@@ -1,1 +1,21 @@
-spring.application.name=discovery-service
+server:
+  port: ${DISCOVERY_PORT:8761}
+
+spring:
+  application:
+    name: discovery-service
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+
+  instance:
+    hostname: discovery-service
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
