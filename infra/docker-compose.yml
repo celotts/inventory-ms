@@ -29,8 +29,7 @@ services:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - DISCOVERY_SERVICE_HEALTH_URL=${DISCOVERY_SERVICE_HEALTH_URL}
       - JAVA_OPTS=${JAVA_OPTS}
-      - GIT_USERNAME=${GIT_USERNAME}
-      - GIT_TOKEN=${GIT_TOKEN}
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/celotts/config-repo.git
     depends_on:
       discovery-service:
         condition: service_healthy

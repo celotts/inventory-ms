@@ -4,7 +4,6 @@ server:
 spring:
   application:
     name: config-service
-
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
 
@@ -12,11 +11,9 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/celotts/inventory-config-repo.git
+          uri: ${SPRING_CLOUD_CONFIG_SERVER_GIT_URI}
           default-label: main
           search-paths: config
-          username: ${GIT_USERNAME}
-          password: ${GIT_TOKEN}
       fail-fast: true
 
 eureka:
