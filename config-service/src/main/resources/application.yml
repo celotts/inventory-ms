@@ -1,1 +1,36 @@
-spring.application.name=config-service
+server:
+  port: ${CONFIG_PORT:7777}
+
+spring:
+  application:
+    name: config-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/celotts/inventory-config-repo.git
+          default-label: main
+          search-paths: config
+          username: ${GIT_USERNAME}
+          password: ${GIT_TOKEN}
+      fail-fast: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-service:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: false
+
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
