@@ -1,0 +1,47 @@
+
+services:
+  discovery-service:
+    build:
+      context: ../discovery-service
+      dockerfile: Dockerfile
+    container_name: discovery-service
+    ports:
+      - "${DISCOVERY_PORT}:${DISCOVERY_PORT}"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - JAVA_OPTS=${JAVA_OPTS}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f ${DISCOVERY_SERVICE_HEALTH_URL} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - inventory-network
+
+  config-service:
+    build:
+      context: ../config-service
+      dockerfile: Dockerfile
+    container_name: config-service
+    ports:
+      - "${CONFIG_PORT}:${CONFIG_PORT}"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - DISCOVERY_SERVICE_HEALTH_URL=${DISCOVERY_SERVICE_HEALTH_URL}
+      - JAVA_OPTS=${JAVA_OPTS}
+      - GIT_USERNAME=${GIT_USERNAME}
+      - GIT_TOKEN=${GIT_TOKEN}
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f ${CONFIG_SERVICE_HEALTH_URL} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - inventory-network
+
+networks:
+  inventory-network:
+    driver: bridge
