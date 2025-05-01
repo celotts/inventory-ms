@@ -5,14 +5,32 @@ spring:
   application:
     name: discovery-service
 
+services:
+  discovery-service:
+    build:
+      context: ../discovery-service
+      dockerfile: infra/docker/Dockerfile
+
+    container_name: discovery-service
+    networks:
+      - inventory-network
+
+  config-service:
+    networks:
+      - inventory-network
+
 eureka:
   client:
-    register-with-eureka: false
+    service-url:
+      #defaultZone: http://discovery-service:8761/eureka/
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
     fetch-registry: false
 
   instance:
     hostname: discovery-service
     prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
 
 management:
   endpoints:
