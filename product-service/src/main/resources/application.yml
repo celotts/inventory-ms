@@ -5,10 +5,10 @@ spring:
   application:
     name: product-service
   config:
-    import: optional:configserver:http://localhost:7777
+    import: optional:configserver://config-service:7777
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/product
+    url: jdbc:postgresql://product-db:5432/product
     username: product
     password: product123
     driver-class-name: org.postgresql.Driver
@@ -22,7 +22,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://discovery-service:8761/eureka/
     register-with-eureka: true
     fetch-registry: false
 
