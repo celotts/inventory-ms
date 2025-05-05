@@ -11,6 +11,9 @@ function wait_for_service() {
     echo "✅ $name está disponible."
 }
 
+# === Esperar a PostgreSQL ===
+wait_for_service "PostgreSQL" "product-db:5432" 30
+
 # === Lanzar app ===
 echo "🚀 Iniciando app.jar..."
-exec java -jar app.jar
+exec java $JAVA_OPTS -jar app.jar
