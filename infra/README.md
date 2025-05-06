@@ -170,6 +170,18 @@ make up-local
 make up-dev
 make up-prod
 ```
+## Puertos recomendados para microservicios
+
+| Microservicio       | Puerto recomendado |
+|---------------------|--------------------|
+| config-service      | 7777               |
+| discovery-service   | 8761               |
+| product-service     | 8081               |
+| inventory-service   | 8082               |
+| order-service       | 8083               |
+| supplier-service    | 8084               |
+| movement-service    | 8085               |
+| api-gateway         | 9090               |
 
 🗺️ Arquitectura general del sistema
 
