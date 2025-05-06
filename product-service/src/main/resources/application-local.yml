@@ -1,14 +1,15 @@
 server:
-  port: 8081
+  port: 8082
 
 spring:
   application:
     name: product-service
-  config:
-    import: optional:configserver://config-service:7777
+  # Quita esto si config-service no está corriendo en local
+  # config:
+  #   import: optional:configserver:http://localhost:7777
 
   datasource:
-    url: jdbc:postgresql://product-db:5432/product
+    url: jdbc:postgresql://localhost:5432/product
     username: product
     password: product123
     driver-class-name: org.postgresql.Driver
@@ -27,15 +28,13 @@ spring:
 
 eureka:
   client:
-    service-url:
-      defaultZone: http://discovery-service:8761/eureka/
-    register-with-eureka: true
+    enabled: false  # <- Desactiva cliente Eureka
+    register-with-eureka: false
     fetch-registry: false
 
   instance:
-    hostname: discovery-service
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+    instance-id: ${spring.application.name}:${server.port}
 
 management:
   endpoints:
