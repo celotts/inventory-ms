@@ -1,53 +1,57 @@
+
 services:
   discovery-service:
     image: inventory/discovery-service
     ports:
-      - "8761:8761"
+      - "${DISCOVERY_PORT}:${DISCOVERY_PORT}"
     environment:
-      - SPRING_PROFILES_ACTIVE=local
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - JAVA_OPTS=${JAVA_OPTS}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f ${DISCOVERY_SERVICE_HEALTH_URL} || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       - inventory-network
 
   config-service:
     image: inventory/config-service
     ports:
-      - "7777:7777"
+      - "${CONFIG_PORT}:${CONFIG_PORT}"
     environment:
-      - SPRING_PROFILES_ACTIVE=local
-      - DISCOVERY_SERVICE_HEALTH_URL=http://discovery-service:8761/actuator/health
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - DISCOVERY_SERVICE_HEALTH_URL=${DISCOVERY_SERVICE_HEALTH_URL}
+      - JAVA_OPTS=${JAVA_OPTS}
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/celotts/config-repo.git
+      - GIT_USERNAME=${GIT_USERNAME}
+      - GIT_TOKEN=${GIT_TOKEN}
     depends_on:
-      - discovery-service
+      discovery-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f ${CONFIG_SERVICE_HEALTH_URL} || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     networks:
       - inventory-network
 
   product-db:
     image: postgres:16
+    ports:
+      - "5432:5432"
     environment:
       - POSTGRES_DB=product
       - POSTGRES_USER=product
       - POSTGRES_PASSWORD=product123
-    ports:
-      - "5432:5432"
     volumes:
       - product-data:/var/lib/postgresql/data
-    networks:
-      - inventory-network
-
-  product-service:
-    image: inventory/product-service
-    ports:
-      - "8081:8081"
-    environment:
-      - SPRING_PROFILES_ACTIVE=local
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://product-db:5432/product
-      - SPRING_DATASOURCE_USERNAME=product
-      - SPRING_DATASOURCE_PASSWORD=product123
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
-      - JAVA_OPTS=-Xms128m -Xmx256m
-    depends_on:
-      - discovery-service
-      - config-service
-      - product-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U product"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - inventory-network
 
