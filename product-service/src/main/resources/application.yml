@@ -8,9 +8,9 @@ spring:
     import: optional:configserver:http://config-service:7777
 
   datasource:
-    url: jdbc:postgresql://product-db:5432/product
-    username: product
-    password: product123
+    url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:${PRODUCT_DB_PORT:5432}/${PRODUCT_DB_NAME:product}
+    username: ${PRODUCT_DB_USERNAME:product}
+    password: ${PRODUCT_DB_PASSWORD:product123}
     driver-class-name: org.postgresql.Driver
     hikari:
       minimum-idle: 5
@@ -30,10 +30,10 @@ eureka:
     service-url:
       defaultZone: http://discovery-service:8761/eureka/
     register-with-eureka: true
-    fetch-registry: false
+    fetch-registry: true
 
   instance:
-    hostname: discovery-service
+    #hostname: discovery-service
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
 
