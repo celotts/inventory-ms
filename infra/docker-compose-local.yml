@@ -1,7 +1,10 @@
 
 services:
   discovery-service:
-    image: inventory/discovery-service
+    build:
+      context: ../discovery-service
+      dockerfile: Dockerfile
+    container_name: discovery-service
     ports:
       - "${DISCOVERY_PORT}:${DISCOVERY_PORT}"
     environment:
@@ -16,7 +19,10 @@ services:
       - inventory-network
 
   config-service:
-    image: inventory/config-service
+    build:
+      context: ../config-service
+      dockerfile: Dockerfile
+    container_name: config-service
     ports:
       - "${CONFIG_PORT}:${CONFIG_PORT}"
     environment:
@@ -36,24 +42,26 @@ services:
       retries: 5
     networks:
       - inventory-network
-
   product-db:
     image: postgres:16
+    container_name: product-db
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_DB=product
-      - POSTGRES_USER=product
-      - POSTGRES_PASSWORD=product123
-    volumes:
-      - product-data:/var/lib/postgresql/data
+      POSTGRES_DB: product
+      POSTGRES_USER: product
+      POSTGRES_PASSWORD: product123
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U product"]
+      test: [ "CMD-SHELL", "pg_isready -U product" ]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - inventory-network
+    volumes:
+      - product-data:/var/lib/postgresql/data
+
+
 
 networks:
   inventory-network:
