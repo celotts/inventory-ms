@@ -12,6 +12,9 @@ spring:
       server:
         git:
           uri: ${SPRING_CLOUD_CONFIG_SERVER_GIT_URI}
+          username: ${GIT_USERNAME}
+          password: ${GIT_TOKEN}
+          timeout: 10
           default-label: main
           search-paths: config
       fail-fast: true
