@@ -1,3 +1,6 @@
+# Variables
+ENV_FILE ?= .env.local
+
 up-local:
 	docker compose down -v
 	docker compose --env-file .env.local up --build
@@ -17,3 +20,7 @@ build-images:
 	docker build -t inventory/config-service ../config-service
 	docker build -t inventory/product-service ../product-service
 
+# Levantar con archivo .env actual (puedes exportar ENV_FILE para cambiarlo)
+up:
+	cp $(ENV_FILE) .env
+	docker compose --env-file $(ENV_FILE) up --build
