@@ -30,6 +30,8 @@ services:
       - DISCOVERY_SERVICE_HEALTH_URL=${DISCOVERY_SERVICE_HEALTH_URL}
       - JAVA_OPTS=${JAVA_OPTS}
       - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/celotts/config-repo.git
+      - GIT_USERNAME=${GIT_USERNAME}
+      - GIT_TOKEN=${GIT_TOKEN}
     depends_on:
       discovery-service:
         condition: service_healthy
@@ -40,7 +42,57 @@ services:
       retries: 5
     networks:
       - inventory-network
+  product-db:
+    image: postgres:16
+    container_name: product-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: product
+      POSTGRES_USER: product
+      POSTGRES_PASSWORD: product123
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U product" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - inventory-network
+    volumes:
+      - product-data:/var/lib/postgresql/data
+
+  product-service:
+    build:
+      context: ../product-service
+      dockerfile: Dockerfile
+    container_name: product-service
+    ports:
+      - "9090:9090"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - JAVA_OPTS=${JAVA_OPTS}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://product-db:5432/product
+      - SPRING_DATASOURCE_USERNAME=product
+      - SPRING_DATASOURCE_PASSWORD=product123
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT}
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+      product-db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - inventory-network
 
 networks:
   inventory-network:
     driver: bridge
+
+volumes:
+  product-data:
