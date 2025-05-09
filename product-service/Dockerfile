@@ -17,7 +17,7 @@ RUN chmod +x wait-for-it.sh entrypoint.sh
 # 📦 Copia el .jar generado por Gradle
 COPY build/libs/*.jar app.jar
 
-EXPOSE 8081
+EXPOSE 9091
 
 ENTRYPOINT ["bash", "entrypoint.sh"]
 # 🔕 No pongas ENTRYPOINT aquí si lo defines en docker-compose

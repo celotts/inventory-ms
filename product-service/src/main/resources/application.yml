@@ -33,9 +33,9 @@ eureka:
     fetch-registry: true
 
   instance:
-    #hostname: discovery-service
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+
 
 management:
   endpoints:
