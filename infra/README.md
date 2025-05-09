@@ -197,6 +197,9 @@ make up-prod
 
 ![img_2.png](img_2.png)
 
+🗺️ Base de dato product-service
+![img_1.png](img_1.png)
+
 📄 Licencia
 
 Este proyecto se distribuye bajo la licencia MIT. Con esto que se modificó en Makefile # Variables
