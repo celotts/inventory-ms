@@ -50,7 +50,7 @@ Crea los siguientes archivos en la raíz del proyecto.
 SPRING_PROFILES_ACTIVE=local
 DISCOVERY_PORT=8761
 CONFIG_PORT=7777
-PRODUCT_PORT=8081
+PRODUCT_PORT=9091
 JAVA_OPTS=-Xms128m -Xmx256m
 DISCOVERY_SERVICE_HEALTH_URL=http://discovery-service:8761/actuator/health
 CONFIG_SERVICE_HEALTH_URL=http://config-service:7777/actuator/health
@@ -196,9 +196,6 @@ make up-prod
 
 
 ![img_2.png](img_2.png)
-
-🗺️ Base de dato product-service
-![img_1.png](img_1.png)
 
 📄 Licencia
 
