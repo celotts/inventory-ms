@@ -60,7 +60,7 @@ services:
       - inventory-network
     volumes:
       - product-data:/var/lib/postgresql/data
-      - ./init-scripts/product-init.sql:/docker-entrypoint-initdb.d/product-init.sql
+      - ../init-scripts:/docker-entrypoint-initdb.d
 networks:
   inventory-network:
     driver: bridge

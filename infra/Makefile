@@ -59,8 +59,13 @@ build-images: ## 🏗️ Build manual de imágenes (opcional si ya usas build au
 	docker build -t inventory/product-service ../product-service
 
 
-restart-db:  ## 🔄 Reinicia solo la base de datos
-	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) restart product-db
+reset-db:  ## 🧨 Elimina y vuelve a crear product-db con datos iniciales
+	@echo "⛔ Eliminando contenedor y volumen de product-db..."
+	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) down -v --remove-orphans
+	@echo "🚀 Levantando solo product-db..."
+	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) up --build -d product-db
+	@echo "📋 Mostrando logs de product-db..."
+	docker logs -f product-db
 
 logs-local: ## 📜 Muestra logs de todos los servicios locales
 	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) logs -f
@@ -93,3 +98,6 @@ stop-all: ## 🛑 Detiene todos los contenedores activos en Docker
 	docker ps -q | xargs -r docker stop
 	docker system prune -f --volumes
 
+reload-schema:  ## ♻️ Ejecuta manualmente el script SQL en product-db
+	docker cp ./init-scripts/product-init.sql product-db:/tmp/product-init.sql
+	docker exec -it product-db psql -U product -d product -f /tmp/product-init.sql
