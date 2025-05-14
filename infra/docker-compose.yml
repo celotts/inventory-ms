@@ -48,7 +48,7 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: product
+      POSTGRES_DB: product_db
       POSTGRES_USER: product
       POSTGRES_PASSWORD: product123
     healthcheck:
@@ -71,7 +71,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - JAVA_OPTS=${JAVA_OPTS}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://product-db:5432/product
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://product-db:5432/product_db
       - SPRING_DATASOURCE_USERNAME=product
       - SPRING_DATASOURCE_PASSWORD=product123
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT}
