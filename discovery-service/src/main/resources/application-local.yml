@@ -1,16 +1,12 @@
 server:
   port: ${DISCOVERY_PORT:8761}
 
-spring:
-  application:
-    name: discovery-service
-
 eureka:
   client:
     service-url:
       defaultZone: http://discovery-service:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: true
+    register-with-eureka: false
+    fetch-registry: false
 
   instance:
     hostname: discovery-service
