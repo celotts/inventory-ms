@@ -1,23 +1,25 @@
 server:
-  port: 9091
+  port: ${PORT9091:9091}
 
 spring:
   application:
     name: product-service
   config:
-    import: optional:configserver:http://config-service:7777
+    import: ${IMPORT_CONFIG_SERVICE}
 
   datasource:
     url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:${PRODUCT_DB_PORT:5432}/${PRODUCT_DB_NAME:product_db}
     username: ${PRODUCT_DB_USERNAME:product}
     password: ${PRODUCT_DB_PASSWORD:product123}
     driver-class-name: org.postgresql.Driver
+
+
     hikari:
-      minimum-idle: 5
-      maximum-pool-size: 10
-      auto-commit: true
-      validation-timeout: 3000
-      connection-test-query: SELECT 1
+      minimum-idle: ${MINIMUM_IDLE:5}
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
+      auto-commit: ${AUTO_COMMIT:true}
+      validation-timeout: ${VALIDATION_TIMEOUT:3000}
+      connection-test-query: ${CONNECTION_TEST_QUERY:SELECT 1}
 
   jpa:
     hibernate:
@@ -28,7 +30,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://discovery-service:8761/eureka/
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
 

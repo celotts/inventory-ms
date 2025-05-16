@@ -1,14 +1,14 @@
 server:
-  port: 9090
+  port: ${PORT9090:9090}
 
 spring:
   application:
     name: product-service
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/product_db
-    username: product
-    password: product123
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME:product}
+    password: ${SPRING_DATASOURCE_PASSWORD:product123}
     driver-class-name: org.postgresql.Driver
     hikari:
       minimum-idle: 5
@@ -26,7 +26,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://discovery-service:8761/eureka/
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
 
