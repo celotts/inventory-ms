@@ -12,11 +12,12 @@ services:
       - JAVA_OPTS=${JAVA_OPTS}
     healthcheck:
       test: ["CMD-SHELL", "curl -f ${DISCOVERY_SERVICE_HEALTH_URL} || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+      interval: ${INTERVAL10s}
+      timeout: ${TIMEOUT5s}
+      retries: ${RETRIES3}
     networks:
       - inventory-network
+
   config-service:
     build:
       context: ../config-service
@@ -41,20 +42,21 @@ services:
       retries: 5
     networks:
       - inventory-network
+
   product-service:
     build:
       context: ../product-service
       dockerfile: Dockerfile
     container_name: product-service
     ports:
-      - "9090:9090"
+      - "${PORT9090}:${PORT9090}"
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - JAVA_OPTS=${JAVA_OPTS}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://product-db:5432/product
-      - SPRING_DATASOURCE_USERNAME=product
-      - SPRING_DATASOURCE_PASSWORD=product123
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT}
+      - SPRING_DATASOURCE_URL=${URL_DATASOURCE_PRODUCT}
+      - SPRING_DATASOURCE_USERNAME=${PRODUCT_DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${PRODUCT_DB_PASSWORD}
+      - SPRING_CONFIG_IMPORT=${SPRING_CONFIG_IMPORT_VALUE}
     depends_on:
       discovery-service:
         condition: service_healthy
@@ -63,10 +65,10 @@ services:
       product-db:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      test: [ "CMD-SHELL", "curl -f $PRODUCT_HEALTHCHECK_URL_LOCAL || exit 1" ]
+      interval: ${INTERVAL30s}
+      timeout: ${TIMEOUT10s}
+      retries: ${RETRIES5}
     networks:
       - inventory-network
 
@@ -74,16 +76,16 @@ services:
     image: postgres:16
     container_name: product-db
     ports:
-      - "5432:5432"
+      - "${PORT_5432}:${PORT_5432}"
     environment:
-      POSTGRES_DB: product
-      POSTGRES_USER: product
-      POSTGRES_PASSWORD: product123
+      POSTGRES_DB: ${PRODUCT_DB_NAME}
+      POSTGRES_USER: ${PRODUCT_DB_USERNAME}
+      POSTGRES_PASSWORD: ${PRODUCT_DB_PASSWORD}
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U product" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: ${INTERVAL10s}
+      timeout: ${TIMEOUT5s}
+      retries: ${RETRIES5}
     networks:
       - inventory-network
     volumes:
