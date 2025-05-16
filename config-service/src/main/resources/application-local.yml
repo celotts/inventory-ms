@@ -4,8 +4,6 @@ server:
 spring:
   application:
     name: config-service
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
 
   cloud:
     config:
@@ -22,7 +20,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://discovery-service:8761/eureka/
     register-with-eureka: true
     fetch-registry: false
 
