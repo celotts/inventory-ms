@@ -1,0 +1,37 @@
+server:
+  port: ${CONFIG_PORT:7777}
+
+spring:
+  application:
+    name: config-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+  cloud:
+    config:
+      server:
+        git:
+          uri: ${SPRING_CLOUD_CONFIG_SERVER_GIT_URI}
+          username: ${GIT_USERNAME}
+          password: ${GIT_TOKEN}
+          timeout: 10
+          default-label: main
+          search-paths: config
+      fail-fast: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: false
+
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
