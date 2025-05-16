@@ -1,5 +1,5 @@
 server:
-  port: 9090
+  port: 9091
 
 spring:
   application:
@@ -8,7 +8,7 @@ spring:
     import: optional:configserver:http://config-service:7777
 
   datasource:
-    url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:${PRODUCT_DB_PORT:5432}/${PRODUCT_DB_NAME:product}
+    url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:${PRODUCT_DB_PORT:5432}/${PRODUCT_DB_NAME:product_db}
     username: ${PRODUCT_DB_USERNAME:product}
     password: ${PRODUCT_DB_PASSWORD:product123}
     driver-class-name: org.postgresql.Driver

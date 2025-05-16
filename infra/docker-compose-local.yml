@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     container_name: discovery-service
     ports:
-      - "${DISCOVERY_PORT}:${DISCOVERY_PORT}"
+      - "${DISCOVERY_PORT}:8761"
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - JAVA_OPTS=${JAVA_OPTS}
@@ -17,7 +17,6 @@ services:
       retries: 3
     networks:
       - inventory-network
-
   config-service:
     build:
       context: ../config-service
@@ -36,12 +35,41 @@ services:
       discovery-service:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f ${CONFIG_SERVICE_HEALTH_URL} || exit 1"]
+      test: [ "CMD-SHELL", "curl -f ${CONFIG_SERVICE_HEALTH_URL} || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
     networks:
       - inventory-network
+  product-service:
+    build:
+      context: ../product-service
+      dockerfile: Dockerfile
+    container_name: product-service
+    ports:
+      - "9090:9090"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - JAVA_OPTS=${JAVA_OPTS}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://product-db:5432/product
+      - SPRING_DATASOURCE_USERNAME=product
+      - SPRING_DATASOURCE_PASSWORD=product123
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT}
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+      product-db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - inventory-network
+
   product-db:
     image: postgres:16
     container_name: product-db
@@ -59,8 +87,9 @@ services:
     networks:
       - inventory-network
     volumes:
+      - ./init-scripts/product/01-product-init.sql:/docker-entrypoint-initdb.d/01-product-init.sql
       - product-data:/var/lib/postgresql/data
-      - ../init-scripts:/docker-entrypoint-initdb.d
+
 networks:
   inventory-network:
     driver: bridge

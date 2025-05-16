@@ -101,3 +101,6 @@ stop-all: ## 🛑 Detiene todos los contenedores activos en Docker
 reload-schema:  ## ♻️ Ejecuta manualmente el script SQL en product-db
 	docker cp ./init-scripts/product-init.sql product-db:/tmp/product-init.sql
 	docker exec -it product-db psql -U product -d product -f /tmp/product-init.sql
+
+build-jars:
+	cd .. && ./gradlew --console=plain :config-service:bootJar :discovery-service:bootJar :product-service:bootJar

@@ -1,24 +1,6 @@
 server:
   port: ${DISCOVERY_PORT:8761}
 
-spring:
-  application:
-    name: discovery-service
-
-services:
-  discovery-service:
-    build:
-      context: ../discovery-service
-      dockerfile: infra/docker/Dockerfile
-
-    container_name: discovery-service
-    networks:
-      - inventory-network
-
-  config-service:
-    networks:
-      - inventory-network
-
 eureka:
   client:
     service-url:

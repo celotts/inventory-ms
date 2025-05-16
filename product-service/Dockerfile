@@ -1,4 +1,4 @@
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jdk-jammy
 
 # Instala bash y curl en una sola capa limpia
 RUN apt-get update \
@@ -15,9 +15,9 @@ COPY entrypoint.sh entrypoint.sh
 RUN chmod +x wait-for-it.sh entrypoint.sh
 
 # 📦 Copia el .jar generado por Gradle
-COPY build/libs/*.jar app.jar
+COPY build/libs/product-service-0.0.1-SNAPSHOT.jar app.jar
 
-EXPOSE 9091
+EXPOSE 9090
 
 ENTRYPOINT ["bash", "entrypoint.sh"]
 # 🔕 No pongas ENTRYPOINT aquí si lo defines en docker-compose
