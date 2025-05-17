@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity;
 
+import com.celotts.productservice.infrastructure.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,7 +15,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Product {
+public class Product extends BaseEntity {
     @Id
     @GeneratedValue
     private UUID id;
