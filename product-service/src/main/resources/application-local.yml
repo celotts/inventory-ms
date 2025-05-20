@@ -4,7 +4,8 @@ server:
 spring:
   application:
     name: product-service
-
+  config:
+    import: "optional:${IMPORT_CONFIG_SERVICE}"
   datasource:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME:product}

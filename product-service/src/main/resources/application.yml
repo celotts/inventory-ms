@@ -5,7 +5,7 @@ spring:
   application:
     name: product-service
   config:
-    import: ${IMPORT_CONFIG_SERVICE}
+    import: "optional:${IMPORT_CONFIG_SERVICE}"
 
   datasource:
     url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:${PRODUCT_DB_PORT:5432}/${PRODUCT_DB_NAME:product_db}
