@@ -3,6 +3,7 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.adapte
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.ProductRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.Product;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.ProductEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -22,20 +23,20 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
     public List<ProductModel> findAll() {
         return productRepository.findAll()
                 .stream()
-                .map(Product::toModel)
+                .map(ProductEntityMapper::toModel)
                 .collect(Collectors.toList());
     }
 
     @Override
     public Optional<ProductModel> findById(UUID id) {
         return productRepository.findById(id)
-                .map(Product::toModel);
+                .map(ProductEntityMapper::toModel);
     }
 
     @Override
     public ProductModel save(ProductModel productModel) {
-        Product entity = Product.fromModel(productModel);
+        Product entity = ProductEntityMapper.toEntity(productModel);
         Product saved = productRepository.save(entity);
-        return saved.toModel();
+        return ProductEntityMapper.toModel(saved);
     }
 }
