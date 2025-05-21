@@ -126,3 +126,9 @@ check-db-init: ## 🔎 Verifica existencia del volumen de base de datos
 		echo "⚠️ Volumen ya existe. PostgreSQL NO ejecutará el script de inicialización."; \
 	fi
 	@$(MAKE) up-local
+
+validate-product: ## ✅ Valida la compilación y tests de product-service (sin Docker)
+	cd .. && ./gradlew :product-service:build
+
+validate-product-no-tests: ## ✅ Valida product-service sin ejecutar pruebas
+	cd .. && ./gradlew :product-service:build -x test
