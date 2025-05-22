@@ -32,6 +32,7 @@ services:
       - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/celotts/config-repo.git
       - GIT_USERNAME=${GIT_USERNAME}
       - GIT_TOKEN=${GIT_TOKEN}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
     depends_on:
       discovery-service:
         condition: service_healthy
