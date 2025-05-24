@@ -6,17 +6,27 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductR
 public class ProductResponseMapper {
 
     public static ProductResponseDTO toResponse(ProductModel model) {
+        if (model == null) {
+            return null;
+        }
+
         return ProductResponseDTO.builder()
                 .id(model.getId())
                 .code(model.getCode())
                 .description(model.getDescription())
-                .productType(model.getProductTypeCode())
-                .unit(model.getUnitCode())
+                .productTypeCode(model.getProductTypeCode())
+                .unitCode(model.getUnitCode())
                 .brandId(model.getBrandId())
-                .minimumStock(model.getMinimumStock() != null ? model.getMinimumStock().doubleValue() : null)
-                .currentStock(model.getCurrentStock() != null ? model.getCurrentStock().doubleValue() : null)
-                .unitPrice(model.getUnitPrice() != null ? model.getUnitPrice().doubleValue() : null)
+                .minimumStock(model.getMinimumStock())
+                .currentStock(model.getCurrentStock())
+                .unitPrice(model.getUnitPrice())
                 .enabled(model.getEnabled())
+                .createdAt(model.getCreatedAt())
+                .updatedAt(model.getUpdatedAt())
+                .createdBy(model.getCreatedBy())
+                .updatedBy(model.getUpdatedBy())
+                .lowStock(model.getCurrentStock() != null && model.getMinimumStock() != null &&
+                        model.getCurrentStock() < model.getMinimumStock())
                 .build();
     }
 }

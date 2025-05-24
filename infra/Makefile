@@ -23,8 +23,16 @@ clean-gradle: ## 🧹 Limpia caché y compilación de Gradle
 
 ## 🔽 Infraestructura por entorno
 up-local: ## 🧪 Levanta infra para trabajar desde IntelliJ
+	@echo "🧹 Copiando variables de entorno..."
 	cp $(ENV_FILE_LOCAL) .env.override
+
+	@echo "🔨 Construyendo servicios..."
+	cd .. && ./gradlew :config-service:bootJar :discovery-service:bootJar :product-service:bootJar
+
+	@echo "🧼 Apagando contenedores anteriores..."
 	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) down -v
+
+	@echo "🐳 Levantando contenedores..."
 	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) up --build
 
 down-local: ## 🔻 Apaga infra local
@@ -124,3 +132,16 @@ check-db-init: ## 🔎 Verifica existencia del volumen product-db
 		echo "⚠️ Volumen ya existe. PostgreSQL NO ejecutará el script de inicialización."; \
 	fi
 	@$(MAKE) up-local
+# Construcción paso a paso con verificación
+build-step-by-step:
+	@echo "🧹 Limpiando proyecto..."
+	cd .. && ./gradlew clean
+	@echo "🔨 Construyendo config-service..."
+	cd .. && ./gradlew :config-service:bootJar
+	@echo "🔨 Construyendo discovery-service..."
+	cd .. && ./gradlew :discovery-service:bootJar
+	@echo "🔨 Construyendo product-service..."
+	cd .. && ./gradlew :product-service:bootJar
+	@echo "✅ Verificando JARs creados..."
+	@ls -la ../*/build/libs/*.jar || echo "❌ Algunos JARs no se crearon"
+	@echo "🎉 Construcción completada!"

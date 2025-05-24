@@ -8,7 +8,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -20,25 +19,28 @@ import java.util.UUID;
 public class Product extends BaseEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @Column(nullable = false, unique = true, length = 50)
     private String code;
 
+    @Column(nullable = false, length = 100)
+    private String name;
+
+    @Column(length = 500)
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_type", referencedColumnName = "code", nullable = false)
-    private ProductType productType;
+    // ✅ Aquí está el campo clave:
+    // productTypeCode en Java → mapeado a product_type en la base de datos
+    @Column(name = "product_type", length = 50, nullable = false)
+    private String productTypeCode;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "unit_code", referencedColumnName = "code", nullable = false)
-    private ProductUnit productUnit;
+    @Column(name = "unit_code", length = 50)
+    private String unitCode;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "brand_id", nullable = false)
-    private ProductBrand productBrand;
+    @Column(name = "brand_id")
+    private UUID brandId;
 
     @Column(name = "minimum_stock", nullable = false)
     private Integer minimumStock;
@@ -49,14 +51,6 @@ public class Product extends BaseEntity {
     @Column(name = "unit_price", precision = 10, scale = 2, nullable = false)
     private BigDecimal unitPrice;
 
+    @Column(nullable = false)
     private Boolean enabled = true;
-
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    private String createdBy;
-    private String updatedBy;
 }

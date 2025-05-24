@@ -2,34 +2,31 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper
 
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.Product;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.ProductBrand;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.ProductType;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.ProductUnit;
 
 public class ProductEntityMapper {
 
     public static Product toEntity(ProductModel model) {
+        if (model == null) return null;
+
         Product product = new Product();
-        product.setId(model.getId());
+
+        // Solo establecer ID para updates cuando ya existe
+        if (model.getId() != null) {
+            product.setId(model.getId());
+        }
+
         product.setCode(model.getCode());
+        product.setName(model.getName()); // ← FIX: Usar name del model, no description
         product.setDescription(model.getDescription());
 
-        ProductType type = new ProductType();
-        type.setCode(model.getProductTypeCode());
-        product.setProductType(type);
-
-        ProductUnit unit = new ProductUnit();
-        unit.setCode(model.getUnitCode());
-        product.setProductUnit(unit);
-
-        ProductBrand brand = new ProductBrand();
-        brand.setId(model.getBrandId());
-        product.setProductBrand(brand);
+        // Mapeo directo sin entidades relacionadas
+        product.setProductTypeCode(model.getProductTypeCode());
+        product.setUnitCode(model.getUnitCode());
+        product.setBrandId(model.getBrandId());
 
         product.setMinimumStock(model.getMinimumStock());
         product.setCurrentStock(model.getCurrentStock());
         product.setUnitPrice(model.getUnitPrice());
-
         product.setEnabled(model.getEnabled());
         product.setCreatedAt(model.getCreatedAt());
         product.setUpdatedAt(model.getUpdatedAt());
@@ -40,13 +37,16 @@ public class ProductEntityMapper {
     }
 
     public static ProductModel toModel(Product entity) {
+        if (entity == null) return null;
+
         return ProductModel.builder()
                 .id(entity.getId())
                 .code(entity.getCode())
+                .name(entity.getName()) // ← FIX: Mapear name también
                 .description(entity.getDescription())
-                .productTypeCode(entity.getProductType() != null ? entity.getProductType().getCode() : null)
-                .unitCode(entity.getProductUnit() != null ? entity.getProductUnit().getCode() : null)
-                .brandId(entity.getProductBrand() != null ? entity.getProductBrand().getId() : null)
+                .productTypeCode(entity.getProductTypeCode())
+                .unitCode(entity.getUnitCode())
+                .brandId(entity.getBrandId())
                 .minimumStock(entity.getMinimumStock())
                 .currentStock(entity.getCurrentStock())
                 .unitPrice(entity.getUnitPrice())
