@@ -9,7 +9,7 @@ spring:
     config:
       server:
         git:
-          uri: ${SPRING_CLOUD_CONFIG_SERVER_GIT_URI}
+          uri: https://github.com/celotts/your-config-repo.git
           username: ${GIT_USERNAME}
           password: ${GIT_TOKEN}
           timeout: 10
@@ -19,10 +19,12 @@ spring:
 
 eureka:
   client:
-    service-url:
-      defaultZone: http://discovery-service:8761/eureka/
+    enabled: ${EUREKA_CLIENT_ENABLED:true}
     register-with-eureka: true
     fetch-registry: false
+    service-url:
+      defaultZone: http://discovery-service:8761/eureka/
+
 
   instance:
     prefer-ip-address: true
