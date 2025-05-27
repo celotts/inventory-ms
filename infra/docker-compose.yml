@@ -60,6 +60,8 @@ services:
       - inventory-network
     volumes:
       - product-data:/var/lib/postgresql/data
+    env_file:
+      - .env
 
   product-service:
     build:
@@ -75,6 +77,12 @@ services:
       - SPRING_DATASOURCE_USERNAME=product
       - SPRING_DATASOURCE_PASSWORD=product123
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT}
+      - PAGINATION_DEFAULT_PAGE=${PAGINATION_DEFAULT_PAGE:-0}
+      - PAGINATION_DEFAULT_SIZE=${PAGINATION_DEFAULT_SIZE:-10}
+      - PAGINATION_MAX_SIZE=${PAGINATION_MAX_SIZE:-100}
+      - PAGINATION_DEFAULT_SORT_BY=${PAGINATION_DEFAULT_SORT_BY:-createdAt}
+      - PAGINATION_DEFAULT_SORT_DIR=${PAGINATION_DEFAULT_SORT_DIR:-desc}
+      - PAGINATION_ALLOWED_SORT_FIELDS=${PAGINATION_ALLOWED_SORT_FIELDS:-createdAt,updatedAt,code,description,unitPrice,currentStock}
     depends_on:
       discovery-service:
         condition: service_healthy

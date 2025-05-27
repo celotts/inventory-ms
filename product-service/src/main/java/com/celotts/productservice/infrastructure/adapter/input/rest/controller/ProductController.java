@@ -1,4 +1,3 @@
-// ProductController - Controlador completo y corregido
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.applications.service.ProductService;
@@ -6,6 +5,8 @@ import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,9 +23,26 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Slf4j
 public class ProductController {
 
     private final ProductService productService;
+
+    // ✅ AGREGAR: Configuración desde variables de entorno
+    @Value("${app.pagination.default-page:0}")
+    private int defaultPage;
+
+    @Value("${app.pagination.default-size:10}")
+    private int defaultSize;
+
+    @Value("${app.pagination.max-size:100}")
+    private int maxSize;
+
+    @Value("${app.pagination.default-sort:createdAt}")
+    private String defaultSort;
+
+    @Value("${app.pagination.default-direction:desc}")
+    private String defaultDirection;
 
     // GET /api/v1/products - Obtener todos los productos
     @GetMapping
@@ -36,25 +54,47 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // GET /api/v1/products/paginated - Obtener productos con paginación
+    // ✅ CAMBIAR: Este método para usar configuración externa
     @GetMapping("/paginated")
     public ResponseEntity<Page<ProductResponseDTO>> getAllProductsPaginated(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir) {
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) String sortDir) {
 
-        Sort sort = sortDir.equalsIgnoreCase("desc") ?
-                Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        log.info("Fetching paginated products - page: {}, size: {}, sortBy: {}, sortDir: {}",
+                page, size, sortBy, sortDir);
 
-        Pageable pageable = PageRequest.of(page, size, sort);
+        // Usar valores de configuración en lugar de hardcodeados
+        int pageNumber = page != null ? Math.max(0, page) : defaultPage;
+        int pageSize = size != null ? Math.min(Math.max(1, size), maxSize) : defaultSize;
+        String sortField = sortBy != null && !sortBy.trim().isEmpty() ? sortBy.trim() : defaultSort;
+        String sortDirection = sortDir != null && !sortDir.trim().isEmpty() ? sortDir.trim() : defaultDirection;
+
+        // Validar campo de ordenamiento
+        List<String> allowedSortFields = List.of("createdAt", "updatedAt", "code", "description", "unitPrice", "currentStock");
+        if (!allowedSortFields.contains(sortField)) {
+            log.warn("Invalid sort field: {}. Using default: {}", sortField, defaultSort);
+            sortField = defaultSort;
+        }
+
+        Sort sort = sortDirection.equalsIgnoreCase("desc") ?
+                Sort.by(sortField).descending() : Sort.by(sortField).ascending();
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
         Page<ProductModel> products = productService.getAllProducts(pageable);
         Page<ProductResponseDTO> response = products.map(ProductResponseDTO::fromModel);
+
+        log.info("Retrieved {} products out of {} total (page {}/{})",
+                response.getNumberOfElements(),
+                response.getTotalElements(),
+                response.getNumber() + 1,
+                response.getTotalPages());
 
         return ResponseEntity.ok(response);
     }
 
-    // GET /api/v1/products/{id} - Obtener producto por ID
+    // ✅ EL RESTO DE TUS MÉTODOS PERMANECEN IGUAL
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable UUID id) {
         ProductModel product = productService.getProductById(id);
@@ -62,7 +102,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // GET /api/v1/products/code/{code} - Obtener producto por código
     @GetMapping("/code/{code}")
     public ResponseEntity<ProductResponseDTO> getProductByCode(@PathVariable String code) {
         ProductModel product = productService.getProductByCode(code);
@@ -70,7 +109,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // POST /api/v1/products - Crear nuevo producto
     @PostMapping
     public ResponseEntity<ProductResponseDTO> createProduct(@Valid @RequestBody ProductRequestDTO requestDTO) {
         ProductModel createdProduct = productService.createProduct(requestDTO);
@@ -78,7 +116,6 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // PUT /api/v1/products/{id} - Actualizar producto completo
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> updateProduct(
             @PathVariable UUID id,
@@ -89,44 +126,35 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // PATCH /api/v1/products/{id} - Actualizar producto parcial
     @PatchMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> partialUpdateProduct(
             @PathVariable UUID id,
             @Valid @RequestBody ProductUpdateDTO updateDTO) {
 
         ProductModel existingProduct = productService.getProductById(id);
-        // Aquí aplicarías los cambios parciales usando el mapper
-        // ProductRequestMapper.updateModelFromDto(existingProduct, updateDTO);
-        // Por simplicidad, reutilizamos el método de update completo
-
         ProductModel updatedProduct = productService.updateProduct(id, convertToRequestDTO(updateDTO, existingProduct));
         ProductResponseDTO response = ProductResponseDTO.fromModel(updatedProduct);
         return ResponseEntity.ok(response);
     }
 
-    // DELETE /api/v1/products/{id} - Eliminar producto (soft delete)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable UUID id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }
 
-    // DELETE /api/v1/products/{id}/hard - Eliminar producto definitivamente
     @DeleteMapping("/{id}/hard")
     public ResponseEntity<Void> hardDeleteProduct(@PathVariable UUID id) {
         productService.hardDeleteProduct(id);
         return ResponseEntity.noContent().build();
     }
 
-    // GET /api/v1/products/{id}/exists - Verificar si existe producto
     @GetMapping("/{id}/exists")
     public ResponseEntity<Boolean> existsProduct(@PathVariable UUID id) {
         boolean exists = productService.existsById(id);
         return ResponseEntity.ok(exists);
     }
 
-    // GET /api/v1/products/active - Obtener productos activos
     @GetMapping("/active")
     public ResponseEntity<List<ProductResponseDTO>> getActiveProducts() {
         List<ProductModel> products = productService.getActiveProducts();
@@ -136,7 +164,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // GET /api/v1/products/inactive - Obtener productos inactivos
     @GetMapping("/inactive")
     public ResponseEntity<List<ProductResponseDTO>> getInactiveProducts() {
         List<ProductModel> products = productService.getInactiveProducts();
@@ -146,7 +173,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // GET /api/v1/products/low-stock - Obtener productos con stock bajo
     @GetMapping("/low-stock")
     public ResponseEntity<List<ProductResponseDTO>> getLowStockProducts() {
         List<ProductModel> products = productService.getLowStockProducts();
@@ -156,7 +182,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // GET /api/v1/products/type/{typeCode} - Obtener productos por tipo
     @GetMapping("/type/{typeCode}")
     public ResponseEntity<List<ProductResponseDTO>> getProductsByType(@PathVariable String typeCode) {
         List<ProductModel> products = productService.getProductsByType(typeCode);
@@ -166,17 +191,15 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // GET /api/v1/products/brand/{brandId} - Obtener productos por marca
     @GetMapping("/brand/{brandId}")
     public ResponseEntity<List<ProductResponseDTO>> getProductsByBrand(@PathVariable UUID brandId) {
         List<ProductModel> products = productService.getProductsByBrand(brandId);
         List<ProductResponseDTO> response = products.stream()
                 .map(ProductResponseDTO::fromModel)
-                .collect(Collectors.toList());
+                .toList();  // ✅ Forma moderna
         return ResponseEntity.ok(response);
     }
 
-    // PATCH /api/v1/products/{id}/stock - Actualizar stock
     @PatchMapping("/{id}/stock")
     public ResponseEntity<ProductResponseDTO> updateStock(
             @PathVariable UUID id,
@@ -187,7 +210,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // PATCH /api/v1/products/{id}/enable - Habilitar producto
     @PatchMapping("/{id}/enable")
     public ResponseEntity<ProductResponseDTO> enableProduct(@PathVariable UUID id) {
         ProductModel updatedProduct = productService.enableProduct(id);
@@ -195,7 +217,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // PATCH /api/v1/products/{id}/disable - Deshabilitar producto
     @PatchMapping("/{id}/disable")
     public ResponseEntity<ProductResponseDTO> disableProduct(@PathVariable UUID id) {
         ProductModel updatedProduct = productService.disableProduct(id);
@@ -203,14 +224,12 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // GET /api/v1/products/count - Contar productos
     @GetMapping("/count")
     public ResponseEntity<Long> countProducts() {
         long count = productService.countProducts();
         return ResponseEntity.ok(count);
     }
 
-    // GET /api/v1/products/count/active - Contar productos activos
     @GetMapping("/count/active")
     public ResponseEntity<Long> countActiveProducts() {
         long count = productService.countActiveProducts();

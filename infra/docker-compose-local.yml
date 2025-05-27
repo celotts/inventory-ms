@@ -58,6 +58,12 @@ services:
       - SPRING_DATASOURCE_USERNAME=${PRODUCT_DB_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${PRODUCT_DB_PASSWORD}
       - SPRING_CONFIG_IMPORT=${SPRING_CONFIG_IMPORT_VALUE}
+      - PAGINATION_DEFAULT_PAGE=${PAGINATION_DEFAULT_PAGE:-0}
+      - PAGINATION_DEFAULT_SIZE=${PAGINATION_DEFAULT_SIZE:-10}
+      - PAGINATION_MAX_SIZE=${PAGINATION_MAX_SIZE:-100}
+      - PAGINATION_DEFAULT_SORT_BY=${PAGINATION_DEFAULT_SORT_BY:-createdAt}
+      - PAGINATION_DEFAULT_SORT_DIR=${PAGINATION_DEFAULT_SORT_DIR:-desc}
+      - PAGINATION_ALLOWED_SORT_FIELDS=${PAGINATION_ALLOWED_SORT_FIELDS:-createdAt,updatedAt,code,description,unitPrice,currentStock}
     depends_on:
       discovery-service:
         condition: service_healthy
@@ -89,6 +95,8 @@ services:
       retries: ${RETRIES5}
     networks:
       - inventory-network
+    env_file:
+      - .env.local
     volumes:
       - ./init-scripts/product/01-product-init.sql:/docker-entrypoint-initdb.d/01-product-init.sql
       - product-data:/var/lib/postgresql/data
