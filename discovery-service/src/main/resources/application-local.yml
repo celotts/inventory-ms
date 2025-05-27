@@ -1,0 +1,23 @@
+server:
+  port: ${DISCOVERY_PORT:8761}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-service:8761/eureka/
+    register-with-eureka: false
+    fetch-registry: false
+
+  instance:
+    hostname: discovery-service
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+logging:
+  level:
+    com.netflix.discovery.shared.transport.jersey3.EurekaJersey3ClientImpl: OFF

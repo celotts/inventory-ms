@@ -34,12 +34,18 @@ dependencies {
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.postgresql:postgresql:42.7.2'
+	implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+	implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	// runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.projectlombok:lombok'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.testcontainers:junit-jupiter'
+	testImplementation 'org.testcontainers:postgresql'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 }
 
 dependencyManagement {
@@ -48,6 +54,10 @@ dependencyManagement {
 	}
 }
 
-tasks.named('test') {
+test {
 	useJUnitPlatform()
+}
+
+bootJar {
+	archiveFileName = 'product-service-0.0.1-SNAPSHOT.jar'
 }

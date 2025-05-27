@@ -22,9 +22,8 @@ services:
 eureka:
   client:
     service-url:
-      #defaultZone: http://discovery-service:8761/eureka/
-      defaultZone: http://localhost:8761/eureka/
-    register-with-eureka: true
+      defaultZone: http://discovery-service:8761/eureka/
+    register-with-eureka: false
     fetch-registry: false
 
   instance:
@@ -37,3 +36,6 @@ management:
     web:
       exposure:
         include: "*"
+logging:
+  level:
+    com.netflix.discovery.shared.transport.jersey3.EurekaJersey3ClientImpl: ERROR

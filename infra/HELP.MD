@@ -59,7 +59,7 @@ GIT_TOKEN=your_github_token
 EUREKA_HOST=localhost
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=product_db
+DB_NAME=product
 DB_USERNAME=postgres
 DB_PASSWORD=postgres
 ```

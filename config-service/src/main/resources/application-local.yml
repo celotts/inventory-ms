@@ -1,0 +1,37 @@
+server:
+  port: ${CONFIG_PORT:7777}
+
+spring:
+  application:
+    name: config-service
+
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/celotts/your-config-repo.git
+          username: ${GIT_USERNAME}
+          password: ${GIT_TOKEN}
+          timeout: 10
+          default-label: main
+          search-paths: config
+      fail-fast: true
+
+eureka:
+  client:
+    enabled: ${EUREKA_CLIENT_ENABLED:true}
+    register-with-eureka: true
+    fetch-registry: false
+    service-url:
+      defaultZone: http://discovery-service:8761/eureka/
+
+
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
