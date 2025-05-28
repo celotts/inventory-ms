@@ -1,0 +1,92 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      # Configuración global
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+      # Configuración CORS global
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"     # React
+              - "http://localhost:4200"     # Angular
+              - "http://localhost:5173"     # Vite
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
+      # Rutas de los microservicios
+      routes:
+        # Auth Service - SIN JWT
+        - id: auth-service
+          uri: lb://auth-service  # lb = load balancer con Eureka
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - name: StripPrefix
+              args:
+                parts: 0
+
+        # Product Service - CON JWT
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - name: StripPrefix
+              args:
+                parts: 0
+            - name: JwtAuthenticationGatewayFilter  # Filtro personalizado
+
+        # Inventory Service - CON JWT
+        - id: inventory-service
+          uri: lb://inventory-service
+          predicates:
+            - Path=/api/inventory/**
+          filters:
+            - name: StripPrefix
+              args:
+                parts: 0
+            - name: JwtAuthenticationGatewayFilter
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:developmentSecretKey1234567890abcdefghijklmnopqrstuvwxyz1234567890}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+# Eureka Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.tu.paquete: DEBUG
