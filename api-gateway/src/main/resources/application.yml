@@ -4,21 +4,17 @@ server:
 spring:
   application:
     name: api-gateway
-
   cloud:
     gateway:
-      # Configuración global
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
-
-      # Configuración CORS global
       globalcors:
         corsConfigurations:
           '[/**]':
             allowedOrigins:
-              - "http://localhost:3000"     # React
-              - "http://localhost:4200"     # Angular
-              - "http://localhost:5173"     # Vite
+              - "http://localhost:3000"
+              - "http://localhost:4200"
+              - "http://localhost:5173"
             allowedMethods:
               - GET
               - POST
@@ -27,55 +23,33 @@ spring:
               - OPTIONS
             allowedHeaders: "*"
             allowCredentials: true
-
-      # Rutas de los microservicios
       routes:
-        # Auth Service - SIN JWT
         - id: auth-service
-          uri: lb://auth-service  # lb = load balancer con Eureka
+          uri: lb://auth-service
           predicates:
             - Path=/api/auth/**
-          filters:
-            - name: StripPrefix
-              args:
-                parts: 0
-
-        # Product Service - CON JWT
         - id: product-service
           uri: lb://product-service
           predicates:
             - Path=/api/products/**
-          filters:
-            - name: StripPrefix
-              args:
-                parts: 0
-            - name: JwtAuthenticationGatewayFilter  # Filtro personalizado
-
-        # Inventory Service - CON JWT
         - id: inventory-service
           uri: lb://inventory-service
           predicates:
             - Path=/api/inventory/**
-          filters:
-            - name: StripPrefix
-              args:
-                parts: 0
-            - name: JwtAuthenticationGatewayFilter
 
-# JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:developmentSecretKey1234567890abcdefghijklmnopqrstuvwxyz1234567890}
-  expiration: ${JWT_EXPIRATION:86400000}
+  secret: developmentSecretKey1234567890abcdefghijklmnopqrstuvwxyz1234567890
+  expiration: 86400000
 
-# Eureka Configuration
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
   instance:
     prefer-ip-address: true
 
-# Actuator Configuration
 management:
   endpoints:
     web:
@@ -85,8 +59,7 @@ management:
     health:
       show-details: always
 
-# Logging
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
-    com.tu.paquete: DEBUG
+    com.celotts.apigateway: DEBUG

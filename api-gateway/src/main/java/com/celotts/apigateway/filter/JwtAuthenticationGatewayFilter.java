@@ -15,11 +15,11 @@ import reactor.core.publisher.Mono;
 @Component
 public class JwtAuthenticationGatewayFilter extends AbstractGatewayFilterFactory<JwtAuthenticationGatewayFilter.Config> {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
 
-    public JwtAuthenticationGatewayFilter() {
+    public JwtAuthenticationGatewayFilter(JwtUtil jwtUtil) {
         super(Config.class);
+        this.jwtUtil = jwtUtil;
     }
 
     @Override
