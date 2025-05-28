@@ -16,18 +16,16 @@ import java.util.function.Predicate;
 @Component
 public class JwtAuthenticationFilter implements WebFilter {
 
-    private final JwtUtil jwtUtil;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     // Rutas que no requieren autenticación
     private static final List<String> OPEN_API_ENDPOINTS = List.of(
-            "/auth-service/api/auth/login",
-            "/auth-service/api/auth/register",
+            "/api/auth/",
+            "/actuator/",
+            "/health",
             "/eureka"
     );
-
-    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
-    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -79,7 +77,7 @@ public class JwtAuthenticationFilter implements WebFilter {
     public Predicate<ServerHttpRequest> isSecured =
             request -> OPEN_API_ENDPOINTS
                     .stream()
-                    .noneMatch(uri -> request.getURI().getPath().contains(uri));
+                    .noneMatch(uri -> request.getURI().getPath().startsWith(uri));
 
     private Mono<Void> onError(ServerWebExchange exchange, String err, HttpStatus httpStatus) {
         ServerHttpResponse response = exchange.getResponse();

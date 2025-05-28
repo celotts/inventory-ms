@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8090  # Cambiado de 8080 a 8090
 
 spring:
   application:
@@ -25,15 +25,15 @@ spring:
             allowCredentials: true
       routes:
         - id: auth-service
-          uri: lb://auth-service
+          uri: lb://auth-service  # Load balancer via Eureka
           predicates:
             - Path=/api/auth/**
         - id: product-service
-          uri: lb://product-service
+          uri: lb://product-service  # Load balancer via Eureka
           predicates:
             - Path=/api/products/**
         - id: inventory-service
-          uri: lb://inventory-service
+          uri: lb://inventory-service  # Load balancer via Eureka
           predicates:
             - Path=/api/inventory/**
 
@@ -45,10 +45,18 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: true
+    register-with-eureka: true   # Habilitado de nuevo
+    fetch-registry: true         # Habilitado de nuevo
+    enabled: true                # Habilitado de nuevo
+    initial-instance-info-replication-interval-seconds: 5
+    instance-info-replication-interval-seconds: 30
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: false     # Usar hostname en lugar de IP
+    hostname: ${spring.application.name}  # api-gateway
+    instance-id: ${spring.application.name}:${eureka.instance.ip-address}:${server.port}
+    ip-address: 127.0.0.1        # IP específica
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
 
 management:
   endpoints:
