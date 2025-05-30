@@ -1,0 +1,46 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**
+        - id: config-service
+          uri: lb://config-service
+          predicates:
+            - Path=/config/**
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-service:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.celotts.apigateway: DEBUG

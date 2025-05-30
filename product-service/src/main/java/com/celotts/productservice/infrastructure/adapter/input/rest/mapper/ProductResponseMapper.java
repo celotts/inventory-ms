@@ -2,10 +2,12 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.mapper;
 
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductResponseDTO;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ProductResponseMapper {
 
-    public static ProductResponseDTO toResponse(ProductModel model) {
+    public ProductResponseDTO toDto(ProductModel model) {
         if (model == null) {
             return null;
         }
@@ -25,8 +27,18 @@ public class ProductResponseMapper {
                 .updatedAt(model.getUpdatedAt())
                 .createdBy(model.getCreatedBy())
                 .updatedBy(model.getUpdatedBy())
-                .lowStock(model.getCurrentStock() != null && model.getMinimumStock() != null &&
-                        model.getCurrentStock() < model.getMinimumStock())
+                .lowStock(calculateLowStock(model))
                 .build();
+    }
+
+    private Boolean calculateLowStock(ProductModel model) {
+        Integer current = model.getCurrentStock();
+        Integer minimum = model.getMinimumStock();
+
+        if (current == null || minimum == null) {
+            return Boolean.FALSE;
+        }
+
+        return current < minimum;
     }
 }

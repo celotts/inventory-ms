@@ -1,0 +1,24 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: api-gateway-test
+  cloud:
+    gateway:
+      routes: []  # Sin rutas para tests
+    discovery:
+      enabled: false
+
+eureka:
+  client:
+    enabled: false
+
+jwt:
+  secret: testSecretKeyThatShouldBeAtLeast256BitsLongForHMACSHA256Algorithm1234567890
+  expiration: 86400000
+
+logging:
+  level:
+    root: WARN
+    com.celotts.apigateway: INFO

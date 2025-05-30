@@ -86,23 +86,22 @@ public class ProductService {
             throw new ProductAlreadyExistsException(requestDTO.getCode());
         }
 
-        // Actualizar campos
-        existingProduct.setCode(requestDTO.getCode());
-        existingProduct.setDescription(requestDTO.getDescription());
-        existingProduct.setProductTypeCode(requestDTO.getProductTypeCode());
-        existingProduct.setUnitCode(requestDTO.getUnitCode());
-        existingProduct.setBrandId(requestDTO.getBrandId());
-        existingProduct.setMinimumStock(requestDTO.getMinimumStock());
-        existingProduct.setCurrentStock(requestDTO.getCurrentStock());
-        existingProduct.setUnitPrice(requestDTO.getUnitPrice());
-        existingProduct.setEnabled(requestDTO.getEnabled());
-        existingProduct.setUpdatedAt(LocalDateTime.now());
-        existingProduct.setUpdatedBy(requestDTO.getUpdatedBy() != null ? requestDTO.getUpdatedBy() : "system");
+        // Crear nuevo modelo actualizado usando el mapper existente
+        ProductModel updatedModel = ProductRequestMapper.toModel(requestDTO);
 
-        ProductModel updatedProduct = productRepositoryPort.save(existingProduct);
-        log.info("Product updated successfully with id: {}", updatedProduct.getId());
+        // Preservar campos de auditoría del producto existente
+        updatedModel.setId(existingProduct.getId());
+        updatedModel.setCreatedAt(existingProduct.getCreatedAt());
+        updatedModel.setCreatedBy(existingProduct.getCreatedBy());
 
-        return updatedProduct;
+        // Campos de actualización
+        updatedModel.setUpdatedAt(LocalDateTime.now());
+        updatedModel.setUpdatedBy(requestDTO.getUpdatedBy() != null ? requestDTO.getUpdatedBy() : "system");
+
+        ProductModel savedProduct = productRepositoryPort.save(updatedModel);
+        log.info("Product updated successfully with id: {}", savedProduct.getId());
+
+        return savedProduct;
     }
 
     public void deleteProduct(UUID id) {

@@ -3,6 +3,7 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 import com.celotts.productservice.applications.service.ProductService;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.*;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.ProductResponseMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,41 +21,20 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/products")
+@RequestMapping("/api/products")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 @Slf4j
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductResponseMapper responseMapper;
 
-    // ✅ AGREGAR: Configuración desde variables de entorno
-    @Value("${app.pagination.default-page:0}")
-    private int defaultPage;
-
-    @Value("${app.pagination.default-size:10}")
-    private int defaultSize;
-
-    @Value("${app.pagination.max-size:100}")
-    private int maxSize;
-
-    @Value("${app.pagination.default-sort:createdAt}")
-    private String defaultSort;
-
-    @Value("${app.pagination.default-direction:desc}")
-    private String defaultDirection;
-
-    // GET /api/v1/products - Obtener todos los productos
-    @GetMapping
-    public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
-        List<ProductModel> products = productService.getAllProducts();
-        List<ProductResponseDTO> response = products.stream()
-                .map(ProductResponseDTO::fromModel)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
+    @GetMapping("/test")  // 🆕 Agregar endpoint de prueba
+    public ResponseEntity<String> testEndpoint() {
+        return ResponseEntity.ok("¡Product Service funcionando correctamente!");
     }
 
-    // ✅ CAMBIAR: Este método para usar configuración externa
     @GetMapping("/paginated")
     public ResponseEntity<Page<ProductResponseDTO>> getAllProductsPaginated(
             @RequestParam(required = false) Integer page,
@@ -83,7 +63,7 @@ public class ProductController {
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
         Page<ProductModel> products = productService.getAllProducts(pageable);
-        Page<ProductResponseDTO> response = products.map(ProductResponseDTO::fromModel);
+        Page<ProductResponseDTO> response = products.map(responseMapper::toDto);
 
         log.info("Retrieved {} products out of {} total (page {}/{})",
                 response.getNumberOfElements(),
@@ -94,26 +74,81 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // ✅ EL RESTO DE TUS MÉTODOS PERMANECEN IGUAL
-    @GetMapping("/{id}")
-    public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable UUID id) {
-        ProductModel product = productService.getProductById(id);
-        ProductResponseDTO response = ProductResponseDTO.fromModel(product);
+    @GetMapping("/active")
+    public ResponseEntity<List<ProductResponseDTO>> getActiveProducts() {
+        List<ProductModel> products = productService.getActiveProducts();
+        List<ProductResponseDTO> response = products.stream()
+                .map(responseMapper::toDto)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/inactive")
+    public ResponseEntity<List<ProductResponseDTO>> getInactiveProducts() {
+        List<ProductModel> products = productService.getInactiveProducts();
+        List<ProductResponseDTO> response = products.stream()
+                .map(responseMapper::toDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/low-stock")
+    public ResponseEntity<List<ProductResponseDTO>> getLowStockProducts() {
+        List<ProductModel> products = productService.getLowStockProducts();
+        List<ProductResponseDTO> response = products.stream()
+                .map(responseMapper::toDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/count")
+    public ResponseEntity<Long> countProducts() {
+        long count = productService.countProducts();
+        return ResponseEntity.ok(count);
+    }
+
+    @GetMapping("/count/active")
+    public ResponseEntity<Long> countActiveProducts() {
+        long count = productService.countActiveProducts();
+        return ResponseEntity.ok(count);
     }
 
     @GetMapping("/code/{code}")
     public ResponseEntity<ProductResponseDTO> getProductByCode(@PathVariable String code) {
         ProductModel product = productService.getProductByCode(code);
-        ProductResponseDTO response = ProductResponseDTO.fromModel(product);
+        ProductResponseDTO response = responseMapper.toDto(product);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping
-    public ResponseEntity<ProductResponseDTO> createProduct(@Valid @RequestBody ProductRequestDTO requestDTO) {
-        ProductModel createdProduct = productService.createProduct(requestDTO);
-        ProductResponseDTO response = ProductResponseDTO.fromModel(createdProduct);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    @GetMapping("/type/{typeCode}")
+    public ResponseEntity<List<ProductResponseDTO>> getProductsByType(@PathVariable String typeCode) {
+        List<ProductModel> products = productService.getProductsByType(typeCode);
+        List<ProductResponseDTO> response = products.stream()
+                .map(responseMapper::toDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/brand/{brandId}")
+    public ResponseEntity<List<ProductResponseDTO>> getProductsByBrand(@PathVariable UUID brandId) {
+        List<ProductModel> products = productService.getProductsByBrand(brandId);
+        List<ProductResponseDTO> response = products.stream()
+                .map(responseMapper::toDto)
+                .toList();  // ✅ Forma moderna
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable UUID id) {
+        ProductModel product = productService.getProductById(id);
+        ProductResponseDTO response = responseMapper.toDto(product);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/exists")
+    public ResponseEntity<Boolean> existsProduct(@PathVariable UUID id) {
+        boolean exists = productService.existsById(id);
+        return ResponseEntity.ok(exists);
     }
 
     @PutMapping("/{id}")
@@ -122,7 +157,7 @@ public class ProductController {
             @Valid @RequestBody ProductRequestDTO requestDTO) {
 
         ProductModel updatedProduct = productService.updateProduct(id, requestDTO);
-        ProductResponseDTO response = ProductResponseDTO.fromModel(updatedProduct);
+        ProductResponseDTO response = responseMapper.toDto(updatedProduct);
         return ResponseEntity.ok(response);
     }
 
@@ -133,7 +168,7 @@ public class ProductController {
 
         ProductModel existingProduct = productService.getProductById(id);
         ProductModel updatedProduct = productService.updateProduct(id, convertToRequestDTO(updateDTO, existingProduct));
-        ProductResponseDTO response = ProductResponseDTO.fromModel(updatedProduct);
+        ProductResponseDTO response = responseMapper.toDto(updatedProduct);
         return ResponseEntity.ok(response);
     }
 
@@ -149,91 +184,63 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{id}/exists")
-    public ResponseEntity<Boolean> existsProduct(@PathVariable UUID id) {
-        boolean exists = productService.existsById(id);
-        return ResponseEntity.ok(exists);
-    }
-
-    @GetMapping("/active")
-    public ResponseEntity<List<ProductResponseDTO>> getActiveProducts() {
-        List<ProductModel> products = productService.getActiveProducts();
-        List<ProductResponseDTO> response = products.stream()
-                .map(ProductResponseDTO::fromModel)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/inactive")
-    public ResponseEntity<List<ProductResponseDTO>> getInactiveProducts() {
-        List<ProductModel> products = productService.getInactiveProducts();
-        List<ProductResponseDTO> response = products.stream()
-                .map(ProductResponseDTO::fromModel)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/low-stock")
-    public ResponseEntity<List<ProductResponseDTO>> getLowStockProducts() {
-        List<ProductModel> products = productService.getLowStockProducts();
-        List<ProductResponseDTO> response = products.stream()
-                .map(ProductResponseDTO::fromModel)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/type/{typeCode}")
-    public ResponseEntity<List<ProductResponseDTO>> getProductsByType(@PathVariable String typeCode) {
-        List<ProductModel> products = productService.getProductsByType(typeCode);
-        List<ProductResponseDTO> response = products.stream()
-                .map(ProductResponseDTO::fromModel)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/brand/{brandId}")
-    public ResponseEntity<List<ProductResponseDTO>> getProductsByBrand(@PathVariable UUID brandId) {
-        List<ProductModel> products = productService.getProductsByBrand(brandId);
-        List<ProductResponseDTO> response = products.stream()
-                .map(ProductResponseDTO::fromModel)
-                .toList();  // ✅ Forma moderna
-        return ResponseEntity.ok(response);
-    }
-
     @PatchMapping("/{id}/stock")
     public ResponseEntity<ProductResponseDTO> updateStock(
             @PathVariable UUID id,
             @Valid @RequestBody ProductStockUpdateDTO stockUpdateDTO) {
 
         ProductModel updatedProduct = productService.updateStock(id, stockUpdateDTO.getStock());
-        ProductResponseDTO response = ProductResponseDTO.fromModel(updatedProduct);
+        ProductResponseDTO response = responseMapper.toDto(updatedProduct);
         return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{id}/enable")
     public ResponseEntity<ProductResponseDTO> enableProduct(@PathVariable UUID id) {
         ProductModel updatedProduct = productService.enableProduct(id);
-        ProductResponseDTO response = ProductResponseDTO.fromModel(updatedProduct);
+        ProductResponseDTO response = responseMapper.toDto(updatedProduct);
         return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{id}/disable")
     public ResponseEntity<ProductResponseDTO> disableProduct(@PathVariable UUID id) {
         ProductModel updatedProduct = productService.disableProduct(id);
-        ProductResponseDTO response = ProductResponseDTO.fromModel(updatedProduct);
+        ProductResponseDTO response = responseMapper.toDto(updatedProduct);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/count")
-    public ResponseEntity<Long> countProducts() {
-        long count = productService.countProducts();
-        return ResponseEntity.ok(count);
+
+    // ✅ AGREGAR: Configuración desde variables de entorno
+    @Value("${app.pagination.default-page:0}")
+    private int defaultPage;
+
+    @Value("${app.pagination.default-size:10}")
+    private int defaultSize;
+
+    @Value("${app.pagination.max-size:100}")
+    private int maxSize;
+
+    @Value("${app.pagination.default-sort:createdAt}")
+    private String defaultSort;
+
+    @Value("${app.pagination.default-direction:desc}")
+    private String defaultDirection;
+
+    // GET /api/v1/products - Obtener todos los productos
+    @GetMapping
+    public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
+        List<ProductModel> products = productService.getAllProducts();
+        List<ProductResponseDTO> response = products.stream()
+                .map(responseMapper::toDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/count/active")
-    public ResponseEntity<Long> countActiveProducts() {
-        long count = productService.countActiveProducts();
-        return ResponseEntity.ok(count);
+
+    @PostMapping
+    public ResponseEntity<ProductResponseDTO> createProduct(@Valid @RequestBody ProductRequestDTO requestDTO) {
+        ProductModel createdProduct = productService.createProduct(requestDTO);
+        ProductResponseDTO response = responseMapper.toDto(createdProduct);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     // Método auxiliar para convertir UpdateDTO a RequestDTO

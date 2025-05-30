@@ -31,8 +31,6 @@ public class Product extends BaseEntity {
     @Column(length = 500)
     private String description;
 
-    // ✅ Aquí está el campo clave:
-    // productTypeCode en Java → mapeado a product_type en la base de datos
     @Column(name = "product_type", length = 50, nullable = false)
     private String productTypeCode;
 

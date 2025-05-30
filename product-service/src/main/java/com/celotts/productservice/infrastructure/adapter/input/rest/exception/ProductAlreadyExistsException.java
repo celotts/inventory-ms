@@ -22,7 +22,7 @@ public class ProductAlreadyExistsException extends RuntimeException {
 
     /**
      * Constructor para producto que ya existe por campo específico
-     * @param field Nombre del campo (ej: "code", "name")
+     * @param field Nombre del campo (ejm: "code", "name")
      * @param value Valor del campo que ya existe
      */
     public ProductAlreadyExistsException(String field, String value) {
