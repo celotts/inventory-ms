@@ -1,4 +1,3 @@
-
 services:
   discovery-service:
     build:
@@ -44,6 +43,35 @@ services:
     networks:
       - inventory-network
 
+  # 🌐 API Gateway - Punto de entrada principal
+  api-gateway:
+    build:
+      context: ../api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"  # Puerto principal de entrada
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - JAVA_OPTS=${JAVA_OPTS}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CONFIG_IMPORT=${SPRING_CONFIG_IMPORT_VALUE}
+      # Configuraciones adicionales para Gateway
+      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
+      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWERCASESERVICEID=true
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1" ]
+      interval: ${INTERVAL30s}
+      timeout: ${TIMEOUT10s}
+      retries: ${RETRIES5}
+    networks:
+      - inventory-network
+
   product-service:
     build:
       context: ../product-service
@@ -64,11 +92,15 @@ services:
       - PAGINATION_DEFAULT_SORT_BY=${PAGINATION_DEFAULT_SORT_BY:-createdAt}
       - PAGINATION_DEFAULT_SORT_DIR=${PAGINATION_DEFAULT_SORT_DIR:-desc}
       - PAGINATION_ALLOWED_SORT_FIELDS=${PAGINATION_ALLOWED_SORT_FIELDS:-createdAt,updatedAt,code,description,unitPrice,currentStock}
+      # Configuración para registrarse en Eureka
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
     depends_on:
       discovery-service:
         condition: service_healthy
       config-service:
         condition: service_healthy
+      api-gateway:
+        condition: service_healthy  # Ahora depende del Gateway
       product-db:
         condition: service_healthy
     healthcheck:

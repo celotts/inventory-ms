@@ -68,7 +68,6 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
 
     @Override
     public List<ProductModel> findByBrandId(UUID brandId) {
-        // ✅ CORREGIDO: Usar el método correcto
         return productRepository.findByBrandId(brandId)
                 .stream()
                 .map(ProductEntityMapper::toModel)

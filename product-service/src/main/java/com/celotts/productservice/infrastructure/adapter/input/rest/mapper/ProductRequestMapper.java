@@ -5,6 +5,7 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductR
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductUpdateDTO;
 
 import java.time.LocalDateTime;
+import java.util.function.Consumer;
 
 public class ProductRequestMapper {
 
@@ -26,36 +27,26 @@ public class ProductRequestMapper {
     }
 
     public static void updateModelFromDto(ProductModel model, ProductUpdateDTO dto) {
-        if (dto.getCode() != null) {
-            model.setCode(dto.getCode());
-        }
+        // Usar método helper para evitar repetición
+        updateFieldIfNotNull(dto.getCode(), model::setCode);
+        updateFieldIfNotNull(dto.getDescription(), model::setDescription);
+        updateFieldIfNotNull(dto.getProductTypeCode(), model::setProductTypeCode);
+        updateFieldIfNotNull(dto.getUnitCode(), model::setUnitCode);
+        updateFieldIfNotNull(dto.getBrandId(), model::setBrandId);
+        updateFieldIfNotNull(dto.getMinimumStock(), model::setMinimumStock);
+        updateFieldIfNotNull(dto.getCurrentStock(), model::setCurrentStock);
+        updateFieldIfNotNull(dto.getUnitPrice(), model::setUnitPrice);
+        updateFieldIfNotNull(dto.getEnabled(), model::setEnabled);
 
-        if (dto.getDescription() != null) {
-            model.setDescription(dto.getDescription());
-        }
-        if (dto.getProductTypeCode() != null) {
-            model.setProductTypeCode(dto.getProductTypeCode());
-        }
-        if (dto.getUnitCode() != null) {
-            model.setUnitCode(dto.getUnitCode());
-        }
-        if (dto.getBrandId() != null) {
-            model.setBrandId(dto.getBrandId());
-        }
-        if (dto.getMinimumStock() != null) {
-            model.setMinimumStock(dto.getMinimumStock());
-        }
-        if (dto.getCurrentStock() != null) {
-            model.setCurrentStock(dto.getCurrentStock());
-        }
-        if (dto.getUnitPrice() != null) {
-            model.setUnitPrice(dto.getUnitPrice());
-        }
-        if (dto.getEnabled() != null) {
-            model.setEnabled(dto.getEnabled());
-        }
-
+        // Campos de auditoría siempre se actualizan
         model.setUpdatedAt(LocalDateTime.now());
         model.setUpdatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system");
+    }
+
+    // Método helper para eliminar duplicación
+    private static <T> void updateFieldIfNotNull(T value, Consumer<T> setter) {
+        if (value != null) {
+            setter.accept(value);
+        }
     }
 }
