@@ -2,7 +2,6 @@ package com.celotts.apigateway.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -15,13 +14,13 @@ import java.util.function.Function;
 public class JwtUtil {
 
     @Value("${jwt.secret:mySecretKey}")
-    private String secretKey;
+    private String secret;
 
-    @Value("${jwt.expiration:86400000}") // 24 horas por defecto
-    private Long jwtExpiration;
+    @Value("${jwt.expiration:86400}")
+    private Long expiration;
 
     private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secretKey.getBytes());
+        return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
     public String extractUsername(String token) {
@@ -38,22 +37,37 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     private Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    public Boolean isTokenValid(String token, String username) {
+    public String generateToken(String username) {
+        return createToken(username);
+    }
+
+    private String createToken(String subject) {
+        return Jwts.builder()
+                .subject(subject)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + expiration * 1000))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    // Método para validar token con username
+    public Boolean validateToken(String token, String username) {
         final String extractedUsername = extractUsername(token);
         return (extractedUsername.equals(username) && !isTokenExpired(token));
     }
 
+    // Método para validar token solo (sin username)
     public Boolean validateToken(String token) {
         try {
             extractAllClaims(token);
@@ -63,12 +77,8 @@ public class JwtUtil {
         }
     }
 
-    public String generateToken(String username) {
-        return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
-                .compact();
+    // Alias para isTokenValid (usado por JwtAuthenticationFilter)
+    public Boolean isTokenValid(String token, String username) {
+        return validateToken(token, username);
     }
 }
