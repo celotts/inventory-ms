@@ -1,0 +1,143 @@
+services:
+  discovery-service:
+    build:
+      context: ../discovery-service
+      dockerfile: Dockerfile
+    container_name: discovery-service
+    ports:
+      - "${DISCOVERY_PORT:-8761}:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - JAVA_OPTS=${JAVA_OPTS}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
+      interval: ${INTERVAL10s:-10s}
+      timeout: ${TIMEOUT5s:-5s}
+      retries: ${RETRIES3:-3}
+      start_period: 30s
+    networks:
+      - inventory-network
+
+  config-service:
+    build:
+      context: ../config-service
+      dockerfile: Dockerfile
+    container_name: config-service
+    ports:
+      - "${CONFIG_PORT:-7777}:${CONFIG_PORT:-7777}"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - JAVA_OPTS=${JAVA_OPTS}
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/celotts/config-repo.git
+      - GIT_USERNAME=${GIT_USERNAME}
+      - GIT_TOKEN=${GIT_TOKEN}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:${CONFIG_PORT:-7777}/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - inventory-network
+
+  api-gateway:
+    build:
+      context: ../api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "${GATEWAY_PORT:-8090}:8090"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - JAVA_OPTS=${JAVA_OPTS}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
+      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
+      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWERCASESERVICEID=true
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8090/actuator/health || exit 1"]
+      interval: ${INTERVAL30s:-30s}
+      timeout: ${TIMEOUT10s:-10s}
+      retries: ${RETRIES5:-5}
+      start_period: 45s
+    networks:
+      - inventory-network
+
+  product-db:
+    image: postgres:16
+    container_name: product-db
+    ports:
+      - "${PORT_5432:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${PRODUCT_DB_NAME:-product}
+      POSTGRES_USER: ${PRODUCT_DB_USERNAME:-product}
+      POSTGRES_PASSWORD: ${PRODUCT_DB_PASSWORD:-product123}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PRODUCT_DB_USERNAME:-product}"]
+      interval: ${INTERVAL10s:-10s}
+      timeout: ${TIMEOUT5s:-5s}
+      retries: ${RETRIES5:-5}
+      start_period: 30s
+    networks:
+      - inventory-network
+    volumes:
+      - product-data:/var/lib/postgresql/data
+      - ./init-scripts/product/01-product-init.sql:/docker-entrypoint-initdb.d/01-product-init.sql
+    # Podman maneja mejor las variables de entorno individualmente
+    env_file:
+      - .env.local
+
+  product-service:
+    build:
+      context: ../product-service
+      dockerfile: Dockerfile
+    container_name: product-service
+    ports:
+      - "${PORT9090:-9090}:9090"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - JAVA_OPTS=${JAVA_OPTS}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://product-db:5432/${PRODUCT_DB_NAME:-product}
+      - SPRING_DATASOURCE_USERNAME=${PRODUCT_DB_USERNAME:-product}
+      - SPRING_DATASOURCE_PASSWORD=${PRODUCT_DB_PASSWORD:-product123}
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - PAGINATION_DEFAULT_PAGE=${PAGINATION_DEFAULT_PAGE:-0}
+      - PAGINATION_DEFAULT_SIZE=${PAGINATION_DEFAULT_SIZE:-10}
+      - PAGINATION_MAX_SIZE=${PAGINATION_MAX_SIZE:-100}
+      - PAGINATION_DEFAULT_SORT_BY=${PAGINATION_DEFAULT_SORT_BY:-createdAt}
+      - PAGINATION_DEFAULT_SORT_DIR=${PAGINATION_DEFAULT_SORT_DIR:-desc}
+      - PAGINATION_ALLOWED_SORT_FIELDS=${PAGINATION_ALLOWED_SORT_FIELDS:-createdAt,updatedAt,code,description,unitPrice,currentStock}
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
+      product-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1"]
+      interval: ${INTERVAL30s:-30s}
+      timeout: ${TIMEOUT10s:-10s}
+      retries: ${RETRIES5:-5}
+      start_period: 60s
+    networks:
+      - inventory-network
+
+networks:
+  inventory-network:
+    driver: bridge
+
+volumes:
+  product-data:

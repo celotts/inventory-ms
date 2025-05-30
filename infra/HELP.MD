@@ -26,7 +26,7 @@ inventory-ms/
 ├── product-service/            # Microservicio de productos
 ├── infra/                      # Infraestructura Docker
 │   └── docker-compose.yml
-├── Makefile                    # Automatización de tareas
+├── Makefile old                    # Automatización de tareas
 ├── .env.local                  # Configuración local
 ├── .env.dev                    # Configuración desarrollo
 ├── .env.prod                   # Configuración producción

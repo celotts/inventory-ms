@@ -1,0 +1,218 @@
+#------------------------------------------------------------------------
+# 📦 Variables de entorno
+#------------------------------------------------------------------------
+ENV_FILE_LOCAL ?= .env.local
+ENV_FILE_DEV ?= .env.dev
+ENV_FILE_PROD ?= .env.prod
+
+# 🆕 Archivo de compose para Podman
+COMPOSE_FILE_LOCAL ?= docker-compose-podman.yml
+COMPOSE_FILE_DEV ?= docker-compose-podman.yml
+COMPOSE_FILE_PROD ?= docker-compose-podman.yml
+
+#------------------------------------------------------------------------
+# 🧑‍💻 Funciones de desarrollo LOCAL (sin Podman)
+#------------------------------------------------------------------------
+validate-product: ## ✅ Valida la compilación y tests de product-service (sin Podman)
+	cd .. && ./gradlew :product-service:build
+
+validate-product-no-tests: ## ✅ Valida product-service sin ejecutar pruebas
+	cd .. && ./gradlew :product-service:build -x test
+
+clean-gradle: ## 🧹 Limpia caché y compilación de Gradle
+	cd .. && ./gradlew clean
+
+#------------------------------------------------------------------------
+# 🦭 Funciones que USAN Podman Compose
+#------------------------------------------------------------------------
+
+## 🔽 Infraestructura por entorno
+up-local: ## 🧪 Levanta infra para trabajar desde IntelliJ
+	@echo "🧹 Copiando variables de entorno..."
+	cp $(ENV_FILE_LOCAL) .env.override
+
+	@echo "🔨 Construyendo servicios..."
+	cd .. && ./gradlew :config-service:bootJar :discovery-service:bootJar :product-service:bootJar :api-gateway:bootJar
+
+	@echo "🧼 Apagando contenedores anteriores..."
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v
+
+	@echo "🦭 Levantando contenedores con Podman..."
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up --build
+
+down-local: ## 🔻 Apaga infra local
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v
+
+up-dev: ## 🧪 Levanta todo el stack en contenedores (modo dev)
+	cp $(ENV_FILE_DEV) .env.override
+	podman-compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) down -v
+	podman-compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) up --build
+
+up-prod: ## 🚀 Levanta todo en entorno de producción
+	cp $(ENV_FILE_PROD) .env.override
+	podman-compose -f $(COMPOSE_FILE_PROD) --env-file $(ENV_FILE_PROD) down -v
+	podman-compose -f $(COMPOSE_FILE_PROD) --env-file $(ENV_FILE_PROD) up --build
+
+up-db: ## 🔄 Levanta solo la base de datos para desarrollo local
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d product-db
+
+## 🔁 Build y Rebuild
+build-images: ## 🏗️ Build manual de imágenes
+	podman build -t inventory/discovery-service ../discovery-service
+	podman build -t inventory/config-service ../config-service
+	podman build -t inventory/api-gateway ../api-gateway
+	podman build -t inventory/product-service ../product-service
+
+build-jars:
+	cd .. && ./gradlew --console=plain :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar
+
+# 🆕 Comandos para servicios individuales
+rebuild-api-gateway-local: ## 🔁 Reconstruye solo api-gateway (local)
+	@echo "🛠️  Reconstruyendo api-gateway con env: $(ENV_FILE_LOCAL)"
+	cp $(ENV_FILE_LOCAL) .env.override
+	cd .. && ./gradlew :api-gateway:bootJar
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) build api-gateway
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d api-gateway
+
+rebuild-config-service-local: ## 🔁 Reconstruye solo config-service (local)
+	@echo "🛠️  Reconstruyendo config-service con env: $(ENV_FILE_LOCAL)"
+	cp $(ENV_FILE_LOCAL) .env.override
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) build config-service
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d config-service
+
+rebuild-discovery-local: ## 🔁 Reconstruye solo discovery-service (local)
+	@echo "🛠️  Reconstruyendo discovery-service con env: $(ENV_FILE_LOCAL)"
+	cp $(ENV_FILE_LOCAL) .env.override
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) build discovery-service
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d discovery-service
+
+rebuild-product-local: ## 🔁 Reconstruye solo product-service (local)
+	@echo "🛠️  Reconstruyendo product-service con env: $(ENV_FILE_LOCAL)"
+	cp $(ENV_FILE_LOCAL) .env.override
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) build product-service
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d product-service
+
+rebuild-product-dev: ## 🔁 Reconstruye solo product-service (dev)
+	@echo "🛠️  Reconstruyendo product-service con env: $(ENV_FILE_DEV)"
+	cp $(ENV_FILE_DEV) .env.override
+	podman-compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) build product-service
+	podman-compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) up -d product-service
+
+## ♻️ Mantenimiento y limpieza
+clean-volumes: ## 🧹 Limpia volúmenes no usados
+	podman volume prune -f
+
+clean-images: ## 🧹 Limpia imágenes sin contenedor
+	podman image prune -a -f
+
+clean-podman: ## 🧹 Limpia imágenes sin contenedor y volúmenes
+	$(MAKE) clean-images
+	$(MAKE) clean-volumes
+
+stop-all: ## 🛑 Detiene todos los contenedores activos en Podman
+	@echo "🛑 Deteniendo todos los contenedores..."
+	podman ps -q | xargs -r podman stop
+	podman system prune -f --volumes
+
+reset-db: ## 🧨 Reinicia product-db con script inicial
+	@echo "⛔ Eliminando contenedor y volumen de product-db..."
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v --remove-orphans
+	@echo "🚀 Levantando product-db..."
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up --build -d product-db
+	@echo "📋 Mostrando logs..."
+	podman logs -f product-db
+
+reset-local: ## 🔁 Reinicia completamente el entorno local
+	$(MAKE) down-local
+	$(MAKE) clean-podman
+	$(MAKE) up-local
+
+reload-schema: ## ♻️ Ejecuta el script SQL en product-db
+	podman cp ./init-scripts/product-init.sql product-db:/tmp/product-init.sql
+	podman exec -it product-db psql -U product -d product -f /tmp/product-init.sql
+
+## 🔍 Logs y verificación
+logs-local: ## 📜 Logs de todos los servicios locales
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f
+
+logs-dev: ## 📜 Logs del entorno dev
+	podman-compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) logs -f
+
+# 🆕 Logs específicos por servicio
+logs-api-gateway: ## 📜 Logs del API Gateway
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f api-gateway
+
+logs-discovery: ## 📜 Logs del Discovery Service
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f discovery-service
+
+logs-config: ## 📜 Logs del Config Service
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f config-service
+
+logs-product: ## 📜 Logs del Product Service
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f product-service
+
+logs-db: ## 📜 Logs de la base de datos
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f product-db
+
+check-db-init: ## 🔎 Verifica existencia del volumen product-db
+	@echo "🔎 Verificando volumen de la base de datos..."
+	@if ! podman volume inspect inventoryms_product-data >/dev/null 2>&1; then \
+		echo "✅ Volumen no existe. Se ejecutará el script SQL al levantar PostgreSQL."; \
+	else \
+		echo "⚠️ Volumen ya existe. PostgreSQL NO ejecutará el script de inicialización."; \
+	fi
+	@$(MAKE) up-local
+
+# 🆕 Status y testing
+status: ## 📊 Ver estado de todos los servicios
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) ps
+
+podman-status: ## 📊 Ver todos los contenedores Podman
+	podman ps -a
+
+test-services: ## 🧪 Probar que todos los servicios estén funcionando
+	@echo "🧪 Probando servicios..."
+	@echo "Discovery Service (8761):"
+	@curl -s http://localhost:8761/actuator/health | jq . || echo "❌ Discovery Service no responde"
+	@echo "\nConfig Service (7777):"
+	@curl -s http://localhost:7777/actuator/health | jq . || echo "❌ Config Service no responde"
+	@echo "\nAPI Gateway (8090):"
+	@curl -s http://localhost:8090/actuator/health | jq . || echo "❌ API Gateway no responde"
+	@echo "\nProduct Service (9090):"
+	@curl -s http://localhost:9090/actuator/health | jq . || echo "❌ Product Service no responde"
+
+# Construcción paso a paso con verificación
+build-step-by-step:
+	@echo "🧹 Limpiando proyecto..."
+	cd .. && ./gradlew clean
+	@echo "🔨 Construyendo config-service..."
+	cd .. && ./gradlew :config-service:bootJar
+	@echo "🔨 Construyendo discovery-service..."
+	cd .. && ./gradlew :discovery-service:bootJar
+	@echo "🔨 Construyendo api-gateway..."
+	cd .. && ./gradlew :api-gateway:bootJar
+	@echo "🔨 Construyendo product-service..."
+	cd .. && ./gradlew :product-service:bootJar
+	@echo "✅ Verificando JARs creados..."
+	@ls -la ../*/build/libs/*.jar || echo "❌ Algunos JARs no se crearon"
+	@echo "🎉 Construcción completada con Podman!"
+
+# 🆕 Comandos adicionales para Podman
+pods-list: ## 📋 Lista todos los pods de Podman
+	podman pod ps
+
+pods-stats: ## 📊 Estadísticas de recursos de Podman
+	podman stats --no-stream
+
+images-list: ## 🖼️ Lista todas las imágenes de Podman
+	podman images
+
+system-info: ## ℹ️ Información del sistema Podman
+	podman system info
+
+help: ## 📖 Mostrar esta ayuda
+	@echo "🦭 Makefile para Podman - Sistema de Microservicios"
+	@echo "=================================================="
+	@echo ""
+	@echo "Comandos disponibles:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-25s %s\n", $$1, $$2}'
