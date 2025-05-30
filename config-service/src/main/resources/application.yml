@@ -16,8 +16,14 @@ spring:
           default-label: main
           search-paths: config
       fail-fast: true
-
-eureka:
+    gateway:
+      - id: product-service
+        uti: lb://product-service
+        predicates:
+          - Path=/product/**
+        filters:
+          - RewritePath=/api/products/(?<path>.*), /$\{pat}
+  eureka:
   client:
     service-url:
       defaultZone: http://discovery-service:8761/eureka/

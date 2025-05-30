@@ -5,6 +5,11 @@ ENV_FILE_LOCAL ?= .env.local
 ENV_FILE_DEV ?= .env.dev
 ENV_FILE_PROD ?= .env.prod
 
+# 🆕 Archivo de compose unificado
+COMPOSE_FILE_LOCAL ?= docker-compose.yml
+COMPOSE_FILE_DEV ?= docker-compose.yml
+COMPOSE_FILE_PROD ?= docker-compose.yml
+
 #------------------------------------------------------------------------
 # 🧑‍💻 Funciones de desarrollo LOCAL (sin Docker)
 #------------------------------------------------------------------------
@@ -27,62 +32,71 @@ up-local: ## 🧪 Levanta infra para trabajar desde IntelliJ
 	cp $(ENV_FILE_LOCAL) .env.override
 
 	@echo "🔨 Construyendo servicios..."
-	cd .. && ./gradlew :config-service:bootJar :discovery-service:bootJar :product-service:bootJar
+	cd .. && ./gradlew :config-service:bootJar :discovery-service:bootJar :product-service:bootJar :api-gateway:bootJar
 
 	@echo "🧼 Apagando contenedores anteriores..."
-	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) down -v
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v
 
 	@echo "🐳 Levantando contenedores..."
-	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) up --build
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up --build
 
 down-local: ## 🔻 Apaga infra local
-	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) down -v
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v
 
 up-dev: ## 🧪 Levanta todo el stack en contenedores (modo dev)
 	cp $(ENV_FILE_DEV) .env.override
-	docker compose down -v
-	docker compose --env-file $(ENV_FILE_DEV) up --build
+	docker compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) down -v
+	docker compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) up --build
 
 up-prod: ## 🚀 Levanta todo en entorno de producción
 	cp $(ENV_FILE_PROD) .env.override
-	docker compose -f docker-compose.yml --env-file $(ENV_FILE_PROD) down -v
-	docker compose -f docker-compose.yml --env-file $(ENV_FILE_PROD) up --build
+	docker compose -f $(COMPOSE_FILE_PROD) --env-file $(ENV_FILE_PROD) down -v
+	docker compose -f $(COMPOSE_FILE_PROD) --env-file $(ENV_FILE_PROD) up --build
 
 up-db: ## 🔄 Levanta solo la base de datos para desarrollo local
-	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) up -d product-db
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d product-db
 
 ## 🔁 Build y Rebuild
 build-images: ## 🏗️ Build manual de imágenes
 	docker build -t inventory/discovery-service ../discovery-service
 	docker build -t inventory/config-service ../config-service
+	docker build -t inventory/api-gateway ../api-gateway
 	docker build -t inventory/product-service ../product-service
 
 build-jars:
-	cd .. && ./gradlew --console=plain :config-service:bootJar :discovery-service:bootJar :product-service:bootJar
+	cd .. && ./gradlew --console=plain :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar
+
+# 🆕 Comandos para API Gateway
+rebuild-api-gateway-local: ## 🔁 Reconstruye solo api-gateway (local)
+	@echo "🛠️  Reconstruyendo api-gateway con env: $(ENV_FILE_LOCAL)"
+	cp $(ENV_FILE_LOCAL) .env.override
+	cd .. && ./gradlew :api-gateway:bootJar
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) build api-gateway
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d api-gateway
 
 rebuild-config-service-local: ## 🔁 Reconstruye solo config-service (local)
 	@echo "🛠️  Reconstruyendo config-service con env: $(ENV_FILE_LOCAL)"
 	cp $(ENV_FILE_LOCAL) .env.override
-	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) build config-service
-	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) up -d config-service
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) build config-service
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d config-service
 
 rebuild-discovery-local: ## 🔁 Reconstruye solo discovery-service (local)
 	@echo "🛠️  Reconstruyendo discovery-service con env: $(ENV_FILE_LOCAL)"
 	cp $(ENV_FILE_LOCAL) .env.override
-	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) build discovery-service
-	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) up -d discovery-service
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) build discovery-service
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d discovery-service
 
 rebuild-product-local: ## 🔁 Reconstruye solo product-service (local)
 	@echo "🛠️  Reconstruyendo product-service con env: $(ENV_FILE_LOCAL)"
 	cp $(ENV_FILE_LOCAL) .env.override
-	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) build product-service
-	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) up -d product-service
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) build product-service
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d product-service
 
 rebuild-product-dev: ## 🔁 Reconstruye solo product-service (dev)
 	@echo "🛠️  Reconstruyendo product-service con env: $(ENV_FILE_DEV)"
 	cp $(ENV_FILE_DEV) .env.override
-	docker compose -f docker-compose.yml --env-file $(ENV_FILE_DEV) build product-service
-	docker compose -f docker-compose.yml --env-file $(ENV_FILE_DEV) up -d product-service
+	docker compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) build product-service
+	docker compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) up -d product-service
 
 ## ♻️ Mantenimiento y limpieza
 clean-volumes: ## 🧹 Limpia volúmenes no usados
@@ -102,9 +116,9 @@ stop-all: ## 🛑 Detiene todos los contenedores activos en Docker
 
 reset-db: ## 🧨 Reinicia product-db con script inicial
 	@echo "⛔ Eliminando contenedor y volumen de product-db..."
-	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) down -v --remove-orphans
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v --remove-orphans
 	@echo "🚀 Levantando product-db..."
-	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) up --build -d product-db
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up --build -d product-db
 	@echo "📋 Mostrando logs..."
 	docker logs -f product-db
 
@@ -119,10 +133,26 @@ reload-schema: ## ♻️ Ejecuta el script SQL en product-db
 
 ## 🔍 Logs y verificación
 logs-local: ## 📜 Logs de todos los servicios locales
-	docker compose -f docker-compose-local.yml --env-file $(ENV_FILE_LOCAL) logs -f
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f
 
 logs-dev: ## 📜 Logs del entorno dev
-	docker compose -f docker-compose.yml --env-file $(ENV_FILE_DEV) logs -f
+	docker compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) logs -f
+
+# 🆕 Logs específicos por servicio
+logs-api-gateway: ## 📜 Logs del API Gateway
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f api-gateway
+
+logs-discovery: ## 📜 Logs del Discovery Service
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f discovery-service
+
+logs-config: ## 📜 Logs del Config Service
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f config-service
+
+logs-product: ## 📜 Logs del Product Service
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f product-service
+
+logs-db: ## 📜 Logs de la base de datos
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f product-db
 
 check-db-init: ## 🔎 Verifica existencia del volumen product-db
 	@echo "🔎 Verificando volumen de la base de datos..."
@@ -132,7 +162,23 @@ check-db-init: ## 🔎 Verifica existencia del volumen product-db
 		echo "⚠️ Volumen ya existe. PostgreSQL NO ejecutará el script de inicialización."; \
 	fi
 	@$(MAKE) up-local
-# Construcción paso a paso con verificación
+
+# 🆕 Status y testing
+status: ## 📊 Ver estado de todos los servicios
+	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) ps
+
+test-services: ## 🧪 Probar que todos los servicios estén funcionando
+	@echo "🧪 Probando servicios..."
+	@echo "Discovery Service (8761):"
+	@curl -s http://localhost:8761/actuator/health | jq . || echo "❌ Discovery Service no responde"
+	@echo "\nConfig Service (7777):"
+	@curl -s http://localhost:7777/actuator/health | jq . || echo "❌ Config Service no responde"
+	@echo "\nAPI Gateway (8090):"
+	@curl -s http://localhost:8090/actuator/health | jq . || echo "❌ API Gateway no responde"
+	@echo "\nProduct Service (9090):"
+	@curl -s http://localhost:9090/actuator/health | jq . || echo "❌ Product Service no responde"
+
+# Construcción paso a paso con verificación (actualizada)
 build-step-by-step:
 	@echo "🧹 Limpiando proyecto..."
 	cd .. && ./gradlew clean
@@ -140,8 +186,14 @@ build-step-by-step:
 	cd .. && ./gradlew :config-service:bootJar
 	@echo "🔨 Construyendo discovery-service..."
 	cd .. && ./gradlew :discovery-service:bootJar
+	@echo "🔨 Construyendo api-gateway..."
+	cd .. && ./gradlew :api-gateway:bootJar
 	@echo "🔨 Construyendo product-service..."
 	cd .. && ./gradlew :product-service:bootJar
 	@echo "✅ Verificando JARs creados..."
 	@ls -la ../*/build/libs/*.jar || echo "❌ Algunos JARs no se crearon"
 	@echo "🎉 Construcción completada!"
+
+help: ## 📖 Mostrar esta ayuda
+	@echo "Comandos disponibles:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-25s %s\n", $$1, $$2}'
