@@ -5,28 +5,21 @@ spring:
   application:
     name: product-service
 
-  # ✅ PostgreSQL para desarrollo local en Docker
+  # ✅ PostgreSQL para producción/Docker
   datasource:
     url: jdbc:postgresql://product-db:5432/product
-    username: product
-    password: product123
+    username: ${DB_USERNAME:product}
+    password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-
-eureka:
-  client:
-    service-url:
-      defaultZone: http://discovery-service:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    prefer-ip-address: true
-    instance-id: ${spring.application.name}:${random.value}
+    properties:
+      hibernate:
+        format_sql: true
 
 # Configuración de paginación
 app:
@@ -37,14 +30,27 @@ app:
     default-sort: createdAt
     default-direction: desc
 
+# Eureka para microservicios
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-service:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+
+# Management endpoints
 management:
   endpoints:
     web:
       exposure:
         include: "*"
 
+# Logging
 logging:
   level:
-    com.celotts.productservice: DEBUG
+    com.celotts.productservice: INFO
     com.netflix.eureka: WARN
     com.netflix.discovery: WARN

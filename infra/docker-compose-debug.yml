@@ -43,25 +43,6 @@ services:
       start_period: 30s
     networks:
       - inventory-network
-  product-db:
-    image: postgres:16
-    container_name: product-db
-    ports:
-      - "${PORT_5432:-5432}:5432"
-    environment:
-      POSTGRES_DB: ${PRODUCT_DB_NAME:-product}
-      POSTGRES_USER: ${PRODUCT_DB_USERNAME:-product}
-      POSTGRES_PASSWORD: ${PRODUCT_DB_PASSWORD:-product123}
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${PRODUCT_DB_USERNAME:-product}" ]
-      interval: ${INTERVAL10s:-10s}
-      timeout: ${TIMEOUT5s:-5s}
-      retries: ${RETRIES5:-5}
-      start_period: 30s
-    networks:
-      - inventory-network
-    volumes:
-      - product-data:/var/lib/postgresql/data
 
   product-service:
     build:
@@ -73,24 +54,13 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - JAVA_OPTS=${JAVA_OPTS}
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://product-db:5432/product
-      - SPRING_DATASOURCE_USERNAME=product
-      - SPRING_DATASOURCE_PASSWORD=product123
-      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      # ✅ SOLO configuración mínima - H2 se configura en application.yml
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      - PAGINATION_DEFAULT_PAGE=${PAGINATION_DEFAULT_PAGE:-0}
-      - PAGINATION_DEFAULT_SIZE=${PAGINATION_DEFAULT_SIZE:-10}
-      - PAGINATION_MAX_SIZE=${PAGINATION_MAX_SIZE:-100}
-      - PAGINATION_DEFAULT_SORT_BY=${PAGINATION_DEFAULT_SORT_BY:-createdAt}
-      - PAGINATION_DEFAULT_SORT_DIR=${PAGINATION_DEFAULT_SORT_DIR:-desc}
-      - PAGINATION_ALLOWED_SORT_FIELDS=${PAGINATION_ALLOWED_SORT_FIELDS:-createdAt,updatedAt,code,description,unitPrice,currentStock}
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
     depends_on:
       discovery-service:
         condition: service_healthy
       config-service:
-        condition: service_healthy
-      product-db:
         condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1" ]
@@ -111,11 +81,8 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - JAVA_OPTS=${JAVA_OPTS}
-      # ✅ FORZAR la URL de Eureka sin variables
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
-      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
-      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWERCASESERVICEID=true
     depends_on:
       discovery-service:
         condition: service_healthy
@@ -135,6 +102,3 @@ services:
 networks:
   inventory-network:
     driver: bridge
-
-volumes:
-  product-data:

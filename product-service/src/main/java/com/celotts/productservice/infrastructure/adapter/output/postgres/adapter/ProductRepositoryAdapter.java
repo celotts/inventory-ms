@@ -1,39 +1,46 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter;
 
+import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;           // ✅ AQUÍ van estos imports
+import org.springframework.data.domain.Pageable;       // ✅ AQUÍ van estos imports
+import java.util.stream.Collectors;                   // ✅ AQUÍ van estos imports
+
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.ProductRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.Product;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.ProductEntityMapper;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.ProductEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.ProductRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Repository;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.ProductEntityMapper;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-@Repository
+@Component
 @RequiredArgsConstructor
 public class ProductRepositoryAdapter implements ProductRepositoryPort {
 
     private final ProductRepository productRepository;
 
     @Override
-    public ProductModel save(ProductModel productModel) {
-        Product entity = ProductEntityMapper.toEntity(productModel);
-        Product saved = productRepository.save(entity);
-        return ProductEntityMapper.toModel(saved);
+    public ProductModel save(ProductModel productModel) {  // ✅ Usar ProductModel
+        ProductEntity entity = ProductEntityMapper.toEntity(productModel);
+        ProductEntity saved = productRepository.save(entity);
+        return ProductEntityMapper.toModel(saved);  // ✅ Usar toModel
     }
 
     @Override
     public List<ProductModel> findAll() {
         return productRepository.findAll()
                 .stream()
-                .map(ProductEntityMapper::toModel)
+                .map(ProductEntityMapper::toModel)  // ✅ Usar toModel
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<ProductModel> findAll(Pageable pageable) {
+        return productRepository.findAll(pageable)
+                .map(ProductEntityMapper::toModel);
     }
 
     @Override
@@ -59,6 +66,11 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
     }
 
     @Override
+    public boolean existsByCode(String code) {
+        return productRepository.existsByCode(code);
+    }
+
+    @Override
     public List<ProductModel> findByProductTypeCode(String productTypeCode) {
         return productRepository.findByProductTypeCode(productTypeCode)
                 .stream()
@@ -80,12 +92,6 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
                 .stream()
                 .map(ProductEntityMapper::toModel)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    public Page<ProductModel> findAll(Pageable pageable) {
-        return productRepository.findAll(pageable)
-                .map(ProductEntityMapper::toModel);
     }
 
     @Override

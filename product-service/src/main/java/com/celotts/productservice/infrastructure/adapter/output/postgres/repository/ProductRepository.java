@@ -1,33 +1,30 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.repository;
 
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.Product;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Query;            // ✅ AQUÍ va este import
+import org.springframework.data.domain.Page;                    // ✅ AQUÍ va este import
+import org.springframework.data.domain.Pageable;                // ✅ AQUÍ va este import
 import org.springframework.stereotype.Repository;
+
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.ProductEntity;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, UUID> {
+public interface ProductRepository extends JpaRepository<ProductEntity, UUID> {
 
-    Optional<Product> findByCode(String code);
-
-    List<Product> findByProductTypeCode(String productTypeCode);
-
-    List<Product> findByBrandId(UUID brandId);  // ← ESTA LÍNEA DEBE EXISTIR
-
-    List<Product> findByEnabled(Boolean enabled);
-
-    Page<Product> findByEnabled(Boolean enabled, Pageable pageable);
-
+    Optional<ProductEntity> findByCode(String code);
+    boolean existsByCode(String code);
+    List<ProductEntity> findByProductTypeCode(String productTypeCode);
+    List<ProductEntity> findByBrandId(UUID brandId);
+    List<ProductEntity> findByEnabled(Boolean enabled);
+    Page<ProductEntity> findByEnabled(Boolean enabled, Pageable pageable);
     long countByEnabled(Boolean enabled);
 
-    List<Product> findByCurrentStockLessThan(Integer stock);
+    @Query("SELECT p FROM ProductEntity p WHERE p.currentStock < p.minimumStock")
+    List<ProductEntity> findByCurrentStockLessThanMinimumStock();
 
-    @Query("SELECT p FROM Product p WHERE p.currentStock < p.minimumStock")
-    List<Product> findByCurrentStockLessThanMinimumStock();
+    List<ProductEntity> findByCurrentStockLessThan(Integer stock);
 }

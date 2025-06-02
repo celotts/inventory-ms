@@ -4,43 +4,57 @@ server:
 spring:
   application:
     name: api-gateway
+
   cloud:
     gateway:
       routes:
         - id: product-service
           uri: lb://product-service
           predicates:
-            - Path=/api/products/**
-        - id: config-service
-          uri: lb://config-service
+            - Path=/product-service/**
+          filters:
+            - StripPrefix=1
+
+        - id: products-direct
+          uri: lb://product-service
           predicates:
-            - Path=/config/**
+            - Path=/api/v1/products/**
+
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
 
+# ✅ DEBUG: Agregar endpoint para verificar configuración
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+    env:
+      show-values: ALWAYS
+
+# ✅ FORZAR configuración sin variables (para debug)
 eureka:
   client:
     service-url:
       defaultZone: http://discovery-service:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
+    initial-instance-info-replication-interval-seconds: 30
+    instance-info-replication-interval-seconds: 30
   instance:
     prefer-ip-address: true
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,gateway
-  endpoint:
-    health:
-      show-details: always
-    gateway:
-      enabled: true
+    instance-id: ${spring.application.name}:${random.value}
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
 
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
-    com.celotts.apigateway: DEBUG
+    com.netflix.eureka: DEBUG  # ✅ Cambiar a DEBUG para ver qué está pasando
+    com.netflix.discovery: DEBUG
+    org.springframework.core.env: DEBUG  # ✅ Ver cómo se cargan las propiedades

@@ -1,26 +1,26 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-
-import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "product_type")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductType {
 
     @Id
-    @Column(length = 50)
+    @Column(name = "code", length = 50)
     private String code;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "name", length = 100, nullable = false)
     private String name;
 
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
 }

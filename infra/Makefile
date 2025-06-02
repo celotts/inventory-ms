@@ -5,15 +5,15 @@ ENV_FILE_LOCAL ?= .env.local
 ENV_FILE_DEV ?= .env.dev
 ENV_FILE_PROD ?= .env.prod
 
-# 🆕 Archivo de compose para Podman
-COMPOSE_FILE_LOCAL ?= docker-compose-podman.yml
-COMPOSE_FILE_DEV ?= docker-compose-podman.yml
-COMPOSE_FILE_PROD ?= docker-compose-podman.yml
+# 🆕 Archivo de compose unificado
+COMPOSE_FILE_LOCAL ?= docker-compose.yml
+COMPOSE_FILE_DEV ?= docker-compose.yml
+COMPOSE_FILE_PROD ?= docker-compose.yml
 
 #------------------------------------------------------------------------
-# 🧑‍💻 Funciones de desarrollo LOCAL (sin Podman)
+# 🧑‍💻 Funciones de desarrollo LOCAL (sin Docker)
 #------------------------------------------------------------------------
-validate-product: ## ✅ Valida la compilación y tests de product-service (sin Podman)
+validate-product: ## ✅ Valida la compilación y tests de product-service (sin Docker)
 	cd .. && ./gradlew :product-service:build
 
 validate-product-no-tests: ## ✅ Valida product-service sin ejecutar pruebas
@@ -216,3 +216,170 @@ help: ## 📖 Mostrar esta ayuda
 	@echo ""
 	@echo "Comandos disponibles:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-25s %s\n", $$1, $$2}'
+
+podman-start:
+	podman machine start
+
+podman-machine-list:
+	podman machine list
+
+podman-view-all:
+	podman ps -a
+
+podman-remove-all:
+	podman rm --all --force
+
+#------------------------------------------------------------------------
+# 🧪 Product Service - Comandos específicos para desarrollo local
+#------------------------------------------------------------------------
+
+## 🧪 Testing del Product Service
+test-product: ## 🧪 Ejecutar todos los tests del product-service
+	@echo "🧪 Ejecutando tests del product-service..."
+	cd ../product-service && ./gradlew test
+
+test-product-unit: ## 🧪 Ejecutar solo tests unitarios del product-service
+	@echo "🧪 Ejecutando tests unitarios del product-service..."
+	cd ../product-service && ./gradlew test --tests "*Test"
+
+test-product-controller: ## 🧪 Testear ProductController específicamente
+	@echo "🧪 Testeando ProductController..."
+	cd ../product-service && ./gradlew test --tests ProductControllerTest
+
+test-product-app: ## 🧪 Testear carga de aplicación del product-service
+	@echo "🧪 Testeando carga de aplicación..."
+	cd ../product-service && ./gradlew test --tests ProductServiceApplicationTests
+
+test-product-health: ## 🧪 Testear health endpoint del product-service
+	@echo "🧪 Testeando health endpoint..."
+	cd ../product-service && ./gradlew test --tests HealthCheckTest
+
+test-product-report: ## 📊 Abrir reporte de tests del product-service
+	@echo "📊 Abriendo reporte de tests..."
+	@open ../product-service/build/reports/tests/test/index.html || echo "❌ No se pudo abrir el reporte. Ejecuta 'make test-product' primero."
+
+## 🚀 Desarrollo local del Product Service (sin contenedores)
+run-product-local: ## 🚀 Ejecutar product-service localmente (puerto 9090)
+	@echo "🚀 Iniciando product-service en modo desarrollo local..."
+	@echo "📍 La aplicación estará disponible en: http://localhost:9090"
+	@echo "🧪 Endpoint de prueba: http://localhost:9090/api/v1/products/test"
+	@echo "💚 Health check: http://localhost:9090/actuator/health"
+	cd ../product-service && ./gradlew bootRun
+
+dev-product: run-product-local ## 🚀 Alias para run-product-local
+
+stop-product-local: ## 🛑 Detener product-service local
+	@echo "🛑 Deteniendo product-service local..."
+	@pkill -f "product-service" || echo "ℹ️  No hay procesos del product-service ejecutándose"
+
+## 🔨 Build del Product Service
+build-product: ## 🔨 Construir product-service para producción
+	@echo "🔨 Construyendo product-service para producción..."
+	cd ../product-service && ./gradlew build
+
+build-product-no-tests: ## 🔨 Construir product-service sin tests
+	@echo "🔨 Construyendo product-service sin tests..."
+	cd ../product-service && ./gradlew build -x test
+
+clean-product: ## 🧹 Limpiar archivos temporales del product-service
+	@echo "🧹 Limpiando product-service..."
+	cd ../product-service && ./gradlew clean
+
+rebuild-product-local-dev: clean-product build-product ## ♻️ Limpiar y construir product-service
+
+## ✅ Calidad del Product Service
+check-product: clean-product test-product build-product ## ✅ Verificación completa del product-service (clean + test + build)
+	@echo "✅ Verificación de calidad del product-service completada"
+
+lint-product: ## 🔍 Verificar estilo de código del product-service
+	@echo "🔍 Verificando estilo de código del product-service..."
+	cd ../product-service && ./gradlew check
+
+## 📦 Dependencias del Product Service
+deps-product: ## 📦 Mostrar dependencias del product-service
+	@echo "📦 Mostrando dependencias del product-service..."
+	cd ../product-service && ./gradlew dependencies
+
+deps-product-update: ## 📦 Actualizar dependencias del product-service
+	@echo "📦 Actualizando dependencias del product-service..."
+	cd ../product-service && ./gradlew build --refresh-dependencies
+
+## 🛠️ Utilidades del Product Service
+health-product: ## 💚 Verificar health del product-service
+	@echo "💚 Verificando health del product-service..."
+	@curl -f http://localhost:9090/actuator/health 2>/dev/null && echo "\n✅ Product Service funcionando correctamente" || echo "❌ Product Service no responde. ¿Está ejecutándose?"
+
+test-endpoints-product: ## 🧪 Probar endpoints principales del product-service
+	@echo "🧪 Probando endpoints del product-service..."
+	@echo "💚 Health endpoint:"
+	@curl -s http://localhost:9090/actuator/health | jq . || echo "❌ Health endpoint no responde"
+	@echo "\n🧪 Test endpoint:"
+	@curl -s http://localhost:9090/api/v1/products/test || echo "❌ Test endpoint no responde"
+	@echo "\n📦 Products endpoint:"
+	@curl -s http://localhost:9090/api/v1/products | jq . || echo "❌ Products endpoint no responde"
+
+info-product: ## ℹ️ Información del product-service
+	@echo "ℹ️  Información del Product Service:"
+	@echo "  📁 Proyecto: product-service"
+	@echo "  ☕ Java: 17"
+	@echo "  🔧 Build: Gradle"
+	@echo "  🗄️  BD Producción: PostgreSQL"
+	@echo "  🧪 BD Tests: H2"
+	@echo "  🌐 Puerto: 9090"
+	@echo "  📍 Endpoints principales:"
+	@echo "    - GET /api/v1/products/test"
+	@echo "    - GET /api/v1/products"
+	@echo "    - GET /actuator/health"
+
+## 🎯 Comandos rápidos del Product Service
+quick-test-product: ## ⚡ Test rápido del product-service
+	@echo "⚡ Test rápido del product-service..."
+	cd ../product-service && ./gradlew test --parallel
+
+quick-build-product: ## ⚡ Build rápido del product-service
+	@echo "⚡ Build rápido del product-service..."
+	cd ../product-service && ./gradlew build -x test
+
+## 📊 Reportes del Product Service
+coverage-product: ## 📊 Generar reporte de cobertura del product-service
+	@echo "📊 Generando reporte de cobertura del product-service..."
+	cd ../product-service && ./gradlew jacocoTestReport
+	@echo "📊 Reporte disponible en: ../product-service/build/reports/jacoco/test/html/index.html"
+
+## 🔄 Comandos integrados (Product Service + Infraestructura)
+dev-full-stack: up-db run-product-local ## 🚀 Levantar BD en Docker + Product Service local
+	@echo "🎉 Full stack listo: BD en Docker + Product Service local"
+
+test-integration-product: up-db ## 🧪 Tests de integración con BD real
+	@echo "🧪 Ejecutando tests de integración con BD PostgreSQL..."
+	@sleep 5
+	cd ../product-service && ./gradlew test -Dspring.profiles.active=integration
+
+## 📋 Ayuda específica del Product Service
+help-product: ## 📖 Mostrar ayuda específica del product-service
+	@echo "🧪 Product Service - Comandos disponibles:"
+	@echo "============================================"
+	@echo ""
+	@echo "🧪 TESTING:"
+	@echo "  make test-product          - Ejecutar todos los tests"
+	@echo "  make test-product-unit     - Ejecutar solo tests unitarios"
+	@echo "  make test-product-report   - Abrir reporte de tests en navegador"
+	@echo ""
+	@echo "🚀 DESARROLLO:"
+	@echo "  make run-product-local     - Ejecutar aplicación en modo desarrollo"
+	@echo "  make dev-product           - Alias para run-product-local"
+	@echo "  make stop-product-local    - Detener aplicación local"
+	@echo ""
+	@echo "🔨 BUILD:"
+	@echo "  make build-product         - Construir para producción"
+	@echo "  make clean-product         - Limpiar archivos temporales"
+	@echo "  make rebuild-product-local-dev - Limpiar y construir"
+	@echo ""
+	@echo "✅ CALIDAD:"
+	@echo "  make check-product         - Verificar código (build + test)"
+	@echo "  make lint-product          - Verificar estilo de código"
+	@echo ""
+	@echo "🛠️  UTILIDADES:"
+	@echo "  make health-product        - Verificar health de la aplicación"
+	@echo "  make test-endpoints-product - Probar endpoints principales"
+	@echo "  make info-product          - Información del proyecto"

@@ -1,61 +1,58 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper;
 
-import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.Product;
+import com.celotts.productservice.domain.model.ProductModel;  // ✅ Cambiar Product por ProductModel
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.ProductEntity;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class ProductEntityMapper {
 
-    public static Product toEntity(ProductModel model) {
-        if (model == null) return null;
-
-        Product product = new Product();
-
-        // Solo establecer ID para updates cuando ya existe
-        if (model.getId() != null) {
-            product.setId(model.getId());
+    public static ProductEntity toEntity(ProductModel productModel) {  // ✅ Cambiar Product por ProductModel
+        if (productModel == null) {
+            return null;
         }
 
-        mapCommonFields(model, product);
-        return product;
+        return ProductEntity.builder()
+                .id(productModel.getId())
+                .code(productModel.getCode())
+                .name(productModel.getName())
+                .description(productModel.getDescription())
+                .unitPrice(productModel.getUnitPrice())
+                .currentStock(productModel.getCurrentStock())
+                .minimumStock(productModel.getMinimumStock())
+                .enabled(productModel.getEnabled())
+                .unitCode(productModel.getUnitCode())
+                .productTypeCode(productModel.getProductTypeCode())
+                .brandId(productModel.getBrandId())
+                .createdAt(productModel.getCreatedAt())
+                .updatedAt(productModel.getUpdatedAt())
+                .createdBy(productModel.getCreatedBy())
+                .updatedBy(productModel.getUpdatedBy())
+                .build();
     }
 
-    public static ProductModel toModel(Product entity) {
-        if (entity == null) return null;
+    public static ProductModel toModel(ProductEntity entity) {  // ✅ Cambiar Product por ProductModel
+        if (entity == null) {
+            return null;
+        }
 
         return ProductModel.builder()
                 .id(entity.getId())
                 .code(entity.getCode())
                 .name(entity.getName())
                 .description(entity.getDescription())
-                .productTypeCode(entity.getProductTypeCode())
-                .unitCode(entity.getUnitCode())
-                .brandId(entity.getBrandId())
-                .minimumStock(entity.getMinimumStock())
-                .currentStock(entity.getCurrentStock())
                 .unitPrice(entity.getUnitPrice())
+                .currentStock(entity.getCurrentStock())
+                .minimumStock(entity.getMinimumStock())
                 .enabled(entity.getEnabled())
+                .unitCode(entity.getUnitCode())
+                .productTypeCode(entity.getProductTypeCode())
+                .brandId(entity.getBrandId())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .createdBy(entity.getCreatedBy())
                 .updatedBy(entity.getUpdatedBy())
                 .build();
-    }
-
-    // Método privado para evitar duplicación
-    private static void mapCommonFields(ProductModel model, Product product) {
-        product.setCode(model.getCode());
-        product.setName(model.getName());
-        product.setDescription(model.getDescription());
-        product.setProductTypeCode(model.getProductTypeCode());
-        product.setUnitCode(model.getUnitCode());
-        product.setBrandId(model.getBrandId());
-        product.setMinimumStock(model.getMinimumStock());
-        product.setCurrentStock(model.getCurrentStock());
-        product.setUnitPrice(model.getUnitPrice());
-        product.setEnabled(model.getEnabled());
-        product.setCreatedAt(model.getCreatedAt());
-        product.setUpdatedAt(model.getUpdatedAt());
-        product.setCreatedBy(model.getCreatedBy());
-        product.setUpdatedBy(model.getUpdatedBy());
     }
 }
