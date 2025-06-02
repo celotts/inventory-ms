@@ -43,35 +43,6 @@ services:
       start_period: 30s
     networks:
       - inventory-network
-
-  api-gateway:
-    build:
-      context: ../api-gateway
-      dockerfile: Dockerfile
-    container_name: api-gateway
-    ports:
-      - "${GATEWAY_PORT:-8090}:8090"
-    environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - JAVA_OPTS=${JAVA_OPTS}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
-      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
-      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWERCASESERVICEID=true
-    depends_on:
-      discovery-service:
-        condition: service_healthy
-      config-service:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8090/actuator/health || exit 1"]
-      interval: ${INTERVAL30s:-30s}
-      timeout: ${TIMEOUT10s:-10s}
-      retries: ${RETRIES5:-5}
-      start_period: 45s
-    networks:
-      - inventory-network
-
   product-db:
     image: postgres:16
     container_name: product-db
@@ -82,7 +53,7 @@ services:
       POSTGRES_USER: ${PRODUCT_DB_USERNAME:-product}
       POSTGRES_PASSWORD: ${PRODUCT_DB_PASSWORD:-product123}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PRODUCT_DB_USERNAME:-product}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${PRODUCT_DB_USERNAME:-product}" ]
       interval: ${INTERVAL10s:-10s}
       timeout: ${TIMEOUT5s:-5s}
       retries: ${RETRIES5:-5}
@@ -91,10 +62,6 @@ services:
       - inventory-network
     volumes:
       - product-data:/var/lib/postgresql/data
-      - ./init-scripts/product/01-product-init.sql:/docker-entrypoint-initdb.d/01-product-init.sql
-    # Podman maneja mejor las variables de entorno individualmente
-    env_file:
-      - .env.local
 
   product-service:
     build:
@@ -106,10 +73,11 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - JAVA_OPTS=${JAVA_OPTS}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://product-db:5432/${PRODUCT_DB_NAME:-product}
-      - SPRING_DATASOURCE_USERNAME=${PRODUCT_DB_USERNAME:-product}
-      - SPRING_DATASOURCE_PASSWORD=${PRODUCT_DB_PASSWORD:-product123}
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://product-db:5432/product
+      - SPRING_DATASOURCE_USERNAME=product
+      - SPRING_DATASOURCE_PASSWORD=product123
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
       - PAGINATION_DEFAULT_PAGE=${PAGINATION_DEFAULT_PAGE:-0}
       - PAGINATION_DEFAULT_SIZE=${PAGINATION_DEFAULT_SIZE:-10}
@@ -122,16 +90,45 @@ services:
         condition: service_healthy
       config-service:
         condition: service_healthy
-      api-gateway:
-        condition: service_healthy
       product-db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1" ]
       interval: ${INTERVAL30s:-30s}
       timeout: ${TIMEOUT10s:-10s}
       retries: ${RETRIES5:-5}
       start_period: 60s
+    networks:
+      - inventory-network
+
+  api-gateway:
+    build:
+      context: ../api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "${GATEWAY_PORT:-8090}:8090"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - JAVA_OPTS=${JAVA_OPTS}
+      # ✅ FORZAR la URL de Eureka sin variables
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
+      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
+      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWERCASESERVICEID=true
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8090/actuator/health || exit 1"]
+      interval: ${INTERVAL30s:-30s}
+      timeout: ${TIMEOUT10s:-10s}
+      retries: ${RETRIES5:-5}
+      start_period: 45s
     networks:
       - inventory-network
 

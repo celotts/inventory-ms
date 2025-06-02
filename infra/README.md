@@ -26,7 +26,7 @@ inventory-ms/
 ├── product-service/            # Microservicio de productos
 ├── infra/                      # Infraestructura Docker
 │   └── docker-compose.yml
-├── Makefile old                    # Automatización de tareas
+├── Makefile_old2 old                    # Automatización de tareas
 ├── .env.local                  # Configuración local
 ├── .env.dev                    # Configuración desarrollo
 ├── .env.prod                   # Configuración producción
@@ -229,4 +229,15 @@ docker build -t inventory/discovery-service ../discovery-service
 docker build -t inventory/config-service ../config-service
 docker build -t inventory/product-service ../product-service
 
+🎯 Comandos recomendados:
+bash# Opción 1: Reset completo (recomendado)
+make reset-local
 
+# Opción 2: Solo parar y reconstruir
+make down-local
+make rebuild-product-local
+
+# Opción 3: Forzar limpieza
+make stop-all
+make clean-podman
+make up-local

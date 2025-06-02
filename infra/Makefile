@@ -23,7 +23,7 @@ clean-gradle: ## 🧹 Limpia caché y compilación de Gradle
 	cd .. && ./gradlew clean
 
 #------------------------------------------------------------------------
-# 🐳 Funciones que USAN Docker Compose
+# 🦭 Funciones que USAN Podman Compose
 #------------------------------------------------------------------------
 
 ## 🔽 Infraestructura por entorno
@@ -35,128 +35,128 @@ up-local: ## 🧪 Levanta infra para trabajar desde IntelliJ
 	cd .. && ./gradlew :config-service:bootJar :discovery-service:bootJar :product-service:bootJar :api-gateway:bootJar
 
 	@echo "🧼 Apagando contenedores anteriores..."
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v
 
-	@echo "🐳 Levantando contenedores..."
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up --build
+	@echo "🦭 Levantando contenedores con Podman..."
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up --build
 
 down-local: ## 🔻 Apaga infra local
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v
 
 up-dev: ## 🧪 Levanta todo el stack en contenedores (modo dev)
 	cp $(ENV_FILE_DEV) .env.override
-	docker compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) down -v
-	docker compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) up --build
+	podman-compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) down -v
+	podman-compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) up --build
 
 up-prod: ## 🚀 Levanta todo en entorno de producción
 	cp $(ENV_FILE_PROD) .env.override
-	docker compose -f $(COMPOSE_FILE_PROD) --env-file $(ENV_FILE_PROD) down -v
-	docker compose -f $(COMPOSE_FILE_PROD) --env-file $(ENV_FILE_PROD) up --build
+	podman-compose -f $(COMPOSE_FILE_PROD) --env-file $(ENV_FILE_PROD) down -v
+	podman-compose -f $(COMPOSE_FILE_PROD) --env-file $(ENV_FILE_PROD) up --build
 
 up-db: ## 🔄 Levanta solo la base de datos para desarrollo local
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d product-db
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d product-db
 
 ## 🔁 Build y Rebuild
 build-images: ## 🏗️ Build manual de imágenes
-	docker build -t inventory/discovery-service ../discovery-service
-	docker build -t inventory/config-service ../config-service
-	docker build -t inventory/api-gateway ../api-gateway
-	docker build -t inventory/product-service ../product-service
+	podman build -t inventory/discovery-service ../discovery-service
+	podman build -t inventory/config-service ../config-service
+	podman build -t inventory/api-gateway ../api-gateway
+	podman build -t inventory/product-service ../product-service
 
 build-jars:
 	cd .. && ./gradlew --console=plain :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar
 
-# 🆕 Comandos para API Gateway
+# 🆕 Comandos para servicios individuales
 rebuild-api-gateway-local: ## 🔁 Reconstruye solo api-gateway (local)
 	@echo "🛠️  Reconstruyendo api-gateway con env: $(ENV_FILE_LOCAL)"
 	cp $(ENV_FILE_LOCAL) .env.override
 	cd .. && ./gradlew :api-gateway:bootJar
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) build api-gateway
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d api-gateway
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) build api-gateway
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d api-gateway
 
 rebuild-config-service-local: ## 🔁 Reconstruye solo config-service (local)
 	@echo "🛠️  Reconstruyendo config-service con env: $(ENV_FILE_LOCAL)"
 	cp $(ENV_FILE_LOCAL) .env.override
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) build config-service
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d config-service
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) build config-service
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d config-service
 
 rebuild-discovery-local: ## 🔁 Reconstruye solo discovery-service (local)
 	@echo "🛠️  Reconstruyendo discovery-service con env: $(ENV_FILE_LOCAL)"
 	cp $(ENV_FILE_LOCAL) .env.override
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) build discovery-service
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d discovery-service
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) build discovery-service
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d discovery-service
 
 rebuild-product-local: ## 🔁 Reconstruye solo product-service (local)
 	@echo "🛠️  Reconstruyendo product-service con env: $(ENV_FILE_LOCAL)"
 	cp $(ENV_FILE_LOCAL) .env.override
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) build product-service
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d product-service
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) build product-service
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up -d product-service
 
 rebuild-product-dev: ## 🔁 Reconstruye solo product-service (dev)
 	@echo "🛠️  Reconstruyendo product-service con env: $(ENV_FILE_DEV)"
 	cp $(ENV_FILE_DEV) .env.override
-	docker compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) build product-service
-	docker compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) up -d product-service
+	podman-compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) build product-service
+	podman-compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) up -d product-service
 
 ## ♻️ Mantenimiento y limpieza
 clean-volumes: ## 🧹 Limpia volúmenes no usados
-	docker volume prune -f
+	podman volume prune -f
 
 clean-images: ## 🧹 Limpia imágenes sin contenedor
-	docker image prune -a -f
+	podman image prune -a -f
 
-clean-docker: ## 🧹 Limpia imágenes sin contenedor y volúmenes
+clean-podman: ## 🧹 Limpia imágenes sin contenedor y volúmenes
 	$(MAKE) clean-images
 	$(MAKE) clean-volumes
 
-stop-all: ## 🛑 Detiene todos los contenedores activos en Docker
+stop-all: ## 🛑 Detiene todos los contenedores activos en Podman
 	@echo "🛑 Deteniendo todos los contenedores..."
-	docker ps -q | xargs -r docker stop
-	docker system prune -f --volumes
+	podman ps -q | xargs -r podman stop
+	podman system prune -f --volumes
 
 reset-db: ## 🧨 Reinicia product-db con script inicial
 	@echo "⛔ Eliminando contenedor y volumen de product-db..."
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v --remove-orphans
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v --remove-orphans
 	@echo "🚀 Levantando product-db..."
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up --build -d product-db
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up --build -d product-db
 	@echo "📋 Mostrando logs..."
-	docker logs -f product-db
+	podman logs -f product-db
 
 reset-local: ## 🔁 Reinicia completamente el entorno local
 	$(MAKE) down-local
-	$(MAKE) clean-docker
+	$(MAKE) clean-podman
 	$(MAKE) up-local
 
 reload-schema: ## ♻️ Ejecuta el script SQL en product-db
-	docker cp ./init-scripts/product-init.sql product-db:/tmp/product-init.sql
-	docker exec -it product-db psql -U product -d product -f /tmp/product-init.sql
+	podman cp ./init-scripts/product-init.sql product-db:/tmp/product-init.sql
+	podman exec -it product-db psql -U product -d product -f /tmp/product-init.sql
 
 ## 🔍 Logs y verificación
 logs-local: ## 📜 Logs de todos los servicios locales
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f
 
 logs-dev: ## 📜 Logs del entorno dev
-	docker compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) logs -f
+	podman-compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) logs -f
 
 # 🆕 Logs específicos por servicio
 logs-api-gateway: ## 📜 Logs del API Gateway
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f api-gateway
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f api-gateway
 
 logs-discovery: ## 📜 Logs del Discovery Service
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f discovery-service
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f discovery-service
 
 logs-config: ## 📜 Logs del Config Service
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f config-service
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f config-service
 
 logs-product: ## 📜 Logs del Product Service
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f product-service
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f product-service
 
 logs-db: ## 📜 Logs de la base de datos
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f product-db
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) logs -f product-db
 
 check-db-init: ## 🔎 Verifica existencia del volumen product-db
 	@echo "🔎 Verificando volumen de la base de datos..."
-	@if ! docker volume inspect inventoryms_product-data >/dev/null 2>&1; then \
+	@if ! podman volume inspect inventoryms_product-data >/dev/null 2>&1; then \
 		echo "✅ Volumen no existe. Se ejecutará el script SQL al levantar PostgreSQL."; \
 	else \
 		echo "⚠️ Volumen ya existe. PostgreSQL NO ejecutará el script de inicialización."; \
@@ -165,7 +165,10 @@ check-db-init: ## 🔎 Verifica existencia del volumen product-db
 
 # 🆕 Status y testing
 status: ## 📊 Ver estado de todos los servicios
-	docker compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) ps
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) ps
+
+podman-status: ## 📊 Ver todos los contenedores Podman
+	podman ps -a
 
 test-services: ## 🧪 Probar que todos los servicios estén funcionando
 	@echo "🧪 Probando servicios..."
@@ -178,7 +181,7 @@ test-services: ## 🧪 Probar que todos los servicios estén funcionando
 	@echo "\nProduct Service (9090):"
 	@curl -s http://localhost:9090/actuator/health | jq . || echo "❌ Product Service no responde"
 
-# Construcción paso a paso con verificación (actualizada)
+# Construcción paso a paso con verificación
 build-step-by-step:
 	@echo "🧹 Limpiando proyecto..."
 	cd .. && ./gradlew clean
@@ -192,8 +195,191 @@ build-step-by-step:
 	cd .. && ./gradlew :product-service:bootJar
 	@echo "✅ Verificando JARs creados..."
 	@ls -la ../*/build/libs/*.jar || echo "❌ Algunos JARs no se crearon"
-	@echo "🎉 Construcción completada!"
+	@echo "🎉 Construcción completada con Podman!"
+
+# 🆕 Comandos adicionales para Podman
+pods-list: ## 📋 Lista todos los pods de Podman
+	podman pod ps
+
+pods-stats: ## 📊 Estadísticas de recursos de Podman
+	podman stats --no-stream
+
+images-list: ## 🖼️ Lista todas las imágenes de Podman
+	podman images
+
+system-info: ## ℹ️ Información del sistema Podman
+	podman system info
 
 help: ## 📖 Mostrar esta ayuda
+	@echo "🦭 Makefile para Podman - Sistema de Microservicios"
+	@echo "=================================================="
+	@echo ""
 	@echo "Comandos disponibles:"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-25s %s\n", $$1, $$2}'
+
+podman-start:
+	podman machine start
+
+podman-machine-list:
+	podman machine list
+
+podman-view-all:
+	podman ps -a
+
+podman-remove-all:
+	podman rm --all --force
+
+#------------------------------------------------------------------------
+# 🧪 Product Service - Comandos específicos para desarrollo local
+#------------------------------------------------------------------------
+
+## 🧪 Testing del Product Service
+test-product: ## 🧪 Ejecutar todos los tests del product-service
+	@echo "🧪 Ejecutando tests del product-service..."
+	cd ../product-service && ./gradlew test
+
+test-product-unit: ## 🧪 Ejecutar solo tests unitarios del product-service
+	@echo "🧪 Ejecutando tests unitarios del product-service..."
+	cd ../product-service && ./gradlew test --tests "*Test"
+
+test-product-controller: ## 🧪 Testear ProductController específicamente
+	@echo "🧪 Testeando ProductController..."
+	cd ../product-service && ./gradlew test --tests ProductControllerTest
+
+test-product-app: ## 🧪 Testear carga de aplicación del product-service
+	@echo "🧪 Testeando carga de aplicación..."
+	cd ../product-service && ./gradlew test --tests ProductServiceApplicationTests
+
+test-product-health: ## 🧪 Testear health endpoint del product-service
+	@echo "🧪 Testeando health endpoint..."
+	cd ../product-service && ./gradlew test --tests HealthCheckTest
+
+test-product-report: ## 📊 Abrir reporte de tests del product-service
+	@echo "📊 Abriendo reporte de tests..."
+	@open ../product-service/build/reports/tests/test/index.html || echo "❌ No se pudo abrir el reporte. Ejecuta 'make test-product' primero."
+
+## 🚀 Desarrollo local del Product Service (sin contenedores)
+run-product-local: ## 🚀 Ejecutar product-service localmente (puerto 9090)
+	@echo "🚀 Iniciando product-service en modo desarrollo local..."
+	@echo "📍 La aplicación estará disponible en: http://localhost:9090"
+	@echo "🧪 Endpoint de prueba: http://localhost:9090/api/v1/products/test"
+	@echo "💚 Health check: http://localhost:9090/actuator/health"
+	cd ../product-service && ./gradlew bootRun
+
+dev-product: run-product-local ## 🚀 Alias para run-product-local
+
+stop-product-local: ## 🛑 Detener product-service local
+	@echo "🛑 Deteniendo product-service local..."
+	@pkill -f "product-service" || echo "ℹ️  No hay procesos del product-service ejecutándose"
+
+## 🔨 Build del Product Service
+build-product: ## 🔨 Construir product-service para producción
+	@echo "🔨 Construyendo product-service para producción..."
+	cd ../product-service && ./gradlew build
+
+build-product-no-tests: ## 🔨 Construir product-service sin tests
+	@echo "🔨 Construyendo product-service sin tests..."
+	cd ../product-service && ./gradlew build -x test
+
+clean-product: ## 🧹 Limpiar archivos temporales del product-service
+	@echo "🧹 Limpiando product-service..."
+	cd ../product-service && ./gradlew clean
+
+rebuild-product-local-dev: clean-product build-product ## ♻️ Limpiar y construir product-service
+
+## ✅ Calidad del Product Service
+check-product: clean-product test-product build-product ## ✅ Verificación completa del product-service (clean + test + build)
+	@echo "✅ Verificación de calidad del product-service completada"
+
+lint-product: ## 🔍 Verificar estilo de código del product-service
+	@echo "🔍 Verificando estilo de código del product-service..."
+	cd ../product-service && ./gradlew check
+
+## 📦 Dependencias del Product Service
+deps-product: ## 📦 Mostrar dependencias del product-service
+	@echo "📦 Mostrando dependencias del product-service..."
+	cd ../product-service && ./gradlew dependencies
+
+deps-product-update: ## 📦 Actualizar dependencias del product-service
+	@echo "📦 Actualizando dependencias del product-service..."
+	cd ../product-service && ./gradlew build --refresh-dependencies
+
+## 🛠️ Utilidades del Product Service
+health-product: ## 💚 Verificar health del product-service
+	@echo "💚 Verificando health del product-service..."
+	@curl -f http://localhost:9090/actuator/health 2>/dev/null && echo "\n✅ Product Service funcionando correctamente" || echo "❌ Product Service no responde. ¿Está ejecutándose?"
+
+test-endpoints-product: ## 🧪 Probar endpoints principales del product-service
+	@echo "🧪 Probando endpoints del product-service..."
+	@echo "💚 Health endpoint:"
+	@curl -s http://localhost:9090/actuator/health | jq . || echo "❌ Health endpoint no responde"
+	@echo "\n🧪 Test endpoint:"
+	@curl -s http://localhost:9090/api/v1/products/test || echo "❌ Test endpoint no responde"
+	@echo "\n📦 Products endpoint:"
+	@curl -s http://localhost:9090/api/v1/products | jq . || echo "❌ Products endpoint no responde"
+
+info-product: ## ℹ️ Información del product-service
+	@echo "ℹ️  Información del Product Service:"
+	@echo "  📁 Proyecto: product-service"
+	@echo "  ☕ Java: 17"
+	@echo "  🔧 Build: Gradle"
+	@echo "  🗄️  BD Producción: PostgreSQL"
+	@echo "  🧪 BD Tests: H2"
+	@echo "  🌐 Puerto: 9090"
+	@echo "  📍 Endpoints principales:"
+	@echo "    - GET /api/v1/products/test"
+	@echo "    - GET /api/v1/products"
+	@echo "    - GET /actuator/health"
+
+## 🎯 Comandos rápidos del Product Service
+quick-test-product: ## ⚡ Test rápido del product-service
+	@echo "⚡ Test rápido del product-service..."
+	cd ../product-service && ./gradlew test --parallel
+
+quick-build-product: ## ⚡ Build rápido del product-service
+	@echo "⚡ Build rápido del product-service..."
+	cd ../product-service && ./gradlew build -x test
+
+## 📊 Reportes del Product Service
+coverage-product: ## 📊 Generar reporte de cobertura del product-service
+	@echo "📊 Generando reporte de cobertura del product-service..."
+	cd ../product-service && ./gradlew jacocoTestReport
+	@echo "📊 Reporte disponible en: ../product-service/build/reports/jacoco/test/html/index.html"
+
+## 🔄 Comandos integrados (Product Service + Infraestructura)
+dev-full-stack: up-db run-product-local ## 🚀 Levantar BD en Docker + Product Service local
+	@echo "🎉 Full stack listo: BD en Docker + Product Service local"
+
+test-integration-product: up-db ## 🧪 Tests de integración con BD real
+	@echo "🧪 Ejecutando tests de integración con BD PostgreSQL..."
+	@sleep 5
+	cd ../product-service && ./gradlew test -Dspring.profiles.active=integration
+
+## 📋 Ayuda específica del Product Service
+help-product: ## 📖 Mostrar ayuda específica del product-service
+	@echo "🧪 Product Service - Comandos disponibles:"
+	@echo "============================================"
+	@echo ""
+	@echo "🧪 TESTING:"
+	@echo "  make test-product          - Ejecutar todos los tests"
+	@echo "  make test-product-unit     - Ejecutar solo tests unitarios"
+	@echo "  make test-product-report   - Abrir reporte de tests en navegador"
+	@echo ""
+	@echo "🚀 DESARROLLO:"
+	@echo "  make run-product-local     - Ejecutar aplicación en modo desarrollo"
+	@echo "  make dev-product           - Alias para run-product-local"
+	@echo "  make stop-product-local    - Detener aplicación local"
+	@echo ""
+	@echo "🔨 BUILD:"
+	@echo "  make build-product         - Construir para producción"
+	@echo "  make clean-product         - Limpiar archivos temporales"
+	@echo "  make rebuild-product-local-dev - Limpiar y construir"
+	@echo ""
+	@echo "✅ CALIDAD:"
+	@echo "  make check-product         - Verificar código (build + test)"
+	@echo "  make lint-product          - Verificar estilo de código"
+	@echo ""
+	@echo "🛠️  UTILIDADES:"
+	@echo "  make health-product        - Verificar health de la aplicación"
+	@echo "  make test-endpoints-product - Probar endpoints principales"
+	@echo "  make info-product          - Información del proyecto"
