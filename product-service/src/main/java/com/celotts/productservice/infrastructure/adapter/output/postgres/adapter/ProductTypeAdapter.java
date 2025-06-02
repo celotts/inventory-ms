@@ -1,0 +1,34 @@
+package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter;
+
+import com.celotts.productservice.domain.port.ProductTypePort;
+
+import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.ProductTypeRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+
+@Component
+@RequiredArgsConstructor
+public class ProductTypeAdapter implements ProductTypePort {
+
+    private final ProductTypeRepository productTypeRepository;
+
+    @Override
+    public boolean existsByCode(String code) {
+        return productTypeRepository.existsByCode(code);
+    }
+
+    @Override
+    public Optional<String> findNameByCode(String code) {
+        return productTypeRepository.findNameByCode(code);
+    }
+
+    @Override
+    public List<String> findAllCodes() {
+        return productTypeRepository.findAll().stream()
+                .map(productType -> productType.getCode() + " (" + productType.getName() + ")")
+                .toList();
+    }
+}

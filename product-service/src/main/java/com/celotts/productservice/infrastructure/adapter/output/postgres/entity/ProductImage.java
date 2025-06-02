@@ -14,13 +14,14 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductImage {
+
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)  // ✅ Agregar strategy
     private UUID id;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    private ProductEntity product;
 
     @Column(nullable = false)
     private String url;
