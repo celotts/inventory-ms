@@ -90,10 +90,14 @@ public class ProductController {
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir) {
+            @RequestParam(required = false) String sortDir,
+            // Filtros opcionales agregados
+            @RequestParam(required = false) String code,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String description) {
 
-        log.info("Fetching paginated products - page: {}, size: {}, sortBy: {}, sortDir: {}",
-                page, size, sortBy, sortDir);
+        log.info("Fetching paginated products - page: {}, size: {}, sortBy: {}, sortDir: {}, code: {}, name: {}, description: {}",
+                page, size, sortBy, sortDir, code, name, description);
 
         // Aplicar valores por defecto y validaciones
         int pageNumber = page != null ? Math.max(0, page) : defaultPage;
@@ -101,8 +105,8 @@ public class ProductController {
         String sortField = sortBy != null && !sortBy.trim().isEmpty() ? sortBy.trim() : defaultSort;
         String sortDirection = sortDir != null && !sortDir.trim().isEmpty() ? sortDir.trim() : defaultDirection;
 
-        // Validar campo de ordenamiento
-        List<String> allowedSortFields = List.of("createdAt", "updatedAt", "code", "description", "unitPrice", "currentStock");
+        // Validar campo de ordenamiento (agregué 'name' a la lista)
+        List<String> allowedSortFields = List.of("createdAt", "updatedAt", "code", "name", "description", "unitPrice", "currentStock");
         if (!allowedSortFields.contains(sortField)) {
             log.warn("Invalid sort field: {}. Using default: {}", sortField, defaultSort);
             sortField = defaultSort;
@@ -112,7 +116,22 @@ public class ProductController {
                 Sort.by(sortField).descending() : Sort.by(sortField).ascending();
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
-        Page<ProductModel> products = productService.getAllProducts(pageable);
+
+        // Determinar si hay filtros aplicados
+        boolean hasFilters = (code != null && !code.trim().isEmpty()) ||
+                (name != null && !name.trim().isEmpty()) ||
+                (description != null && !description.trim().isEmpty());
+
+        Page<ProductModel> products;
+        if (hasFilters) {
+            // Usar método con filtros
+            products = productService.getAllProductsWithFilters(pageable, code, name, description);
+            log.info("Applied filters - code: {}, name: {}, description: {}", code, name, description);
+        } else {
+            // Usar método sin filtros
+            products = productService.getAllProducts(pageable);
+        }
+
         Page<ProductResponseDTO> response = products.map(responseMapper::toDto);
 
         log.info("Retrieved {} products out of {} total (page {}/{})",

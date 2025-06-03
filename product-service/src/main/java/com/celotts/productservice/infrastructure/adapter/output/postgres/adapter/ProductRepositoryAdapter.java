@@ -2,9 +2,10 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.adapte
 
 import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;           // ✅ AQUÍ van estos imports
-import org.springframework.data.domain.Pageable;       // ✅ AQUÍ van estos imports
-import java.util.stream.Collectors;                   // ✅ AQUÍ van estos imports
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import java.util.stream.Collectors;
 
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.ProductRepositoryPort;
@@ -18,35 +19,37 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ProductRepositoryAdapter implements ProductRepositoryPort {
 
     private final ProductRepository productRepository;
+    private final ProductEntityMapper productEntityMapper;  // ✅ AGREGAR ESTA LÍNEA
 
     @Override
-    public ProductModel save(ProductModel productModel) {  // ✅ Usar ProductModel
-        ProductEntity entity = ProductEntityMapper.toEntity(productModel);
-        ProductEntity saved = productRepository.save(entity);
-        return ProductEntityMapper.toModel(saved);  // ✅ Usar toModel
+    public ProductModel save(ProductModel productModel) {
+        ProductEntity entity = productEntityMapper.toEntity(productModel);  // ✅ CORREGIDO: instancia
+        ProductEntity saved = productRepository.save(entity);  // ✅ CORREGIDO: instancia
+        return productEntityMapper.toModel(saved);  // ✅ CORREGIDO: instancia
     }
 
     @Override
     public List<ProductModel> findAll() {
         return productRepository.findAll()
                 .stream()
-                .map(ProductEntityMapper::toModel)  // ✅ Usar toModel
+                .map(productEntityMapper::toModel)  // ✅ CORREGIDO: instancia
                 .collect(Collectors.toList());
     }
 
     @Override
     public Page<ProductModel> findAll(Pageable pageable) {
         return productRepository.findAll(pageable)
-                .map(ProductEntityMapper::toModel);
+                .map(productEntityMapper::toModel);  // ✅ CORREGIDO: instancia
     }
 
     @Override
     public Optional<ProductModel> findById(UUID id) {
         return productRepository.findById(id)
-                .map(ProductEntityMapper::toModel);
+                .map(productEntityMapper::toModel);  // ✅ CORREGIDO: instancia
     }
 
     @Override
@@ -62,7 +65,7 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
     @Override
     public Optional<ProductModel> findByCode(String code) {
         return productRepository.findByCode(code)
-                .map(ProductEntityMapper::toModel);
+                .map(productEntityMapper::toModel);  // ✅ CORREGIDO: instancia
     }
 
     @Override
@@ -74,7 +77,7 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
     public List<ProductModel> findByProductTypeCode(String productTypeCode) {
         return productRepository.findByProductTypeCode(productTypeCode)
                 .stream()
-                .map(ProductEntityMapper::toModel)
+                .map(productEntityMapper::toModel)  // ✅ CORREGIDO: instancia
                 .collect(Collectors.toList());
     }
 
@@ -82,7 +85,7 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
     public List<ProductModel> findByBrandId(UUID brandId) {
         return productRepository.findByBrandId(brandId)
                 .stream()
-                .map(ProductEntityMapper::toModel)
+                .map(productEntityMapper::toModel)  // ✅ CORREGIDO: instancia
                 .collect(Collectors.toList());
     }
 
@@ -90,14 +93,14 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
     public List<ProductModel> findByEnabled(Boolean enabled) {
         return productRepository.findByEnabled(enabled)
                 .stream()
-                .map(ProductEntityMapper::toModel)
+                .map(productEntityMapper::toModel)  // ✅ CORREGIDO: instancia
                 .collect(Collectors.toList());
     }
 
     @Override
     public Page<ProductModel> findByEnabled(Boolean enabled, Pageable pageable) {
         return productRepository.findByEnabled(enabled, pageable)
-                .map(ProductEntityMapper::toModel);
+                .map(productEntityMapper::toModel);  // ✅ CORREGIDO: instancia
     }
 
     @Override
@@ -114,7 +117,7 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
     public List<ProductModel> findByCurrentStockLessThanMinimumStock() {
         return productRepository.findByCurrentStockLessThanMinimumStock()
                 .stream()
-                .map(ProductEntityMapper::toModel)
+                .map(productEntityMapper::toModel)  // ✅ CORREGIDO: instancia
                 .collect(Collectors.toList());
     }
 
@@ -122,7 +125,16 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
     public List<ProductModel> findByCurrentStockLessThan(Integer stock) {
         return productRepository.findByCurrentStockLessThan(stock)
                 .stream()
-                .map(ProductEntityMapper::toModel)
+                .map(productEntityMapper::toModel)  // ✅ CORREGIDO: instancia
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<ProductModel> findProductsWithFilters(Pageable pageable, String code, String name, String description) {
+        log.info("ProductRepositoryAdapter: Searching products with filters - code: {}, name: {}, description: {}",
+                code, name, description);
+
+        Page<ProductEntity> productEntities = productRepository.findProductsWithFilters(pageable, code, name, description);
+        return productEntities.map(productEntityMapper::toModel);  // ✅ CORREGIDO: instancia
     }
 }

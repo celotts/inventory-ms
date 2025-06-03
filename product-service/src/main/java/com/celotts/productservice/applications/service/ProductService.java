@@ -212,4 +212,21 @@ public class ProductService {
 
         return productRepositoryPort.save(product);
     }
+
+    public Page<ProductModel> getAllProductsWithFilters(Pageable pageable, String code, String name, String description) {
+        log.info("Service: Fetching products with filters - code: {}, name: {}, description: {}", code, name, description);
+
+        // Si no hay filtros, usar el método básico para optimizar
+        boolean hasCode = code != null && !code.trim().isEmpty();
+        boolean hasName = name != null && !name.trim().isEmpty();
+        boolean hasDescription = description != null && !description.trim().isEmpty();
+
+        if (!hasCode && !hasName && !hasDescription) {
+            log.info("No filters provided, using standard pagination");
+            return getAllProducts(pageable);
+        }
+
+        // Usar el puerto para búsqueda con filtros
+        return productRepositoryPort.findProductsWithFilters(pageable, code, name, description);
+    }
 }

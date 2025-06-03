@@ -7,7 +7,7 @@ spring:
 
   # ✅ PostgreSQL para desarrollo local en Docker
   datasource:
-    url: jdbc:postgresql://product-db:5432/product
+    url: jdbc:postgresql://localhost:5432/product
     username: product
     password: product123
     driver-class-name: org.postgresql.Driver

@@ -2,10 +2,12 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper
 
 import com.celotts.productservice.domain.model.ProductModel;  // ✅ Cambiar Product por ProductModel
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.ProductEntity;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Component  // ✅ Agregar esta anotación para hacer el mapper un bean
 public class ProductEntityMapper {
 
     public static ProductEntity toEntity(ProductModel productModel) {  // ✅ Cambiar Product por ProductModel
@@ -32,7 +34,7 @@ public class ProductEntityMapper {
                 .build();
     }
 
-    public static ProductModel toModel(ProductEntity entity) {  // ✅ Cambiar Product por ProductModel
+    public ProductModel toModel(ProductEntity entity) {  // ✅ Cambiar Product por ProductModel
         if (entity == null) {
             return null;
         }
