@@ -6,13 +6,14 @@ public interface Auditable {
 
     // Setters
     void setCreatedAt(LocalDateTime createdAt);
-    void setUpdatedAt(LocalDateTime updatedAt);
     void setCreatedBy(String createdBy);
+    void setUpdatedAt(LocalDateTime updatedAt);
     void setUpdatedBy(String updatedBy);
+
 
     // Getters
     LocalDateTime getCreatedAt();
-    LocalDateTime getUpdatedAt();
     String getCreatedBy();
+    LocalDateTime getUpdatedAt();
     String getUpdatedBy();
 }

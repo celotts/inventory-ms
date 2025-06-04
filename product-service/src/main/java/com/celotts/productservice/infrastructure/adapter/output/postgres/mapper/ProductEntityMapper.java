@@ -4,8 +4,7 @@ import com.celotts.productservice.domain.model.ProductModel;  // ✅ Cambiar Pro
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.ProductEntity;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+
 
 @Component  // ✅ Agregar esta anotación para hacer el mapper un bean
 public class ProductEntityMapper {
@@ -39,22 +38,23 @@ public class ProductEntityMapper {
             return null;
         }
 
-        return ProductModel.builder()
-                .id(entity.getId())
-                .code(entity.getCode())
-                .name(entity.getName())
-                .description(entity.getDescription())
-                .unitPrice(entity.getUnitPrice())
-                .currentStock(entity.getCurrentStock())
-                .minimumStock(entity.getMinimumStock())
-                .enabled(entity.getEnabled())
-                .unitCode(entity.getUnitCode())
-                .productTypeCode(entity.getProductTypeCode())
-                .brandId(entity.getBrandId())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .createdBy(entity.getCreatedBy())
-                .updatedBy(entity.getUpdatedBy())
-                .build();
+        return new ProductModel(
+                entity.getId(),
+                entity.getCode(),
+                entity.getName(),
+                entity.getDescription(),
+                entity.getProductTypeCode(),
+                entity.getUnitCode(),
+                entity.getBrandId(),
+                entity.getMinimumStock(),
+                entity.getCurrentStock(),
+                entity.getUnitPrice(),
+                entity.getEnabled(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt(),
+                entity.getCreatedBy(),
+                entity.getUpdatedBy(),
+                entity.getEnabled() // ← aquí el campo faltante `withEnabled`
+        );
     }
 }

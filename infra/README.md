@@ -241,3 +241,103 @@ make rebuild-product-local
 make stop-all
 make clean-podman
 make up-local
+
+# 🚀 Flujo de Trabajo de Desarrollo
+
+## 📋 Configuración de Perfiles
+
+El proyecto utiliza perfiles de Spring Boot para diferentes entornos:
+
+- **`dev`**: Todos los servicios en contenedores
+- **`local`**: Product Service local + infraestructura en contenedores
+- **`prod`**: Configuración de producción
+
+## 🛠️ Desarrollo Local (Recomendado)
+
+Para desarrollo ágil, ejecuta la infraestructura en contenedores y el Product Service localmente:
+
+### 1️⃣ Levantar infraestructura en contenedores
+```bash
+make up-local
+```
+Esto levanta:
+- `discovery-service` (Eureka) - Puerto 8761
+- `config-service` - Puerto 7777
+- `api-gateway` - Puerto 8090
+- `product-db` (PostgreSQL) - Puerto 5432
+
+### 2️⃣ Ejecutar Product Service localmente
+```bash
+make run-product-local
+```
+- Usa perfil `local` automáticamente
+- Se conecta a servicios en contenedores via `localhost`
+- Puerto 9090 disponible para debugging
+
+### 3️⃣ Verificar conexiones
+```bash
+make test-services
+```
+Verifica que todos los servicios estén funcionando y comunicándose correctamente.
+
+## 🐳 Stack Completo en Contenedores
+
+Para testing de integración o CI/CD:
+
+```bash
+# Levantar todo en contenedores
+make up-dev
+
+# Verificar servicios
+make test-services
+
+# Ver logs
+make logs-local
+```
+
+## 🧪 Testing y Validación
+
+### Health Checks
+```bash
+# Health check individual del Product Service
+make health-product
+
+# Health check completo del ecosistema
+make health-check-all
+```
+
+### Test de Endpoints
+```bash
+# Probar endpoints principales
+make test-endpoints-product
+
+# Probar funcionalidad de paginación
+make test-pagination-endpoints
+```
+
+### Monitoreo
+```bash
+# Ver recursos en tiempo real
+make monitor-resources
+
+# Estado de contenedores
+make debug-containers
+
+# Información del sistema
+make system-info-full
+```
+
+## 🔧 Troubleshooting
+
+### Problemas de Base de Datos
+```bash
+make troubleshoot-db
+```
+
+### Problemas de Red
+```bash
+make troubleshoot-network
+```
+
+### Solución de problemas comunes
+```bash

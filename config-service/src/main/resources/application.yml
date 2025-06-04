@@ -29,7 +29,6 @@ spring:
         defaultZone: http://discovery-service:8761/eureka/
       register-with-eureka: true
       fetch-registry: false
-
     instance:
       prefer-ip-address: true
       instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}

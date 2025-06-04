@@ -80,7 +80,7 @@ public class ProductController {
         List<ProductResponseDTO> response = products.stream()
                 .map(responseMapper::toDto)
                 .collect(Collectors.toList());
-        log.info("Retrieved {} products", response.size());
+        log.info("List Retrieved {} products", response.size());
         return ResponseEntity.ok(response);
     }
 
@@ -173,11 +173,16 @@ public class ProductController {
     @GetMapping("/active")
     public ResponseEntity<List<ProductResponseDTO>> getActiveProducts() {
         log.info("Fetching active products");
-        List<ProductModel> products = productService.getActiveProducts();
+
+        Pageable pageable = Pageable.unpaged(); // o PageRequest.of(0, 100) si quieres límite
+
+        List<ProductModel> products = productService.getActiveProducts(pageable).getContent();
+
         List<ProductResponseDTO> response = products.stream()
                 .map(responseMapper::toDto)
                 .collect(Collectors.toList());
-        log.info("Retrieved {} active products", response.size());
+
+        log.info("Retrieved Product Response {} active products", response.size());
         return ResponseEntity.ok(response);
     }
 
@@ -327,6 +332,7 @@ public class ProductController {
         log.info("Product hard deleted successfully: {}", id);
         return ResponseEntity.noContent().build();
     }
+
 
     // ===============================================
     // MÉTODOS AUXILIARES PRIVADOS

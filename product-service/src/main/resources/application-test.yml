@@ -7,10 +7,10 @@ spring:
 
   # H2 Database
   datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: jdbc:postgresql://localhost:5432/product
+    username: product
+    password: product123
+    driver-class-name: org.postgresql.Driver
 
   # JPA/Hibernate
   jpa:
@@ -23,6 +23,9 @@ spring:
 eureka:
   client:
     enabled: false
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
 
 # ✅ Logging detallado para debug
 logging:

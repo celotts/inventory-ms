@@ -1,9 +1,6 @@
 package com.celotts.productservice.domain.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -11,31 +8,28 @@ import java.util.UUID;
 
 @Data
 @Builder
-@NoArgsConstructor
+@With
 @AllArgsConstructor
+@NoArgsConstructor
 public class ProductModel {
+    UUID id;
+    String code;
+    String name;
+    String description;
+    String productTypeCode;
+    String unitCode;
+    UUID brandId;
+    Integer minimumStock;
+    Integer currentStock;
+    BigDecimal unitPrice;
+    Boolean enabled;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
+    String createdBy;
+    String updatedBy;
+    Boolean withEnabled;
 
-    private UUID id;
-    private String code;
-    private String name;
-    private String description;
-
-    // Referencias
-    private String productTypeCode;
-    private String unitCode;
-    private UUID brandId;
-
-    // Stock y pricing
-    private Integer minimumStock;
-    private Integer currentStock;
-    private BigDecimal unitPrice;
-
-    // Estado
-    private Boolean enabled;
-
-    // Auditoría
-    private LocalDateTime createdAt;
-    private String createdBy;
-    private LocalDateTime updatedAt;
-    private String updatedBy;
+    public boolean lowStock() {
+        return currentStock != null && minimumStock != null && currentStock < minimumStock;
+    }
 }

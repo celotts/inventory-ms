@@ -1,4 +1,3 @@
-// ProductRepositoryPort - Puerto extendido con métodos adicionales
 package com.celotts.productservice.domain.port;
 
 import com.celotts.productservice.domain.model.ProductModel;
@@ -15,29 +14,18 @@ public interface ProductRepositoryPort {
     ProductModel save(ProductModel product);
     List<ProductModel> findAll();
     Page<ProductModel> findAll(Pageable pageable);
+    Page<ProductModel> findAllWithFilters(Pageable pageable, String code, String name, String description);
     Optional<ProductModel> findById(UUID id);
     void deleteById(UUID id);
     boolean existsById(UUID id);
 
     // Métodos de búsqueda adicionales
     Optional<ProductModel> findByCode(String code);
-    boolean existsByCode(String code);
     List<ProductModel> findByProductTypeCode(String productTypeCode);
     List<ProductModel> findByBrandId(UUID brandId);
-    List<ProductModel> findByEnabled(Boolean enabled);
-
-    // Métodos con paginación
     Page<ProductModel> findByEnabled(Boolean enabled, Pageable pageable);
 
-    // ✅ NUEVO - Método para búsqueda con filtros
-    /**
-     * Encuentra productos aplicando filtros opcionales de búsqueda
-     * @param pageable configuración de paginación y ordenamiento
-     * @param code filtro por código del producto (búsqueda parcial, case-insensitive)
-     * @param name filtro por nombre del producto (búsqueda parcial, case-insensitive)
-     * @param description filtro por descripción del producto (búsqueda parcial, case-insensitive)
-     * @return página de productos que coinciden con los filtros aplicados
-     */
+    //  Método para búsqueda con filtros
     Page<ProductModel> findProductsWithFilters(Pageable pageable, String code, String name, String description);
 
     // Métodos de conteo
@@ -45,6 +33,11 @@ public interface ProductRepositoryPort {
     long countByEnabled(Boolean enabled);
 
     // Métodos de stock
-    List<ProductModel> findByCurrentStockLessThanMinimumStock();
-    List<ProductModel> findByCurrentStockLessThan(Integer stock);
+    Page<ProductModel> findByCurrentStockLessThanMinimumStock(Pageable pageable);
+    Page<ProductModel> findByCurrentStockLessThan(Integer stock, Pageable pageable);
+
+    boolean existsByCode(String code);
+
+    Page<ProductModel> findByProductTypeCode(String typeCode, Pageable pageable);
+    Page<ProductModel> findByBrandId(UUID brandId, Pageable pageable);
 }

@@ -15,13 +15,20 @@ import java.util.UUID;
 
 @Repository
 public interface ProductRepository extends JpaRepository<ProductEntity, UUID> {
+    Page<ProductEntity> findByProductTypeCode(String productTypeCode, Pageable pageable);
+
+    Page<ProductEntity> findByBrandId(UUID brandId, Pageable pageable);
+
+    Page<ProductEntity> findByEnabled(Boolean enabled, Pageable pageable);
+
+
+    Page<ProductEntity> findByCurrentStockLessThan(Integer stock, Pageable pageable);
 
     Optional<ProductEntity> findByCode(String code);
     boolean existsByCode(String code);
     List<ProductEntity> findByProductTypeCode(String productTypeCode);
     List<ProductEntity> findByBrandId(UUID brandId);
-    List<ProductEntity> findByEnabled(Boolean enabled);
-    Page<ProductEntity> findByEnabled(Boolean enabled, Pageable pageable);
+
     @Query("SELECT p FROM ProductEntity p WHERE " +
             "p.enabled = true AND " +
             "(:code IS NULL OR :code = '' OR LOWER(p.code) LIKE LOWER(CONCAT('%', :code, '%'))) AND " +
@@ -33,8 +40,23 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID> {
                                                 @Param("description") String description);
     long countByEnabled(Boolean enabled);
 
-    @Query("SELECT p FROM ProductEntity p WHERE p.currentStock < p.minimumStock")
-    List<ProductEntity> findByCurrentStockLessThanMinimumStock();
 
-    List<ProductEntity> findByCurrentStockLessThan(Integer stock);
+
+
+
+    @Query("""
+    SELECT p FROM ProductEntity p
+    WHERE (:code IS NULL OR LOWER(p.code) LIKE LOWER(CONCAT('%', :code, '%')))
+      AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')))
+      AND (:description IS NULL OR LOWER(p.description) LIKE LOWER(CONCAT('%', :description, '%')))
+""")
+    Page<ProductEntity> findAllWithFilters(
+            @Param("code") String code,
+            @Param("name") String name,
+            @Param("description") String description,
+            Pageable pageable
+    );
+
+    @Query("SELECT p FROM ProductEntity p WHERE p.currentStock < p.minimumStock")
+    Page<ProductEntity> findProductsWithLowStock(Pageable pageable);
 }

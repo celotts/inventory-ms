@@ -1,18 +1,23 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity;
 
+import com.celotts.productservice.infrastructure.common.listener.Auditable;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.boot.actuate.audit.listener.AuditListener;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "product_unit")
+@EntityListeners(AuditListener.class)
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductUnit {
+public class ProductUnit implements Auditable {
 
     @Id
     @Column(name = "code", length = 30)
@@ -21,6 +26,8 @@ public class ProductUnit {
     @Column(name = "name", length = 100, nullable = false)
     private String name;
 
-    @Column(name = "symbol", length = 10)
-    private String symbol;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private String createdBy;
+    private String updatedBy;
 }

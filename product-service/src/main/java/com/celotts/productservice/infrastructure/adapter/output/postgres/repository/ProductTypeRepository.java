@@ -15,7 +15,6 @@ public interface ProductTypeRepository extends JpaRepository<ProductType, String
 
     boolean existsByCode(String code);
 
-    Optional<ProductType> findByCode(String code);
 
     @Query("SELECT pt.name FROM ProductType pt WHERE pt.code = :code")
     Optional<String> findNameByCode(@Param("code") String code);
