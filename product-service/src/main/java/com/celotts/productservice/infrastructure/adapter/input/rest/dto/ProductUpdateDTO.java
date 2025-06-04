@@ -1,12 +1,14 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto;
 
 import jakarta.validation.constraints.*;
+import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
+@Builder
 public class ProductUpdateDTO {
 
     @Size(max = 50, message = "Product code must not exceed 50 characters")

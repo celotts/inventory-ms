@@ -1,5 +1,6 @@
 // ProductService - Servicio mejorado con validaciones y manejo de excepciones
 package com.celotts.productservice.applications.service;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.ProductDtoMapper;
 
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.ProductBrandPort;
@@ -8,8 +9,10 @@ import com.celotts.productservice.domain.port.ProductTypePort;
 import com.celotts.productservice.domain.port.ProductUnitPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductRequestDTO;
 
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductUpdateDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.ProductRequestMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -63,25 +66,14 @@ public class ProductService {
 
         validateReferences(dto);
 
-        ProductModel updated = ProductModel.builder()
-                .id(id)
-                .code(dto.getCode())
-                .name(dto.getName())
-                .description(dto.getDescription())
-                .productTypeCode(dto.getProductTypeCode())
-                .unitCode(dto.getUnitCode())
-                .brandId(dto.getBrandId())
-                .minimumStock(dto.getMinimumStock())
-                .currentStock(dto.getCurrentStock())
-                .unitPrice(dto.getUnitPrice())
-                .enabled(dto.getEnabled())
-                .createdAt(existing.getCreatedAt())  // Conserva valores originales
-                .updatedAt(LocalDateTime.now())
-                .createdBy(existing.getCreatedBy())
-                .updatedBy(dto.getUpdatedBy())
-                .build();
+        // ⛔ Esto no funcionaba antes porque `dto` era `ProductRequestDTO`
+        // ProductRequestMapper.updateModelFromDto(existing, dto);
 
-        return repository.save(updated);
+        // ✅ Solución: Convertimos primero a ProductUpdateDTO
+        ProductUpdateDTO updateDto = ProductDtoMapper.toUpdateDto(dto);
+        ProductRequestMapper.updateModelFromDto(existing, updateDto);
+
+        return repository.save(existing);
 
     }
 
