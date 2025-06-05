@@ -6,6 +6,7 @@ import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.ProductEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
+@Primary
 public class ProductAdapter implements ProductRepositoryPort {
 
     private final ProductRepository repository;
