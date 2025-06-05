@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.common.entity;
 
-import com.celotts.productservice.infrastructure.common.listener.Auditable;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.Auditable;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;

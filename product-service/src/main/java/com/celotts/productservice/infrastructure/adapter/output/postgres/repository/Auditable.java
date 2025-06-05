@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.common.listener;
+package com.celotts.productservice.infrastructure.adapter.output.postgres.repository;
 
 import java.time.LocalDateTime;
 
