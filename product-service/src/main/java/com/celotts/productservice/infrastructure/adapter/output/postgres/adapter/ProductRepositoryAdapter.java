@@ -2,6 +2,7 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.adapte
 
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.ProductRepositoryPort;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.ProductEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.ProductEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,12 +37,16 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
                 .map(productEntityMapper::toModel);
     }
 
+    // ✅ CAMBIAR: productTypeCode por categoryId
     @Override
-    public List<ProductModel> findByProductTypeCode(String typeCode) {
-        return productRepository.findByProductTypeCode(typeCode).stream()
+    public List<ProductModel> findByCategoryId(UUID categoryId) {
+        return productRepository.findByCategoryId(categoryId)
+                .stream()
                 .map(productEntityMapper::toModel)
                 .toList();
     }
+
+
 
     @Override
     public List<ProductModel> findByBrandId(UUID brandId) {
@@ -50,43 +55,10 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
                 .toList();
     }
 
+
     @Override
     public Page<ProductModel> findByEnabled(Boolean enabled, Pageable pageable) {
         return productRepository.findByEnabled(enabled, pageable)
-                .map(productEntityMapper::toModel);
-    }
-
-    @Override
-    public Page<ProductModel> findByCurrentStockLessThanMinimumStock(Pageable pageable) {
-        return productRepository.findProductsWithLowStock(pageable)
-                .map(productEntityMapper::toModel);
-    }
-
-    @Override
-    public Page<ProductModel> findByCurrentStockLessThan(Integer stock, Pageable pageable) {
-        return productRepository.findByCurrentStockLessThan(stock, pageable)
-                .map(productEntityMapper::toModel);
-    }
-
-    @Override
-    public long count() {
-        return productRepository.count();
-    }
-
-    @Override
-    public long countByEnabled(Boolean enabled) {
-        return productRepository.countByEnabled(enabled);
-    }
-
-    @Override
-    public Page<ProductModel> findByProductTypeCode(String productTypeCode, Pageable pageable) {
-        return productRepository.findByProductTypeCode(productTypeCode, pageable)
-                .map(productEntityMapper::toModel);
-    }
-
-    @Override
-    public Page<ProductModel> findByBrandId(UUID brandId, Pageable pageable) {
-        return productRepository.findByBrandId(brandId, pageable)
                 .map(productEntityMapper::toModel);
     }
 
@@ -102,7 +74,7 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
         return productRepository.findAll()
                 .stream()
                 .map(productEntityMapper::toModel)
-                .toList(); // Usa .collect(Collectors.toList()) si estás en Java 8
+                .toList();
     }
 
     @Override
@@ -113,8 +85,10 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
 
     @Override
     public Page<ProductModel> findAllWithFilters(Pageable pageable, String code, String name, String description) {
-        return productRepository.findAllWithFilters(code, name, description, pageable)
+        // ✅ Cambiar solo esta línea (cambiar el orden):
+        return productRepository.findAllWithFilters(pageable, code, name, description)
                 .map(productEntityMapper::toModel);
+        //                                         ↑ Mover pageable al inicio
     }
 
     @Override
@@ -128,10 +102,7 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
         productRepository.deleteById(id);
     }
 
-    @Override
-    public Page<ProductModel> findProductsWithFilters(Pageable pageable, String code, String name, String description) {
-        return productRepository.findProductsWithFilters(pageable, code, name, description)
-                .map(productEntityMapper::toModel);
-    }
+
+
 
 }

@@ -14,10 +14,13 @@ public class ProductResponseDTO {
 
     private UUID id;
     private String code;
+    private String name;
     private String description;
-    private String productTypeCode;
+    private UUID categoryId;
+    private String categoryName;  // ← Para mostrar nombre de categoría
     private String unitCode;
     private UUID brandId;
+    private String brandName;
     private Integer minimumStock;
     private Integer currentStock;
     private BigDecimal unitPrice;

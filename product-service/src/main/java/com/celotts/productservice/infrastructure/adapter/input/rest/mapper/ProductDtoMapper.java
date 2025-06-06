@@ -11,7 +11,7 @@ public class ProductDtoMapper {
                 .code(requestDto.getCode())
                 .name(requestDto.getName())
                 .description(requestDto.getDescription())
-                .productTypeCode(requestDto.getProductTypeCode())
+                .categoryId(requestDto.getCategoryId())  // ✅ AGREGAR esta línea
                 .unitCode(requestDto.getUnitCode())
                 .brandId(requestDto.getBrandId())
                 .minimumStock(requestDto.getMinimumStock())

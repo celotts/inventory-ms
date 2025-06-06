@@ -10,20 +10,5 @@ public class ProductAlreadyExistsException extends RuntimeException {
         super(message);
     }
 
-    /**
-     * Constructor estructurado - para casos específicos
-     * Uso: throw new ProductAlreadyExistsException("code", productCode);
-     * Ventaja: Mejor para logging y parsing automático
-     */
-    public ProductAlreadyExistsException(String field, String value) {
-        super("Product already exists with " + field + ": " + value);
-    }
 
-    /**
-     * Constructor con causa - solo si necesitas wrappear otras excepciones
-     * Uso: En casos de DataIntegrityViolationException del JPA
-     */
-    public ProductAlreadyExistsException(String message, Throwable cause) {
-        super(message, cause);
-    }
 }

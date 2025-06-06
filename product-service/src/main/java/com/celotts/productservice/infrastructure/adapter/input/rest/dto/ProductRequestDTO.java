@@ -23,8 +23,9 @@ public class ProductRequestDTO {
     @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
 
-    @NotBlank(message = "Product type code is required")
-    private String productTypeCode;
+    @NotNull(message = "Category is required")
+    private UUID categoryId;  // ← AGREGAR ESTO
+
 
     @NotBlank(message = "Unit code is required")
     private String unitCode;

@@ -19,12 +19,12 @@ public class ProductTypeAdapter implements ProductTypePort {
     public boolean existsByCode(String code) {
         return productTypeRepository.existsByCode(code);
     }
-
+    //TODO: cannot resolve method
     @Override
     public Optional<String> findNameByCode(String code) {
         return productTypeRepository.findNameByCode(code);
     }
-
+    //TODO: cannot resolve method
     @Override
     public List<String> findAllCodes() {
         return productTypeRepository.findAll().stream()

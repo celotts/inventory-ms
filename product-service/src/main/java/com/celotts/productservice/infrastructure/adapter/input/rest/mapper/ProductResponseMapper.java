@@ -15,8 +15,10 @@ public class ProductResponseMapper {
         return ProductResponseDTO.builder()
                 .id(model.getId())
                 .code(model.getCode())
+                .name(model.getName())  // ✅ AGREGAR
                 .description(model.getDescription())
-                .productTypeCode(model.getProductTypeCode())
+                .categoryId(model.getCategoryId())  // ✅ CAMBIAR: productTypeCode → categoryId
+                .categoryName(null)  // ✅ AGREGAR: Por ahora null, después podemos mejorarlo
                 .unitCode(model.getUnitCode())
                 .brandId(model.getBrandId())
                 .minimumStock(model.getMinimumStock())
@@ -27,18 +29,34 @@ public class ProductResponseMapper {
                 .updatedAt(model.getUpdatedAt())
                 .createdBy(model.getCreatedBy())
                 .updatedBy(model.getUpdatedBy())
-                .lowStock(calculateLowStock(model))
+                .lowStock(model.lowStock())
                 .build();
     }
 
-    private Boolean calculateLowStock(ProductModel model) {
-        Integer current = model.getCurrentStock();
-        Integer minimum = model.getMinimumStock();
-
-        if (current == null || minimum == null) {
-            return Boolean.FALSE;
+    // ✅ OPCIONAL: Versión mejorada para obtener categoryName
+    public ProductResponseDTO toDtoWithCategoryName(ProductModel model, String categoryName) {
+        if (model == null) {
+            return null;
         }
 
-        return current < minimum;
+        return ProductResponseDTO.builder()
+                .id(model.getId())
+                .code(model.getCode())
+                .name(model.getName())
+                .description(model.getDescription())
+                .categoryId(model.getCategoryId())
+                .categoryName(categoryName)  // Nombre obtenido externamente
+                .unitCode(model.getUnitCode())
+                .brandId(model.getBrandId())
+                .minimumStock(model.getMinimumStock())
+                .currentStock(model.getCurrentStock())
+                .unitPrice(model.getUnitPrice())
+                .enabled(model.getEnabled())
+                .createdAt(model.getCreatedAt())
+                .updatedAt(model.getUpdatedAt())
+                .createdBy(model.getCreatedBy())
+                .updatedBy(model.getUpdatedBy())
+                .lowStock(model.lowStock())
+                .build();
     }
 }

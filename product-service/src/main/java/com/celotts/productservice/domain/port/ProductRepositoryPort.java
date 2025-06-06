@@ -18,26 +18,14 @@ public interface ProductRepositoryPort {
     Optional<ProductModel> findById(UUID id);
     void deleteById(UUID id);
     boolean existsById(UUID id);
+    boolean existsByCode(String code);
 
     // Métodos de búsqueda adicionales
     Optional<ProductModel> findByCode(String code);
-    List<ProductModel> findByProductTypeCode(String productTypeCode);
+
+    // ✅ MANTENER: Métodos que SÍ usas
+    List<ProductModel> findByCategoryId(UUID categoryId);
     List<ProductModel> findByBrandId(UUID brandId);
     Page<ProductModel> findByEnabled(Boolean enabled, Pageable pageable);
 
-    //  Método para búsqueda con filtros
-    Page<ProductModel> findProductsWithFilters(Pageable pageable, String code, String name, String description);
-
-    // Métodos de conteo
-    long count();
-    long countByEnabled(Boolean enabled);
-
-    // Métodos de stock
-    Page<ProductModel> findByCurrentStockLessThanMinimumStock(Pageable pageable);
-    Page<ProductModel> findByCurrentStockLessThan(Integer stock, Pageable pageable);
-
-    boolean existsByCode(String code);
-
-    Page<ProductModel> findByProductTypeCode(String typeCode, Pageable pageable);
-    Page<ProductModel> findByBrandId(UUID brandId, Pageable pageable);
 }

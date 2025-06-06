@@ -8,13 +8,13 @@ import java.time.LocalDateTime;
 import java.util.function.Consumer;
 
 public class ProductRequestMapper {
-
+    //TODO: cannot resolve method
     public static ProductModel toModel(ProductRequestDTO dto) {
         return ProductModel.builder()
                 .code(dto.getCode())
                 .name(dto.getName())
                 .description(dto.getDescription())
-                .productTypeCode(dto.getProductTypeCode())
+                .categoryId(dto.getCategoryId())
                 .unitCode(dto.getUnitCode())
                 .brandId(dto.getBrandId())
                 .minimumStock(dto.getMinimumStock())

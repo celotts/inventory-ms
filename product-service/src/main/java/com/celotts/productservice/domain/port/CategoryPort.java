@@ -11,6 +11,8 @@ public interface CategoryPort {
     List<CategoryModel> findAll();
     Optional<CategoryModel> findById(UUID id);
     CategoryModel update(UUID id, CategoryModel category);
+
     void delete(UUID id);
     boolean existsById(UUID id);
+
 }

@@ -31,6 +31,9 @@ public class ProductEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "category_id", columnDefinition = "UUID",  nullable = false)
+    private UUID categoryId;
+
     @Column(name = "unit_price", precision = 10, scale = 2, nullable = false)
     private BigDecimal unitPrice;
 
@@ -45,9 +48,6 @@ public class ProductEntity {
 
     @Column(name = "unit_code", length = 30, nullable = false)
     private String unitCode;
-
-    @Column(name = "product_type_code", length = 50, nullable = false)
-    private String productTypeCode;
 
     @Column(name = "brand_id", nullable = false)
     private UUID brandId;

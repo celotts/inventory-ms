@@ -6,7 +6,7 @@ import static com.celotts.productservice.infrastructure.common.util.MapperUtils.
 
 import java.time.LocalDateTime;
 
-
+//TODO: not used method
 public class ProductModelUpdater {
     public static void applyUpdate(ProductModel model, ProductUpdateDTO dto) {
         ProductModelUpdateMapper.apply(model, dto);

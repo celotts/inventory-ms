@@ -72,7 +72,6 @@ public class ProductController {
     // READ - Operaciones de lectura
     // ===============================================
 
-    // Obtener todos los productos (sin paginación)
     @GetMapping
     public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
         log.info("Fetching all products");
@@ -84,14 +83,14 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // Obtener productos con paginación
+
     @GetMapping("/paginated")
     public ResponseEntity<Page<ProductResponseDTO>> getAllProductsPaginated(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false) String sortDir,
-            // Filtros opcionales agregados
+
             @RequestParam(required = false) String code,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String description) {
@@ -143,7 +142,7 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // Obtener producto por ID
+
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable UUID id) {
         log.info("Fetching product by ID: {}", id);
@@ -152,7 +151,7 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // Obtener producto por código
+
     @GetMapping("/code/{code}")
     public ResponseEntity<ProductResponseDTO> getProductByCode(@PathVariable String code) {
         log.info("Fetching product by code: {}", code);
@@ -161,7 +160,7 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // Verificar si existe un producto
+
     @GetMapping("/{id}/exists")
     public ResponseEntity<Boolean> existsProduct(@PathVariable UUID id) {
         log.info("Checking if product exists: {}", id);
@@ -169,7 +168,7 @@ public class ProductController {
         return ResponseEntity.ok(exists);
     }
 
-    // Filtros y consultas especializadas
+
     @GetMapping("/active")
     public ResponseEntity<List<ProductResponseDTO>> getActiveProducts() {
         log.info("Fetching active products");
@@ -208,14 +207,26 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/type/{typeCode}")
-    public ResponseEntity<List<ProductResponseDTO>> getProductsByType(@PathVariable String typeCode) {
-        log.info("Fetching products by type: {}", typeCode);
-        List<ProductModel> products = productService.getProductsByType(typeCode);
+    // ✅ AGREGAR estos nuevos endpoints de categoría:
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<ProductResponseDTO>> getProductsByCategory(@PathVariable UUID categoryId) {
+        log.info("Fetching products by category: {}", categoryId);
+        List<ProductModel> products = productService.getProductsByCategory(categoryId);
         List<ProductResponseDTO> response = products.stream()
                 .map(responseMapper::toDto)
                 .collect(Collectors.toList());
-        log.info("Retrieved {} products for type: {}", response.size(), typeCode);
+        log.info("Retrieved {} products for category: {}", response.size(), categoryId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/category/{categoryId}/low-stock")
+    public ResponseEntity<List<ProductResponseDTO>> getLowStockByCategory(@PathVariable UUID categoryId) {
+        log.info("Fetching low stock products by category: {}", categoryId);
+        List<ProductModel> products = productService.getLowStockByCategory(categoryId);
+        List<ProductResponseDTO> response = products.stream()
+                .map(responseMapper::toDto)
+                .collect(Collectors.toList());
+        log.info("Retrieved {} low stock products for category: {}", response.size(), categoryId);
         return ResponseEntity.ok(response);
     }
 
@@ -230,7 +241,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // Contadores
     @GetMapping("/count")
     public ResponseEntity<Long> countProducts() {
         log.info("Counting all products");
@@ -247,11 +257,6 @@ public class ProductController {
         return ResponseEntity.ok(count);
     }
 
-    // ===============================================
-    // UPDATE - Operaciones de actualización
-    // ===============================================
-
-    // Actualización completa
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> updateProduct(
             @PathVariable UUID id,
@@ -264,7 +269,7 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // Actualización parcial
+
     @PatchMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> partialUpdateProduct(
             @PathVariable UUID id,
@@ -278,7 +283,7 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // Actualización específica de stock
+
     @PatchMapping("/{id}/stock")
     public ResponseEntity<ProductResponseDTO> updateStock(
             @PathVariable UUID id,
@@ -291,7 +296,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // Habilitar producto
     @PatchMapping("/{id}/enable")
     public ResponseEntity<ProductResponseDTO> enableProduct(@PathVariable UUID id) {
         log.info("Enabling product with ID: {}", id);
@@ -301,7 +305,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // Deshabilitar producto
     @PatchMapping("/{id}/disable")
     public ResponseEntity<ProductResponseDTO> disableProduct(@PathVariable UUID id) {
         log.info("Disabling product with ID: {}", id);
@@ -311,11 +314,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // ===============================================
-    // DELETE - Operaciones de eliminación
-    // ===============================================
-
-    // Eliminación lógica (soft delete)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable UUID id) {
         log.info("Soft deleting product with ID: {}", id);
@@ -324,7 +322,6 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
-    // Eliminación física (hard delete)
     @DeleteMapping("/{id}/hard")
     public ResponseEntity<Void> hardDeleteProduct(@PathVariable UUID id) {
         log.info("Hard deleting product with ID: {}", id);
@@ -334,9 +331,6 @@ public class ProductController {
     }
 
 
-    // ===============================================
-    // MÉTODOS AUXILIARES PRIVADOS
-    // ===============================================
 
     /**
      * Convierte un ProductUpdateDTO a ProductRequestDTO manteniendo los valores existentes
@@ -345,8 +339,9 @@ public class ProductController {
     private ProductRequestDTO convertToRequestDTO(ProductUpdateDTO updateDTO, ProductModel existingProduct) {
         ProductRequestDTO requestDTO = new ProductRequestDTO();
         requestDTO.setCode(updateDTO.getCode() != null ? updateDTO.getCode() : existingProduct.getCode());
+        requestDTO.setName(updateDTO.getName() != null ? updateDTO.getName() : existingProduct.getName()); // ✅ AGREGAR
         requestDTO.setDescription(updateDTO.getDescription() != null ? updateDTO.getDescription() : existingProduct.getDescription());
-        requestDTO.setProductTypeCode(updateDTO.getProductTypeCode() != null ? updateDTO.getProductTypeCode() : existingProduct.getProductTypeCode());
+        requestDTO.setCategoryId(updateDTO.getCategoryId() != null ? updateDTO.getCategoryId() : existingProduct.getCategoryId()); // ✅ CAMBIAR
         requestDTO.setUnitCode(updateDTO.getUnitCode() != null ? updateDTO.getUnitCode() : existingProduct.getUnitCode());
         requestDTO.setBrandId(updateDTO.getBrandId() != null ? updateDTO.getBrandId() : existingProduct.getBrandId());
         requestDTO.setMinimumStock(updateDTO.getMinimumStock() != null ? updateDTO.getMinimumStock() : existingProduct.getMinimumStock());
@@ -356,4 +351,16 @@ public class ProductController {
         requestDTO.setUpdatedBy(updateDTO.getUpdatedBy());
         return requestDTO;
     }
+    /*
+    //TODO: Pendiente por agregar en la bd
+    sql-- Agregar columna category_id si no la tienes
+    ALTER TABLE product ADD COLUMN category_id UUID;
+
+-- Eliminar columna product_type_code si existe
+    ALTER TABLE product DROP COLUMN IF EXISTS product_type_code;
+
+-- Crear índice para mejor performance
+    CREATE INDEX IF NOT EXISTS idx_product_category_id ON product(category_id);
+    */
+
 }

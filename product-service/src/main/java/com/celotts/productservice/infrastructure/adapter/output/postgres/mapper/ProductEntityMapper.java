@@ -1,15 +1,13 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper;
 
-import com.celotts.productservice.domain.model.ProductModel;  // ✅ Cambiar Product por ProductModel
+import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.ProductEntity;
 import org.springframework.stereotype.Component;
 
-
-
-@Component  // ✅ Agregar esta anotación para hacer el mapper un bean
+@Component
 public class ProductEntityMapper {
 
-    public static ProductEntity toEntity(ProductModel productModel) {  // ✅ Cambiar Product por ProductModel
+    public static ProductEntity toEntity(ProductModel productModel) {
         if (productModel == null) {
             return null;
         }
@@ -19,13 +17,13 @@ public class ProductEntityMapper {
                 .code(productModel.getCode())
                 .name(productModel.getName())
                 .description(productModel.getDescription())
-                .unitPrice(productModel.getUnitPrice())
-                .currentStock(productModel.getCurrentStock())
-                .minimumStock(productModel.getMinimumStock())
-                .enabled(productModel.getEnabled())
+                .categoryId(productModel.getCategoryId())  // ✅ AGREGAR
                 .unitCode(productModel.getUnitCode())
-                .productTypeCode(productModel.getProductTypeCode())
                 .brandId(productModel.getBrandId())
+                .minimumStock(productModel.getMinimumStock())
+                .currentStock(productModel.getCurrentStock())
+                .unitPrice(productModel.getUnitPrice())
+                .enabled(productModel.getEnabled())
                 .createdAt(productModel.getCreatedAt())
                 .updatedAt(productModel.getUpdatedAt())
                 .createdBy(productModel.getCreatedBy())
@@ -33,28 +31,27 @@ public class ProductEntityMapper {
                 .build();
     }
 
-    public ProductModel toModel(ProductEntity entity) {  // ✅ Cambiar Product por ProductModel
+    public ProductModel toModel(ProductEntity entity) {
         if (entity == null) {
             return null;
         }
 
-        return new ProductModel(
-                entity.getId(),
-                entity.getCode(),
-                entity.getName(),
-                entity.getDescription(),
-                entity.getProductTypeCode(),
-                entity.getUnitCode(),
-                entity.getBrandId(),
-                entity.getMinimumStock(),
-                entity.getCurrentStock(),
-                entity.getUnitPrice(),
-                entity.getEnabled(),
-                entity.getCreatedAt(),
-                entity.getUpdatedAt(),
-                entity.getCreatedBy(),
-                entity.getUpdatedBy(),
-                entity.getEnabled() // ← aquí el campo faltante `withEnabled`
-        );
+        return ProductModel.builder()  // ✅ Usar builder pattern
+                .id(entity.getId())
+                .code(entity.getCode())
+                .name(entity.getName())
+                .description(entity.getDescription())
+                .categoryId(entity.getCategoryId())  // ✅ AGREGAR
+                .unitCode(entity.getUnitCode())
+                .brandId(entity.getBrandId())
+                .minimumStock(entity.getMinimumStock())
+                .currentStock(entity.getCurrentStock())
+                .unitPrice(entity.getUnitPrice())
+                .enabled(entity.getEnabled())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .createdBy(entity.getCreatedBy())
+                .updatedBy(entity.getUpdatedBy())
+                .build();
     }
 }

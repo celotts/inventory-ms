@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-
+//TODO: not used
 @MappedSuperclass
 @Getter
 @Setter

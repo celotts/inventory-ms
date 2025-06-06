@@ -16,7 +16,9 @@ public class ProductModel {
     String code;
     String name;
     String description;
-    String productTypeCode;
+
+    UUID categoryId;
+
     String unitCode;
     UUID brandId;
     Integer minimumStock;
@@ -27,7 +29,6 @@ public class ProductModel {
     LocalDateTime updatedAt;
     String createdBy;
     String updatedBy;
-    Boolean withEnabled;
 
     public boolean lowStock() {
         return currentStock != null && minimumStock != null && currentStock < minimumStock;
