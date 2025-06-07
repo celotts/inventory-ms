@@ -1,8 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter;
 
 import com.celotts.productservice.domain.model.CategoryModel;
-import com.celotts.productservice.domain.port.CategoryPort;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.Category;
+import com.celotts.productservice.domain.port.CategoryRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.CategoryEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,44 +13,54 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class CategoryAdapter implements CategoryPort {
+public class CategoryAdapter implements CategoryRepositoryPort {
 
-    private final CategoryRepository repository;
-    private final CategoryEntityMapper mapper;
-
-    @Override
-    public CategoryModel create(CategoryModel model) {
-        Category entity = repository.save(mapper.toEntity(model));
-        return mapper.toModel(entity);
-    }
+    private final CategoryRepository categoryRepository;
+    private final CategoryEntityMapper categoryEntityMapper;
 
     @Override
-    public List<CategoryModel> findAll() {
-        return repository.findAll()
-                .stream()
-                .map(mapper::toModel)
-                .toList();
+    public CategoryModel save(CategoryModel category) {
+        var categoryEntity = categoryEntityMapper.toEntity(category);
+        var savedEntity = categoryRepository.save(categoryEntity);
+        return categoryEntityMapper.toDomain(savedEntity);
     }
 
     @Override
     public Optional<CategoryModel> findById(UUID id) {
-        return repository.findById(id).map(mapper::toModel);
+        return categoryRepository.findById(id)
+                .map(categoryEntityMapper::toDomain);
     }
 
     @Override
-    public CategoryModel update(UUID id, CategoryModel model) {
-        Category entity = mapper.toEntity(model);
-        entity.setId(id);
-        return mapper.toModel(repository.save(entity));
+    public Optional<CategoryModel> findByName(String name) {
+        return categoryRepository.findByName(name)
+                .map(categoryEntityMapper::toDomain);
     }
 
     @Override
-    public void delete(UUID id) {
-        repository.deleteById(id);
+    public List<CategoryModel> findAll() {
+        var entities = categoryRepository.findAllOrderByCreatedAtDesc();
+        return categoryEntityMapper.toDomainList(entities);
+    }
+
+    @Override
+    public List<CategoryModel> findByNameContaining(String name) {
+        var entities = categoryRepository.findByNameContaining(name);
+        return categoryEntityMapper.toDomainList(entities);
+    }
+
+    @Override
+    public boolean existsByName(String name) {
+        return categoryRepository.existsByName(name);
+    }
+
+    @Override
+    public void deleteById(UUID id) {
+        categoryRepository.deleteById(id);
     }
 
     @Override
     public boolean existsById(UUID id) {
-        return repository.existsById(id);
+        return categoryRepository.existsById(id);
     }
 }

@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.dto;
+package com.celotts.productservice.infrastructure.adapter.input.rest.dto.product;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;

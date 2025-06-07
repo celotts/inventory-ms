@@ -1,7 +1,7 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.mapper;
+package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductUpdateDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
 import com.celotts.productservice.infrastructure.common.util.MapperUtils;
 
 import java.time.LocalDateTime;

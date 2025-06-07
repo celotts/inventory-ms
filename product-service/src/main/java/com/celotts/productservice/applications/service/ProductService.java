@@ -1,16 +1,16 @@
 package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.port.CategoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.ProductDtoMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductDtoMapper;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.ProductBrandPort;
 import com.celotts.productservice.domain.port.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.ProductUnitPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductRequestDTO;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductUpdateDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.ProductRequestMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;

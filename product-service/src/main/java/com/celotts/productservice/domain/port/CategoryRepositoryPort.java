@@ -6,13 +6,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface CategoryPort {  // Siguiendo tu patrón, no CategoryRepositoryPort
+public interface CategoryRepositoryPort {
+
+    // Métodos básicos CRUD
     CategoryModel save(CategoryModel category);
     Optional<CategoryModel> findById(UUID id);
-    Optional<CategoryModel> findByName(String name);
     List<CategoryModel> findAll();
-    List<CategoryModel> findByNameContaining(String name);
-    boolean existsByName(String name);
     void deleteById(UUID id);
     boolean existsById(UUID id);
+    boolean existsByName(String name);
+
+    // Métodos de búsqueda adicionales
+    Optional<CategoryModel> findByName(String name);
+    List<CategoryModel> findByNameContaining(String name);
 }

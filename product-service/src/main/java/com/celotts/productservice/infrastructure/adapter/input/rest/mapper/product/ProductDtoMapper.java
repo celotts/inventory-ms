@@ -1,7 +1,7 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.mapper;
+package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product;
 
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductRequestDTO;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductUpdateDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass

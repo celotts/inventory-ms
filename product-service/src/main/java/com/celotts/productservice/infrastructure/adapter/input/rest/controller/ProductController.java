@@ -2,8 +2,11 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.applications.service.ProductService;
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.*;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.ProductResponseMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductStockUpdateDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductResponseMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

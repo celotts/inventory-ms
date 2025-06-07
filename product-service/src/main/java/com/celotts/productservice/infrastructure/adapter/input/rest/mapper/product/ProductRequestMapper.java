@@ -1,14 +1,12 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.mapper;
+package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductRequestDTO;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductUpdateDTO;
-import static com.celotts.productservice.infrastructure.common.util.MapperUtils.updateFieldIfNotNull;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
+
 import java.time.LocalDateTime;
-import java.util.function.Consumer;
 
 public class ProductRequestMapper {
-    //TODO: cannot resolve method
     public static ProductModel toModel(ProductRequestDTO dto) {
         return ProductModel.builder()
                 .code(dto.getCode())
