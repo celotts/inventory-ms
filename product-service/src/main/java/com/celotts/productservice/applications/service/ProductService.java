@@ -1,6 +1,8 @@
 package com.celotts.productservice.applications.service;
 
+//import com.celotts.productservice.domain.port.category.CategoryPort;
 import com.celotts.productservice.domain.port.category.CategoryPort;
+import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductDtoMapper;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.product.ProductBrandPort;
@@ -35,7 +37,7 @@ public class ProductService {
     private final ProductUnitPort productUnitPort;
     private final ProductBrandPort productBrandPort;
 
-    private final CategoryPort categoryPort;
+    private final CategoryRepositoryPort categoryPort;
 
     public ProductModel createProduct(ProductRequestDTO dto) {
         if (repository.findByCode(dto.getCode()).isPresent()) {
