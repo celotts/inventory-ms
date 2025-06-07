@@ -1,7 +1,7 @@
 package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.model.CategoryModel;
-import com.celotts.productservice.domain.port.CategoryRepositoryPort;  // ✅ Corregido: sin "output"
+import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;  // ✅ Corregido: sin "output"
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

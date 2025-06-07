@@ -1,11 +1,11 @@
 package com.celotts.productservice.applications.service;
 
-import com.celotts.productservice.domain.port.CategoryPort;
+import com.celotts.productservice.domain.port.category.CategoryPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductDtoMapper;
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.ProductBrandPort;
-import com.celotts.productservice.domain.port.ProductRepositoryPort;
-import com.celotts.productservice.domain.port.ProductUnitPort;
+import com.celotts.productservice.domain.port.product.ProductBrandPort;
+import com.celotts.productservice.domain.port.product.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.product.ProductUnitPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
