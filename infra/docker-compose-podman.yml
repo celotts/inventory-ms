@@ -64,6 +64,8 @@ services:
       - inventory-network
     volumes:
       - product-data:/var/lib/postgresql/data
+      - ./init-scripts/product/01-product-init.sql:/docker-entrypoint-initdb.d/01-product-init.sql:ro
+      #- ./init-scripts/product-init.sql:/docker-entrypoint-initdb.d/product-init.sql:ro  # ✅ NUEVA LÍNEA
 
   product-service:
     build:

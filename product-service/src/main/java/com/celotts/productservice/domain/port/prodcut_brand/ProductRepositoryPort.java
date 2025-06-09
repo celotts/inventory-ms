@@ -1,4 +1,4 @@
-package com.celotts.productservice.domain.port.product;
+package com.celotts.productservice.domain.port.prodcut_brand;
 
 import com.celotts.productservice.domain.model.ProductModel;
 import org.springframework.data.domain.Page;

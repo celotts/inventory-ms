@@ -1,19 +1,17 @@
 package com.celotts.productservice.applications.service;
 
-//import com.celotts.productservice.domain.port.category.CategoryPort;
-import com.celotts.productservice.domain.port.category.CategoryPort;
 import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductDtoMapper;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.product.ProductBrandPort;
-import com.celotts.productservice.domain.port.product.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.prodcut_brand.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.product.ProductUnitPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
-import lombok.RequiredArgsConstructor;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
@@ -27,17 +25,26 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 @Slf4j
 public class ProductService {
 
-    @Qualifier("productRepositoryAdapter")
+    //@Qualifier("productRepositoryAdapter")
     private final ProductRepositoryPort repository;
     private final ProductUnitPort productUnitPort;
     private final ProductBrandPort productBrandPort;
-
     private final CategoryRepositoryPort categoryPort;
+
+    public ProductService(
+            @Qualifier("productRepositoryAdapter") ProductRepositoryPort repository,
+            ProductUnitPort productUnitPort,
+            ProductBrandPort productBrandPort,
+            CategoryRepositoryPort categoryPort) {
+        this.repository = repository;
+        this.productUnitPort = productUnitPort;
+        this.productBrandPort = productBrandPort;
+        this.categoryPort = categoryPort;
+    }
 
     public ProductModel createProduct(ProductRequestDTO dto) {
         if (repository.findByCode(dto.getCode()).isPresent()) {
