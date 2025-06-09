@@ -1,11 +1,16 @@
 import com.celotts.productservice.applications.service.ProductService;
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.product.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
+import com.celotts.productservice.domain.port.prodcut_brand.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.product.ProductBrandPort;
+import com.celotts.productservice.domain.port.product.ProductUnitPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.math.BigDecimal;
@@ -18,11 +23,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ExtendWith(SpringExtension.class)
 class ProductServiceIntegrationTest {
 
-    @Autowired
+    @InjectMocks
     private ProductService productService;
 
-    @Autowired
+    @MockitoBean
     private ProductRepositoryPort repository;
+
+    @MockitoBean
+    private ProductUnitPort productUnitPort;
+
+    @MockitoBean
+    private ProductBrandPort productBrandPort;
+
+    @MockitoBean
+    private CategoryRepositoryPort categoryPort;
+
 
     @Test
     void updateProduct_shouldUpdateOnlyProvidedFields() {
@@ -31,7 +46,7 @@ class ProductServiceIntegrationTest {
                 .code("CODE123")
                 .name("Original Name")
                 .description("Initial Description")
-                .productTypeCode("TYPE01")
+                .unitCode("TYPE01")
                 .unitCode("UNIT01")
                 .brandId(UUID.randomUUID())
                 .minimumStock(5)
