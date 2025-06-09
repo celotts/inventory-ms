@@ -1,7 +1,7 @@
 import com.celotts.productservice.applications.service.ProductService;
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.ProductRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductRequestDTO;
+import com.celotts.productservice.domain.port.product.ProductRepositoryPort;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;

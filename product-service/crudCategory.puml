@@ -1,0 +1,586 @@
+@startuml Category_CRUD_Sequence
+!theme spacelab
+title CRUD de Categorias de Productos - Patron Hexagonal
+
+' Definicion de participantes por capas
+box "CAPA DE PRESENTACION" #LightBlue
+    participant "Cliente" as Client
+    participant "CategoryController" as Controller
+    participant "CategoryRequestMapper" as RequestMapper
+    participant "CategoryResponseMapper" as ResponseMapper
+end box
+
+box "CAPA DE APLICACION" #LightGreen
+    participant "CategoryService" as Service
+end box
+
+box "CAPA DE DOMINIO" #LightCoral
+    participant "CategoryModel" as Model
+    participant "CategoryBusinessRules" as BusinessRules
+    participant "CategoryValueObjects" as ValueObjects
+end box
+
+box "CAPA DE PUERTOS" #LightYellow
+    participant "CategoryRepositoryPort" as RepoPort
+    participant "ProductRepositoryPort" as ProductRepoPort
+    participant "AuditPort" as AuditPort
+    participant "CachePort" as CachePort
+end box
+
+box "CAPA DE INFRAESTRUCTURA" #LightGray
+    participant "CategoryRepositoryAdapter" as RepoAdapter
+    participant "CategoryEntityMapper" as EntityMapper
+    participant "PostgreSQL" as Database
+    participant "AuditService" as AuditService
+    participant "RedisCache" as RedisCache
+end box
+
+== CASO DE USO 1: CREAR CATEGORIA ==
+
+Client -> Controller : POST /api/v1/categories
+activate Controller
+note over Client : {\n  "name": "Smartphones",\n  "description": "Telefonos inteligentes",\n  "parentCategoryId": 1,\n  "icon": "phone",\n  "isActive": true\n}
+
+note over Controller : VALIDACION INICIAL\nFormato JSON\nCampos requeridos\nTipos de datos
+
+Controller -> RequestMapper : toCreateModel(request)
+activate RequestMapper
+
+note over RequestMapper : TRANSFORMACION A DTO\nNormalizacion de datos\nValidacion de reglas basicas\nGeneracion de slug\nSanitizacion
+
+RequestMapper -> RequestMapper : validateRequest()
+RequestMapper -> RequestMapper : normalizeData()
+RequestMapper -> RequestMapper : generateSlug("Smartphones")
+RequestMapper -> RequestMapper : sanitizeDescription()
+
+RequestMapper --> Controller : CategoryCreateDTO
+deactivate RequestMapper
+
+Controller -> Service : createCategory(categoryCreateDTO)
+activate Service
+
+note over Service : LOGICA DE NEGOCIO\nValidaciones de dominio\nVerificacion de jerarquia\nReglas de negocio
+
+' Validar categoria padre existe
+Service -> RepoPort : findById(parentCategoryId)
+activate RepoPort
+RepoPort -> RepoAdapter : findById(parentCategoryId)
+activate RepoAdapter
+RepoAdapter -> Database : SELECT * FROM categories WHERE id = 1
+activate Database
+Database --> RepoAdapter : parentCategory
+deactivate Database
+RepoAdapter --> RepoPort : CategoryModel
+deactivate RepoAdapter
+RepoPort --> Service : CategoryModel
+deactivate RepoPort
+
+' Validar nombre unico
+Service -> RepoPort : findByNameAndParent(name, parentId)
+activate RepoPort
+RepoPort -> RepoAdapter : findByNameAndParent(name, parentId)
+activate RepoAdapter
+RepoAdapter -> Database : SELECT * FROM categories WHERE name = ? AND parent_id = ?
+activate Database
+Database --> RepoAdapter : null
+deactivate Database
+RepoAdapter --> RepoPort : null
+deactivate RepoAdapter
+RepoPort --> Service : null
+deactivate RepoPort
+
+alt Categoria ya existe
+    Service --> Controller : DuplicateCategoryException
+    Controller --> Client : HTTP 409 Conflict
+else Categoria no existe - Continuar
+    ' Crear modelo de dominio
+    Service -> Model : create(categoryData)
+    activate Model
+
+    note over Model : CREACION DEL MODELO\nInstanciacion de entidad\nCreacion de Value Objects\nAplicacion de reglas
+
+    Model -> ValueObjects : new CategoryName(name)
+    activate ValueObjects
+    ValueObjects -> ValueObjects : validateLength(name)
+    ValueObjects -> ValueObjects : validateFormat(name)
+    ValueObjects --> Model : CategoryName
+    deactivate ValueObjects
+
+    Model -> ValueObjects : new CategoryPath(parentPath + slug)
+    activate ValueObjects
+    ValueObjects --> Model : CategoryPath
+    deactivate ValueObjects
+
+    Model -> ValueObjects : new CategoryHierarchy(level, parentId)
+    activate ValueObjects
+    ValueObjects --> Model : CategoryHierarchy
+    deactivate ValueObjects
+
+    Model -> BusinessRules : validateCategoryRules()
+    activate BusinessRules
+
+    BusinessRules -> BusinessRules : validateMaxDepth(level)
+    BusinessRules -> BusinessRules : validateParentCompatibility()
+    BusinessRules -> BusinessRules : validateNamingConventions()
+
+    BusinessRules --> Model : validation success
+    deactivate BusinessRules
+
+    Model -> Model : generateFullPath()
+    Model -> Model : calculateLevel()
+    Model -> Model : setDefaultProperties()
+
+    Model --> Service : CategoryModel
+    deactivate Model
+
+    ' Persistir categoria
+    Service -> RepoPort : save(categoryModel)
+    activate RepoPort
+
+    RepoPort -> RepoAdapter : save(categoryModel)
+    activate RepoAdapter
+
+    RepoAdapter -> EntityMapper : toEntity(categoryModel)
+    activate EntityMapper
+
+    note over EntityMapper : MAPEO A ENTIDAD\nConversion de Value Objects\nMapeo de campos\nPreparacion para BD
+
+    EntityMapper -> EntityMapper : mapValueObjectsToColumns()
+    EntityMapper -> EntityMapper : setTimestamps()
+    EntityMapper -> EntityMapper : calculatePaths()
+
+    EntityMapper --> RepoAdapter : CategoryEntity
+    deactivate EntityMapper
+
+    RepoAdapter -> Database : INSERT INTO categories (...) RETURNING *
+    activate Database
+
+    note over Database : PERSISTENCIA\nInsercion en BD\nValidacion de constraints\nActualizacion de indices\nTriggers automaticos
+
+    Database --> RepoAdapter : CategoryEntity (with ID)
+    deactivate Database
+
+    ' Post-insercion: Actualizar contadores y jerarquia
+    RepoAdapter -> Database : UPDATE parent SET child_count = child_count + 1
+    activate Database
+    Database --> RepoAdapter : success
+    deactivate Database
+
+    RepoAdapter -> Database : UPDATE categoria_paths SET full_path = ?
+    activate Database
+    Database --> RepoAdapter : success
+    deactivate Database
+
+    RepoAdapter -> EntityMapper : toModel(persistedEntity)
+    activate EntityMapper
+    EntityMapper --> RepoAdapter : CategoryModel (persisted)
+    deactivate EntityMapper
+
+    RepoAdapter --> RepoPort : CategoryModel (persisted)
+    deactivate RepoAdapter
+    RepoPort --> Service : CategoryModel (persisted)
+    deactivate RepoPort
+
+    ' Post-procesamiento
+    Service -> AuditPort : logCategoryCreation(category)
+    activate AuditPort
+    AuditPort -> AuditService : logCategoryCreation(category)
+    activate AuditService
+    AuditService --> AuditPort : success
+    deactivate AuditService
+    AuditPort --> Service : success
+    deactivate AuditPort
+
+    Service -> CachePort : invalidateCategoryCache()
+    activate CachePort
+    CachePort -> RedisCache : del("categories:*")
+    activate RedisCache
+    RedisCache --> CachePort : success
+    deactivate RedisCache
+    CachePort --> Service : success
+    deactivate CachePort
+
+    Service --> Controller : CategoryModel (created)
+    deactivate Service
+end
+
+Controller -> ResponseMapper : toResponse(categoryModel)
+activate ResponseMapper
+
+note over ResponseMapper : PREPARACION RESPUESTA\nConversion a DTO\nEnlaces HATEOAS\nMetadatos de respuesta
+
+ResponseMapper -> ResponseMapper : mapToDTO()
+ResponseMapper -> ResponseMapper : generateLinks()
+ResponseMapper -> ResponseMapper : addMetadata()
+
+ResponseMapper --> Controller : CategoryResponseDTO
+deactivate ResponseMapper
+
+Controller --> Client : HTTP 201 Created\nCategoryResponseDTO
+deactivate Controller
+
+note over Client : RESPUESTA EXITOSA\n{\n  "id": 3,\n  "name": "Smartphones",\n  "slug": "smartphones",\n  "description": "Telefonos inteligentes",\n  "parentId": 1,\n  "level": 2,\n  "path": "/electronics/smartphones",\n  "childCount": 0,\n  "isActive": true,\n  "createdAt": "2025-06-06T10:30:00Z",\n  "_links": {\n    "self": "/api/v1/categories/3",\n    "parent": "/api/v1/categories/1",\n    "children": "/api/v1/categories/3/children",\n    "products": "/api/v1/categories/3/products"\n  }\n}
+
+== CASO DE USO 2: LEER CATEGORIA ==
+
+Client -> Controller : GET /api/v1/categories/3
+activate Controller
+
+Controller -> Service : getCategoryById(3)
+activate Service
+
+' Verificar cache primero
+Service -> CachePort : get("category:3")
+activate CachePort
+CachePort -> RedisCache : get("category:3")
+activate RedisCache
+RedisCache --> CachePort : null (cache miss)
+deactivate RedisCache
+CachePort --> Service : null
+deactivate CachePort
+
+' Buscar en BD
+Service -> RepoPort : findById(3)
+activate RepoPort
+RepoPort -> RepoAdapter : findById(3)
+activate RepoAdapter
+RepoAdapter -> Database : SELECT * FROM categories WHERE id = 3
+activate Database
+Database --> RepoAdapter : CategoryEntity
+deactivate Database
+
+RepoAdapter -> EntityMapper : toModel(entity)
+activate EntityMapper
+EntityMapper --> RepoAdapter : CategoryModel
+deactivate EntityMapper
+
+RepoAdapter --> RepoPort : CategoryModel
+deactivate RepoAdapter
+RepoPort --> Service : CategoryModel
+deactivate RepoPort
+
+' Guardar en cache
+Service -> CachePort : set("category:3", categoryModel, 300)
+activate CachePort
+CachePort -> RedisCache : set("category:3", data, 300)
+activate RedisCache
+RedisCache --> CachePort : success
+deactivate RedisCache
+CachePort --> Service : success
+deactivate CachePort
+
+Service --> Controller : CategoryModel
+deactivate Service
+
+Controller -> ResponseMapper : toResponse(categoryModel)
+activate ResponseMapper
+ResponseMapper --> Controller : CategoryResponseDTO
+deactivate ResponseMapper
+
+Controller --> Client : HTTP 200 OK\nCategoryResponseDTO
+deactivate Controller
+
+== CASO DE USO 3: ACTUALIZAR CATEGORIA ==
+
+Client -> Controller : PUT /api/v1/categories/3
+activate Controller
+note over Client : {\n  "name": "Smartphones Avanzados",\n  "description": "Telefonos inteligentes de ultima generacion",\n  "icon": "smartphone"\n}
+
+Controller -> RequestMapper : toUpdateModel(request, categoryId)
+activate RequestMapper
+RequestMapper --> Controller : CategoryUpdateDTO
+deactivate RequestMapper
+
+Controller -> Service : updateCategory(3, categoryUpdateDTO)
+activate Service
+
+' Verificar que categoria existe
+Service -> RepoPort : findById(3)
+activate RepoPort
+RepoPort -> RepoAdapter : findById(3)
+activate RepoAdapter
+RepoAdapter -> Database : SELECT * FROM categories WHERE id = 3
+activate Database
+Database --> RepoAdapter : CategoryEntity
+deactivate Database
+RepoAdapter -> EntityMapper : toModel(entity)
+activate EntityMapper
+EntityMapper --> RepoAdapter : CategoryModel
+deactivate EntityMapper
+RepoAdapter --> RepoPort : CategoryModel
+deactivate RepoAdapter
+RepoPort --> Service : CategoryModel (existing)
+deactivate RepoPort
+
+' Verificar si nuevo nombre es unico (si cambio)
+alt Nombre cambio
+    Service -> RepoPort : findByNameAndParent(newName, parentId)
+    activate RepoPort
+    RepoPort -> RepoAdapter : findByNameAndParent(newName, parentId)
+    activate RepoAdapter
+    RepoAdapter -> Database : SELECT * FROM categories WHERE name = ? AND parent_id = ? AND id != ?
+    activate Database
+    Database --> RepoAdapter : null
+    deactivate Database
+    RepoAdapter --> RepoPort : null
+    deactivate RepoAdapter
+    RepoPort --> Service : null (nombre disponible)
+    deactivate RepoPort
+end
+
+' Actualizar modelo
+Service -> Model : update(existingCategory, updateData)
+activate Model
+
+Model -> BusinessRules : validateUpdateRules()
+activate BusinessRules
+BusinessRules -> BusinessRules : validateNameChange()
+BusinessRules -> BusinessRules : validateHierarchyIntegrity()
+BusinessRules --> Model : validation success
+deactivate BusinessRules
+
+Model -> Model : updateProperties()
+Model -> Model : recalculatePaths()
+Model -> Model : setUpdatedTimestamp()
+
+Model --> Service : CategoryModel (updated)
+deactivate Model
+
+' Persistir cambios
+Service -> RepoPort : save(updatedCategory)
+activate RepoPort
+RepoPort -> RepoAdapter : save(updatedCategory)
+activate RepoAdapter
+
+RepoAdapter -> EntityMapper : toEntity(updatedCategory)
+activate EntityMapper
+EntityMapper --> RepoAdapter : CategoryEntity
+deactivate EntityMapper
+
+RepoAdapter -> Database : UPDATE categories SET ... WHERE id = 3
+activate Database
+Database --> RepoAdapter : CategoryEntity (updated)
+deactivate Database
+
+' Si cambio el nombre, actualizar rutas de hijos
+alt Nombre o slug cambio
+    RepoAdapter -> Database : UPDATE categories SET full_path = ... WHERE parent_path LIKE ?
+    activate Database
+    Database --> RepoAdapter : affected rows
+    deactivate Database
+end
+
+RepoAdapter -> EntityMapper : toModel(updatedEntity)
+activate EntityMapper
+EntityMapper --> RepoAdapter : CategoryModel
+deactivate EntityMapper
+
+RepoAdapter --> RepoPort : CategoryModel (persisted)
+deactivate RepoAdapter
+RepoPort --> Service : CategoryModel (persisted)
+deactivate RepoPort
+
+' Post-procesamiento
+Service -> AuditPort : logCategoryUpdate(oldCategory, newCategory)
+activate AuditPort
+AuditPort --> Service : success
+deactivate AuditPort
+
+Service -> CachePort : invalidateCategoryCache()
+activate CachePort
+CachePort -> RedisCache : del("category:3", "categories:*")
+activate RedisCache
+RedisCache --> CachePort : success
+deactivate RedisCache
+CachePort --> Service : success
+deactivate CachePort
+
+Service --> Controller : CategoryModel (updated)
+deactivate Service
+
+Controller -> ResponseMapper : toResponse(updatedCategory)
+activate ResponseMapper
+ResponseMapper --> Controller : CategoryResponseDTO
+deactivate ResponseMapper
+
+Controller --> Client : HTTP 200 OK\nCategoryResponseDTO
+deactivate Controller
+
+== CASO DE USO 4: ELIMINAR CATEGORIA ==
+
+Client -> Controller : DELETE /api/v1/categories/3
+activate Controller
+
+Controller -> Service : deleteCategory(3)
+activate Service
+
+' Verificar que categoria existe
+Service -> RepoPort : findById(3)
+activate RepoPort
+RepoPort -> RepoAdapter : findById(3)
+activate RepoAdapter
+RepoAdapter -> Database : SELECT * FROM categories WHERE id = 3
+activate Database
+Database --> RepoAdapter : CategoryEntity
+deactivate Database
+RepoAdapter -> EntityMapper : toModel(entity)
+activate EntityMapper
+EntityMapper --> RepoAdapter : CategoryModel
+deactivate EntityMapper
+RepoAdapter --> RepoPort : CategoryModel
+deactivate RepoPort
+RepoPort --> Service : CategoryModel (existing)
+deactivate RepoPort
+
+' Validar que se puede eliminar
+Service -> BusinessRules : validateDeletion(category)
+activate BusinessRules
+
+' Verificar que no tiene productos
+BusinessRules -> ProductRepoPort : countByCategory(categoryId)
+activate ProductRepoPort
+ProductRepoPort -> Database : SELECT COUNT(*) FROM products WHERE category_id = 3
+activate Database
+Database --> ProductRepoPort : count = 0
+deactivate Database
+ProductRepoPort --> BusinessRules : 0 productos
+deactivate ProductRepoPort
+
+' Verificar que no tiene subcategorias
+BusinessRules -> RepoPort : countChildren(categoryId)
+activate RepoPort
+RepoPort -> RepoAdapter : countChildren(categoryId)
+activate RepoAdapter
+RepoAdapter -> Database : SELECT COUNT(*) FROM categories WHERE parent_id = 3
+activate Database
+Database --> RepoAdapter : count = 0
+deactivate Database
+RepoAdapter --> RepoPort : 0 hijos
+deactivate RepoAdapter
+RepoPort --> BusinessRules : 0 subcategorias
+deactivate RepoPort
+
+BusinessRules --> Service : validation success (puede eliminar)
+deactivate BusinessRules
+
+alt No se puede eliminar
+    Service --> Controller : CannotDeleteCategoryException
+    Controller --> Client : HTTP 400 Bad Request\n"Cannot delete category with products or subcategories"
+else Se puede eliminar
+    ' Soft delete
+    Service -> RepoPort : softDelete(categoryId)
+    activate RepoPort
+    RepoPort -> RepoAdapter : softDelete(categoryId)
+    activate RepoAdapter
+
+    RepoAdapter -> Database : UPDATE categories SET deleted_at = NOW(), is_active = false WHERE id = 3
+    activate Database
+    Database --> RepoAdapter : success
+    deactivate Database
+
+    ' Actualizar contador del padre
+    RepoAdapter -> Database : UPDATE categories SET child_count = child_count - 1 WHERE id = parent_id
+    activate Database
+    Database --> RepoAdapter : success
+    deactivate Database
+
+    RepoAdapter --> RepoPort : success
+    deactivate RepoAdapter
+    RepoPort --> Service : success
+    deactivate RepoPort
+
+    ' Post-procesamiento
+    Service -> AuditPort : logCategoryDeletion(category)
+    activate AuditPort
+    AuditPort --> Service : success
+    deactivate AuditPort
+
+    Service -> CachePort : invalidateCategoryCache()
+    activate CachePort
+    CachePort -> RedisCache : del("category:3", "categories:*")
+    activate RedisCache
+    RedisCache --> CachePort : success
+    deactivate RedisCache
+    CachePort --> Service : success
+    deactivate CachePort
+
+    Service --> Controller : success
+    deactivate Service
+
+    Controller --> Client : HTTP 204 No Content
+    deactivate Controller
+end
+
+== CASO DE USO 5: LISTAR CATEGORIAS ==
+
+Client -> Controller : GET /api/v1/categories?page=1&limit=10&parentId=1
+activate Controller
+
+Controller -> Service : getCategories(filters, pagination)
+activate Service
+
+' Verificar cache
+Service -> CachePort : get("categories:parent:1:page:1")
+activate CachePort
+CachePort -> RedisCache : get("categories:parent:1:page:1")
+activate RedisCache
+RedisCache --> CachePort : null (cache miss)
+deactivate RedisCache
+CachePort --> Service : null
+deactivate CachePort
+
+' Buscar en BD
+Service -> RepoPort : findByParentWithPagination(parentId, page, limit)
+activate RepoPort
+RepoPort -> RepoAdapter : findByParentWithPagination(parentId, page, limit)
+activate RepoAdapter
+
+RepoAdapter -> Database : SELECT * FROM categories WHERE parent_id = 1 AND deleted_at IS NULL ORDER BY name LIMIT 10 OFFSET 0
+activate Database
+Database --> RepoAdapter : List<CategoryEntity>
+deactivate Database
+
+RepoAdapter -> Database : SELECT COUNT(*) FROM categories WHERE parent_id = 1 AND deleted_at IS NULL
+activate Database
+Database --> RepoAdapter : total = 25
+deactivate Database
+
+RepoAdapter -> EntityMapper : toModelList(entities)
+activate EntityMapper
+EntityMapper --> RepoAdapter : List<CategoryModel>
+deactivate EntityMapper
+
+RepoAdapter --> RepoPort : PaginatedResult<CategoryModel>
+deactivate RepoAdapter
+RepoPort --> Service : PaginatedResult<CategoryModel>
+deactivate RepoPort
+
+' Guardar en cache
+Service -> CachePort : set("categories:parent:1:page:1", result, 180)
+activate CachePort
+CachePort -> RedisCache : set(key, data, 180)
+activate RedisCache
+RedisCache --> CachePort : success
+deactivate RedisCache
+CachePort --> Service : success
+deactivate CachePort
+
+Service --> Controller : PaginatedResult<CategoryModel>
+deactivate Service
+
+Controller -> ResponseMapper : toCollectionResponse(categories, pagination)
+activate ResponseMapper
+
+ResponseMapper -> ResponseMapper : mapCategoriesToDTO()
+ResponseMapper -> ResponseMapper : generatePaginationLinks()
+ResponseMapper -> ResponseMapper : addCollectionMetadata()
+
+ResponseMapper --> Controller : CategoryCollectionResponseDTO
+deactivate ResponseMapper
+
+Controller --> Client : HTTP 200 OK\nCategoryCollectionResponseDTO
+deactivate Controller
+
+note over Client : RESPUESTA PAGINADA\n{\n  "data": [\n    {\n      "id": 2,\n      "name": "Laptops",\n      "slug": "laptops",\n      "parentId": 1,\n      "childCount": 3,\n      "_links": {...}\n    },\n    {...}\n  ],\n  "pagination": {\n    "page": 1,\n    "limit": 10,\n    "total": 25,\n    "totalPages": 3,\n    "hasNext": true,\n    "hasPrevious": false\n  },\n  "_links": {\n    "self": "/api/v1/categories?page=1&limit=10&parentId=1",\n    "next": "/api/v1/categories?page=2&limit=10&parentId=1",\n    "first": "/api/v1/categories?page=1&limit=10&parentId=1",\n    "last": "/api/v1/categories?page=3&limit=10&parentId=1"\n  }\n}
+
+@enduml

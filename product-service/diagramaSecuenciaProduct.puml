@@ -1,0 +1,237 @@
+@startuml Patron_Hexagonal_Flujo_Producto
+!theme spacelab
+title Patrón Hexagonal - Flujo de Creación de Producto
+
+' Definición de participantes organizados por capas
+box "CAPA DE PRESENTACION" #LightBlue
+    participant "Cliente" as Client
+    participant "ProductController" as Controller
+    participant "ProductRequestMapper" as RequestMapper
+end box
+
+box "CAPA DE APLICACION" #LightGreen
+    participant "ProductService" as Service
+end box
+
+box "CAPA DE DOMINIO" #LightCoral
+    participant "ProductModel" as Model
+    participant "BusinessRules" as BusinessRules
+    participant "ValueObjects" as ValueObjects
+end box
+
+box "CAPA DE PUERTOS" #LightYellow
+    participant "ProductRepositoryPort" as RepoPort
+    participant "NotificationPort" as NotificationPort
+    participant "AuditPort" as AuditPort
+    participant "CachePort" as CachePort
+end box
+
+box "CAPA DE INFRAESTRUCTURA" #LightGray
+    participant "ProductRepositoryAdapter" as RepoAdapter
+    participant "ProductEntityMapper" as EntityMapper
+    participant "PostgreSQL" as Database
+    participant "EmailService" as EmailService
+    participant "AuditService" as AuditService
+    participant "RedisCache" as RedisCache
+end box
+
+' FLUJO PRINCIPAL DE CREACION
+Client -> Controller : POST /api/v1/products
+activate Controller
+
+note over Controller : ETAPA 1: Entrada HTTP\nValidacion basica de formato\nExtraccion de metadatos
+
+Controller -> RequestMapper : toModel(httpRequest)
+activate RequestMapper
+
+note over RequestMapper : ETAPA 2: Transformacion a DTO\nNormalizacion de datos\nValidaciones de formato\nSanitizacion de strings
+
+RequestMapper -> RequestMapper : validateBusinessRules()
+RequestMapper -> RequestMapper : normalizeData()
+RequestMapper -> RequestMapper : generateSlug()
+
+RequestMapper --> Controller : ProductRequestDTO
+deactivate RequestMapper
+
+Controller -> Service : create(productRequestDTO)
+activate Service
+
+note over Service : ETAPA 3: Logica de Aplicacion\nOrquestacion del proceso\nValidaciones de negocio
+
+' VALIDACIONES DE NEGOCIO
+Service -> Service : validateBusinessRules()
+Service -> Service : checkDuplicates()
+
+Service -> RepoPort : findByNameAndCategory(name, category)
+activate RepoPort
+RepoPort -> RepoAdapter : findByNameAndCategory(name, category)
+activate RepoAdapter
+RepoAdapter -> Database : SELECT * FROM products WHERE...
+activate Database
+Database --> RepoAdapter : result
+deactivate Database
+RepoAdapter --> RepoPort : ProductModel | null
+deactivate RepoAdapter
+RepoPort --> Service : ProductModel | null
+deactivate RepoPort
+
+alt Producto ya existe
+    Service --> Controller : DuplicateProductException
+    Controller --> Client : HTTP 409 Conflict
+else Producto no existe
+    ' CREACION DEL MODELO DE DOMINIO
+    Service -> Model : create(productData)
+    activate Model
+
+    note over Model : ETAPA 4: Creacion del Modelo\nInstanciacion del modelo de dominio\nCreacion de Value Objects\nAplicacion de reglas de negocio
+
+    Model -> ValueObjects : new Money(price, currency)
+    activate ValueObjects
+    ValueObjects --> Model : Money
+    deactivate ValueObjects
+
+    Model -> ValueObjects : new ProductCategory(category)
+    activate ValueObjects
+    ValueObjects --> Model : ProductCategory
+    deactivate ValueObjects
+
+    Model -> BusinessRules : validatePremiumProduct()
+    activate BusinessRules
+    BusinessRules --> Model : validation result
+    deactivate BusinessRules
+
+    Model -> BusinessRules : applyLaunchDiscount()
+    activate BusinessRules
+    BusinessRules --> Model : discount applied
+    deactivate BusinessRules
+
+    Model -> Model : generateSku()
+    Model -> Model : setAvailabilityDate()
+
+    Model --> Service : ProductModel
+    deactivate Model
+
+    ' PERSISTENCIA
+    Service -> RepoPort : create(productModel)
+    activate RepoPort
+
+    note over RepoPort : ETAPA 5: Puerto de Persistencia\nContrato de persistencia\nAbstraccion de implementacion
+
+    RepoPort -> RepoAdapter : create(productModel)
+    activate RepoAdapter
+
+    note over RepoAdapter : ETAPA 6: Adaptador de BD\nImplementacion especifica\nManejo de transacciones\nConversion a entidad
+
+    RepoAdapter -> EntityMapper : toEntity(productModel)
+    activate EntityMapper
+
+    note over EntityMapper : ETAPA 7: Mapeo de Entidad\nConversion modelo a entidad\nMapeo de Value Objects\nAdaptacion de nomenclatura
+
+    EntityMapper -> EntityMapper : mapValueObjects()
+    EntityMapper -> EntityMapper : convertNaming()
+    EntityMapper -> EntityMapper : addMetadata()
+
+    EntityMapper --> RepoAdapter : ProductEntity
+    deactivate EntityMapper
+
+    RepoAdapter -> Database : INSERT INTO products (...) RETURNING *
+    activate Database
+
+    note over Database : ETAPA 8: Persistencia\nEjecucion SQL\nValidacion de constraints\nGeneracion de ID\nTimestamps automaticos
+
+    Database --> RepoAdapter : ProductEntity (with ID)
+    deactivate Database
+
+    ' POST-INSERCION
+    RepoAdapter -> RepoAdapter : executePostInsertOperations()
+
+    RepoAdapter -> Database : UPDATE category_counters
+    activate Database
+    Database --> RepoAdapter : success
+    deactivate Database
+
+    RepoAdapter -> Database : UPDATE search_vector
+    activate Database
+    Database --> RepoAdapter : success
+    deactivate Database
+
+    RepoAdapter -> Database : INSERT INTO audit_log
+    activate Database
+    Database --> RepoAdapter : success
+    deactivate Database
+
+    RepoAdapter -> EntityMapper : toModel(persistedEntity)
+    activate EntityMapper
+
+    note over EntityMapper : ETAPA 9: Reconstitucion\nEntidad a Modelo de dominio\nReconstruccion de Value Objects\nHidratacion completa
+
+    EntityMapper -> EntityMapper : reconstructValueObjects()
+    EntityMapper -> EntityMapper : setPersistedState()
+
+    EntityMapper --> RepoAdapter : ProductModel (persisted)
+    deactivate EntityMapper
+
+    RepoAdapter --> RepoPort : ProductModel (persisted)
+    deactivate RepoAdapter
+    RepoPort --> Service : ProductModel (persisted)
+    deactivate RepoPort
+
+    ' OPERACIONES POST-CREACION
+    note over Service : ETAPA 10: Post-Procesamiento\nOperaciones criticas sincronas\nOperaciones secundarias asincronas
+
+    Service -> AuditPort : logProductCreation(product, request)
+    activate AuditPort
+    AuditPort -> AuditService : logProductCreation(product, request)
+    activate AuditService
+    AuditService --> AuditPort : success
+    deactivate AuditService
+    AuditPort --> Service : success
+    deactivate AuditPort
+
+    Service -> CachePort : invalidateProductCaches(keys)
+    activate CachePort
+    CachePort -> RedisCache : del(keys)
+    activate RedisCache
+    RedisCache --> CachePort : success
+    deactivate RedisCache
+    CachePort --> Service : success
+    deactivate CachePort
+
+    ' OPERACIONES ASINCRONAS
+    Service -> Service : executeAsyncPostOperations()
+
+    Service ->> NotificationPort : notifyProductCreated(product)
+    activate NotificationPort
+    NotificationPort ->> EmailService : sendNotification(recipients, product)
+    activate EmailService
+    EmailService -->> NotificationPort : queued
+    deactivate EmailService
+    deactivate NotificationPort
+
+    Service ->> Service : indexForSearch(product)
+    Service ->> Service : triggerWebhooks(product)
+    Service ->> Service : updateInventory(product)
+
+    note over Service : ETAPA 11: Enriquecimiento\nDatos adicionales\nMetadatos de respuesta
+
+    Service -> Service : enrichProductData(product)
+    Service --> Controller : ProductModel (enriched)
+    deactivate Service
+end
+
+' TRANSFORMACION DE RESPUESTA
+Controller -> Controller : buildRequestContext()
+Controller -> Controller : responseMapper.toResponse(product, context)
+
+note over Controller : ETAPA 12: Preparacion de Respuesta\nConversion a DTO de respuesta\nAplicacion de filtros de seguridad\nGeneracion de enlaces HATEOAS\nMetadatos de respuesta
+
+Controller -> Controller : setResponseHeaders()
+Controller -> Controller : logSuccessfulCreation()
+
+Controller --> Client : HTTP 201 Created\nProductResponseDTO
+deactivate Controller
+
+' ESTRUCTURA DE LA RESPUESTA
+note over Client : RESPUESTA FINAL\n{\n  "id": 1001,\n  "name": "iPhone 15 Pro",\n  "price": {"amount": 999.99, "currency": "USD"},\n  "status": "DRAFT",\n  "_links": {"self": "/api/v1/products/1001"},\n  "_metadata": {"responseId": "resp-789", "processingTime": 245}\n}
+
+@enduml

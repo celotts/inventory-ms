@@ -3,14 +3,14 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.reposi
 import java.time.LocalDateTime;
 
 public interface Auditable {
-
+    //TODO: no usages
     // Setters
     void setCreatedAt(LocalDateTime createdAt);
     void setCreatedBy(String createdBy);
     void setUpdatedAt(LocalDateTime updatedAt);
     void setUpdatedBy(String updatedBy);
 
-
+    //TODO: no usages
     // Getters
     LocalDateTime getCreatedAt();
     String getCreatedBy();

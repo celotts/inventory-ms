@@ -1,18 +1,18 @@
-
 package com.celotts.productservice.applications.service;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.ProductDtoMapper;
 
+//import com.celotts.productservice.domain.port.category.CategoryPort;
+import com.celotts.productservice.domain.port.category.CategoryPort;
+import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductDtoMapper;
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.ProductBrandPort;
-import com.celotts.productservice.domain.port.ProductRepositoryPort;
-import com.celotts.productservice.domain.port.ProductTypePort;
-import com.celotts.productservice.domain.port.ProductUnitPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductRequestDTO;
-
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductUpdateDTO;
+import com.celotts.productservice.domain.port.product.ProductBrandPort;
+import com.celotts.productservice.domain.port.product.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.product.ProductUnitPort;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.ProductRequestMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,11 +32,12 @@ import java.util.UUID;
 @Slf4j
 public class ProductService {
 
-    @Qualifier("productAdapter")
+    @Qualifier("productRepositoryAdapter")
     private final ProductRepositoryPort repository;
-    private final ProductTypePort productTypePort;
     private final ProductUnitPort productUnitPort;
     private final ProductBrandPort productBrandPort;
+
+    private final CategoryRepositoryPort categoryPort;
 
     public ProductModel createProduct(ProductRequestDTO dto) {
         if (repository.findByCode(dto.getCode()).isPresent()) {
@@ -48,7 +50,7 @@ public class ProductService {
                 .code(dto.getCode())
                 .name(dto.getName())
                 .description(dto.getDescription())
-                .productTypeCode(dto.getProductTypeCode())
+                .categoryId(dto.getCategoryId())  // ✅ AGREGAR
                 .unitCode(dto.getUnitCode())
                 .brandId(dto.getBrandId())
                 .minimumStock(dto.getMinimumStock())
@@ -57,7 +59,6 @@ public class ProductService {
                 .enabled(dto.getEnabled())
                 .createdAt(LocalDateTime.now())
                 .createdBy(dto.getCreatedBy())
-                .withEnabled(true)
                 .build();
 
         return repository.save(model);
@@ -65,18 +66,12 @@ public class ProductService {
 
     public ProductModel updateProduct(UUID id, ProductRequestDTO dto) {
         ProductModel existing = getProductById(id);
-
         validateReferences(dto);
 
-        // ⛔ Esto no funcionaba antes porque `dto` era `ProductRequestDTO`
-        // ProductRequestMapper.updateModelFromDto(existing, dto);
-
-        // ✅ Solución: Convertimos primero a ProductUpdateDTO
         ProductUpdateDTO updateDto = ProductDtoMapper.toUpdateDto(dto);
         ProductRequestMapper.updateModelFromDto(existing, updateDto);
 
         return repository.save(existing);
-
     }
 
     public ProductModel getProductById(UUID id) {
@@ -134,20 +129,27 @@ public class ProductService {
     }
 
     public List<ProductModel> getInactiveProducts() {
-        // Usamos paginación con un límite grande (si quieres traer todo)
-        Pageable pageable = Pageable.unpaged(); // o: PageRequest.of(0, Integer.MAX_VALUE)
-        return repository.findByEnabled(false, pageable)
-                .getContent(); // Extraemos los resultados
+        Pageable pageable = Pageable.unpaged();
+        return repository.findByEnabled(false, pageable).getContent();
+    }
+
+    // ✅ CORREGIR: Usar 'repository' en lugar de 'productRepositoryPort'
+
+    public List<ProductModel> getProductsByCategory(UUID categoryId) {
+        return repository.findByCategoryId(categoryId);
+    }
+
+    public List<ProductModel> getLowStockByCategory(UUID categoryId) {
+        return repository.findByCategoryId(categoryId)
+                .stream()
+                .filter(ProductModel::lowStock)
+                .collect(Collectors.toList());
     }
 
     public List<ProductModel> getLowStockProducts() {
         return repository.findAll().stream()
                 .filter(ProductModel::lowStock)
                 .toList();
-    }
-
-    public List<ProductModel> getProductsByType(String typeCode) {
-        return repository.findByProductTypeCode(typeCode);
     }
 
     public List<ProductModel> getProductsByBrand(UUID brandId) {
@@ -163,10 +165,6 @@ public class ProductService {
     }
 
     private void validateReferences(ProductRequestDTO dto) {
-        if (!productTypePort.existsByCode(dto.getProductTypeCode())) {
-            throw new IllegalArgumentException("Invalid product type code: " + dto.getProductTypeCode());
-        }
-
         if (!productUnitPort.existsByCode(dto.getUnitCode())) {
             throw new IllegalArgumentException("Invalid unit code: " + dto.getUnitCode());
         }
@@ -174,8 +172,9 @@ public class ProductService {
         if (!productBrandPort.existsById(dto.getBrandId())) {
             throw new IllegalArgumentException("Invalid brand ID: " + dto.getBrandId());
         }
+
+        if (!categoryPort.existsById(dto.getCategoryId())) {
+             throw new IllegalArgumentException("Invalid category ID: " + dto.getCategoryId());
+         }
     }
-
-
-
 }
