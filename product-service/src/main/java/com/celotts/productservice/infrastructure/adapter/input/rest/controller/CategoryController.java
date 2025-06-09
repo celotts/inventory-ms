@@ -24,6 +24,7 @@ public class CategoryController {
     private final CategoryResponseMapper categoryResponseMapper;
 
     @PostMapping
+
     public ResponseEntity<CategoryResponseDto> create(@Valid @RequestBody CategoryRequestDto categoryCreateDto) {
         var category = CategoryDtoMapper.toModel(categoryCreateDto);
         var createdCategory = categoryService.create(category);
