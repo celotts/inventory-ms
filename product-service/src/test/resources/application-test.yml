@@ -1,3 +1,5 @@
+# Reemplaza tu configuración actual con esta:
+
 spring:
   config:
     activate:
@@ -7,28 +9,53 @@ spring:
     config:
       enabled: false
 
+  # CAMBIAR POSTGRESQL POR H2 PARA TESTS
   datasource:
-    url: jdbc:postgresql://localhost:5432/product
-    username: product
-    password: product123
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
 
+  # CAMBIAR CONFIGURACIÓN JPA PARA H2
   jpa:
     hibernate:
       ddl-auto: create-drop
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+    show-sql: false
+
+  # DESACTIVAR FLYWAY PARA TESTS
+  flyway:
+    enabled: false
+
+  # CONFIGURACIÓN H2 CONSOLE (OPCIONAL)
+  h2:
+    console:
+      enabled: true
 
   sql:
     init:
       mode: never
+
+# CONFIGURACIÓN ACTUATOR PARA HEALTH CHECK
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
 
 server:
   port: 0
 
 logging:
   level:
-    root: INFO
+    root: WARN
     org.springframework: WARN
+    org.hibernate.SQL: WARN
     com.ms_cels: DEBUG
+    com.celotts.productservice: DEBUG

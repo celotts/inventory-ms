@@ -5,6 +5,8 @@ import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.category.CategoryEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.category.CategoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,6 +19,8 @@ public class CategoryAdapter implements CategoryRepositoryPort {
 
     private final CategoryRepository categoryRepository;
     private final CategoryEntityMapper categoryEntityMapper;
+
+    // ========== MÉTODOS EXISTENTES (mantenidos) ==========
 
     @Override
     public CategoryModel save(CategoryModel category) {
@@ -62,5 +66,48 @@ public class CategoryAdapter implements CategoryRepositoryPort {
     @Override
     public boolean existsById(UUID id) {
         return categoryRepository.existsById(id);
+    }
+
+    // ========== MÉTODOS NUEVOS AGREGADOS ==========
+
+    @Override
+    public List<CategoryModel> findByActive(Boolean active) {
+        var entities = categoryRepository.findByActive(active);
+        return categoryEntityMapper.toDomainList(entities);
+    }
+
+    @Override
+    public Page<CategoryModel> findByActive(Boolean active, Pageable pageable) {
+        var entitiesPage = categoryRepository.findByActive(active, pageable);
+        return entitiesPage.map(categoryEntityMapper::toDomain);
+    }
+
+    @Override
+    public Page<CategoryModel> findByNameContaining(String name, Pageable pageable) {
+        var entitiesPage = categoryRepository.findByNameContainingIgnoreCase(name, pageable);
+        return entitiesPage.map(categoryEntityMapper::toDomain);
+    }
+
+    @Override
+    public Page<CategoryModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable) {
+        var entitiesPage = categoryRepository.findByNameContainingIgnoreCaseAndActive(name, active, pageable);
+        return entitiesPage.map(categoryEntityMapper::toDomain);
+    }
+
+    @Override
+    public Page<CategoryModel> findAll(Pageable pageable) {
+        var entitiesPage = categoryRepository.findAll(pageable);
+        return entitiesPage.map(categoryEntityMapper::toDomain);
+    }
+
+    @Override
+    public List<CategoryModel> findAllById(Iterable<UUID> ids) {
+        var entities = categoryRepository.findAllById(ids);
+        return categoryEntityMapper.toDomainList(entities);
+    }
+
+    @Override
+    public long countByActive(Boolean active) {
+        return categoryRepository.countByActive(active);
     }
 }
