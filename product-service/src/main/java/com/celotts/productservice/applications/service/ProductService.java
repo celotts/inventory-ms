@@ -1,14 +1,19 @@
-// ProductService - Servicio mejorado con validaciones y manejo de excepciones
 package com.celotts.productservice.applications.service;
 
+import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductDtoMapper;
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.ProductRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductRequestDTO;
+import com.celotts.productservice.domain.port.product.ProductBrandPort;
+import com.celotts.productservice.domain.port.prodcut_brand.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.product.ProductUnitPort;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.ProductRequestMapper;
-import lombok.RequiredArgsConstructor;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
+
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,201 +21,167 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
 @Slf4j
 public class ProductService {
 
-    private final ProductRepositoryPort productRepositoryPort;
+    //@Qualifier("productRepositoryAdapter")
+    private final ProductRepositoryPort repository;
+    private final ProductUnitPort productUnitPort;
+    private final ProductBrandPort productBrandPort;
+    private final CategoryRepositoryPort categoryPort;
 
-    @Transactional(readOnly = true)
-    public List<ProductModel> getAllProducts() {
-        log.debug("Fetching all products");
-        return productRepositoryPort.findAll();
+    public ProductService(
+            @Qualifier("productRepositoryAdapter") ProductRepositoryPort repository,
+            ProductUnitPort productUnitPort,
+            ProductBrandPort productBrandPort,
+            CategoryRepositoryPort categoryPort) {
+        this.repository = repository;
+        this.productUnitPort = productUnitPort;
+        this.productBrandPort = productBrandPort;
+        this.categoryPort = categoryPort;
     }
 
-    @Transactional(readOnly = true)
-    public Page<ProductModel> getAllProducts(Pageable pageable) {
-        log.debug("Fetching products with pagination: {}", pageable);
-        return productRepositoryPort.findAll(pageable);
+    public ProductModel createProduct(ProductRequestDTO dto) {
+        if (repository.findByCode(dto.getCode()).isPresent()) {
+            throw new ProductAlreadyExistsException("Product code already exists: " + dto.getCode());
+        }
+
+        validateReferences(dto);
+
+        ProductModel model = ProductModel.builder()
+                .code(dto.getCode())
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .categoryId(dto.getCategoryId())  // ✅ AGREGAR
+                .unitCode(dto.getUnitCode())
+                .brandId(dto.getBrandId())
+                .minimumStock(dto.getMinimumStock())
+                .currentStock(dto.getCurrentStock())
+                .unitPrice(dto.getUnitPrice())
+                .enabled(dto.getEnabled())
+                .createdAt(LocalDateTime.now())
+                .createdBy(dto.getCreatedBy())
+                .build();
+
+        return repository.save(model);
     }
 
-    @Transactional(readOnly = true)
+    public ProductModel updateProduct(UUID id, ProductRequestDTO dto) {
+        ProductModel existing = getProductById(id);
+        validateReferences(dto);
+
+        ProductUpdateDTO updateDto = ProductDtoMapper.toUpdateDto(dto);
+        ProductRequestMapper.updateModelFromDto(existing, updateDto);
+
+        return repository.save(existing);
+    }
+
     public ProductModel getProductById(UUID id) {
-        log.debug("Fetching product with id: {}", id);
-        return productRepositoryPort.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException(id));
+        return repository.findById(id).orElseThrow(() ->
+                new ProductNotFoundException(id));
     }
 
-    @Transactional(readOnly = true)
-    public Optional<ProductModel> findProductById(UUID id) {
-        return productRepositoryPort.findById(id);
-    }
-
-    @Transactional(readOnly = true)
     public ProductModel getProductByCode(String code) {
-        log.debug("Fetching product with code: {}", code);
-        return productRepositoryPort.findByCode(code)
-                .orElseThrow(() -> new ProductNotFoundException("Product not found with code: " + code));
+        return repository.findByCode(code).orElseThrow(() ->
+                new ProductNotFoundException("Product not found with code: " + code));
     }
 
-    public ProductModel createProduct(ProductRequestDTO requestDTO) {
-        log.info("Creating new product with code: {}", requestDTO.getCode());
-
-        // Validar que no existe un producto con el mismo código
-        if (productRepositoryPort.findByCode(requestDTO.getCode()).isPresent()) {
-            throw new ProductAlreadyExistsException("Product already exists with code: " + requestDTO.getCode());
-        }
-
-        // Usar el mapper existente en lugar de builder manual
-        ProductModel productModel = ProductRequestMapper.toModel(requestDTO);
-
-        ProductModel savedProduct = productRepositoryPort.save(productModel);
-        log.info("Product created successfully with id: {}", savedProduct.getId());
-
-        return savedProduct;
+    public List<ProductModel> getAllProducts() {
+        return repository.findAll();
     }
 
-    public ProductModel updateProduct(UUID id, ProductRequestDTO requestDTO) {
-        log.info("Updating product with id: {}", id);
+    public Page<ProductModel> getAllProducts(Pageable pageable) {
+        return repository.findAll(pageable);
+    }
 
-        ProductModel existingProduct = getProductById(id);
-
-        // Validar que no existe otro producto con el mismo código
-        Optional<ProductModel> productWithSameCode = productRepositoryPort.findByCode(requestDTO.getCode());
-        if (productWithSameCode.isPresent() && !productWithSameCode.get().getId().equals(id)) {
-            throw new ProductAlreadyExistsException(requestDTO.getCode());
-        }
-
-        // Actualizar campos
-        existingProduct.setCode(requestDTO.getCode());
-        existingProduct.setDescription(requestDTO.getDescription());
-        existingProduct.setProductTypeCode(requestDTO.getProductTypeCode());
-        existingProduct.setUnitCode(requestDTO.getUnitCode());
-        existingProduct.setBrandId(requestDTO.getBrandId());
-        existingProduct.setMinimumStock(requestDTO.getMinimumStock());
-        existingProduct.setCurrentStock(requestDTO.getCurrentStock());
-        existingProduct.setUnitPrice(requestDTO.getUnitPrice());
-        existingProduct.setEnabled(requestDTO.getEnabled());
-        existingProduct.setUpdatedAt(LocalDateTime.now());
-        existingProduct.setUpdatedBy(requestDTO.getUpdatedBy() != null ? requestDTO.getUpdatedBy() : "system");
-
-        ProductModel updatedProduct = productRepositoryPort.save(existingProduct);
-        log.info("Product updated successfully with id: {}", updatedProduct.getId());
-
-        return updatedProduct;
+    public Page<ProductModel> getAllProductsWithFilters(Pageable pageable, String code, String name, String description) {
+        return repository.findAllWithFilters(pageable, code, name, description);
     }
 
     public void deleteProduct(UUID id) {
-        log.info("Soft deleting product with id: {}", id);
-
-        ProductModel existingProduct = getProductById(id);
-
-        // Soft delete - solo deshabilitamos el producto
-        existingProduct.setEnabled(false);
-        existingProduct.setUpdatedAt(LocalDateTime.now());
-        existingProduct.setUpdatedBy("system");
-
-        productRepositoryPort.save(existingProduct);
-        log.info("Product soft deleted successfully with id: {}", id);
+        repository.findById(id).orElseThrow(() ->
+                new ProductNotFoundException(id));
     }
 
     public void hardDeleteProduct(UUID id) {
-        log.warn("Hard deleting product with id: {}", id);
-
-        if (!productRepositoryPort.existsById(id)) {
-            throw new ProductNotFoundException(id);
-        }
-
-        productRepositoryPort.deleteById(id);
-        log.warn("Product hard deleted successfully with id: {}", id);
-    }
-
-    @Transactional(readOnly = true)
-    public boolean existsById(UUID id) {
-        return productRepositoryPort.existsById(id);
-    }
-
-    @Transactional(readOnly = true)
-    public List<ProductModel> getProductsByType(String productTypeCode) {
-        log.debug("Fetching products by type: {}", productTypeCode);
-        return productRepositoryPort.findByProductTypeCode(productTypeCode);
-    }
-
-    @Transactional(readOnly = true)
-    public List<ProductModel> getProductsByBrand(UUID brandId) {
-        log.debug("Fetching products by brand: {}", brandId);
-        return productRepositoryPort.findByBrandId(brandId);
-    }
-
-    @Transactional(readOnly = true)
-    public List<ProductModel> getActiveProducts() {
-        log.debug("Fetching active products");
-        return productRepositoryPort.findByEnabled(true);
-    }
-
-    @Transactional(readOnly = true)
-    public List<ProductModel> getInactiveProducts() {
-        log.debug("Fetching inactive products");
-        return productRepositoryPort.findByEnabled(false);
-    }
-
-    @Transactional(readOnly = true)
-    public List<ProductModel> getLowStockProducts() {
-        log.debug("Fetching products with low stock");
-        return productRepositoryPort.findByCurrentStockLessThanMinimumStock();
-    }
-
-    @Transactional(readOnly = true)
-    public List<ProductModel> getProductsWithStockLessThan(Integer stock) {
-        log.debug("Fetching products with stock less than: {}", stock);
-        return productRepositoryPort.findByCurrentStockLessThan(stock);
-    }
-
-    @Transactional(readOnly = true)
-    public long countProducts() {
-        return productRepositoryPort.count();
-    }
-
-    @Transactional(readOnly = true)
-    public long countActiveProducts() {
-        return productRepositoryPort.countByEnabled(true);
-    }
-
-    public ProductModel updateStock(UUID id, Integer newStock) {
-        log.info("Updating stock for product id: {} to: {}", id, newStock);
-
-        ProductModel product = getProductById(id);
-        product.setCurrentStock(newStock);
-        product.setUpdatedAt(LocalDateTime.now());
-        product.setUpdatedBy("stock-system");
-
-        return productRepositoryPort.save(product);
+        repository.deleteById(id);
     }
 
     public ProductModel enableProduct(UUID id) {
-        log.info("Enabling product with id: {}", id);
-
         ProductModel product = getProductById(id);
-        product.setEnabled(true);
-        product.setUpdatedAt(LocalDateTime.now());
-        product.setUpdatedBy("system");
-
-        return productRepositoryPort.save(product);
+        return repository.save(product.withEnabled(true));
     }
 
     public ProductModel disableProduct(UUID id) {
-        log.info("Disabling product with id: {}", id);
-
         ProductModel product = getProductById(id);
-        product.setEnabled(false);
-        product.setUpdatedAt(LocalDateTime.now());
-        product.setUpdatedBy("system");
+        return repository.save(product.withEnabled(false));
+    }
 
-        return productRepositoryPort.save(product);
+    public ProductModel updateStock(UUID id, int stock) {
+        ProductModel product = getProductById(id);
+        return repository.save(product.withCurrentStock(stock));
+    }
+
+    public boolean existsById(UUID id) {
+        return repository.existsById(id);
+    }
+
+    public Page<ProductModel> getActiveProducts(Pageable pageable) {
+        return repository.findByEnabled(true, pageable);
+    }
+
+    public List<ProductModel> getInactiveProducts() {
+        Pageable pageable = Pageable.unpaged();
+        return repository.findByEnabled(false, pageable).getContent();
+    }
+
+    // ✅ CORREGIR: Usar 'repository' en lugar de 'productRepositoryPort'
+
+    public List<ProductModel> getProductsByCategory(UUID categoryId) {
+        return repository.findByCategoryId(categoryId);
+    }
+
+    public List<ProductModel> getLowStockByCategory(UUID categoryId) {
+        return repository.findByCategoryId(categoryId)
+                .stream()
+                .filter(ProductModel::lowStock)
+                .collect(Collectors.toList());
+    }
+
+    public List<ProductModel> getLowStockProducts() {
+        return repository.findAll().stream()
+                .filter(ProductModel::lowStock)
+                .toList();
+    }
+
+    public List<ProductModel> getProductsByBrand(UUID brandId) {
+        return repository.findByBrandId(brandId);
+    }
+
+    public long countProducts() {
+        return repository.findAll().size();
+    }
+
+    public long countActiveProducts() {
+        return repository.findByEnabled(true, Pageable.unpaged()).getTotalElements();
+    }
+
+    private void validateReferences(ProductRequestDTO dto) {
+        if (!productUnitPort.existsByCode(dto.getUnitCode())) {
+            throw new IllegalArgumentException("Invalid unit code: " + dto.getUnitCode());
+        }
+
+        if (!productBrandPort.existsById(dto.getBrandId())) {
+            throw new IllegalArgumentException("Invalid brand ID: " + dto.getBrandId());
+        }
+
+        if (!categoryPort.existsById(dto.getCategoryId())) {
+             throw new IllegalArgumentException("Invalid category ID: " + dto.getCategoryId());
+         }
     }
 }

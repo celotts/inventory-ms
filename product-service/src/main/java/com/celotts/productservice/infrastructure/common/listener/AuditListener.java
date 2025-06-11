@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.common.listener;
 
+import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.Auditable;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.extern.slf4j.Slf4j;
@@ -7,7 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
-
+//TODO: cannot resolve method
 @Slf4j
 public class AuditListener {
 

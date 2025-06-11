@@ -1,0 +1,37 @@
+# Configuración para tests con logging detallado
+# Ubicación: src/test/resources/application-test.yml
+
+spring:
+  application:
+    name: product-service
+
+  # H2 Database
+  datasource:
+    url: jdbc:postgresql://localhost:5432/product
+    username: product
+    password: product123
+    driver-class-name: org.postgresql.Driver
+
+  # JPA/Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true  # ✅ Activar para debug
+    database-platform: org.hibernate.dialect.H2Dialect
+
+# Desactivar servicios externos
+eureka:
+  client:
+    enabled: false
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+
+# ✅ Logging detallado para debug
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.hibernate: DEBUG
+    com.celotts.productservice: DEBUG
+    org.springframework.security: DEBUG
+    root: INFO

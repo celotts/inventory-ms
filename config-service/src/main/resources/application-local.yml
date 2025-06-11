@@ -17,6 +17,13 @@ spring:
           search-paths: config
       fail-fast: true
 
+    gateway:
+      - id: product-service
+        uti: lb://product-service
+        predicates:
+          - Path=/product/**
+        filters:
+          - RewritePath=/api/products/(?<path>.*), /$\{pat}
 eureka:
   client:
     enabled: ${EUREKA_CLIENT_ENABLED:true}

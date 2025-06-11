@@ -6,26 +6,31 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
 @Builder
+@With
+@AllArgsConstructor
+@NoArgsConstructor
 public class ProductModel {
-    private UUID id;
-    private String code;
-    private String name;
-    private String description;
-    private String productTypeCode;
-    private String unitCode;
-    private UUID brandId;
-    private Integer minimumStock;
-    private Integer currentStock;
-    private BigDecimal unitPrice;
-    private Boolean enabled;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private String createdBy;
-    private String updatedBy;
+    UUID id;
+    String code;
+    String name;
+    String description;
 
+    UUID categoryId;
+
+    String unitCode;
+    UUID brandId;
+    Integer minimumStock;
+    Integer currentStock;
+    BigDecimal unitPrice;
+    Boolean enabled;
+    LocalDateTime createdAt;
+    LocalDateTime updatedAt;
+    String createdBy;
+    String updatedBy;
+
+    public boolean lowStock() {
+        return currentStock != null && minimumStock != null && currentStock < minimumStock;
+    }
 }

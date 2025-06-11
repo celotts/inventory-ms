@@ -1,0 +1,6 @@
+rootProject.name = 'inventory-ms'
+include 'config-service'
+include 'discovery-service'
+include 'infra'
+include 'product-service'
+include 'api-gateway'
