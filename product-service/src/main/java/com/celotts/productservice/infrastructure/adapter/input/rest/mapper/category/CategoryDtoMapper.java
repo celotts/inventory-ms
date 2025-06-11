@@ -1,35 +1,58 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category;
 
 import com.celotts.productservice.domain.model.CategoryModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryRequestDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryUpdateDto;
-import lombok.experimental.UtilityClass;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryResponseDto;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
-@UtilityClass
 public class CategoryDtoMapper {
 
-    public CategoryUpdateDto toUpdateDto(CategoryRequestDto requestDto) {
-        return CategoryUpdateDto.builder()
-                .name(requestDto.getName())
-                .description(requestDto.getDescription())
-                .active(requestDto.getActive())
-                .updatedBy(requestDto.getUpdatedBy())
-                .build();
-    }
+    /**
+     * Convierte CategoryCreateDto a CategoryModel
+     */
+    public static CategoryModel toModelFromCreate(CategoryCreateDto dto) {
+        if (dto == null) {
+            return null;
+        }
 
-    public CategoryModel toModel(CategoryRequestDto requestDto) {
         return CategoryModel.builder()
-                .name(requestDto.getName())
-                .description(requestDto.getDescription())
-                .active(requestDto.getActive() != null ? requestDto.getActive() : Boolean.TRUE)
-                .createdBy(requestDto.getCreatedBy() != null ? requestDto.getCreatedBy() : "system")
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .active(true) // Por defecto activa al crear
+                .createdBy("system") // Esto debería venir del contexto de seguridad
+                .createdAt(LocalDateTime.now())
                 .build();
     }
 
-    public CategoryResponseDto toResponseDto(CategoryModel model) {
+    /**
+     * Convierte CategoryUpdateDto a CategoryModel
+     */
+    public static CategoryModel toModelFromUpdate(CategoryUpdateDto dto) {
+        if (dto == null) {
+            return null;
+        }
+
+        return CategoryModel.builder()
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .active(dto.getActive())
+                .updatedBy(dto.getUpdatedBy() != null ? dto.getUpdatedBy() : "system")
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
+
+    /**
+     * Convierte CategoryModel a CategoryResponseDto
+     */
+    public static CategoryResponseDto toResponseDto(CategoryModel model) {
+        if (model == null) {
+            return null;
+        }
+
         return CategoryResponseDto.builder()
                 .id(model.getId())
                 .name(model.getName())
@@ -42,9 +65,30 @@ public class CategoryDtoMapper {
                 .build();
     }
 
-    public List<CategoryResponseDto> toResponseDtoList(List<CategoryModel> models) {
+    /**
+     * Convierte lista de CategoryModel a lista de CategoryResponseDto
+     */
+    public static List<CategoryResponseDto> toResponseDtoList(List<CategoryModel> models) {
+        if (models == null) {
+            return null;
+        }
+
         return models.stream()
-                .map(CategoryDtoMapper::toResponseDto)  // ✅ Ahora es método estático
-                .toList();
+                .map(CategoryDtoMapper::toResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Método de compatibilidad con el código existente
+     * @deprecated Usar toModelFromCreate o toModelFromUpdate según corresponda
+     */
+    @Deprecated
+    public static CategoryModel toModel(Object dto) {
+        if (dto instanceof CategoryCreateDto) {
+            return toModelFromCreate((CategoryCreateDto) dto);
+        } else if (dto instanceof CategoryUpdateDto) {
+            return toModelFromUpdate((CategoryUpdateDto) dto);
+        }
+        throw new IllegalArgumentException("Unsupported DTO type: " + dto.getClass().getSimpleName());
     }
 }
