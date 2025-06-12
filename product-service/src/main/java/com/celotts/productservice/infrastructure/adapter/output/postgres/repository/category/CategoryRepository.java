@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -15,50 +16,31 @@ import java.util.UUID;
 @Repository
 public interface CategoryRepository extends JpaRepository<CategoryEntity, UUID> {
 
+    // ========== MÉTODOS BÁSICOS ==========
     Optional<CategoryEntity> findByName(String name);
-
-    @Query("SELECT c FROM CategoryEntity c WHERE c.name LIKE %:name%")
-    List<CategoryEntity> findByNameContaining(@Param("name") String name);
-
     boolean existsByName(String name);
-
-    @Query("SELECT c FROM CategoryEntity c ORDER BY c.createdAt DESC")
-    List<CategoryEntity> findAllOrderByCreatedAtDesc();
-
     List<CategoryEntity> findByActive(Boolean active);
 
-    /**
-     * Buscar categorías por estado con paginación
-     */
+    // ========== MÉTODOS DE BÚSQUEDA SIN PAGINACIÓN ==========
+    List<CategoryEntity> findByNameContaining(String name);
+
+    // ========== MÉTODOS CON PAGINACIÓN (LOS QUE TE FALTAN) ==========
     Page<CategoryEntity> findByActive(Boolean active, Pageable pageable);
 
-    /**
-     * Buscar por nombre con paginación (case insensitive)
-     */
-    Page<CategoryEntity> findByNameContainingIgnoreCase(String name, Pageable pageable);
+    // Este es uno de los métodos que te falta
+    Page<CategoryEntity> findByNameContaining(String name, Pageable pageable);
 
-    /**
-     * Buscar por nombre y estado con paginación (case insensitive)
-     */
-    Page<CategoryEntity> findByNameContainingIgnoreCaseAndActive(String name, Boolean active, Pageable pageable);
+    // Este es el otro método que te falta
+    Page<CategoryEntity> findByNameContainingAndActive(String name, Boolean active, Pageable pageable);
 
-    /**
-     * Contar por estado
-     */
+    // ========== MÉTODOS ADICIONALES ==========
     long countByActive(Boolean active);
 
-    /**
-     * Buscar por nombre (case insensitive) - si no lo tienes ya
-     */
-    Optional<CategoryEntity> findByNameIgnoreCase(String name);
+    List<CategoryEntity> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
 
-    /**
-     * Verificar existencia por nombre (case insensitive) - si no lo tienes ya
-     */
-    boolean existsByNameIgnoreCase(String name);
-
-    /**
-     * Buscar por nombre conteniendo (case insensitive) - si no lo tienes ya
-     */
-    List<CategoryEntity> findByNameContainingIgnoreCase(String name);
+    @Query("SELECT c FROM CategoryEntity c WHERE " +
+            "(LOWER(c.name) LIKE LOWER(CONCAT('%', :term, '%')) OR " +
+            "LOWER(c.description) LIKE LOWER(CONCAT('%', :term, '%'))) " +
+            "ORDER BY c.name ASC")
+    List<CategoryEntity> findByNameOrDescription(@Param("term") String term, @Param("limit") int limit);
 }

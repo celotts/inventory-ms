@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -29,7 +30,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ProductService {
 
-    //@Qualifier("productRepositoryAdapter")
     private final ProductRepositoryPort repository;
     private final ProductUnitPort productUnitPort;
     private final ProductBrandPort productBrandPort;
@@ -39,7 +39,7 @@ public class ProductService {
             @Qualifier("productRepositoryAdapter") ProductRepositoryPort repository,
             ProductUnitPort productUnitPort,
             ProductBrandPort productBrandPort,
-            CategoryRepositoryPort categoryPort) {
+            @Qualifier("categoryRepositoryAdapter") CategoryRepositoryPort categoryPort) {
         this.repository = repository;
         this.productUnitPort = productUnitPort;
         this.productBrandPort = productBrandPort;
@@ -47,25 +47,33 @@ public class ProductService {
     }
 
     public ProductModel createProduct(ProductRequestDTO dto) {
+        // Verificar que el código no existe
         if (repository.findByCode(dto.getCode()).isPresent()) {
             throw new ProductAlreadyExistsException("Product code already exists: " + dto.getCode());
         }
 
+        // Validar referencias y obtener nombre de unidad para log
         validateReferences(dto);
+
+        // Obtener nombre de unidad para log descriptivo (opcional)
+        String unitName = productUnitPort.findNameByCode(dto.getUnitCode())
+                .orElse(dto.getUnitCode()); // Fallback al código si no encuentra nombre
+
+        log.info("Creating product '{}' with unit: {}", dto.getName(), unitName);
 
         ProductModel model = ProductModel.builder()
                 .code(dto.getCode())
                 .name(dto.getName())
                 .description(dto.getDescription())
-                .categoryId(dto.getCategoryId())  // ✅ AGREGAR
+                .categoryId(dto.getCategoryId())
                 .unitCode(dto.getUnitCode())
                 .brandId(dto.getBrandId())
                 .minimumStock(dto.getMinimumStock())
                 .currentStock(dto.getCurrentStock())
                 .unitPrice(dto.getUnitPrice())
-                .enabled(dto.getEnabled())
+                .enabled(dto.getEnabled() != null ? dto.getEnabled() : true)
                 .createdAt(LocalDateTime.now())
-                .createdBy(dto.getCreatedBy())
+                .createdBy(dto.getCreatedBy() != null ? dto.getCreatedBy() : "system")
                 .build();
 
         return repository.save(model);
@@ -140,8 +148,6 @@ public class ProductService {
         return repository.findByEnabled(false, pageable).getContent();
     }
 
-    // ✅ CORREGIR: Usar 'repository' en lugar de 'productRepositoryPort'
-
     public List<ProductModel> getProductsByCategory(UUID categoryId) {
         return repository.findByCategoryId(categoryId);
     }
@@ -172,16 +178,24 @@ public class ProductService {
     }
 
     private void validateReferences(ProductRequestDTO dto) {
+        // Validar que unitCode existe
         if (!productUnitPort.existsByCode(dto.getUnitCode())) {
             throw new IllegalArgumentException("Invalid unit code: " + dto.getUnitCode());
         }
 
+        // Validar que brandId existe
         if (!productBrandPort.existsById(dto.getBrandId())) {
             throw new IllegalArgumentException("Invalid brand ID: " + dto.getBrandId());
         }
 
+        // Validar que categoryId existe
         if (!categoryPort.existsById(dto.getCategoryId())) {
-             throw new IllegalArgumentException("Invalid category ID: " + dto.getCategoryId());
-         }
+            throw new IllegalArgumentException("Invalid category ID: " + dto.getCategoryId());
+        }
     }
+
+    public Optional<String> validateUnitCode(String code) {
+        return productUnitPort.findNameByCode(code);
+    }
+
 }

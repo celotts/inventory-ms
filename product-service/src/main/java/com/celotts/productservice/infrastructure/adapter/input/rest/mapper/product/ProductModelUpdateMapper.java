@@ -8,9 +8,6 @@ import java.time.LocalDateTime;
 
 public class ProductModelUpdateMapper {
 
-    private ProductModelUpdateMapper() {
-        // Clase utilitaria - no instanciable
-    }
     //TODO: cannot resolve method
     public static void apply(ProductModel model, ProductUpdateDTO dto) {
         MapperUtils.updateFieldIfNotNull(dto.getCode(), model::setCode);

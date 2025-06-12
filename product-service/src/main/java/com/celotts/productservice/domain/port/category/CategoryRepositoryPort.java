@@ -4,6 +4,7 @@ import com.celotts.productservice.domain.model.CategoryModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -46,5 +47,11 @@ public interface CategoryRepositoryPort {
 
     List<CategoryModel> findAllById(Iterable<UUID> ids);
 
+    List<CategoryModel> findByNameOrDescription(String term, int limit);
+
     long countByActive(Boolean active);
+
+    List<CategoryModel> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+
+    boolean isCategoryInUse(UUID categoryId);
 }

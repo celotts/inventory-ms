@@ -1,18 +1,22 @@
 package com.celotts.productservice.domain.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Entity
+@Table(name = "categories")
+@Getter
+@Setter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class CategoryModel {
+    @Id
     private UUID id;
     private String name;
     private String description;
@@ -22,6 +26,9 @@ public class CategoryModel {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    @Builder.Default
+    private boolean deleted = false;
+
     public void update(String name, String description, Boolean active, String updatedBy) {
         this.name = name;
         this.description = description;
@@ -29,4 +36,5 @@ public class CategoryModel {
         this.updatedBy = updatedBy;
         this.updatedAt = LocalDateTime.now();
     }
+
 }

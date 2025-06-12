@@ -1,6 +1,8 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.applications.service.ProductService;
+import com.celotts.productservice.applications.service.CategoryService; // ✅ AGREGAR ESTE IMPORT
+import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDTO;
@@ -20,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -31,6 +34,7 @@ import java.util.stream.Collectors;
 public class ProductController {
 
     private final ProductService productService;
+    //private final CategoryService categoryService; // ✅ AGREGAR ESTA DEPENDENCIA
     private final ProductResponseMapper responseMapper;
 
     // Configuración de paginación desde variables de entorno
@@ -71,6 +75,13 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @GetMapping("/validate-unit/{code}")
+    public ResponseEntity<String> validateUnitCode(@PathVariable String code) {
+        Optional<String> unitName = productService.validateUnitCode(code);
+        return unitName.map(name -> ResponseEntity.ok("Valid unit: " + name))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     // ===============================================
     // READ - Operaciones de lectura
     // ===============================================
@@ -86,14 +97,12 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-
     @GetMapping("/paginated")
     public ResponseEntity<Page<ProductResponseDTO>> getAllProductsPaginated(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false) String sortDir,
-
             @RequestParam(required = false) String code,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String description) {
@@ -107,7 +116,7 @@ public class ProductController {
         String sortField = sortBy != null && !sortBy.trim().isEmpty() ? sortBy.trim() : defaultSort;
         String sortDirection = sortDir != null && !sortDir.trim().isEmpty() ? sortDir.trim() : defaultDirection;
 
-        // Validar campo de ordenamiento (agregué 'name' a la lista)
+        // Validar campo de ordenamiento
         List<String> allowedSortFields = List.of("createdAt", "updatedAt", "code", "name", "description", "unitPrice", "currentStock");
         if (!allowedSortFields.contains(sortField)) {
             log.warn("Invalid sort field: {}. Using default: {}", sortField, defaultSort);
@@ -126,11 +135,9 @@ public class ProductController {
 
         Page<ProductModel> products;
         if (hasFilters) {
-            // Usar método con filtros
             products = productService.getAllProductsWithFilters(pageable, code, name, description);
             log.info("Applied filters - code: {}, name: {}, description: {}", code, name, description);
         } else {
-            // Usar método sin filtros
             products = productService.getAllProducts(pageable);
         }
 
@@ -145,7 +152,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable UUID id) {
         log.info("Fetching product by ID: {}", id);
@@ -153,7 +159,6 @@ public class ProductController {
         ProductResponseDTO response = responseMapper.toDto(product);
         return ResponseEntity.ok(response);
     }
-
 
     @GetMapping("/code/{code}")
     public ResponseEntity<ProductResponseDTO> getProductByCode(@PathVariable String code) {
@@ -163,7 +168,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-
     @GetMapping("/{id}/exists")
     public ResponseEntity<Boolean> existsProduct(@PathVariable UUID id) {
         log.info("Checking if product exists: {}", id);
@@ -171,19 +175,14 @@ public class ProductController {
         return ResponseEntity.ok(exists);
     }
 
-
     @GetMapping("/active")
     public ResponseEntity<List<ProductResponseDTO>> getActiveProducts() {
         log.info("Fetching active products");
-
-        Pageable pageable = Pageable.unpaged(); // o PageRequest.of(0, 100) si quieres límite
-
+        Pageable pageable = Pageable.unpaged();
         List<ProductModel> products = productService.getActiveProducts(pageable).getContent();
-
         List<ProductResponseDTO> response = products.stream()
                 .map(responseMapper::toDto)
                 .collect(Collectors.toList());
-
         log.info("Retrieved Product Response {} active products", response.size());
         return ResponseEntity.ok(response);
     }
@@ -210,7 +209,6 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
-    // ✅ AGREGAR estos nuevos endpoints de categoría:
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<ProductResponseDTO>> getProductsByCategory(@PathVariable UUID categoryId) {
         log.info("Fetching products by category: {}", categoryId);
@@ -260,6 +258,48 @@ public class ProductController {
         return ResponseEntity.ok(count);
     }
 
+    // ===============================================
+    // ENDPOINTS CON DETALLES DE CATEGORÍA
+    // ===============================================
+    //TODO: Se comneta para futuro desarrollo
+   /* @GetMapping("/{id}/with-details")
+    public ResponseEntity<ProductResponseDTO> getProductWithDetails(@PathVariable UUID id) {
+        log.info("Fetching product with details by ID: {}", id);
+        ProductModel product = productService.getProductById(id);
+
+        // Obtener nombre de categoría
+        String categoryName = categoryService.findById(product.getCategoryId())
+                .map(CategoryModel::getName)
+                .orElse("Unknown Category");
+
+        // ✅ CORREGIR: Usar la instancia del mapper, no estática
+        ProductResponseDTO response = ProductResponseMapper.toDtoWithCategoryName(product, categoryName);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/with-details")
+    public ResponseEntity<List<ProductResponseDTO>> getAllProductsWithDetails() {
+        log.info("Fetching all products with details");
+        List<ProductModel> products = productService.getAllProducts();
+
+        List<ProductResponseDTO> response = products.stream()
+                .map(product -> {
+                    String categoryName = categoryService.findById(product.getCategoryId())
+                            .map(CategoryModel::getName)
+                            .orElse("Unknown Category");
+                    // ✅ CORREGIR: Usar la instancia del mapper, no estática
+                    return ProductResponseMapper.toDtoWithCategoryName(product, categoryName);
+                })
+                .collect(Collectors.toList());
+
+        log.info("Retrieved {} products with details", response.size());
+        return ResponseEntity.ok(response);
+    }*/
+
+    // ===============================================
+    // UPDATE - Operaciones de actualización
+    // ===============================================
+
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> updateProduct(
             @PathVariable UUID id,
@@ -271,7 +311,6 @@ public class ProductController {
         log.info("Product updated successfully: {}", id);
         return ResponseEntity.ok(response);
     }
-
 
     @PatchMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> partialUpdateProduct(
@@ -285,7 +324,6 @@ public class ProductController {
         log.info("Product partially updated successfully: {}", id);
         return ResponseEntity.ok(response);
     }
-
 
     @PatchMapping("/{id}/stock")
     public ResponseEntity<ProductResponseDTO> updateStock(
@@ -317,6 +355,10 @@ public class ProductController {
         return ResponseEntity.ok(response);
     }
 
+    // ===============================================
+    // DELETE - Operaciones de eliminación
+    // ===============================================
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable UUID id) {
         log.info("Soft deleting product with ID: {}", id);
@@ -335,6 +377,10 @@ public class ProductController {
 
 
 
+    // ===============================================
+    // MÉTODOS AUXILIARES
+    // ===============================================
+
     /**
      * Convierte un ProductUpdateDTO a ProductRequestDTO manteniendo los valores existentes
      * para los campos no especificados en la actualización parcial.
@@ -342,9 +388,9 @@ public class ProductController {
     private ProductRequestDTO convertToRequestDTO(ProductUpdateDTO updateDTO, ProductModel existingProduct) {
         ProductRequestDTO requestDTO = new ProductRequestDTO();
         requestDTO.setCode(updateDTO.getCode() != null ? updateDTO.getCode() : existingProduct.getCode());
-        requestDTO.setName(updateDTO.getName() != null ? updateDTO.getName() : existingProduct.getName()); // ✅ AGREGAR
+        requestDTO.setName(updateDTO.getName() != null ? updateDTO.getName() : existingProduct.getName());
         requestDTO.setDescription(updateDTO.getDescription() != null ? updateDTO.getDescription() : existingProduct.getDescription());
-        requestDTO.setCategoryId(updateDTO.getCategoryId() != null ? updateDTO.getCategoryId() : existingProduct.getCategoryId()); // ✅ CAMBIAR
+        requestDTO.setCategoryId(updateDTO.getCategoryId() != null ? updateDTO.getCategoryId() : existingProduct.getCategoryId());
         requestDTO.setUnitCode(updateDTO.getUnitCode() != null ? updateDTO.getUnitCode() : existingProduct.getUnitCode());
         requestDTO.setBrandId(updateDTO.getBrandId() != null ? updateDTO.getBrandId() : existingProduct.getBrandId());
         requestDTO.setMinimumStock(updateDTO.getMinimumStock() != null ? updateDTO.getMinimumStock() : existingProduct.getMinimumStock());
@@ -354,16 +400,4 @@ public class ProductController {
         requestDTO.setUpdatedBy(updateDTO.getUpdatedBy());
         return requestDTO;
     }
-    /*
-    //TODO: Pendiente por agregar en la bd
-    sql-- Agregar columna category_id si no la tienes
-    ALTER TABLE product ADD COLUMN category_id UUID;
-
--- Eliminar columna product_type_code si existe
-    ALTER TABLE product DROP COLUMN IF EXISTS product_type_code;
-
--- Crear índice para mejor performance
-    CREATE INDEX IF NOT EXISTS idx_product_category_id ON product(category_id);
-    */
-
 }

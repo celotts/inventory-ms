@@ -5,6 +5,11 @@ spring:
   application:
     name: product-service
 
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+
   # ✅ PostgreSQL para desarrollo local en Docker
   datasource:
     url: jdbc:postgresql://localhost:5432/product

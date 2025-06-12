@@ -27,5 +27,4 @@ public interface ProductRepositoryPort {
     List<ProductModel> findByCategoryId(UUID categoryId);
     List<ProductModel> findByBrandId(UUID brandId);
     Page<ProductModel> findByEnabled(Boolean enabled, Pageable pageable);
-
 }

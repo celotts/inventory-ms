@@ -2,6 +2,7 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.adapte
 
 import com.celotts.productservice.domain.port.product.ProductBrandPort;
 
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrand;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductBrandRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -29,7 +30,7 @@ public class ProductBrandAdapter implements ProductBrandPort {
     @Override
     public List<UUID> findAllIds() {
         return productBrandRepository.findAll().stream()
-                .map(brand -> brand.getId())
+                .map(ProductBrand::getId)
                 .toList();
     }
 }
