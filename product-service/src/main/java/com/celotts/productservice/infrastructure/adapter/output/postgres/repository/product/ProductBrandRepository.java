@@ -1,4 +1,3 @@
-
 package com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product;
 
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrand;
@@ -13,10 +12,9 @@ import java.util.UUID;
 @Repository
 public interface ProductBrandRepository extends JpaRepository<ProductBrand, UUID> {
 
-    boolean existsById(UUID id);
-
-    Optional<ProductBrand> findById(UUID id);
-
     @Query("SELECT pb.name FROM ProductBrand pb WHERE pb.id = :id")
     Optional<String> findNameById(@Param("id") UUID id);
+
+    Optional<ProductBrand> findByName(String name);
+    boolean existsByName(String name);
 }
