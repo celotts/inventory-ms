@@ -5,50 +5,50 @@ import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 public class CategoryEntityMapper {
 
-    public CategoryEntity toEntity(CategoryModel category) {
-        if (category == null) return null;
-
-        CategoryEntity entity = new CategoryEntity();
-        entity.setId(category.getId());
-        entity.setName(category.getName());
-        entity.setDescription(category.getDescription());
-        entity.setActive(category.getActive());
-        entity.setCreatedBy(category.getCreatedBy());
-        entity.setUpdatedBy(category.getUpdatedBy());
-        entity.setCreatedAt(category.getCreatedAt());
-        entity.setUpdatedAt(category.getUpdatedAt());
-
-        return entity;
-    }
-
-    public CategoryModel toDomain(CategoryEntity categoryEntity) {
-        if (categoryEntity == null) return null;
+    public CategoryModel toDomain(CategoryEntity entity) {
+        if (entity == null) return null;
 
         return CategoryModel.builder()
-                .id(categoryEntity.getId())
-                .name(categoryEntity.getName())
-                .description(categoryEntity.getDescription())
-                .active(categoryEntity.getActive())
-                .createdBy(categoryEntity.getCreatedBy())
-                .updatedBy(categoryEntity.getUpdatedBy())
-                .createdAt(categoryEntity.getCreatedAt())
-                .updatedAt(categoryEntity.getUpdatedAt())
+                .id(entity.getId())
+                .name(entity.getName())
+                .description(entity.getDescription())
+                .active(entity.getActive())
+                .createdBy(entity.getCreatedBy())
+                .updatedBy(entity.getUpdatedBy())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
                 .build();
     }
 
-    public List<CategoryModel> toDomainList(List<CategoryEntity> categoryEntities) {
-        return categoryEntities.stream()
-                .map(this::toDomain)
-                .toList();
+    public CategoryEntity toEntity(CategoryModel model) {
+        if (model == null) return null;
+
+        CategoryEntity entity = new CategoryEntity();
+        entity.setId(model.getId());
+        entity.setName(model.getName());
+        entity.setDescription(model.getDescription());
+        entity.setActive(model.getActive());
+        entity.setCreatedBy(model.getCreatedBy());
+        entity.setUpdatedBy(model.getUpdatedBy());
+        entity.setCreatedAt(model.getCreatedAt());
+        entity.setUpdatedAt(model.getUpdatedAt());
+        return entity;
     }
 
-    public List<CategoryEntity> toEntityList(List<CategoryModel> categories) {
-        return categories.stream()
+    public List<CategoryModel> toDomainList(List<CategoryEntity> entities) {
+        return entities.stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    public List<CategoryEntity> toEntityList(List<CategoryModel> models) {
+        return models.stream()
                 .map(this::toEntity)
-                .toList();
+                .collect(Collectors.toList());
     }
 }

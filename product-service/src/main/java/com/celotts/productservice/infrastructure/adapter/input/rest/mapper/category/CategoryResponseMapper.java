@@ -2,33 +2,33 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.cate
 
 import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryResponseDto;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-@Component
 public class CategoryResponseMapper {
 
-    public CategoryResponseDto toDto(CategoryModel model) {
-        if (model == null) return null;
-
-        return CategoryResponseDto.builder()
-                .id(model.getId())
-                .name(model.getName())
-                .description(model.getDescription())
-                .active(model.getActive())
-                .createdBy(model.getCreatedBy())
-                .updatedBy(model.getUpdatedBy())
-                .createdAt(model.getCreatedAt())
-                .updatedAt(model.getUpdatedAt())
-                .build();
+    private CategoryResponseMapper() {
+        // Clase utilitaria, no instanciar
     }
 
-    public List<CategoryResponseDto> toDtoList(List<CategoryModel> models) {
-        if (models == null) return null;
+    /**
+     * Convierte CategoryModel a CategoryResponseDto
+     */
+    public static CategoryResponseDto toDto(CategoryModel model) {
+        return CategoryDtoMapper.toResponseDto(model);
+    }
+
+    /**
+     * Convierte lista de CategoryModel a lista de CategoryResponseDto
+     */
+    public static List<CategoryResponseDto> toDtoList(List<CategoryModel> models) {
+        if (models == null) {
+            return null;
+        }
 
         return models.stream()
-                .map(this::toDto)
-                .toList();
+                .map(CategoryResponseMapper::toDto)  // ← Ahora SÍ funciona
+                .collect(Collectors.toList());
     }
 }

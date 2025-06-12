@@ -34,7 +34,7 @@ public class ProductResponseMapper {
     }
 
     // ✅ OPCIONAL: Versión mejorada para obtener categoryName
-    public ProductResponseDTO toDtoWithCategoryName(ProductModel model, String categoryName) {
+    public static ProductResponseDTO toDtoWithCategoryName(ProductModel model, String categoryName) {
         if (model == null) {
             return null;
         }
