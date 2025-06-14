@@ -1,0 +1,321 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-06-13T00:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2023.5.8",
+  "resources": [
+    {
+      "_id": "req_create_product_brand",
+      "parentId": "fld_product_brand",
+      "modified": 1686672000000,
+      "created": 1686672000000,
+      "url": "{{ _.base_url }}/product-brands",
+      "name": "Create ProductBrand",
+      "description": "Crear una nueva marca de producto",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Nike\",\n  \"description\": \"American multinational corporation that designs, develops, manufactures, and markets footwear, apparel, equipment, accessories, and services.\",\n  \"enabled\": true,\n  \"createdBy\": \"admin\",\n  \"updatedBy\": \"admin\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "pair_content_type"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1686672000000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_all_product_brands",
+      "parentId": "fld_product_brand",
+      "modified": 1686672000000,
+      "created": 1686672000000,
+      "url": "{{ _.base_url }}/product-brands",
+      "name": "Get All ProductBrands",
+      "description": "Obtener todas las marcas de producto",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1686671000000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_get_product_brand_by_id",
+      "parentId": "fld_product_brand",
+      "modified": 1686672000000,
+      "created": 1686672000000,
+      "url": "{{ _.base_url }}/product-brands/{{ _.brand_id }}",
+      "name": "Get ProductBrand by ID",
+      "description": "Obtener una marca por ID específico",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1686670000000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_update_product_brand",
+      "parentId": "fld_product_brand",
+      "modified": 1686672000000,
+      "created": 1686672000000,
+      "url": "{{ _.base_url }}/product-brands/{{ _.brand_id }}",
+      "name": "Update ProductBrand",
+      "description": "Actualizar una marca existente",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Nike Updated\",\n  \"description\": \"Updated description for Nike brand with new features and capabilities.\",\n  \"enabled\": true,\n  \"createdBy\": \"admin\",\n  \"updatedBy\": \"admin-updated\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "pair_content_type"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1686669000000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_delete_product_brand",
+      "parentId": "fld_product_brand",
+      "modified": 1686672000000,
+      "created": 1686672000000,
+      "url": "{{ _.base_url }}/product-brands/{{ _.brand_id }}",
+      "name": "Delete ProductBrand",
+      "description": "Eliminar una marca por ID",
+      "method": "DELETE",
+      "body": {},
+      "parameters": [],
+      "headers": [],
+      "authentication": {},
+      "metaSortKey": -1686668000000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_create_adidas",
+      "parentId": "fld_test_cases",
+      "modified": 1686672000000,
+      "created": 1686672000000,
+      "url": "{{ _.base_url }}/product-brands",
+      "name": "Test - Create Adidas",
+      "description": "Caso de prueba - Crear marca Adidas",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Adidas\",\n  \"description\": \"German multinational corporation that designs and manufactures shoes, clothing and accessories.\",\n  \"enabled\": true,\n  \"createdBy\": \"test_user\",\n  \"updatedBy\": \"test_user\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "pair_content_type"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1686667000000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_create_minimal",
+      "parentId": "fld_test_cases",
+      "modified": 1686672000000,
+      "created": 1686672000000,
+      "url": "{{ _.base_url }}/product-brands",
+      "name": "Test - Create Minimal Data",
+      "description": "Caso de prueba - Crear con datos mínimos",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Puma\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "pair_content_type"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1686666000000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_create_duplicate",
+      "parentId": "fld_test_cases",
+      "modified": 1686672000000,
+      "created": 1686672000000,
+      "url": "{{ _.base_url }}/product-brands",
+      "name": "Test - Create Duplicate (Should Fail)",
+      "description": "Caso de prueba - Crear duplicado (debería fallar)",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Nike\",\n  \"description\": \"This should fail because Nike already exists\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "pair_content_type"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1686665000000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_create_invalid_short_name",
+      "parentId": "fld_test_cases",
+      "modified": 1686672000000,
+      "created": 1686672000000,
+      "url": "{{ _.base_url }}/product-brands",
+      "name": "Test - Invalid Short Name (Should Fail)",
+      "description": "Caso de prueba - Nombre muy corto (debería fallar)",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"A\",\n  \"description\": \"Name too short - should fail validation\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "pair_content_type"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1686664000000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "fld_product_brand",
+      "parentId": "wrk_main",
+      "modified": 1686672000000,
+      "created": 1686672000000,
+      "name": "ProductBrand CRUD",
+      "description": "Operaciones CRUD básicas para ProductBrand",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1686672000000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "fld_test_cases",
+      "parentId": "wrk_main",
+      "modified": 1686672000000,
+      "created": 1686672000000,
+      "name": "Test Cases",
+      "description": "Casos de prueba y validaciones",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1686671000000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "wrk_main",
+      "parentId": null,
+      "modified": 1686672000000,
+      "created": 1686672000000,
+      "name": "ProductService API",
+      "description": "API REST para el servicio de productos",
+      "scope": "collection",
+      "_type": "workspace"
+    },
+    {
+      "_id": "env_base",
+      "parentId": "wrk_main",
+      "modified": 1686672000000,
+      "created": 1686672000000,
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:9091/api/v1",
+        "brand_id": "550e8400-e29b-41d4-a716-446655440000"
+      },
+      "dataPropertyOrder": {
+        "&": ["base_url", "brand_id"]
+      },
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1686672000000,
+      "_type": "environment"
+    }
+  ]
+}
