@@ -6,7 +6,7 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.produ
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductBrandEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductBrandRepository;
 import com.celotts.productservice.domain.model.ProductBrandModel;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrand;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrandEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,8 +41,8 @@ public class ProductBrandService {
 
         // DTO -> Model -> Entity -> Save -> Entity -> Model -> DTO
         ProductBrandModel model = dtoMapper.toModel(createDto);
-        ProductBrand entity = entityMapper.toEntity(model);
-        ProductBrand savedEntity = productBrandRepository.save(entity);
+        ProductBrandEntity entity = entityMapper.toEntity(model);
+        ProductBrandEntity savedEntity = productBrandRepository.save(entity);
         ProductBrandModel savedModel = entityMapper.toModel(savedEntity);
         ProductBrandResponseDto response = dtoMapper.toResponseDto(savedModel);
 
@@ -58,7 +58,7 @@ public class ProductBrandService {
     public List<ProductBrandResponseDto> findAll() {
         log.info("Fetching all ProductBrands");
 
-        List<ProductBrand> entities = productBrandRepository.findAll();
+        List<ProductBrandEntity> entities = productBrandRepository.findAll();
         List<ProductBrandResponseDto> response = entities.stream()
                 .map(entityMapper::toModel)
                 .map(dtoMapper::toResponseDto)
@@ -77,7 +77,7 @@ public class ProductBrandService {
     public ProductBrandResponseDto findById(UUID id) {
         log.info("Fetching ProductBrand with id: {}", id);
 
-        ProductBrand entity = productBrandRepository.findById(id)
+        ProductBrandEntity entity = productBrandRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error("ProductBrand not found with id: {}", id);
                     return new RuntimeException("ProductBrand not found with id: " + id);
@@ -99,7 +99,7 @@ public class ProductBrandService {
     public ProductBrandResponseDto update(UUID id, ProductBrandCreateDto updateDto) {
         log.info("Updating ProductBrand with id: {}", id);
 
-        ProductBrand existingEntity = productBrandRepository.findById(id)
+        ProductBrandEntity existingEntity = productBrandRepository.findById(id)
                 .orElseThrow(() -> {
                     log.error("ProductBrand not found with id: {}", id);
                     return new RuntimeException("ProductBrand not found with id: " + id);
@@ -122,8 +122,8 @@ public class ProductBrandService {
                 .description(updateModel.getDescription())
                 .build();
 
-        ProductBrand updatedEntity = entityMapper.toEntity(updatedModel);
-        ProductBrand savedEntity = productBrandRepository.save(updatedEntity);
+        ProductBrandEntity updatedEntity = entityMapper.toEntity(updatedModel);
+        ProductBrandEntity savedEntity = productBrandRepository.save(updatedEntity);
         ProductBrandModel savedModel = entityMapper.toModel(savedEntity);
         ProductBrandResponseDto response = dtoMapper.toResponseDto(savedModel);
 
@@ -156,7 +156,7 @@ public class ProductBrandService {
     public ProductBrandResponseDto findByName(String name) {
         log.info("Fetching ProductBrand with name: {}", name);
 
-        ProductBrand entity = productBrandRepository.findByName(name)
+        ProductBrandEntity entity = productBrandRepository.findByName(name)
                 .orElseThrow(() -> {
                     log.error("ProductBrand not found with name: {}", name);
                     return new RuntimeException("ProductBrand not found with name: " + name);

@@ -1,25 +1,25 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product;
 
 import com.celotts.productservice.domain.model.ProductBrandModel;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrand;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrandEntity;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ProductBrandEntityMapper {
 
-    public ProductBrand toEntity(ProductBrandModel productBrandModel) { // ✅ Cambiar ProductBrandEntity por ProductBrand
+    public ProductBrandEntity toEntity(ProductBrandModel productBrandModel) { // ✅ Cambiar ProductBrandEntity por ProductBrand
         if (productBrandModel == null) {
             return null;
         }
 
-        return ProductBrand.builder()
+        return ProductBrandEntity.builder()
                 .id(productBrandModel.getId())
                 .name(productBrandModel.getName())
                 .description(productBrandModel.getDescription())
                 .build();
     }
 
-    public ProductBrandModel toModel(ProductBrand entity) { // ✅ Cambiar ProductBrandEntity por ProductBrand
+    public ProductBrandModel toModel(ProductBrandEntity entity) { // ✅ Cambiar ProductBrandEntity por ProductBrand
         if (entity == null) {
             return null;
         }

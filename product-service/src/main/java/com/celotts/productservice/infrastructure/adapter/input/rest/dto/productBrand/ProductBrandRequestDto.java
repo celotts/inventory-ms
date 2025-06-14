@@ -22,6 +22,7 @@ public class ProductBrandRequestDto {
     private String description;
 
     @NotNull
+    @Builder.Default
     private Boolean enabled = false;
 
     private String createdBy;

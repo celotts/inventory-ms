@@ -11,19 +11,27 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder(toBuilder = true)  // ✅ Agregar toBuilder = true
+@Builder(toBuilder = true)
 public class ProductBrandModel {
-
     private UUID id;
     private String name;
     private String description;
-    private boolean enabled;
-
-    // ✅ Usar LocalDateTime en lugar de String para fechas
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Boolean enabled;
     private String createdBy;
     private String updatedBy;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
+    // Métodos de negocio si los necesitas
+    public boolean isActive() {
+        return enabled != null && enabled;
+    }
 
+    public void activate() {
+        this.enabled = true;
+    }
+
+    public void deactivate() {
+        this.enabled = false;
+    }
 }

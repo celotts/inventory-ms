@@ -6,20 +6,17 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
-
 @Entity
-@Table(name = "product_brand")
+@Table(name = "product_type")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductBrand {
+public class ProductTypeEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id")
-    private UUID id;
+    @Column(name = "code", length = 50)
+    private String code;
 
     @Column(name = "name", length = 100, nullable = false)
     private String name;
