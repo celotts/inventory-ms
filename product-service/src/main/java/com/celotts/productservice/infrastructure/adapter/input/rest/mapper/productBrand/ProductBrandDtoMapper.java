@@ -7,6 +7,7 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productB
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,11 @@ public class ProductBrandDtoMapper {
         return ProductBrandModel.builder()
                 .name(createDto.getName())
                 .description(createDto.getDescription())
+                .enabled(createDto.getEnabled())
+                .createdBy(createDto.getCreatedBy())
+                .updatedBy(createDto.getUpdatedBy())
+                .createdAt(LocalDateTime.now())   // audit inicial
+                .updatedAt(null)
                 .build();
     }
 
@@ -43,6 +49,11 @@ public class ProductBrandDtoMapper {
                 .id(model.getId())
                 .name(model.getName())
                 .description(model.getDescription())
+                .enabled(model.getEnabled())
+                .createdBy(model.getCreatedBy())
+                .updatedBy(model.getUpdatedBy())
+                .createdAt(model.getCreatedAt())
+                .updatedAt(model.getUpdatedAt())
                 .build();
     }
 

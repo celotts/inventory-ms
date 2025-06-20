@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ProductBrandEntityMapper {
 
-    public ProductBrandEntity toEntity(ProductBrandModel productBrandModel) { // ✅ Cambiar ProductBrandEntity por ProductBrand
+    public ProductBrandEntity toEntity(ProductBrandModel productBrandModel) {
         if (productBrandModel == null) {
             return null;
         }
@@ -16,6 +16,11 @@ public class ProductBrandEntityMapper {
                 .id(productBrandModel.getId())
                 .name(productBrandModel.getName())
                 .description(productBrandModel.getDescription())
+                .enabled(productBrandModel.getEnabled())
+                .createdBy(productBrandModel.getCreatedBy())
+                .updatedBy(productBrandModel.getUpdatedBy())
+                .createdAt(productBrandModel.getCreatedAt())
+                .updatedAt(productBrandModel.getUpdatedAt())
                 .build();
     }
 
@@ -28,6 +33,11 @@ public class ProductBrandEntityMapper {
                 .id(entity.getId())
                 .name(entity.getName())
                 .description(entity.getDescription())
+                .enabled(entity.getEnabled())
+                .createdBy(entity.getCreatedBy())
+                .updatedBy(entity.getUpdatedBy())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
                 .build();
     }
 }

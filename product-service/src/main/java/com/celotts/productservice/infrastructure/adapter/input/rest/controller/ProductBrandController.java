@@ -3,6 +3,7 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 import com.celotts.productservice.applications.service.ProductBrandService;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,11 +41,10 @@ public class ProductBrandController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductBrandResponseDto> updateBrand(
+    public ResponseEntity<ProductBrandResponseDto> update(
             @PathVariable UUID id,
-            @Valid @RequestBody ProductBrandCreateDto updateDto) {
-        ProductBrandResponseDto response = productBrandService.update(id, updateDto);
-        return ResponseEntity.ok(response);
+            @Valid @RequestBody ProductBrandUpdateDto updateDto) {
+        return ResponseEntity.ok(productBrandService.update(id, updateDto));
     }
 
     @DeleteMapping("/{id}")

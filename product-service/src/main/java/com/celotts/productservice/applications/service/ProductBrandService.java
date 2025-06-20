@@ -2,6 +2,7 @@ package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductBrandEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductBrandRepository;
@@ -12,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -96,39 +98,30 @@ public class ProductBrandService {
      * @param updateDto DTO con los nuevos datos
      * @return DTO con los datos actualizados
      */
-    public ProductBrandResponseDto update(UUID id, ProductBrandCreateDto updateDto) {
+    public ProductBrandResponseDto update(UUID id, ProductBrandUpdateDto dto) {
         log.info("Updating ProductBrand with id: {}", id);
 
-        ProductBrandEntity existingEntity = productBrandRepository.findById(id)
-                .orElseThrow(() -> {
-                    log.error("ProductBrand not found with id: {}", id);
-                    return new RuntimeException("ProductBrand not found with id: " + id);
+        // 1. Buscar la marca existente
+        ProductBrandEntity entity = productBrandRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("ProductBrand not found with id: " + id));
+
+        // 2. Verificar nombre duplicado (excepto la misma marca)
+        productBrandRepository.findByName(dto.getName())
+                .filter(e -> !e.getId().equals(id))
+                .ifPresent(e -> {
+                    throw new IllegalArgumentException("ProductBrand with name '" + dto.getName() + "' already exists");
                 });
 
-        // Validar que no exista otra marca con el mismo nombre (excepto la actual)
-        productBrandRepository.findByName(updateDto.getName())
-                .ifPresent(existing -> {
-                    if (!existing.getId().equals(id)) {
-                        throw new IllegalArgumentException("ProductBrand with name '" + updateDto.getName() + "' already exists");
-                    }
-                });
+        // 3. Actualizar campos permitidos
+        entity.setName(dto.getName());
+        entity.setDescription(dto.getDescription());
+        entity.setEnabled(dto.getEnabled());
+        entity.setUpdatedBy(dto.getUpdatedBy());     // ← obligatorio en el DTO
+        entity.setUpdatedAt(LocalDateTime.now());
 
-        ProductBrandModel existingModel = entityMapper.toModel(existingEntity);
-        ProductBrandModel updateModel = dtoMapper.toModel(updateDto);
-
-        // Actualizar campos manteniendo el ID
-        ProductBrandModel updatedModel = existingModel.toBuilder()
-                .name(updateModel.getName())
-                .description(updateModel.getDescription())
-                .build();
-
-        ProductBrandEntity updatedEntity = entityMapper.toEntity(updatedModel);
-        ProductBrandEntity savedEntity = productBrandRepository.save(updatedEntity);
-        ProductBrandModel savedModel = entityMapper.toModel(savedEntity);
-        ProductBrandResponseDto response = dtoMapper.toResponseDto(savedModel);
-
-        log.info("ProductBrand updated successfully with id: {}", id);
-        return response;
+        // 4. Guardar y devolver
+        ProductBrandEntity saved = productBrandRepository.save(entity);
+        return dtoMapper.toResponseDto(entityMapper.toModel(saved));
     }
 
     /**
