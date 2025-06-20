@@ -54,4 +54,6 @@ public class ProductEntityMapper {
                 .updatedBy(entity.getUpdatedBy())
                 .build();
     }
+
+
 }

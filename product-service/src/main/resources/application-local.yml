@@ -33,6 +33,13 @@ eureka:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs       # JSON
+  swagger-ui:
+    path: /swagger-ui.html   # UI
+    display-request-duration: true
+
 # Configuración de paginación
 app:
   pagination:
@@ -47,6 +54,7 @@ management:
     web:
       exposure:
         include: "*"
+
 
 logging:
   level:

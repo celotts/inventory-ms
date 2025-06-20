@@ -1,6 +1,7 @@
 
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.product;
 
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -46,6 +47,7 @@ public class ProductRequestDTO {
     @Digits(integer = 10, fraction = 2, message = "Unit price must have maximum 10 digits and 2 decimal places")
     private BigDecimal unitPrice;
 
+    @Column(nullable = false)
     private Boolean enabled = true;
 
     private String createdBy;

@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductUnit implements Auditable {
+public class ProductUnitAuditable implements Auditable {
 
     @Id
     @Column(name = "code", length = 30)

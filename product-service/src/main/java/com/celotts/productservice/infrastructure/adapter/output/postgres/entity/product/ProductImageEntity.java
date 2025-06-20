@@ -9,24 +9,23 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "product_tag_assignment")
+@Table(name = "product_image")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductTagAssignment {
+public class ProductImageEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)  // ✅ Agregar strategy
     private UUID id;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
     private ProductEntity product;
 
-    @ManyToOne
-    @JoinColumn(name = "tag_id", nullable = false)
-    private ProductTagEntity tag;
+    @Column(nullable = false)
+    private String url;
 
-    @Column(name = "created_at")
-    private LocalDateTime assignedAt = LocalDateTime.now();
+    @Column(name = "uploaded_At")
+    private LocalDateTime uploadedAt = LocalDateTime.now();
 }
