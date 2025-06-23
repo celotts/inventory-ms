@@ -206,5 +206,10 @@ public class CategoryController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/exists")
+    public ResponseEntity<Boolean> existsByName(@RequestParam String name) {
+        boolean exists = productBrandService.existsByName(name);
+        return ResponseEntity.ok(exists);
+    }
 
 }

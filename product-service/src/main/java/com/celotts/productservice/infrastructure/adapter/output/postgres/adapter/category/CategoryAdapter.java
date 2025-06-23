@@ -25,9 +25,6 @@ public class CategoryAdapter implements CategoryRepositoryPort {
     private final CategoryEntityMapper categoryEntityMapper;
     private final EntityManager entityManager;
 
-
-    // ========== MÉTODOS EXISTENTES (mantenidos) ==========
-
     @Override
     public CategoryModel save(CategoryModel category) {
         var categoryEntity = categoryEntityMapper.toEntity(category);
