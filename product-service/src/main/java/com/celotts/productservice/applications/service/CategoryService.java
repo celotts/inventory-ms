@@ -2,6 +2,7 @@ package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
+import com.celotts.productservice.domain.port.category.CategoryUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatsDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category.CategoryRequestMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -19,122 +20,122 @@ import java.util.*;
 @Transactional
 public class CategoryService {
 
-    private final CategoryRepositoryPort categoryRepositoryPort;
+    private final CategoryUseCase categoryUseCase;
     private final CategoryRequestMapper categoryRequestMapper;
 
     // Constructor explícito con @Qualifier
     public CategoryService(
-            @Qualifier("categoryRepositoryAdapter") CategoryRepositoryPort categoryRepositoryPort,
+            CategoryUseCase categoryUseCase,
             CategoryRequestMapper categoryRequestMapper) {
-        this.categoryRepositoryPort = categoryRepositoryPort;
+        this.categoryUseCase = categoryUseCase;
         this.categoryRequestMapper = categoryRequestMapper;
     }
 
     public CategoryModel create(CategoryModel dto) {
-        if (categoryRepositoryPort.existsByName(dto.getName())) {
+        if (categoryUseCase.existsByName(dto.getName())) {
             throw new IllegalArgumentException("Category with name '" + dto.getName() + "' already exists");
         }
 
         CategoryModel category = categoryRequestMapper.toModel(dto);
         category.setCreatedAt(LocalDateTime.now());
         category.setCreatedBy(getCurrentUsername());
-        return categoryRepositoryPort.save(category);
+        return categoryUseCase.save(category);
     }
 
     public CategoryModel update(UUID id, CategoryModel dto) {
-        CategoryModel existing = categoryRepositoryPort.findById(id)
+        CategoryModel existing = categoryUseCase.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Category with ID " + id + " not found"));
 
         CategoryRequestMapper.updateModelFromDto(existing, dto);
         existing.setUpdatedAt(LocalDateTime.now());
         existing.setUpdatedBy(getCurrentUsername());
 
-        return categoryRepositoryPort.save(existing);
+        return categoryUseCase.save(existing);
     }
 
     @Transactional(readOnly = true)
     public Optional<CategoryModel> findById(UUID id) {
-        return categoryRepositoryPort.findById(id);
+        return categoryUseCase.findById(id);
     }
 
     @Transactional(readOnly = true)
     public List<CategoryModel> findAll() {
-        return categoryRepositoryPort.findAll();
+        return categoryUseCase.findAll();
     }
 
     @Transactional(readOnly = true)
     public Optional<CategoryModel> findByName(String name) {
-        return categoryRepositoryPort.findByName(name);
+        return categoryUseCase.findByName(name);
     }
 
     @Transactional(readOnly = true)
     public List<CategoryModel> findByNameContaining(String name) {
-        return categoryRepositoryPort.findByNameContaining(name);
+        return categoryUseCase.findByNameContaining(name);
     }
 
     public void deleteById(UUID id) {
-        if (!categoryRepositoryPort.existsById(id)) {
+        if (!categoryUseCase.existsById(id)) {
             throw new IllegalArgumentException("Category with ID " + id + " not found");
         }
-        categoryRepositoryPort.deleteById(id);
+        categoryUseCase.deleteById(id);
     }
 
     @Transactional(readOnly = true)
     public boolean existsById(UUID id) {
-        return categoryRepositoryPort.existsById(id);
+        return categoryUseCase.existsById(id);
     }
 
     @Transactional(readOnly = true)
     public boolean existsByName(String name) {
-        return categoryRepositoryPort.existsByName(name);
+        return categoryUseCase.existsByName(name);
     }
 
     @Transactional(readOnly = true)
     public List<CategoryModel> findByActive(Boolean active) {
-        return categoryRepositoryPort.findByActive(active);
+        return categoryUseCase.findByActive(active);
     }
 
     @Transactional(readOnly = true)
     public Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable) {
         if (name != null && !name.trim().isEmpty() && active != null) {
-            return categoryRepositoryPort.findByNameContainingAndActive(name.trim(), active, pageable);
+            return categoryUseCase.findByNameContainingAndActive(name.trim(), active, pageable);
         } else if (name != null && !name.trim().isEmpty()) {
-            return categoryRepositoryPort.findByNameContaining(name.trim(), pageable);
+            return categoryUseCase.findByNameContaining(name.trim(), pageable);
         } else if (active != null) {
-            return categoryRepositoryPort.findByActive(active, pageable);
+            return categoryUseCase.findByActive(active, pageable);
         } else {
-            return categoryRepositoryPort.findAll(pageable);
+            return categoryUseCase.findAll(pageable);
         }
     }
 
     @Transactional(readOnly = true)
     public List<CategoryModel> searchByNameOrDescription(String query, int limit) {
         if (query == null || query.trim().isEmpty()) {
-            return categoryRepositoryPort.findAll(Pageable.ofSize(limit)).getContent();
+            return categoryUseCase.findAll(Pageable.ofSize(limit)).getContent();
         }
-        return categoryRepositoryPort.findByNameOrDescription(query.trim().toLowerCase(), limit);
+        return categoryUseCase.findByNameOrDescription(query.trim().toLowerCase(), limit);
     }
 
     public CategoryModel updateStatus(UUID id, Boolean active) {
-        CategoryModel existing = categoryRepositoryPort.findById(id)
+        CategoryModel existing = categoryUseCase.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Category with ID " + id + " not found"));
 
         existing.setActive(active);
         existing.setUpdatedAt(LocalDateTime.now());
         existing.setUpdatedBy(getCurrentUsername());
 
-        return categoryRepositoryPort.save(existing);
+        return categoryUseCase.save(existing);
     }
 
     public void permanentDelete(UUID id) {
-        if (!categoryRepositoryPort.existsById(id)) {
+        if (!categoryUseCase.existsById(id)) {
             throw new IllegalArgumentException("Category with ID " + id + " not found");
         }
-        categoryRepositoryPort.deleteById(id);
+        categoryUseCase.deleteById(id);
     }
 
     public CategoryModel restore(UUID id) {
-        CategoryModel category = categoryRepositoryPort.findById(id)
+        CategoryModel category = categoryUseCase.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Category with ID " + id + " not found"));
 
         category.setActive(true);
@@ -142,12 +143,12 @@ public class CategoryService {
         category.setUpdatedAt(LocalDateTime.now());
         category.setUpdatedBy(getCurrentUsername());
 
-        return categoryRepositoryPort.save(category);
+        return categoryUseCase.save(category);
     }
 
     @Transactional(readOnly = true)
     public CategoryStatsDto getCategoryStatistics() {
-        List<CategoryModel> allCategories = categoryRepositoryPort.findAll();
+        List<CategoryModel> allCategories = categoryUseCase.findAll();
 
         long total = allCategories.size();
         long active = allCategories.stream().filter(c -> Boolean.TRUE.equals(c.getActive())).count();
@@ -164,7 +165,7 @@ public class CategoryService {
 
     @Transactional(readOnly = true)
     public List<CategoryModel> findByIds(List<UUID> ids) {
-        return categoryRepositoryPort.findAllById(ids);
+        return categoryUseCase.findAllById(ids);
     }
 
     private String getCurrentUsername() {

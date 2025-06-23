@@ -27,10 +27,17 @@ public class ProductBrandModel {
         return enabled != null && enabled;
     }
 
+    /**
+     * Marca esta entidad como habilitada.
+     * Puede usarse en flujos donde se reactive una marca previamente deshabilitada.
+     */
     public void activate() {
         this.enabled = true;
     }
-
+    /**
+     * Marca esta entidad como habilitada.
+     * Puede usarse en flujos donde se reactive una marca previamente habilitada.
+     */
     public void deactivate() {
         this.enabled = false;
     }
