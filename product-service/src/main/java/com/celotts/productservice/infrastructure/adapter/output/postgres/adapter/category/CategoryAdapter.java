@@ -2,13 +2,17 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.adapte
 
 import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.category.CategoryEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.category.CategoryEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.category.CategoryRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,8 +23,7 @@ public class CategoryAdapter implements CategoryRepositoryPort {
 
     private final CategoryRepository categoryRepository;
     private final CategoryEntityMapper categoryEntityMapper;
-
-    // ========== MÉTODOS EXISTENTES (mantenidos) ==========
+    private final EntityManager entityManager;
 
     @Override
     public CategoryModel save(CategoryModel category) {
@@ -43,7 +46,8 @@ public class CategoryAdapter implements CategoryRepositoryPort {
 
     @Override
     public List<CategoryModel> findAll() {
-        var entities = categoryRepository.findAllOrderByCreatedAtDesc();
+        // CAMBIO 1: Usar Sort en lugar de método personalizado
+        var entities = categoryRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
         return categoryEntityMapper.toDomainList(entities);
     }
 
@@ -84,13 +88,15 @@ public class CategoryAdapter implements CategoryRepositoryPort {
 
     @Override
     public Page<CategoryModel> findByNameContaining(String name, Pageable pageable) {
-        var entitiesPage = categoryRepository.findByNameContainingIgnoreCase(name, pageable);
+        // CAMBIO 2: Usar método sin IgnoreCase
+        var entitiesPage = categoryRepository.findByNameContaining(name, pageable);
         return entitiesPage.map(categoryEntityMapper::toDomain);
     }
 
     @Override
     public Page<CategoryModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable) {
-        var entitiesPage = categoryRepository.findByNameContainingIgnoreCaseAndActive(name, active, pageable);
+        // CAMBIO 3: Usar método sin IgnoreCase
+        var entitiesPage = categoryRepository.findByNameContainingAndActive(name, active, pageable);
         return entitiesPage.map(categoryEntityMapper::toDomain);
     }
 
@@ -109,5 +115,32 @@ public class CategoryAdapter implements CategoryRepositoryPort {
     @Override
     public long countByActive(Boolean active) {
         return categoryRepository.countByActive(active);
+    }
+
+    @Override
+    public List<CategoryModel> findByNameOrDescription(String term, int limit) {
+        var results = entityManager.createQuery(
+                        "FROM CategoryEntity c WHERE LOWER(c.name) LIKE :term OR LOWER(c.description) LIKE :term",
+                        CategoryEntity.class)
+                .setParameter("term", "%" + term.toLowerCase() + "%")
+                .setMaxResults(limit)
+                .getResultList();
+
+        return categoryEntityMapper.toDomainList(results);
+    }
+
+    // ========== MÉTODOS FALTANTES QUE NECESITAS IMPLEMENTAR ==========
+
+    @Override
+    public List<CategoryModel> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end) {
+        var entities = categoryRepository.findByCreatedAtBetween(start, end);
+        return categoryEntityMapper.toDomainList(entities);
+    }
+
+    @Override
+    public boolean isCategoryInUse(UUID categoryId) {
+        // Implementar según tu lógica de negocio
+        // Por ejemplo, verificar si hay productos asociados
+        return categoryRepository.existsById(categoryId);
     }
 }

@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -19,11 +18,7 @@ public class ProductTypeAdapter implements ProductTypePort {
     public boolean existsByCode(String code) {
         return productTypeRepository.existsByCode(code);
     }
-    //TODO: cannot resolve method
-    @Override
-    public Optional<String> findNameByCode(String code) {
-        return productTypeRepository.findNameByCode(code);
-    }
+
     //TODO: cannot resolve method
     @Override
     public List<String> findAllCodes() {

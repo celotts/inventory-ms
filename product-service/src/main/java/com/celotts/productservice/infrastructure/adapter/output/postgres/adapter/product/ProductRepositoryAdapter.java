@@ -7,15 +7,15 @@ import com.celotts.productservice.infrastructure.adapter.output.postgres.reposit
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository
+@Component  // Cambié de @Repository a @Component
 @RequiredArgsConstructor
-public class ProductRepositoryAdapter implements ProductRepositoryPort {
+public class ProductRepositoryAdapter implements ProductRepositoryPort {  // Quité "abstract"
 
     private final ProductRepository productRepository;
     private final ProductEntityMapper productEntityMapper;
@@ -36,7 +36,6 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
                 .map(productEntityMapper::toModel);
     }
 
-    // ✅ CAMBIAR: productTypeCode por categoryId
     @Override
     public List<ProductModel> findByCategoryId(UUID categoryId) {
         return productRepository.findByCategoryId(categoryId)
@@ -45,15 +44,12 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
                 .toList();
     }
 
-
-
     @Override
     public List<ProductModel> findByBrandId(UUID brandId) {
         return productRepository.findByBrandId(brandId).stream()
                 .map(productEntityMapper::toModel)
                 .toList();
     }
-
 
     @Override
     public Page<ProductModel> findByEnabled(Boolean enabled, Pageable pageable) {
@@ -84,10 +80,8 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
 
     @Override
     public Page<ProductModel> findAllWithFilters(Pageable pageable, String code, String name, String description) {
-        // ✅ Cambiar solo esta línea (cambiar el orden):
         return productRepository.findAllWithFilters(pageable, code, name, description)
                 .map(productEntityMapper::toModel);
-        //                                         ↑ Mover pageable al inicio
     }
 
     @Override
@@ -100,8 +94,4 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
     public void deleteById(UUID id) {
         productRepository.deleteById(id);
     }
-
-
-
-
 }

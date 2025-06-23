@@ -8,8 +8,8 @@ import java.util.UUID;
 public interface ProductBrandPort {
 
     boolean existsById(UUID id);
-    //TODO: no usages
+
     Optional<String> findNameById(UUID id);
-    //TODO: no usages
+
     List<UUID> findAllIds();
 }

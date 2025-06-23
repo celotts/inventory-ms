@@ -5,6 +5,11 @@ spring:
   application:
     name: product-service
 
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+
   # ✅ PostgreSQL para desarrollo local en Docker
   datasource:
     url: jdbc:postgresql://localhost:5432/product
@@ -28,6 +33,13 @@ eureka:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs       # JSON
+  swagger-ui:
+    path: /swagger-ui.html   # UI
+    display-request-duration: true
+
 # Configuración de paginación
 app:
   pagination:
@@ -42,6 +54,7 @@ management:
     web:
       exposure:
         include: "*"
+
 
 logging:
   level:

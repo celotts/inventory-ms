@@ -2,11 +2,9 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.applications.service.CategoryService;
 import com.celotts.productservice.domain.model.CategoryModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatsDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryUpdateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.*;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category.CategoryDtoMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category.CategoryResponseMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -41,6 +39,15 @@ public class CategoryController {
         return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
     }
 
+    // Con el mapper estático (Opción B):
+    @GetMapping("/{id}")
+    public ResponseEntity<CategoryResponseDto> findById(@PathVariable UUID id) {
+        return categoryService.findById(id)
+                .map(CategoryResponseMapper::toDto) // ← Uso directo
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     /**
      * Actualizar una categoría existente
      * PUT /api/v1/categories/{id}
@@ -55,17 +62,6 @@ public class CategoryController {
         var responseDto = CategoryDtoMapper.toResponseDto(updatedCategory);
 
         return ResponseEntity.ok(responseDto);
-    }
-
-    /**
-     * Obtener una categoría por ID
-     * GET /api/v1/categories/{id}
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<CategoryResponseDto> getCategoryById(@PathVariable UUID id) {
-        return categoryService.findById(id)
-                .map(category -> ResponseEntity.ok(CategoryDtoMapper.toResponseDto(category)))
-                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
@@ -203,4 +199,17 @@ public class CategoryController {
         boolean exists = categoryService.existsByName(name);
         return ResponseEntity.ok(exists);
     }
+
+    @DeleteMapping("/category")
+    public ResponseEntity<Void> deleteCategory(@RequestBody @Valid CategoryDeleteDto dto) {
+        categoryService.deleteById(dto.getId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/exists")
+    public ResponseEntity<Boolean> existsByName(@RequestParam String name) {
+        boolean exists = productBrandService.existsByName(name);
+        return ResponseEntity.ok(exists);
+    }
+
 }

@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductType {
+public class ProductTypeEntity {
 
     @Id
     @Column(name = "code", length = 50)

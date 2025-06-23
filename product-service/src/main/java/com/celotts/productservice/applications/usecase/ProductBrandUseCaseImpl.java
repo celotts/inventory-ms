@@ -1,4 +1,4 @@
 package com.celotts.productservice.applications.service;
 
-public class ProdutBrandService {
+public class ProductBrandUseCaseImpl {
 }
