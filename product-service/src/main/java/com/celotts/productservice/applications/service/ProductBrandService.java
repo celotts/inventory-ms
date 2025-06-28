@@ -1,7 +1,8 @@
 package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.model.ProductBrandModel;
-import com.celotts.productservice.domain.port.prodcut_brand.ProductBrandUseCase;
+import com.celotts.productservice.domain.port.product.ProductBrandPort;
+import com.celotts.productservice.domain.port.product_brand.ProductBrandUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;
@@ -13,13 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
-@Service
+@Service("productBrandService") // Asegúrate de que coincida con tu @Qualifier
 @Transactional
-@Slf4j
 @RequiredArgsConstructor
-public class ProductBrandService {
+@Slf4j
+public class ProductBrandService implements ProductBrandPort {
 
     private final ProductBrandUseCase productBrandUseCase;
     private final ProductBrandDtoMapper dtoMapper;
@@ -91,4 +93,24 @@ public class ProductBrandService {
     public boolean existsByName(String name) {
         return productBrandUseCase.existsByName(name);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsById(UUID id) {
+        return productBrandUseCase.existsById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<String> findNameById(UUID id) {
+        return productBrandUseCase.findNameById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UUID> findAllIds() {
+        return productBrandUseCase.findAllIds();
+    }
+
+
 }

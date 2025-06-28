@@ -31,6 +31,7 @@ public class ProductBrandModel {
      * Marca esta entidad como habilitada.
      * Puede usarse en flujos donde se reactive una marca previamente deshabilitada.
      */
+    //TODO: NO SE USA
     public void activate() {
         this.enabled = true;
     }
@@ -38,6 +39,7 @@ public class ProductBrandModel {
      * Marca esta entidad como habilitada.
      * Puede usarse en flujos donde se reactive una marca previamente habilitada.
      */
+    //TODO: NO SE USA
     public void deactivate() {
         this.enabled = false;
     }

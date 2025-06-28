@@ -1,4 +1,4 @@
-package com.celotts.productservice.domain.port.prodcut_brand;
+package com.celotts.productservice.domain.port.product_brand;
 
 import com.celotts.productservice.domain.model.ProductBrandModel;
 
@@ -21,4 +21,6 @@ public interface ProductBrandUseCase {
     boolean existsByName(String name);
     void deleteById(UUID id);
     boolean existsById(UUID id);
+    Optional<String> findNameById(UUID id);
+    List<UUID> findAllIds();
 }

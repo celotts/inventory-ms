@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public abstract class BaseEntity implements Auditable {
-
+    //TODO: NO SE USA esta clase
     @Column(name = "created_at", updatable = false)
     protected LocalDateTime createdAt;
 

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -18,4 +19,7 @@ public interface ProductTypeRepository extends JpaRepository<ProductTypeEntity, 
 
     @Query("SELECT pt.name FROM ProductTypeEntity pt WHERE pt.code = :code")
     Optional<String> findNameByCode(@Param("code") String code);
+
+    @Query("SELECT pt.code FROM ProductTypeEntity pt")
+    List<String> findAllCodes();
 }

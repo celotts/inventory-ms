@@ -48,10 +48,10 @@ public interface CategoryRepositoryPort {
     List<CategoryModel> findAllById(Iterable<UUID> ids);
 
     List<CategoryModel> findByNameOrDescription(String term, int limit);
-
+    //TODO: NO SE USA
     long countByActive(Boolean active);
 
     List<CategoryModel> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
-
+    //TODO: NO SE USA
     boolean isCategoryInUse(UUID categoryId);
 }

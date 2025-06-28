@@ -22,6 +22,7 @@ public class CategoryStatsDto {
     /**
      * Calcula el porcentaje de categorías activas
      */
+    //TODO: NO SE USA
     public double getActivePercentage() {
         if (totalCategories == 0) {
             return 0.0;
@@ -32,6 +33,7 @@ public class CategoryStatsDto {
     /**
      * Calcula el porcentaje de categorías inactivas
      */
+    //TODO: NO SE USA
     public double getInactivePercentage() {
         if (totalCategories == 0) {
             return 0.0;
@@ -42,6 +44,7 @@ public class CategoryStatsDto {
     /**
      * Calcula el porcentaje de categorías eliminadas
      */
+    //TODO: NO SE USA
     public double getDeletedPercentage() {
         if (totalCategories == 0) {
             return 0.0;

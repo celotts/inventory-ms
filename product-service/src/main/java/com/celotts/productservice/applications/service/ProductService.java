@@ -1,10 +1,11 @@
 package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
+import com.celotts.productservice.domain.port.product_brand.ProductBrandRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductDtoMapper;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.product.ProductBrandPort;
-import com.celotts.productservice.domain.port.prodcut_brand.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.product_brand.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.product.ProductUnitPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
@@ -35,11 +36,13 @@ public class ProductService {
     private final ProductBrandPort productBrandPort;
     private final CategoryRepositoryPort categoryPort;
 
+
     public ProductService(
             @Qualifier("productRepositoryAdapter") ProductRepositoryPort repository,
             ProductUnitPort productUnitPort,
-            ProductBrandPort productBrandPort,
-            @Qualifier("categoryRepositoryAdapter") CategoryRepositoryPort categoryPort) {
+            @Qualifier("productBrandService") ProductBrandPort productBrandPort,
+            @Qualifier("categoryRepositoryAdapter") CategoryRepositoryPort categoryPort
+    ) {
         this.repository = repository;
         this.productUnitPort = productUnitPort;
         this.productBrandPort = productBrandPort;

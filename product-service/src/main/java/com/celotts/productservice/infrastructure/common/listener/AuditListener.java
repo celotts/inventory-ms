@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 //TODO: cannot resolve method
 @Slf4j
 public class AuditListener {
-
+    //TODO: NO SE USA
     @PrePersist
     public void prePersist(Object entity) {
         if (entity instanceof Auditable auditable) {

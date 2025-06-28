@@ -1,8 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.applications.service.ProductService;
-import com.celotts.productservice.applications.service.CategoryService; // ✅ AGREGAR ESTE IMPORT
-import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDTO;
@@ -374,7 +372,6 @@ public class ProductController {
         log.info("Product hard deleted successfully: {}", id);
         return ResponseEntity.noContent().build();
     }
-
 
 
     // ===============================================
