@@ -10,6 +10,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+//TODO: error
 public class ProductTypeAdapter implements ProductTypePort {
 
     private final ProductTypeRepository productTypeRepository;

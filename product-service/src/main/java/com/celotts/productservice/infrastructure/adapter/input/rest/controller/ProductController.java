@@ -1,8 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.applications.service.ProductService;
-import com.celotts.productservice.applications.service.CategoryService; // ✅ AGREGAR ESTE IMPORT
-import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDTO;
@@ -259,44 +257,6 @@ public class ProductController {
     }
 
     // ===============================================
-    // ENDPOINTS CON DETALLES DE CATEGORÍA
-    // ===============================================
-    //TODO: Se comneta para futuro desarrollo
-   /* @GetMapping("/{id}/with-details")
-    public ResponseEntity<ProductResponseDTO> getProductWithDetails(@PathVariable UUID id) {
-        log.info("Fetching product with details by ID: {}", id);
-        ProductModel product = productService.getProductById(id);
-
-        // Obtener nombre de categoría
-        String categoryName = categoryService.findById(product.getCategoryId())
-                .map(CategoryModel::getName)
-                .orElse("Unknown Category");
-
-        // ✅ CORREGIR: Usar la instancia del mapper, no estática
-        ProductResponseDTO response = ProductResponseMapper.toDtoWithCategoryName(product, categoryName);
-        return ResponseEntity.ok(response);
-    }
-
-    @GetMapping("/with-details")
-    public ResponseEntity<List<ProductResponseDTO>> getAllProductsWithDetails() {
-        log.info("Fetching all products with details");
-        List<ProductModel> products = productService.getAllProducts();
-
-        List<ProductResponseDTO> response = products.stream()
-                .map(product -> {
-                    String categoryName = categoryService.findById(product.getCategoryId())
-                            .map(CategoryModel::getName)
-                            .orElse("Unknown Category");
-                    // ✅ CORREGIR: Usar la instancia del mapper, no estática
-                    return ProductResponseMapper.toDtoWithCategoryName(product, categoryName);
-                })
-                .collect(Collectors.toList());
-
-        log.info("Retrieved {} products with details", response.size());
-        return ResponseEntity.ok(response);
-    }*/
-
-    // ===============================================
     // UPDATE - Operaciones de actualización
     // ===============================================
 
@@ -374,7 +334,6 @@ public class ProductController {
         log.info("Product hard deleted successfully: {}", id);
         return ResponseEntity.noContent().build();
     }
-
 
 
     // ===============================================

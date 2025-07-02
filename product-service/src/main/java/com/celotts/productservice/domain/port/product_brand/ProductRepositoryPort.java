@@ -1,4 +1,4 @@
-package com.celotts.productservice.domain.port.prodcut_brand;
+package com.celotts.productservice.domain.port.product_brand;
 
 import com.celotts.productservice.domain.model.ProductModel;
 import org.springframework.data.domain.Page;
@@ -27,4 +27,6 @@ public interface ProductRepositoryPort {
     List<ProductModel> findByCategoryId(UUID categoryId);
     List<ProductModel> findByBrandId(UUID brandId);
     Page<ProductModel> findByEnabled(Boolean enabled, Pageable pageable);
+    //TODO: NO SE USA
+    List<String> findAllCodes();
 }

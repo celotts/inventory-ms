@@ -82,6 +82,7 @@ public class ProductDtoMapper {
     /**
      * Convierte lista de ProductModel a lista de ProductResponseDTO
      */
+    //TODO: NO SE USA
     public static List<ProductResponseDTO> toResponseDtoList(List<ProductModel> models) {
         if (models == null) return null;
         return models.stream()

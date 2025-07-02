@@ -1,7 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product;
 
 import com.celotts.productservice.domain.model.ProductBrandModel;
-import com.celotts.productservice.domain.port.prodcut_brand.ProductBrandRepositoryPort;
+import com.celotts.productservice.domain.port.product_brand.ProductBrandRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrandEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductBrandEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductBrandRepository;
@@ -60,5 +60,15 @@ public class ProductBrandRepositoryAdapter implements ProductBrandRepositoryPort
     @Override
     public void deleteById(UUID id) {
         productBrandRepository.deleteById(id);
+    }
+
+    @Override
+    public Optional<String> findNameById(UUID id) {
+        return productBrandRepository.findNameById(id);
+    }
+
+    @Override
+    public List<UUID> findAllIds() {
+        return productBrandRepository.findAllIds();
     }
 }

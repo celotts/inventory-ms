@@ -208,6 +208,7 @@ public class CategoryController {
 
     @GetMapping("/exists")
     public ResponseEntity<Boolean> existsByName(@RequestParam String name) {
+        //TODO: ERROR
         boolean exists = productBrandService.existsByName(name);
         return ResponseEntity.ok(exists);
     }

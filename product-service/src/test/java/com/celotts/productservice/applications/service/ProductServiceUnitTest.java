@@ -1,9 +1,8 @@
 package com.celotts.productservice.applications.service;
 
-import static org.mockito.Mockito.lenient;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
-import com.celotts.productservice.domain.port.prodcut_brand.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.product_brand.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.product.ProductBrandPort;
 import com.celotts.productservice.domain.port.product.ProductUnitPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
@@ -21,7 +20,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
