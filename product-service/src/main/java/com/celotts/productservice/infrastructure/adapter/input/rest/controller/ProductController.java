@@ -259,8 +259,8 @@ public class ProductController {
     // ===============================================
     // ENDPOINTS CON DETALLES DE CATEGORÍA
     // ===============================================
-    //TODO: Se comneta para futuro desarrollo
-   /* @GetMapping("/{id}/with-details")
+    // TODO: Se comments para futuro desarrollo
+   /*@GetMapping("/{id}/with-details")
     public ResponseEntity<ProductResponseDTO> getProductWithDetails(@PathVariable UUID id) {
         log.info("Fetching product with details by ID: {}", id);
         ProductModel product = productService.getProductById(id);
