@@ -23,4 +23,6 @@ public interface ProductBrandUseCase {
     boolean existsById(UUID id);
     Optional<String> findNameById(UUID id);
     List<UUID> findAllIds();
+    ProductBrandModel enableBrand(UUID id);
+    ProductBrandModel disableBrand(UUID id);
 }

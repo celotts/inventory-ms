@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,5 +47,15 @@ public class ProductBrandController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/enable")
+    public ResponseEntity<ProductBrandResponseDto> enableBrand(@PathVariable UUID id) {
+        return ResponseEntity.ok(service.enableBrand(id));
+    }
+
+    @PatchMapping("/{id}/disable")
+    public ResponseEntity<ProductBrandResponseDto> disableBrand(@PathVariable UUID id) {
+        return ResponseEntity.ok(service.disableBrand(id));
     }
 }

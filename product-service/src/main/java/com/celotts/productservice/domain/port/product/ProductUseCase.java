@@ -1,5 +1,6 @@
 package com.celotts.productservice.domain.port.product;
 
+import com.celotts.productservice.domain.model.ProductBrandModel;
 import com.celotts.productservice.domain.model.ProductModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,4 +34,6 @@ public interface ProductUseCase {
     long countProducts();
     long countActiveProducts();
     Optional<String> validateUnitCode(String code);
+    ProductBrandModel enableBrand(UUID id);
+    ProductBrandModel disableBrand(UUID id);
 }

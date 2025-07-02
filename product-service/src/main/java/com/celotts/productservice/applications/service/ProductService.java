@@ -98,15 +98,18 @@ public class ProductService {
     }
 
     public ProductModel getProductByCode(String code) {
+        //TODO: NO SE USA
         return repository.findByCode(code).orElseThrow(() ->
                 new ProductNotFoundException("Product not found with code: " + code));
     }
 
     public List<ProductModel> getAllProducts() {
+        //TODO: NO SE USA
         return repository.findAll();
     }
 
     public Page<ProductModel> getAllProducts(Pageable pageable) {
+        //TODO: NO SE USA
         return repository.findAll(pageable);
     }
 
@@ -115,25 +118,30 @@ public class ProductService {
     }
 
     public void deleteProduct(UUID id) {
+        //TODO: NO SE USA
         repository.findById(id).orElseThrow(() ->
                 new ProductNotFoundException(id));
     }
 
     public void hardDeleteProduct(UUID id) {
+        //TODO: NO SE USA
         repository.deleteById(id);
     }
 
     public ProductModel enableProduct(UUID id) {
+        //TODO: NO SE USA
         ProductModel product = getProductById(id);
         return repository.save(product.withEnabled(true));
     }
 
     public ProductModel disableProduct(UUID id) {
+        //TODO: NO SE USA
         ProductModel product = getProductById(id);
         return repository.save(product.withEnabled(false));
     }
 
     public ProductModel updateStock(UUID id, int stock) {
+        //TODO: NO SE USA
         ProductModel product = getProductById(id);
         return repository.save(product.withCurrentStock(stock));
     }
@@ -143,19 +151,23 @@ public class ProductService {
     }
 
     public Page<ProductModel> getActiveProducts(Pageable pageable) {
+        //TODO: NO SE USA
         return repository.findByEnabled(true, pageable);
     }
 
     public List<ProductModel> getInactiveProducts() {
+        //TODO: NO SE USA
         Pageable pageable = Pageable.unpaged();
         return repository.findByEnabled(false, pageable).getContent();
     }
 
     public List<ProductModel> getProductsByCategory(UUID categoryId) {
+        //TODO: NO SE USA
         return repository.findByCategoryId(categoryId);
     }
 
     public List<ProductModel> getLowStockByCategory(UUID categoryId) {
+        //TODO: NO SE USA
         return repository.findByCategoryId(categoryId)
                 .stream()
                 .filter(ProductModel::lowStock)
@@ -163,20 +175,24 @@ public class ProductService {
     }
 
     public List<ProductModel> getLowStockProducts() {
+        //TODO: NO SE USA
         return repository.findAll().stream()
                 .filter(ProductModel::lowStock)
                 .toList();
     }
 
     public List<ProductModel> getProductsByBrand(UUID brandId) {
+        //TODO: NO SE USA
         return repository.findByBrandId(brandId);
     }
 
     public long countProducts() {
+        //TODO: NO SE USA
         return repository.findAll().size();
     }
 
     public long countActiveProducts() {
+        //TODO: NO SE USA
         return repository.findByEnabled(true, Pageable.unpaged()).getTotalElements();
     }
 
@@ -198,6 +214,7 @@ public class ProductService {
     }
 
     public Optional<String> validateUnitCode(String code) {
+        //TODO: NO SE USA
         return productUnitPort.findNameByCode(code);
     }
 

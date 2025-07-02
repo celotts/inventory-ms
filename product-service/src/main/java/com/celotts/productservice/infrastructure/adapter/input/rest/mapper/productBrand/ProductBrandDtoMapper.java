@@ -63,6 +63,7 @@ public class ProductBrandDtoMapper {
      * @param model Modelo del dominio
      * @return DTO de creación
      */
+    //TODO: NO SE USA
     public ProductBrandCreateDto toCreateDto(ProductBrandModel model) {
         if (model == null) {
             return null;
@@ -79,6 +80,7 @@ public class ProductBrandDtoMapper {
      * @param models Lista de modelos del dominio
      * @return Lista de DTOs de respuesta
      */
+    //TODO: NO SE USA
     public List<ProductBrandResponseDto> toResponseDtoList(List<ProductBrandModel> models) {
         if (models == null) {
             return null;

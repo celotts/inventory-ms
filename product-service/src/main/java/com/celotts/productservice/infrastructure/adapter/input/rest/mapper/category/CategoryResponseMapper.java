@@ -22,6 +22,7 @@ public class CategoryResponseMapper {
     /**
      * Convierte lista de CategoryModel a lista de CategoryResponseDto
      */
+    //TODO: NO SE USA
     public static List<CategoryResponseDto> toDtoList(List<CategoryModel> models) {
         if (models == null) {
             return null;

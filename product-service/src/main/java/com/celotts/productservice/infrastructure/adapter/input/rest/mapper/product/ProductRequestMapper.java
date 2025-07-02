@@ -1,10 +1,13 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product;
 
 import com.celotts.productservice.domain.model.ProductModel;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
+@Component
 public class ProductRequestMapper {
 
     /**
@@ -50,5 +53,26 @@ public class ProductRequestMapper {
 
         // Siempre actualizar fecha de modificación
         existingModel.setUpdatedAt(LocalDateTime.now());
+    }
+
+    public ProductModel toModel(ProductRequestDTO dto) {
+        if (dto == null) {
+            return null;
+        }
+
+        return ProductModel.builder()
+                .code(dto.getCode())
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .categoryId(dto.getCategoryId())
+                .unitCode(dto.getUnitCode())
+                .brandId(dto.getBrandId())
+                .minimumStock(dto.getMinimumStock())
+                .currentStock(dto.getCurrentStock())
+                .unitPrice(dto.getUnitPrice())
+                .enabled(dto.getEnabled())
+                .createdBy(dto.getCreatedBy())
+                .updatedBy(dto.getUpdatedBy())
+                .build();
     }
 }

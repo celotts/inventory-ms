@@ -1,10 +1,12 @@
 package com.celotts.productservice.applications.usecase;
 
+import com.celotts.productservice.domain.model.ProductBrandModel;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
 import com.celotts.productservice.domain.port.product_brand.ProductBrandRepositoryPort;
 import com.celotts.productservice.domain.port.product_brand.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.product.*;
+import com.celotts.productservice.infrastructure.adapter.input.rest.exception.BrandNotFoundException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +55,6 @@ public class ProductUseCaseImpl implements ProductUseCase {
 
     @Override
     public ProductModel updateProduct(UUID id, ProductModel model) {
-        ProductModel existing = getProductById(id);
         validateReferences(model);
         return repository.save(model.withId(id));
     }
@@ -165,16 +166,45 @@ public class ProductUseCaseImpl implements ProductUseCase {
 
 
     private void validateReferences(ProductModel model) {
-        if (!productUnitPort.existsByCode(model.getUnitCode())) {
-            throw new IllegalArgumentException("Invalid unit code: " + model.getUnitCode());
-        }
+        validateExistence(
+                productUnitPort.existsByCode(model.getUnitCode()),
+                "Invalid unit code: " + model.getUnitCode()
+        );
 
-        if (!productBrandPort.existsById(model.getBrandId())) {
-            throw new IllegalArgumentException("Invalid brand ID: " + model.getBrandId());
-        }
+        validateExistence(
+                productBrandPort.existsById(model.getBrandId()),
+                "Invalid brand ID: " + model.getBrandId()
+        );
 
-        if (!categoryPort.existsById(model.getCategoryId())) {
-            throw new IllegalArgumentException("Invalid category ID: " + model.getCategoryId());
+        validateExistence(
+                categoryPort.existsById(model.getCategoryId()),
+                "Invalid category ID: " + model.getCategoryId()
+        );
+    }
+
+    private void validateExistence(boolean exists, String errorMessage) {
+        if (!exists) {
+            throw new IllegalArgumentException(errorMessage);
         }
+    }
+
+    @Override
+    public ProductBrandModel enableBrand(UUID id) {
+        // Aquí invoca el repositorio o lo que corresponda
+        ProductBrandModel brand = productBrandPort.findById(id)
+                .orElseThrow(() -> new BrandNotFoundException(id));
+
+        brand.activate();
+        brand.setUpdatedAt(LocalDateTime.now());
+        return productBrandPort.save(brand);
+    }
+
+    @Override
+    public ProductBrandModel disableBrand(UUID id) {
+        ProductBrandModel brand = productBrandPort.findById(id)
+                .orElseThrow(() -> new BrandNotFoundException(id));
+        brand.deactivate();
+        brand.setUpdatedAt(LocalDateTime.now());
+        return productBrandPort.save(brand);
     }
 }

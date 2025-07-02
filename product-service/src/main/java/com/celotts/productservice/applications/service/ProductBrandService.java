@@ -26,6 +26,7 @@ public class ProductBrandService implements ProductBrandPort {
     private final ProductBrandUseCase productBrandUseCase;
     private final ProductBrandDtoMapper dtoMapper;
 
+
     public ProductBrandResponseDto create(ProductBrandCreateDto createDto) {
         log.info("Creating new ProductBrand with name: {}", createDto.getName());
 
@@ -60,8 +61,8 @@ public class ProductBrandService implements ProductBrandPort {
                 .orElseThrow(() -> new RuntimeException("ProductBrand not found with id: " + id));
 
         productBrandUseCase.findByName(dto.getName())
-                .filter(m -> !m.getId().equals(id))
-                .ifPresent(m -> {
+                .filter(mProductBrandMode -> !mProductBrandMode.getId().equals(id))
+                .ifPresent(mProductBrandMode -> {
                     throw new IllegalArgumentException("ProductBrand with name '" + dto.getName() + "' already exists");
                 });
 
@@ -110,6 +111,18 @@ public class ProductBrandService implements ProductBrandPort {
     @Transactional(readOnly = true)
     public List<UUID> findAllIds() {
         return productBrandUseCase.findAllIds();
+    }
+
+    @Override
+    public ProductBrandResponseDto enableBrand(UUID id) {
+        var brand = productBrandUseCase.enableBrand(id);
+        return dtoMapper.toResponseDto(brand);
+    }
+
+    @Override
+    public ProductBrandResponseDto disableBrand(UUID id) {
+        var brand = productBrandUseCase.disableBrand(id);
+        return dtoMapper.toResponseDto(brand);
     }
 
 

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -26,5 +27,11 @@ public class ProductTypeAdapter implements ProductTypePort {
         return productTypeRepository.findAll().stream()
                 .map(productType -> productType.getCode() + " (" + productType.getName() + ")")
                 .toList();
+    }
+
+    @Override
+    public Optional<String> findNameByCode(String code) {
+        return productTypeRepository.findByCode(code)
+                .map(productType -> productType.getName());
     }
 }

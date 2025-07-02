@@ -61,7 +61,7 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {  // Qui
     public ProductModel save(ProductModel product) {
         //TODO: revisar
         return productEntityMapper.toModel(
-                productRepository.save(productEntityMapper.toEntity(product))
+                productRepository.save(ProductEntityMapper.toEntity(product))
         );
     }
 
@@ -95,11 +95,7 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {  // Qui
     public void deleteById(UUID id) {
         productRepository.deleteById(id);
     }
-    //TODO: NO SE USA
-    @Override
-    public List<String> findAllCodes() {
-        return productRepository.findAllCodes();
-    }
+
 
 
 }

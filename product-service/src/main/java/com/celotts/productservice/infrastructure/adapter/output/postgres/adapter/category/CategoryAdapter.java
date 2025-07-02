@@ -129,18 +129,5 @@ public class CategoryAdapter implements CategoryRepositoryPort {
         return categoryEntityMapper.toDomainList(results);
     }
 
-    // ========== MÉTODOS FALTANTES QUE NECESITAS IMPLEMENTAR ==========
-    //TODO: NO SE USA
-    @Override
-    public List<CategoryModel> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end) {
-        var entities = categoryRepository.findByCreatedAtBetween(start, end);
-        return categoryEntityMapper.toDomainList(entities);
-    }
-    //TODO: NO SE USA
-    @Override
-    public boolean isCategoryInUse(UUID categoryId) {
-        // Implementar según tu lógica de negocio
-        // Por ejemplo, verificar si hay productos asociados
-        return categoryRepository.existsById(categoryId);
-    }
+
 }

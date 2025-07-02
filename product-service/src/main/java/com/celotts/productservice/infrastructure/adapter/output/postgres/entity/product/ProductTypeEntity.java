@@ -23,4 +23,6 @@ public class ProductTypeEntity {
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
+
+
 }

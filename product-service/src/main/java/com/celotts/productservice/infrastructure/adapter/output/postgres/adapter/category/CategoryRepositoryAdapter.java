@@ -89,11 +89,6 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
         return categoryRepository.findByNameContaining(name, pageable).map(categoryEntityMapper::toDomain);
     }
 
-    @Override
-    public Page<CategoryModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable) {
-        return categoryRepository.findByNameContainingAndActive(name, active, pageable).map(categoryEntityMapper::toDomain);
-    }
-
     // ========== MÉTODOS ADICIONALES ==========
 
     @Override
@@ -111,15 +106,12 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
         return categoryRepository.countByActive(active);
     }
 
-    @Override
-    public List<CategoryModel> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end) {
-        return categoryEntityMapper.toDomainList(categoryRepository.findByCreatedAtBetween(start, end));
-    }
 
     @Override
-    public boolean isCategoryInUse(UUID categoryId) {
-        // Implementar según tu lógica de negocio
-        // Por ejemplo, verificar si hay productos asociados
-        return categoryRepository.existsById(categoryId);
+    public Page<CategoryModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable) {
+        return categoryRepository.findByNameContainingAndActive(name, active, pageable)
+                .map(categoryEntityMapper::toDomain);
     }
+
+
 }

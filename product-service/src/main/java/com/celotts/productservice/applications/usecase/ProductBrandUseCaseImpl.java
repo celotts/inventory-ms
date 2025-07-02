@@ -4,9 +4,11 @@ import com.celotts.productservice.domain.model.ProductBrandModel;
 import com.celotts.productservice.domain.port.product_brand.ProductBrandRepositoryPort;
 import com.celotts.productservice.domain.port.product_brand.ProductBrandUseCase;
 
+import com.celotts.productservice.infrastructure.adapter.input.rest.exception.BrandNotFoundException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -70,5 +72,25 @@ public class ProductBrandUseCaseImpl implements ProductBrandUseCase {
         return repository.findAll().stream()
                 .map(ProductBrandModel::getId)
                 .toList();
+    }
+
+    @Override
+    public ProductBrandModel enableBrand(UUID id) {
+        ProductBrandModel brand = repository.findById(id)
+                .orElseThrow(() -> new BrandNotFoundException(id));
+
+        brand.activate();  // Aquí usas el método del modelo
+        brand.setUpdatedAt(LocalDateTime.now());
+        return repository.save(brand);
+    }
+
+    @Override
+    public ProductBrandModel disableBrand(UUID id) {
+        ProductBrandModel brand = repository.findById(id)
+                .orElseThrow(() -> new BrandNotFoundException(id));
+
+        brand.deactivate();  // Aquí usas el método del modelo
+        brand.setUpdatedAt(LocalDateTime.now());
+        return repository.save(brand);
     }
 }

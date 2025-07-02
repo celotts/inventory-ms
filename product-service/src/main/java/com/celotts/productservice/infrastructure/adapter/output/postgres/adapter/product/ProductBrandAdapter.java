@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class ProductBrandAdapter implements ProductBrandRepositoryPort, ProductBrandPort {
+public abstract class ProductBrandAdapter implements ProductBrandRepositoryPort, ProductBrandPort {
 
     private final ProductBrandRepository productBrandRepository;
     private final ProductBrandEntityMapper mapper;
@@ -38,7 +38,7 @@ public class ProductBrandAdapter implements ProductBrandRepositoryPort, ProductB
         return productBrandRepository.findByName(name)
                 .map(mapper::toModel);
     }
-    //TODO: NO SE USA
+
     @Override
     public Optional<String> findNameById(UUID id) {
         return productBrandRepository.findNameById(id);
@@ -50,7 +50,7 @@ public class ProductBrandAdapter implements ProductBrandRepositoryPort, ProductB
                 .map(mapper::toModel)
                 .toList();
     }
-    //TODO: NO SE USA
+    
     @Override
     public List<UUID> findAllIds() {
         return productBrandRepository.findAll().stream()
