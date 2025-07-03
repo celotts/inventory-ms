@@ -96,6 +96,12 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
         return repository.findByNameOrDescription(query, limit);
     }
 
+
+    @Override
+    public List<CategoryModel> searchByNameOrDescription(String query, int limit) {
+        return repository.findByNameOrDescription(query, limit);
+    }
+
     @Override
     public List<CategoryModel> findAllById(List<UUID> ids) {
         return repository.findAllById(ids);
@@ -121,11 +127,6 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
         } else {
             return repository.findAll(pageable);
         }
-    }
-
-    @Override
-    public List<CategoryModel> searchByNameOrDescription(String query, int limit) {
-        return repository.findByNameOrDescription(query, limit);
     }
 
     @Override
@@ -170,5 +171,12 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
                 .inactiveCategories(inactive)
                 .build();
     }
+
+    @Override
+    public long countByActive(boolean active) {
+        return repository.countByActive(active);
+    }
+
+
 
 }

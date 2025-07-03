@@ -16,20 +16,13 @@ public class CategoryResponseMapper {
      * Convierte CategoryModel a CategoryResponseDto
      */
     public static CategoryResponseDto toDto(CategoryModel model) {
-        return CategoryDtoMapper.toResponseDto(model);
+        return CategoryResponseDto.builder()
+                .id(model.getId())
+                .name(model.getName())
+                .description(model.getDescription())
+                .active(model.getActive())
+                .build();
     }
 
-    /**
-     * Convierte lista de CategoryModel a lista de CategoryResponseDto
-     */
-    //TODO: NO SE USA
-    public static List<CategoryResponseDto> toDtoList(List<CategoryModel> models) {
-        if (models == null) {
-            return null;
-        }
 
-        return models.stream()
-                .map(CategoryResponseMapper::toDto)  // ← Ahora SÍ funciona
-                .collect(Collectors.toList());
-    }
 }

@@ -101,13 +101,13 @@ public class ProductBrandService implements ProductBrandPort {
         return productBrandUseCase.existsById(id);
     }
 
-    @Override
+
     @Transactional(readOnly = true)
     public Optional<String> findNameById(UUID id) {
         return productBrandUseCase.findNameById(id);
     }
 
-    @Override
+
     @Transactional(readOnly = true)
     public List<UUID> findAllIds() {
         return productBrandUseCase.findAllIds();

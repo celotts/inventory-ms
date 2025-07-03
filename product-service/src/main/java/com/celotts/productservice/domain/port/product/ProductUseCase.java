@@ -11,10 +11,7 @@ import java.util.UUID;
 
 public interface ProductUseCase {
     //TODO: NO SE USA
-    ProductModel createProduct(ProductModel model);
     ProductModel updateProduct(UUID id, ProductModel model);
-    //TODO: NO SE USA
-    ProductModel getProductById(UUID id);
     ProductModel getProductByCode(String code);
     List<ProductModel> getAllProducts();
     Page<ProductModel> getAllProducts(Pageable pageable);
@@ -36,4 +33,9 @@ public interface ProductUseCase {
     Optional<String> validateUnitCode(String code);
     ProductBrandModel enableBrand(UUID id);
     ProductBrandModel disableBrand(UUID id);
+    List<String> findAllUnitCodes();
+
+    ProductModel getProductById(UUID id);
+
+    ProductModel createProduct(ProductModel requestDTO);
 }

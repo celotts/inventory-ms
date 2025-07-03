@@ -12,7 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -130,4 +129,19 @@ public class CategoryAdapter implements CategoryRepositoryPort {
     }
 
 
+    @Override
+    public Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable) {
+        if (name != null && !name.isBlank() && active != null) {
+            return categoryRepository.findByNameContainingAndActive(name, active, pageable)
+                    .map(categoryEntityMapper::toDomain);
+        } else if (name != null && !name.isBlank()) {
+            return categoryRepository.findByNameContaining(name, pageable)
+                    .map(categoryEntityMapper::toDomain);
+        } else if (active != null) {
+            return categoryRepository.findByActive(active, pageable)
+                    .map(categoryEntityMapper::toDomain);
+        } else {
+            return categoryRepository.findAll(pageable).map(categoryEntityMapper::toDomain);
+        }
+    }
 }

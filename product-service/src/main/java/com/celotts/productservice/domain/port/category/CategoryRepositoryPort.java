@@ -34,4 +34,7 @@ public interface CategoryRepositoryPort {
     List<CategoryModel> findAllById(Iterable<UUID> ids);
     List<CategoryModel> findByNameOrDescription(String term, int limit);
     long countByActive(Boolean active);
+
+
+
 }

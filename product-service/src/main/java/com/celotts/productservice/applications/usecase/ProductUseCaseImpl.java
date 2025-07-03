@@ -207,4 +207,9 @@ public class ProductUseCaseImpl implements ProductUseCase {
         brand.setUpdatedAt(LocalDateTime.now());
         return productBrandPort.save(brand);
     }
+
+    @Override
+    public List<String> findAllUnitCodes() {
+        return productUnitPort.findAllCodes();
+    }
 }

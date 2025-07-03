@@ -1,7 +1,6 @@
 package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
-import com.celotts.productservice.domain.port.product_brand.ProductBrandRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductDtoMapper;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.product.ProductBrandPort;
@@ -213,9 +212,16 @@ public class ProductService {
         }
     }
 
+    @Transactional(readOnly = true)
     public Optional<String> validateUnitCode(String code) {
-        //TODO: NO SE USA
+        if (!productUnitPort.existsByCode(code)) {
+            return Optional.empty();
+        }
         return productUnitPort.findNameByCode(code);
     }
+
+
+
+
 
 }

@@ -19,11 +19,17 @@ public interface CategoryUseCase {
     boolean existsByName(String name);
     boolean existsById(UUID id);
     void deleteById(UUID id);
+
+    List<CategoryModel> findAllById(List<UUID> ids);
+
     Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable);
     CategoryModel updateStatus(UUID id, Boolean active);
     CategoryModel restore(UUID id);
     void permanentDelete(UUID id);
     CategoryStatsDto getCategoryStatistics();
+
+    List<CategoryModel> findByNameOrDescription(String query, int limit);
+
     List<CategoryModel> searchByNameOrDescription(String query, int limit);
     List<CategoryModel> findByActive(Boolean active); // Si lo usas, si no, elimínalo
     /**
@@ -35,9 +41,10 @@ public interface CategoryUseCase {
      *
      * ⚠️ No eliminar esos métodos del puerto o repositorio aunque el IDE los marque sin usos directos.
      */
-    List<CategoryModel> findAllById(List<UUID> ids); // Si lo usas, si no, elimínalo
-    List<CategoryModel> findByNameOrDescription(String query, int limit); // Elimina el duplicado searchByNameOrDescription
     Page<CategoryModel> findByNameContaining(String name, Pageable pageable); // Mantén si se usa
     Page<CategoryModel> findByActive(Boolean active, Pageable pageable); // Mantén si se usa
     Page<CategoryModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable); // Mantén si se usa
+
+    long countByActive(boolean active);
+
 }

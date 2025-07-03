@@ -212,6 +212,13 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/unit-codes")
+    public ResponseEntity<List<String>> getAllUnitCodes() {
+        return ResponseEntity.ok(productUseCase.findAllUnitCodes());
+    }
+
+
+
     private ProductModel convertToRequestDTO(ProductUpdateDTO updateDTO, ProductModel existingProduct) {
         ProductRequestDTO dto = new ProductRequestDTO();
         dto.setCode(Optional.ofNullable(updateDTO.getCode()).orElse(existingProduct.getCode()));
@@ -227,4 +234,6 @@ public class ProductController {
         dto.setUpdatedBy(updateDTO.getUpdatedBy());
         return productRequestMapper.toModel(dto);
     }
+
+
 }

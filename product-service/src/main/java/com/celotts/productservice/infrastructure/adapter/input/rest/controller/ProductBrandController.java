@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,43 +20,54 @@ import java.util.UUID;
 @CrossOrigin(origins = "*")
 public class ProductBrandController {
 
-    private final ProductBrandService service;
+    private final ProductBrandService productBrandService;
 
     @PostMapping
     public ResponseEntity<ProductBrandResponseDto> create(@Valid @RequestBody ProductBrandCreateDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(dto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(productBrandService.create(dto));
     }
 
     @GetMapping
     public ResponseEntity<List<ProductBrandResponseDto>> getAllBrands() {
-        return ResponseEntity.ok(service.findAll());
+        return ResponseEntity.ok(productBrandService.findAll());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductBrandResponseDto> getBrandById(@PathVariable UUID id) {
-        return ResponseEntity.ok(service.findById(id));
+        return ResponseEntity.ok(productBrandService.findById(id));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ProductBrandResponseDto> update(
             @PathVariable UUID id,
             @Valid @RequestBody ProductBrandUpdateDto dto) {
-        return ResponseEntity.ok(service.update(id, dto));
+        return ResponseEntity.ok(productBrandService.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        service.delete(id);
+        productBrandService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/enable")
     public ResponseEntity<ProductBrandResponseDto> enableBrand(@PathVariable UUID id) {
-        return ResponseEntity.ok(service.enableBrand(id));
+        return ResponseEntity.ok(productBrandService.enableBrand(id));
     }
 
     @PatchMapping("/{id}/disable")
     public ResponseEntity<ProductBrandResponseDto> disableBrand(@PathVariable UUID id) {
-        return ResponseEntity.ok(service.disableBrand(id));
+        return ResponseEntity.ok(productBrandService.disableBrand(id));
+    }
+
+    @GetMapping("/brands/ids")
+    public List<UUID> getAllBrandIds() {
+        return productBrandService.findAllIds();
+    }
+
+    @GetMapping("/brands/{id}/name")
+    public String getBrandNameById(@PathVariable UUID id) {
+        return productBrandService.findNameById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 }

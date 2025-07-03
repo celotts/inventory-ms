@@ -2,7 +2,10 @@ package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.domain.port.category.CategoryUseCase;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatsDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category.CategoryRequestMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -85,5 +88,38 @@ public class CategoryService {
         return authentication != null ? authentication.getName() : "system";
     }
 
+    @Transactional(readOnly = true)
+    public Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable) {
+        return categoryUseCase.findAllPaginated(name, active, pageable);
+    }
 
+    @Transactional(readOnly = true)
+    public List<CategoryModel> searchByNameOrDescription(String query, int limit) {
+        return categoryUseCase.searchByNameOrDescription(query, limit);
+    }
+
+    @Transactional
+    public CategoryModel updateStatus(UUID id, Boolean active) {
+        var category = categoryUseCase.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Category with ID " + id + " not found"));
+        category.setActive(active);
+        category.setUpdatedAt(LocalDateTime.now());
+        category.setUpdatedBy(getCurrentUsername());
+        return categoryUseCase.save(category);
+    }
+
+    @Transactional
+    public void permanentDelete(UUID id) {
+        categoryUseCase.permanentDelete(id);
+    }
+
+    @Transactional
+    public CategoryModel restore(UUID id) {
+        return categoryUseCase.restore(id);
+    }
+
+    @Transactional(readOnly = true)
+    public CategoryStatsDto getCategoryStatistics() {
+        return categoryUseCase.getCategoryStatistics();
+    }
 }

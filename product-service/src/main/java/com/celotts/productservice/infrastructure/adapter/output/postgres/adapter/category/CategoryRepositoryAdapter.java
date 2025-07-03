@@ -113,5 +113,23 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
                 .map(categoryEntityMapper::toDomain);
     }
 
+    @Override
+    public Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable) {
+        if (name != null && !name.isBlank() && active != null) {
+            return categoryRepository.findByNameContainingAndActive(name, active, pageable)
+                    .map(categoryEntityMapper::toDomain);
+        } else if (name != null && !name.isBlank()) {
+            return categoryRepository.findByNameContaining(name, pageable)
+                    .map(categoryEntityMapper::toDomain);
+        } else if (active != null) {
+            return categoryRepository.findByActive(active, pageable)
+                    .map(categoryEntityMapper::toDomain);
+        } else {
+            return categoryRepository.findAll(pageable)
+                    .map(categoryEntityMapper::toDomain);
+        }
+    }
+
+
 
 }
