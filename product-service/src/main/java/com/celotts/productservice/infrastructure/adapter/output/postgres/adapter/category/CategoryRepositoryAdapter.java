@@ -10,7 +10,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,6 +20,7 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
 
     private final CategoryRepository categoryRepository;
     private final CategoryEntityMapper categoryEntityMapper;
+
 
     // ========== MÉTODOS BÁSICOS CRUD ==========
 
@@ -116,18 +116,18 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
     @Override
     public Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable) {
         if (name != null && !name.isBlank() && active != null) {
-            return categoryRepository.findByNameContainingAndActive(name, active, pageable)
-                    .map(categoryEntityMapper::toDomain);
+            return mapToDomain(categoryRepository.findByNameContainingAndActive(name, active, pageable));
         } else if (name != null && !name.isBlank()) {
-            return categoryRepository.findByNameContaining(name, pageable)
-                    .map(categoryEntityMapper::toDomain);
+            return mapToDomain(categoryRepository.findByNameContaining(name, pageable));
         } else if (active != null) {
-            return categoryRepository.findByActive(active, pageable)
-                    .map(categoryEntityMapper::toDomain);
+            return mapToDomain(categoryRepository.findByActive(active, pageable));
         } else {
-            return categoryRepository.findAll(pageable)
-                    .map(categoryEntityMapper::toDomain);
+            return mapToDomain(categoryRepository.findAll(pageable));
         }
+    }
+
+    private Page<CategoryModel> mapToDomain(Page<CategoryEntity> entityPage) {
+        return entityPage.map(categoryEntityMapper::toDomain);
     }
 
 

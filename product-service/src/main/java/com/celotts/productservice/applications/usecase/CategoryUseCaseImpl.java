@@ -118,15 +118,7 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
      */
     @Override
     public Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable) {
-        if (name != null && active != null) {
-            return repository.findByNameContainingAndActive(name, active, pageable);
-        } else if (name != null) {
-            return repository.findByNameContaining(name, pageable);
-        } else if (active != null) {
-            return repository.findByActive(active, pageable);
-        } else {
-            return repository.findAll(pageable);
-        }
+        return repository.findAllPaginated(name, active, pageable);
     }
 
     @Override
@@ -176,6 +168,10 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
     public long countByActive(boolean active) {
         return repository.countByActive(active);
     }
+
+
+
+
 
 
 

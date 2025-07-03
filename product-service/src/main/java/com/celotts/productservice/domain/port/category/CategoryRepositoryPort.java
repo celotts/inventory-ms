@@ -29,11 +29,12 @@ public interface CategoryRepositoryPort {
     Page<CategoryModel> findByActive(Boolean active, Pageable pageable);
     Page<CategoryModel> findByNameContaining(String name, Pageable pageable);
     Page<CategoryModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable);
-
+    Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable);
     // ========== MÉTODOS ADICIONALES ==========
     List<CategoryModel> findAllById(Iterable<UUID> ids);
     List<CategoryModel> findByNameOrDescription(String term, int limit);
     long countByActive(Boolean active);
+
 
 
 
