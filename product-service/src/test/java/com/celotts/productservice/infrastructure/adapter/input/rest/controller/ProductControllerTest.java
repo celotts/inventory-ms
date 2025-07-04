@@ -5,13 +5,12 @@ import com.celotts.productservice.domain.port.product.ProductUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.advice.ProductControllerAdvice;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductResponseMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.Mockito;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -23,24 +22,33 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
 class ProductControllerTest {
 
-    @Mock
+    private MockMvc mockMvc;
     private ProductUseCase productUseCase;
+    private ProductResponseMapper responseMapper;
 
-    @Mock
-    private ProductResponseMapper productResponseMapper;
+    @BeforeEach
+    void setup() {
+        productUseCase = Mockito.mock(ProductUseCase.class);
+        responseMapper = Mockito.mock(ProductResponseMapper.class);
+        ProductRequestMapper productRequestMapper = Mockito.mock(ProductRequestMapper.class);
 
-    @InjectMocks
-    private ProductController productController;
+        ProductController productController = new ProductController(
+                productUseCase,
+                responseMapper,
+                productRequestMapper
+        );
+
+        mockMvc = MockMvcBuilders.standaloneSetup(productController)
+                .setControllerAdvice(new ProductControllerAdvice())
+                .build();
+    }
 
     @Test
     @DisplayName("PATCH /api/v1/products/{id}/enable debe responder 200 y body correcto")
     void shouldEnableProduct() throws Exception {
         UUID id = UUID.randomUUID();
-
-        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(productController).build();
 
         ProductModel mockProduct = ProductModel.builder()
                 .id(id)
@@ -55,7 +63,7 @@ class ProductControllerTest {
                 .build();
 
         given(productUseCase.enableProduct(id)).willReturn(mockProduct);
-        given(productResponseMapper.toDto(mockProduct)).willReturn(mockResponseDto);
+        given(responseMapper.toDto(mockProduct)).willReturn(mockResponseDto);
 
         mockMvc.perform(patch("/api/v1/products/{id}/enable", id))
                 .andExpect(status().isOk())
@@ -69,10 +77,6 @@ class ProductControllerTest {
     void shouldReturn404WhenProductNotFound() throws Exception {
         UUID id = UUID.randomUUID();
 
-        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(productController)
-                .setControllerAdvice(new ProductControllerAdvice())
-                .build();
-
         given(productUseCase.enableProduct(id)).willThrow(new ProductNotFoundException(id));
 
         mockMvc.perform(patch("/api/v1/products/{id}/enable", id))
@@ -82,8 +86,6 @@ class ProductControllerTest {
     @Test
     @DisplayName("PATCH /api/v1/products/{id}/enable debe responder 400 si el ID es inválido")
     void shouldReturn400ForInvalidUUID() throws Exception {
-        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(productController).build();
-
         mockMvc.perform(patch("/api/v1/products/invalid-uuid/enable"))
                 .andExpect(status().isBadRequest());
     }
@@ -92,10 +94,6 @@ class ProductControllerTest {
     @DisplayName("PATCH /api/v1/products/{id}/enable debe responder 500 en error inesperado")
     void shouldReturn500OnUnexpectedError() throws Exception {
         UUID id = UUID.randomUUID();
-
-        MockMvc mockMvc = MockMvcBuilders.standaloneSetup(productController)
-                .setControllerAdvice(new ProductControllerAdvice())
-                .build();
 
         given(productUseCase.enableProduct(id)).willThrow(new RuntimeException("Unexpected error"));
 

@@ -3,9 +3,9 @@ package com.celotts.productservice.applications.usecase;
 import com.celotts.productservice.domain.model.ProductBrandModel;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
+import com.celotts.productservice.domain.port.product.*;
 import com.celotts.productservice.domain.port.product_brand.ProductBrandRepositoryPort;
 import com.celotts.productservice.domain.port.product_brand.ProductRepositoryPort;
-import com.celotts.productservice.domain.port.product.*;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.BrandNotFoundException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
@@ -41,7 +41,6 @@ public class ProductUseCaseImpl implements ProductUseCase {
         this.productBrandPort = productBrandPort;
         this.categoryPort = categoryPort;
     }
-
 
     @Override
     public ProductModel createProduct(ProductModel model) {
@@ -164,36 +163,22 @@ public class ProductUseCaseImpl implements ProductUseCase {
         return productUnitPort.findNameByCode(code);
     }
 
-
     private void validateReferences(ProductModel model) {
-        validateExistence(
-                productUnitPort.existsByCode(model.getUnitCode()),
-                "Invalid unit code: " + model.getUnitCode()
-        );
-
-        validateExistence(
-                productBrandPort.existsById(model.getBrandId()),
-                "Invalid brand ID: " + model.getBrandId()
-        );
-
-        validateExistence(
-                categoryPort.existsById(model.getCategoryId()),
-                "Invalid category ID: " + model.getCategoryId()
-        );
-    }
-
-    private void validateExistence(boolean exists, String errorMessage) {
-        if (!exists) {
-            throw new IllegalArgumentException(errorMessage);
+        if (!productUnitPort.existsByCode(model.getUnitCode())) {
+            throw new ProductNotFoundException("Invalid unit code: " + model.getUnitCode());
+        }
+        if (!productBrandPort.existsById(model.getBrandId())) {
+            throw new ProductNotFoundException("Invalid brand ID: " + model.getBrandId());
+        }
+        if (!categoryPort.existsById(model.getCategoryId())) {
+            throw new ProductNotFoundException("Invalid category ID: " + model.getCategoryId());
         }
     }
 
     @Override
     public ProductBrandModel enableBrand(UUID id) {
-        // Aquí invoca el repositorio o lo que corresponda
         ProductBrandModel brand = productBrandPort.findById(id)
                 .orElseThrow(() -> new BrandNotFoundException(id));
-
         brand.activate();
         brand.setUpdatedAt(LocalDateTime.now());
         return productBrandPort.save(brand);
