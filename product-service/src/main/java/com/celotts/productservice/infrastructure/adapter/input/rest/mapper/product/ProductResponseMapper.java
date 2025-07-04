@@ -4,6 +4,9 @@ import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDTO;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Component
 public class ProductResponseMapper {
 
@@ -33,7 +36,7 @@ public class ProductResponseMapper {
                 .build();
     }
 
-    // ✅ OPCIONAL: Versión mejorada para obtener categoryName
+    //TODO: NO SE USA
     public static ProductResponseDTO toDtoWithCategoryName(ProductModel model, String categoryName) {
         if (model == null) {
             return null;
@@ -58,5 +61,12 @@ public class ProductResponseMapper {
                 .updatedBy(model.getUpdatedBy())
                 .lowStock(model.lowStock())
                 .build();
+    }
+
+    public static List<ProductResponseDTO> toResponseDtoList(List<ProductModel> models) {
+        if (models == null) return null;
+        return models.stream()
+                .map(new ProductResponseMapper()::toDto) // o si haces static el toDto, lo puedes cambiar
+                .collect(Collectors.toList());
     }
 }

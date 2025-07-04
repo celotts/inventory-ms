@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 public class ProductModelUpdateMapper {
 
-    //TODO: cannot resolve method
+    //TODO: NO SE USA
     public static void apply(ProductModel model, ProductUpdateDTO dto) {
         MapperUtils.updateFieldIfNotNull(dto.getCode(), model::setCode);
         MapperUtils.updateFieldIfNotNull(dto.getDescription(), model::setDescription);

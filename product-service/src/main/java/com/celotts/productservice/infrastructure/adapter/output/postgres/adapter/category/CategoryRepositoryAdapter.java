@@ -10,7 +10,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,6 +20,7 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
 
     private final CategoryRepository categoryRepository;
     private final CategoryEntityMapper categoryEntityMapper;
+
 
     // ========== MÉTODOS BÁSICOS CRUD ==========
 
@@ -89,11 +89,6 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
         return categoryRepository.findByNameContaining(name, pageable).map(categoryEntityMapper::toDomain);
     }
 
-    @Override
-    public Page<CategoryModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable) {
-        return categoryRepository.findByNameContainingAndActive(name, active, pageable).map(categoryEntityMapper::toDomain);
-    }
-
     // ========== MÉTODOS ADICIONALES ==========
 
     @Override
@@ -111,15 +106,30 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
         return categoryRepository.countByActive(active);
     }
 
+
     @Override
-    public List<CategoryModel> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end) {
-        return categoryEntityMapper.toDomainList(categoryRepository.findByCreatedAtBetween(start, end));
+    public Page<CategoryModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable) {
+        return categoryRepository.findByNameContainingAndActive(name, active, pageable)
+                .map(categoryEntityMapper::toDomain);
     }
 
     @Override
-    public boolean isCategoryInUse(UUID categoryId) {
-        // Implementar según tu lógica de negocio
-        // Por ejemplo, verificar si hay productos asociados
-        return categoryRepository.existsById(categoryId);
+    public Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable) {
+        if (name != null && !name.isBlank() && active != null) {
+            return mapToDomain(categoryRepository.findByNameContainingAndActive(name, active, pageable));
+        } else if (name != null && !name.isBlank()) {
+            return mapToDomain(categoryRepository.findByNameContaining(name, pageable));
+        } else if (active != null) {
+            return mapToDomain(categoryRepository.findByActive(active, pageable));
+        } else {
+            return mapToDomain(categoryRepository.findAll(pageable));
+        }
     }
+
+    private Page<CategoryModel> mapToDomain(Page<CategoryEntity> entityPage) {
+        return entityPage.map(categoryEntityMapper::toDomain);
+    }
+
+
+
 }

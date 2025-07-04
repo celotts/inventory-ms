@@ -8,7 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
-//TODO: cannot resolve method
+//TODO: NO SE USA
 @Slf4j
 public class AuditListener {
     //TODO: NO SE USA

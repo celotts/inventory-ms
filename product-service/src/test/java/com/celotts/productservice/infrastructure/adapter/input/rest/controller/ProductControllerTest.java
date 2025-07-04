@@ -1,54 +1,103 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
+import com.celotts.productservice.domain.model.ProductModel;
+import com.celotts.productservice.domain.port.product.ProductUseCase;
+import com.celotts.productservice.infrastructure.adapter.input.rest.advice.ProductControllerAdvice;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductResponseMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpStatus;
+import org.mockito.Mockito;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.UUID;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test")
-@TestPropertySource(properties = {
-        "spring.config.import=optional:classpath:/empty.yml",
-        "spring.cloud.config.enabled=false",
-        "eureka.client.enabled=false"
-})
+import static org.hamcrest.Matchers.is;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 class ProductControllerTest {
 
-    @LocalServerPort
-    private int port;
+    private MockMvc mockMvc;
+    private ProductUseCase productUseCase;
+    private ProductResponseMapper responseMapper;
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+    @BeforeEach
+    void setup() {
+        productUseCase = Mockito.mock(ProductUseCase.class);
+        responseMapper = Mockito.mock(ProductResponseMapper.class);
+        ProductRequestMapper productRequestMapper = Mockito.mock(ProductRequestMapper.class);
 
-    @Test
-    @DisplayName("GET /api/v1/products endpoint debe funcionar")
-    void shouldHaveProductsEndpoint() {
-        // Test usando la ruta correcta del controlador
-        String url = "http://localhost:" + port + "/api/v1/products";
+        ProductController productController = new ProductController(
+                productUseCase,
+                responseMapper,
+                productRequestMapper
+        );
 
-        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-
-        // Verificar que el endpoint responde correctamente
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        mockMvc = MockMvcBuilders.standaloneSetup(productController)
+                .setControllerAdvice(new ProductControllerAdvice())
+                .build();
     }
 
     @Test
-    @DisplayName("GET /api/v1/products/test endpoint debe funcionar")
-    void shouldHaveTestEndpoint() {
-        // Test del endpoint de prueba
-        String url = "http://localhost:" + port + "/api/v1/products/test";
+    @DisplayName("PATCH /api/v1/products/{id}/enable debe responder 200 y body correcto")
+    void shouldEnableProduct() throws Exception {
+        UUID id = UUID.randomUUID();
 
-        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+        ProductModel mockProduct = ProductModel.builder()
+                .id(id)
+                .code("CODE123")
+                .enabled(true)
+                .build();
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).contains("Product Service funcionando correctamente");
+        ProductResponseDTO mockResponseDto = ProductResponseDTO.builder()
+                .id(id)
+                .code("CODE123")
+                .enabled(true)
+                .build();
+
+        given(productUseCase.enableProduct(id)).willReturn(mockProduct);
+        given(responseMapper.toDto(mockProduct)).willReturn(mockResponseDto);
+
+        mockMvc.perform(patch("/api/v1/products/{id}/enable", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(id.toString())))
+                .andExpect(jsonPath("$.code", is("CODE123")))
+                .andExpect(jsonPath("$.enabled", is(true)));
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/products/{id}/enable debe responder 404 si no existe el producto")
+    void shouldReturn404WhenProductNotFound() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        given(productUseCase.enableProduct(id)).willThrow(new ProductNotFoundException(id));
+
+        mockMvc.perform(patch("/api/v1/products/{id}/enable", id))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/products/{id}/enable debe responder 400 si el ID es inválido")
+    void shouldReturn400ForInvalidUUID() throws Exception {
+        mockMvc.perform(patch("/api/v1/products/invalid-uuid/enable"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/products/{id}/enable debe responder 500 en error inesperado")
+    void shouldReturn500OnUnexpectedError() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        given(productUseCase.enableProduct(id)).willThrow(new RuntimeException("Unexpected error"));
+
+        mockMvc.perform(patch("/api/v1/products/{id}/enable", id))
+                .andExpect(status().isInternalServerError());
     }
 }

@@ -12,7 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -129,18 +128,20 @@ public class CategoryAdapter implements CategoryRepositoryPort {
         return categoryEntityMapper.toDomainList(results);
     }
 
-    // ========== MÉTODOS FALTANTES QUE NECESITAS IMPLEMENTAR ==========
-    //TODO: NO SE USA
+
     @Override
-    public List<CategoryModel> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end) {
-        var entities = categoryRepository.findByCreatedAtBetween(start, end);
-        return categoryEntityMapper.toDomainList(entities);
-    }
-    //TODO: NO SE USA
-    @Override
-    public boolean isCategoryInUse(UUID categoryId) {
-        // Implementar según tu lógica de negocio
-        // Por ejemplo, verificar si hay productos asociados
-        return categoryRepository.existsById(categoryId);
+    public Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable) {
+        if (name != null && !name.isBlank() && active != null) {
+            return categoryRepository.findByNameContainingAndActive(name, active, pageable)
+                    .map(categoryEntityMapper::toDomain);
+        } else if (name != null && !name.isBlank()) {
+            return categoryRepository.findByNameContaining(name, pageable)
+                    .map(categoryEntityMapper::toDomain);
+        } else if (active != null) {
+            return categoryRepository.findByActive(active, pageable)
+                    .map(categoryEntityMapper::toDomain);
+        } else {
+            return categoryRepository.findAll(pageable).map(categoryEntityMapper::toDomain);
+        }
     }
 }

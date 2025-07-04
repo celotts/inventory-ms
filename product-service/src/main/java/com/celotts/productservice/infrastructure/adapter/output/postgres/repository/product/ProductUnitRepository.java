@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface ProductUnitRepository extends JpaRepository<ProductUnitEntity, String> {
     
     boolean existsByCode(String code);
-    
+    //TODO: NO SE USA
     Optional<ProductUnitEntity> findByCode(String code);
     
     @Query("SELECT p.name FROM ProductUnitEntity p WHERE p.code = :code")

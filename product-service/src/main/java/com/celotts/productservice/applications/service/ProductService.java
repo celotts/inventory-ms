@@ -1,7 +1,6 @@
 package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
-import com.celotts.productservice.domain.port.product_brand.ProductBrandRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductDtoMapper;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.product.ProductBrandPort;
@@ -114,25 +113,24 @@ public class ProductService {
         return repository.findAllWithFilters(pageable, code, name, description);
     }
 
-    public void deleteProduct(UUID id) {
-        repository.findById(id).orElseThrow(() ->
-                new ProductNotFoundException(id));
-    }
-
+    // Este método se invoca desde ProductController en el endpoint DELETE /{id}/hard
     public void hardDeleteProduct(UUID id) {
         repository.deleteById(id);
     }
 
+    // Este método se invoca desde ProductController en PATCH /{id}/enable
     public ProductModel enableProduct(UUID id) {
         ProductModel product = getProductById(id);
         return repository.save(product.withEnabled(true));
     }
 
+    // Este método se invoca desde ProductController en PATCH /{id}/disable
     public ProductModel disableProduct(UUID id) {
         ProductModel product = getProductById(id);
         return repository.save(product.withEnabled(false));
     }
 
+    // Este método se invoca desde ProductController en PATCH /{id}/stock
     public ProductModel updateStock(UUID id, int stock) {
         ProductModel product = getProductById(id);
         return repository.save(product.withCurrentStock(stock));
@@ -142,19 +140,23 @@ public class ProductService {
         return repository.existsById(id);
     }
 
+    // Este método se invoca desde ProductController en GET /active
     public Page<ProductModel> getActiveProducts(Pageable pageable) {
         return repository.findByEnabled(true, pageable);
     }
 
+    // Este método se invoca desde ProductController en GET /inactive
     public List<ProductModel> getInactiveProducts() {
         Pageable pageable = Pageable.unpaged();
         return repository.findByEnabled(false, pageable).getContent();
     }
 
+    // Este método se invoca desde ProductController en GET /category/{categoryId}
     public List<ProductModel> getProductsByCategory(UUID categoryId) {
         return repository.findByCategoryId(categoryId);
     }
 
+    // Este método se invoca desde ProductController en GET /category/{categoryId}/low-stock
     public List<ProductModel> getLowStockByCategory(UUID categoryId) {
         return repository.findByCategoryId(categoryId)
                 .stream()
@@ -162,20 +164,24 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
+    // Este método se invoca desde ProductController en GET /low-stock
     public List<ProductModel> getLowStockProducts() {
         return repository.findAll().stream()
                 .filter(ProductModel::lowStock)
                 .toList();
     }
 
+    // Este método se invoca desde ProductController en GET /brand/{brandId}
     public List<ProductModel> getProductsByBrand(UUID brandId) {
         return repository.findByBrandId(brandId);
     }
 
+    // Este método se invoca desde ProductController en GET /count
     public long countProducts() {
         return repository.findAll().size();
     }
 
+    // Este método se invoca desde ProductController en GET /count/active
     public long countActiveProducts() {
         return repository.findByEnabled(true, Pageable.unpaged()).getTotalElements();
     }
@@ -197,8 +203,12 @@ public class ProductService {
         }
     }
 
+    // Este método se invoca desde ProductController en GET /validate-unit/{code}
+    @Transactional(readOnly = true)
     public Optional<String> validateUnitCode(String code) {
+        if (!productUnitPort.existsByCode(code)) {
+            return Optional.empty();
+        }
         return productUnitPort.findNameByCode(code);
     }
-
 }

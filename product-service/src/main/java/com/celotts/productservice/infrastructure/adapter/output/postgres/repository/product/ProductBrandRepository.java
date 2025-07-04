@@ -2,6 +2,7 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.reposi
 
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrandEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -21,4 +22,16 @@ public interface ProductBrandRepository extends JpaRepository<ProductBrandEntity
 
     @Query("SELECT pb.id FROM ProductBrandEntity pb")
     List<UUID> findAllIds();
+
+    @Modifying
+    @Query("UPDATE ProductBrandEntity p SET p.enabled = false WHERE p.id = :id")
+    void disableBrandById(@Param("id") UUID id);
+
+    @Modifying
+    @Query("UPDATE ProductBrandEntity p SET p.enabled = true WHERE p.id = :id")
+    void enableBrandById(@Param("id") UUID id);
+
+    @Modifying
+    @Query("DELETE FROM ProductBrandEntity p WHERE p.id = :id")
+    void hardDeleteById(@Param("id") UUID id);
 }

@@ -2,11 +2,15 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.4.5'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'
 }
 
 group = 'com.celotts'
 version = '0.0.1-SNAPSHOT'
 
+jacoco {
+	toolVersion = "0.8.10"
+}
 
 java {
 	toolchain {
@@ -71,6 +75,8 @@ dependencies {
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
 	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+
 }
 
 dependencyManagement {
@@ -81,6 +87,7 @@ dependencyManagement {
 
 test {
 	useJUnitPlatform()
+	finalizedBy jacocoTestReport
 }
 
 bootJar {
@@ -93,3 +100,23 @@ compileJava {
 			'-Amapstruct.unmappedTargetPolicy=IGNORE'
 	]
 }
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required = true
+		html.required = true
+		html.outputLocation = layout.buildDirectory.dir("jacocoHtml")
+	}
+}
+
+jacocoTestCoverageVerification {
+	violationRules {
+		rule {
+			limit {
+				minimum = 0.80 // Por ejemplo: exige 80% cobertura
+			}
+		}
+	}
+}
+
+test.finalizedBy jacocoTestCoverageVerification

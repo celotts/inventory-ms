@@ -22,7 +22,7 @@ public class CategoryDtoMapper {
         return CategoryModel.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
-                .active(true) // Por defecto activa al crear
+                .active(true)
                 .createdBy("system") // Esto debería venir del contexto de seguridad
                 .createdAt(LocalDateTime.now())
                 .build();

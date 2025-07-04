@@ -20,13 +20,11 @@ public interface ProductRepositoryPort {
     boolean existsById(UUID id);
     boolean existsByCode(String code);
 
-    // Métodos de búsqueda adicionales
+
     Optional<ProductModel> findByCode(String code);
 
-    // ✅ MANTENER: Métodos que SÍ usas
     List<ProductModel> findByCategoryId(UUID categoryId);
     List<ProductModel> findByBrandId(UUID brandId);
     Page<ProductModel> findByEnabled(Boolean enabled, Pageable pageable);
-    //TODO: NO SE USA
-    List<String> findAllCodes();
+
 }
