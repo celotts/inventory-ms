@@ -1,6 +1,9 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
 import com.celotts.productservice.applications.service.ProductBrandService;
+import com.celotts.productservice.domain.model.ProductBrandModel;
+import com.celotts.productservice.domain.port.product.ProductUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;
@@ -21,6 +24,9 @@ import java.util.UUID;
 public class ProductBrandController {
 
     private final ProductBrandService productBrandService;
+    private final ProductUseCase productBrandUseCase;
+
+
 
     @PostMapping
     public ResponseEntity<ProductBrandResponseDto> create(@Valid @RequestBody ProductBrandCreateDto dto) {
@@ -50,15 +56,7 @@ public class ProductBrandController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{id}/enable")
-    public ResponseEntity<ProductBrandResponseDto> enableBrand(@PathVariable UUID id) {
-        return ResponseEntity.ok(productBrandService.enableBrand(id));
-    }
 
-    @PatchMapping("/{id}/disable")
-    public ResponseEntity<ProductBrandResponseDto> disableBrand(@PathVariable UUID id) {
-        return ResponseEntity.ok(productBrandService.disableBrand(id));
-    }
 
     @GetMapping("/brands/ids")
     public List<UUID> getAllBrandIds() {
@@ -70,4 +68,18 @@ public class ProductBrandController {
         return productBrandService.findNameById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
+
+    @PatchMapping("/{id}/enable")
+    public ResponseEntity<ProductBrandResponseDto> enableBrand(@PathVariable UUID id) {
+        ProductBrandModel brand = productBrandUseCase.enableBrand(id);
+        return ResponseEntity.ok(ProductBrandDtoMapper.toResponseDto(brand));
+    }
+
+    @PatchMapping("/{id}/disable")
+    public ResponseEntity<ProductBrandResponseDto> disableBrand(@PathVariable UUID id) {
+        ProductBrandModel brand = productBrandUseCase.disableBrand(id);
+        return ResponseEntity.ok(ProductBrandDtoMapper.toResponseDto(brand));
+    }
+
+
 }

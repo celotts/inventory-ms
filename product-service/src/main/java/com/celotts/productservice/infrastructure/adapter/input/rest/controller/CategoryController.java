@@ -116,7 +116,7 @@ public class CategoryController {
             case "update" -> comparator = Comparator.comparing(CategoryModel::getUpdatedAt, Comparator.nullsLast(Comparator.naturalOrder()));
             case "active" -> comparator = Comparator.comparing(CategoryModel::getActive, Comparator.nullsLast(Comparator.naturalOrder()));
             case "name" -> comparator = Comparator.comparing(CategoryModel::getName, String.CASE_INSENSITIVE_ORDER);
-            default -> comparator = Comparator.comparing(CategoryModel::getName, String.CASE_INSENSITIVE_ORDER);
+            default -> throw new IllegalArgumentException("Unsupported sortBy value: " + sortBy);
         }
 
         if ("desc".equalsIgnoreCase(sortDirection)) {
@@ -196,6 +196,12 @@ public class CategoryController {
     @DeleteMapping("/{id}/permanent")
     public ResponseEntity<Void> permanentDeleteCategory(@PathVariable UUID id) {
         categoryService.permanentDelete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteCategory(@Valid @RequestBody CategoryDeleteDto deleteDto) {
+        categoryService.permanentDelete(deleteDto.getId());
         return ResponseEntity.noContent().build();
     }
 

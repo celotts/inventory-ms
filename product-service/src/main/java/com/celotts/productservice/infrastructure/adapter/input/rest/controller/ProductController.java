@@ -5,6 +5,7 @@ import com.celotts.productservice.domain.port.product.ProductUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.*;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductResponseMapper;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 @Slf4j
+@Tag(name = "Product API", description = "API para gestionar productos")
 public class ProductController {
 
     private final ProductUseCase productUseCase;
@@ -64,9 +66,9 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
-        List<ProductResponseDTO> response = productUseCase.getAllProducts().stream()
-                .map(responseMapper::toDto)
-                .collect(Collectors.toList());
+        List<ProductResponseDTO> response = ProductResponseMapper.toResponseDtoList(
+                productUseCase.getActiveProducts(Pageable.unpaged()).getContent()
+        );
         return ResponseEntity.ok(response);
     }
 
@@ -112,22 +114,25 @@ public class ProductController {
 
     @GetMapping("/active")
     public ResponseEntity<List<ProductResponseDTO>> getActiveProducts() {
-        List<ProductResponseDTO> response = productUseCase.getActiveProducts(Pageable.unpaged())
-                .getContent().stream().map(responseMapper::toDto).collect(Collectors.toList());
+        List<ProductResponseDTO> response = ProductResponseMapper.toResponseDtoList(
+                productUseCase.getActiveProducts(Pageable.unpaged()).getContent()
+        );
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/inactive")
     public ResponseEntity<List<ProductResponseDTO>> getInactiveProducts() {
-        List<ProductResponseDTO> response = productUseCase.getInactiveProducts().stream()
-                .map(responseMapper::toDto).collect(Collectors.toList());
+        List<ProductResponseDTO> response = ProductResponseMapper.toResponseDtoList(
+                productUseCase.getInactiveProducts()
+        );
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/low-stock")
     public ResponseEntity<List<ProductResponseDTO>> getLowStockProducts() {
-        List<ProductResponseDTO> response = productUseCase.getLowStockProducts().stream()
-                .map(responseMapper::toDto).collect(Collectors.toList());
+        List<ProductResponseDTO> response = ProductResponseMapper.toResponseDtoList(
+                productUseCase.getLowStockProducts()
+        );
         return ResponseEntity.ok(response);
     }
 
@@ -148,7 +153,8 @@ public class ProductController {
     @GetMapping("/brand/{brandId}")
     public ResponseEntity<List<ProductResponseDTO>> getProductsByBrand(@PathVariable UUID brandId) {
         List<ProductResponseDTO> response = productUseCase.getProductsByBrand(brandId).stream()
-                .map(responseMapper::toDto).collect(Collectors.toList());
+                .map(responseMapper::toDto)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(response);
     }
 
@@ -234,6 +240,8 @@ public class ProductController {
         dto.setUpdatedBy(updateDTO.getUpdatedBy());
         return productRequestMapper.toModel(dto);
     }
+
+
 
 
 }

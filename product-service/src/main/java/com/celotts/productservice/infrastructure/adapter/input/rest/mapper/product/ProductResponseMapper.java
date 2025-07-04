@@ -4,6 +4,9 @@ import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDTO;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Component
 public class ProductResponseMapper {
 
@@ -58,5 +61,12 @@ public class ProductResponseMapper {
                 .updatedBy(model.getUpdatedBy())
                 .lowStock(model.lowStock())
                 .build();
+    }
+
+    public static List<ProductResponseDTO> toResponseDtoList(List<ProductModel> models) {
+        if (models == null) return null;
+        return models.stream()
+                .map(new ProductResponseMapper()::toDto) // o si haces static el toDto, lo puedes cambiar
+                .collect(Collectors.toList());
     }
 }

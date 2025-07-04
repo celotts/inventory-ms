@@ -40,7 +40,7 @@ public class ProductBrandDtoMapper {
      * @param model Modelo del dominio
      * @return DTO de respuesta
      */
-    public ProductBrandResponseDto toResponseDto(ProductBrandModel model) {
+    public static ProductBrandResponseDto toResponseDto(ProductBrandModel model) {
         if (model == null) {
             return null;
         }
@@ -87,7 +87,7 @@ public class ProductBrandDtoMapper {
         }
 
         return models.stream()
-                .map(this::toResponseDto)
+                .map(ProductBrandDtoMapper::toResponseDto)
                 .collect(Collectors.toList());
     }
 }

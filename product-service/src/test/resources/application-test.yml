@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: product-service-test
   config:
     activate:
       on-profile: test

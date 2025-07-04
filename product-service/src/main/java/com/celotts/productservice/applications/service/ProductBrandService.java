@@ -39,13 +39,13 @@ public class ProductBrandService implements ProductBrandPort {
         model.setCreatedBy(createDto.getCreatedBy());
 
         ProductBrandModel saved = productBrandUseCase.save(model);
-        return dtoMapper.toResponseDto(saved);
+        return ProductBrandDtoMapper.toResponseDto(saved);
     }
 
     @Transactional(readOnly = true)
     public List<ProductBrandResponseDto> findAll() {
         return productBrandUseCase.findAll().stream()
-                .map(dtoMapper::toResponseDto)
+                .map(ProductBrandDtoMapper::toResponseDto)
                 .toList();
     }
 
@@ -53,7 +53,7 @@ public class ProductBrandService implements ProductBrandPort {
     public ProductBrandResponseDto findById(UUID id) {
         ProductBrandModel model = productBrandUseCase.findById(id)
                 .orElseThrow(() -> new RuntimeException("ProductBrand not found with id: " + id));
-        return dtoMapper.toResponseDto(model);
+        return ProductBrandDtoMapper.toResponseDto(model);
     }
 
     public ProductBrandResponseDto update(UUID id, ProductBrandUpdateDto dto) {
@@ -73,7 +73,7 @@ public class ProductBrandService implements ProductBrandPort {
         existing.setUpdatedAt(LocalDateTime.now());
 
         ProductBrandModel updated = productBrandUseCase.save(existing);
-        return dtoMapper.toResponseDto(updated);
+        return ProductBrandDtoMapper.toResponseDto(updated);
     }
 
     public void delete(UUID id) {
@@ -87,7 +87,7 @@ public class ProductBrandService implements ProductBrandPort {
     public ProductBrandResponseDto findByName(String name) {
         ProductBrandModel model = productBrandUseCase.findByName(name)
                 .orElseThrow(() -> new RuntimeException("ProductBrand not found with name: " + name));
-        return dtoMapper.toResponseDto(model);
+        return ProductBrandDtoMapper.toResponseDto(model);
     }
 
     @Transactional(readOnly = true)
@@ -101,12 +101,10 @@ public class ProductBrandService implements ProductBrandPort {
         return productBrandUseCase.existsById(id);
     }
 
-
     @Transactional(readOnly = true)
     public Optional<String> findNameById(UUID id) {
         return productBrandUseCase.findNameById(id);
     }
-
 
     @Transactional(readOnly = true)
     public List<UUID> findAllIds() {
@@ -116,13 +114,13 @@ public class ProductBrandService implements ProductBrandPort {
     @Override
     public ProductBrandResponseDto enableBrand(UUID id) {
         var brand = productBrandUseCase.enableBrand(id);
-        return dtoMapper.toResponseDto(brand);
+        return ProductBrandDtoMapper.toResponseDto(brand);
     }
 
     @Override
     public ProductBrandResponseDto disableBrand(UUID id) {
         var brand = productBrandUseCase.disableBrand(id);
-        return dtoMapper.toResponseDto(brand);
+        return ProductBrandDtoMapper.toResponseDto(brand);
     }
 
 

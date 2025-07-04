@@ -97,18 +97,15 @@ public class ProductService {
     }
 
     public ProductModel getProductByCode(String code) {
-        //TODO: NO SE USA
         return repository.findByCode(code).orElseThrow(() ->
                 new ProductNotFoundException("Product not found with code: " + code));
     }
 
     public List<ProductModel> getAllProducts() {
-        //TODO: NO SE USA
         return repository.findAll();
     }
 
     public Page<ProductModel> getAllProducts(Pageable pageable) {
-        //TODO: NO SE USA
         return repository.findAll(pageable);
     }
 
@@ -116,31 +113,25 @@ public class ProductService {
         return repository.findAllWithFilters(pageable, code, name, description);
     }
 
-    public void deleteProduct(UUID id) {
-        //TODO: NO SE USA
-        repository.findById(id).orElseThrow(() ->
-                new ProductNotFoundException(id));
-    }
-
+    // Este método se invoca desde ProductController en el endpoint DELETE /{id}/hard
     public void hardDeleteProduct(UUID id) {
-        //TODO: NO SE USA
         repository.deleteById(id);
     }
 
+    // Este método se invoca desde ProductController en PATCH /{id}/enable
     public ProductModel enableProduct(UUID id) {
-        //TODO: NO SE USA
         ProductModel product = getProductById(id);
         return repository.save(product.withEnabled(true));
     }
 
+    // Este método se invoca desde ProductController en PATCH /{id}/disable
     public ProductModel disableProduct(UUID id) {
-        //TODO: NO SE USA
         ProductModel product = getProductById(id);
         return repository.save(product.withEnabled(false));
     }
 
+    // Este método se invoca desde ProductController en PATCH /{id}/stock
     public ProductModel updateStock(UUID id, int stock) {
-        //TODO: NO SE USA
         ProductModel product = getProductById(id);
         return repository.save(product.withCurrentStock(stock));
     }
@@ -149,49 +140,49 @@ public class ProductService {
         return repository.existsById(id);
     }
 
+    // Este método se invoca desde ProductController en GET /active
     public Page<ProductModel> getActiveProducts(Pageable pageable) {
-        //TODO: NO SE USA
         return repository.findByEnabled(true, pageable);
     }
 
+    // Este método se invoca desde ProductController en GET /inactive
     public List<ProductModel> getInactiveProducts() {
-        //TODO: NO SE USA
         Pageable pageable = Pageable.unpaged();
         return repository.findByEnabled(false, pageable).getContent();
     }
 
+    // Este método se invoca desde ProductController en GET /category/{categoryId}
     public List<ProductModel> getProductsByCategory(UUID categoryId) {
-        //TODO: NO SE USA
         return repository.findByCategoryId(categoryId);
     }
 
+    // Este método se invoca desde ProductController en GET /category/{categoryId}/low-stock
     public List<ProductModel> getLowStockByCategory(UUID categoryId) {
-        //TODO: NO SE USA
         return repository.findByCategoryId(categoryId)
                 .stream()
                 .filter(ProductModel::lowStock)
                 .collect(Collectors.toList());
     }
 
+    // Este método se invoca desde ProductController en GET /low-stock
     public List<ProductModel> getLowStockProducts() {
-        //TODO: NO SE USA
         return repository.findAll().stream()
                 .filter(ProductModel::lowStock)
                 .toList();
     }
 
+    // Este método se invoca desde ProductController en GET /brand/{brandId}
     public List<ProductModel> getProductsByBrand(UUID brandId) {
-        //TODO: NO SE USA
         return repository.findByBrandId(brandId);
     }
 
+    // Este método se invoca desde ProductController en GET /count
     public long countProducts() {
-        //TODO: NO SE USA
         return repository.findAll().size();
     }
 
+    // Este método se invoca desde ProductController en GET /count/active
     public long countActiveProducts() {
-        //TODO: NO SE USA
         return repository.findByEnabled(true, Pageable.unpaged()).getTotalElements();
     }
 
@@ -212,6 +203,7 @@ public class ProductService {
         }
     }
 
+    // Este método se invoca desde ProductController en GET /validate-unit/{code}
     @Transactional(readOnly = true)
     public Optional<String> validateUnitCode(String code) {
         if (!productUnitPort.existsByCode(code)) {
@@ -219,9 +211,4 @@ public class ProductService {
         }
         return productUnitPort.findNameByCode(code);
     }
-
-
-
-
-
 }
