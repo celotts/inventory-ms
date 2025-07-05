@@ -1,11 +1,11 @@
 package com.celotts.productservice.applications.service;
 
-import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
+import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductDtoMapper;
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.product.ProductBrandPort;
-import com.celotts.productservice.domain.port.product_brand.ProductRepositoryPort;
-import com.celotts.productservice.domain.port.product.ProductUnitPort;
+import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
+import com.celotts.productservice.domain.port.product.root.output.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
@@ -31,14 +31,14 @@ import java.util.stream.Collectors;
 public class ProductService {
 
     private final ProductRepositoryPort repository;
-    private final ProductUnitPort productUnitPort;
+    private final ProductUnitRepositoryPort productUnitPort;
     private final ProductBrandPort productBrandPort;
     private final CategoryRepositoryPort categoryPort;
 
 
     public ProductService(
             @Qualifier("productRepositoryAdapter") ProductRepositoryPort repository,
-            ProductUnitPort productUnitPort,
+            ProductUnitRepositoryPort productUnitPort,
             @Qualifier("productBrandService") ProductBrandPort productBrandPort,
             @Qualifier("categoryRepositoryAdapter") CategoryRepositoryPort categoryPort
     ) {

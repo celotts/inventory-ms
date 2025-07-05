@@ -2,10 +2,11 @@ package com.celotts.productservice.applications.usecase;
 
 import com.celotts.productservice.domain.model.ProductBrandModel;
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
-import com.celotts.productservice.domain.port.product.*;
-import com.celotts.productservice.domain.port.product_brand.ProductBrandRepositoryPort;
-import com.celotts.productservice.domain.port.product_brand.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
+import com.celotts.productservice.domain.port.product.brand.output.ProductBrandRepositoryPort;
+import com.celotts.productservice.domain.port.product.root.output.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
+import com.celotts.productservice.domain.port.product.root.input.ProductUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.BrandNotFoundException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
@@ -25,14 +26,14 @@ import java.util.stream.Collectors;
 public class ProductUseCaseImpl implements ProductUseCase {
 
     private final ProductRepositoryPort repository;
-    private final ProductUnitPort productUnitPort;
+    private final ProductUnitRepositoryPort productUnitPort;
     private final ProductBrandRepositoryPort productBrandPort;
     private final CategoryRepositoryPort categoryPort;
 
     @Autowired
     public ProductUseCaseImpl(
             ProductRepositoryPort repository,
-            ProductUnitPort productUnitPort,
+            ProductUnitRepositoryPort productUnitPort,
             @Qualifier("productBrandAdapter") ProductBrandRepositoryPort productBrandPort,
             @Qualifier("categoryAdapter") CategoryRepositoryPort categoryPort
     ) {

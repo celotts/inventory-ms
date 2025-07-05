@@ -1,10 +1,10 @@
 package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
-import com.celotts.productservice.domain.port.product.ProductBrandPort;
-import com.celotts.productservice.domain.port.product.ProductUnitPort;
-import com.celotts.productservice.domain.port.product_brand.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
+import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
+import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
+import com.celotts.productservice.domain.port.product.root.output.ProductRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
@@ -30,7 +30,7 @@ class ProductServiceUnitTest {
     private ProductRepositoryPort productRepositoryPort;
 
     @Mock
-    private ProductUnitPort productUnitPort;
+    private ProductUnitRepositoryPort productUnitPort;
 
     @Mock
     private ProductBrandPort productBrandPort;

@@ -1,28 +1,20 @@
-package com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product;
+package com.celotts.productservice.domain.model;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
-@Table(name = "product_unit")
 @Data
 @Builder
-@NoArgsConstructor
+@With
 @AllArgsConstructor
-public class ProductUnitEntity {
+@NoArgsConstructor
+public class ProductUnitModel {
 
-    @Id
     private UUID id;
-
-    @Column(unique = true, nullable = false)
     private String code;          //  ← NUEVO
-
     private String name;
     private String description;
     private Boolean enabled;
@@ -30,4 +22,5 @@ public class ProductUnitEntity {
     private LocalDateTime updatedAt;
     private String createdBy;
     private String updatedBy;
+
 }

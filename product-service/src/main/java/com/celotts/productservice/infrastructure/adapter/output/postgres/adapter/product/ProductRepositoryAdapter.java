@@ -1,7 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.product_brand.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.product.root.output.ProductRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductRepository;
 import lombok.RequiredArgsConstructor;

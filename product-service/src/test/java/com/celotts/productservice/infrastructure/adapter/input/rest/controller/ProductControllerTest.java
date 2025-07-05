@@ -1,7 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.product.ProductUseCase;
+import com.celotts.productservice.domain.port.product.root.input.ProductUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.advice.ProductControllerAdvice;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDTO;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;

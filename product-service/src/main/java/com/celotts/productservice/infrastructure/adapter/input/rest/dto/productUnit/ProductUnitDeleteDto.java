@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand;
+package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,10 +9,10 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class ProductBrandDeleteDto {
-    @NotBlank(message = "Category ID is required")
-    @NotNull(message = "Category ID is not null")
+@NoArgsConstructor
+public class ProductUnitDeleteDto {
+    @NotBlank(message = "Product brand ID is required")
+    @NotNull(message =  "Product Brand ID is not Null")
     private UUID id;
 }
