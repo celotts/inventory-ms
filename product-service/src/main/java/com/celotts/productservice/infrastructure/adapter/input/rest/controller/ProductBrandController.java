@@ -3,10 +3,11 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
 import com.celotts.productservice.applications.service.ProductBrandService;
 import com.celotts.productservice.domain.model.ProductBrandModel;
-import com.celotts.productservice.domain.port.product.root.input.ProductUseCase;
+import com.celotts.productservice.domain.port.product.brand.input.ProductBrandUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,12 +22,11 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/product-brands")
 @CrossOrigin(origins = "*")
+@Tag(name = "Product Brand API", description = "API para gestionar marcas de productos")
 public class ProductBrandController {
 
     private final ProductBrandService productBrandService;
-    private final ProductUseCase productBrandUseCase;
-
-
+    private final ProductBrandUseCase productBrandUseCase;
 
     @PostMapping
     public ResponseEntity<ProductBrandResponseDto> create(@Valid @RequestBody ProductBrandCreateDto dto) {
@@ -56,8 +56,6 @@ public class ProductBrandController {
         return ResponseEntity.noContent().build();
     }
 
-
-
     @GetMapping("/brands/ids")
     public List<UUID> getAllBrandIds() {
         return productBrandService.findAllIds();
@@ -80,6 +78,4 @@ public class ProductBrandController {
         ProductBrandModel brand = productBrandUseCase.disableBrand(id);
         return ResponseEntity.ok(ProductBrandDtoMapper.toResponseDto(brand));
     }
-
-
 }
