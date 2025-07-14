@@ -1,13 +1,14 @@
 package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductDtoMapper;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
 import com.celotts.productservice.domain.port.product.root.output.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
+
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
@@ -48,7 +49,7 @@ public class ProductService {
         this.categoryPort = categoryPort;
     }
 
-    public ProductModel createProduct(ProductRequestDTO dto) {
+    public ProductModel createProduct(ProductRequestDto dto) {
         // Verificar que el código no existe
         if (repository.findByCode(dto.getCode()).isPresent()) {
             throw new ProductAlreadyExistsException("Product code already exists: " + dto.getCode());
@@ -81,11 +82,11 @@ public class ProductService {
         return repository.save(model);
     }
 
-    public ProductModel updateProduct(UUID id, ProductRequestDTO dto) {
+    public ProductModel updateProduct(UUID id, ProductRequestDto dto) {
         ProductModel existing = getProductById(id);
         validateReferences(dto);
 
-        ProductUpdateDTO updateDto = ProductDtoMapper.toUpdateDto(dto);
+        ProductUpdateDto updateDto = ProductDtoMapper.toUpdateDto(dto);
         ProductRequestMapper.updateModelFromDto(existing, updateDto);
 
         return repository.save(existing);
@@ -186,7 +187,7 @@ public class ProductService {
         return repository.findByEnabled(true, Pageable.unpaged()).getTotalElements();
     }
 
-    private void validateReferences(ProductRequestDTO dto) {
+    private void validateReferences(ProductRequestDto dto) {
         // Validar que unitCode existe
         if (!productUnitPort.existsByCode(dto.getUnitCode())) {
             throw new IllegalArgumentException("Invalid unit code: " + dto.getUnitCode());

@@ -7,7 +7,7 @@ import lombok.Data;
 
 
 @Data
-public class ProductUnitRequestDTO {
+public class ProductUnitRequestDto {
 
      @Size(min = 2, max = 100, message = "Product name must be between 2 and 100 characters")
      @Pattern(regexp = "^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s\\-_]{2,100}$", message = "Product name contains invalid characters")

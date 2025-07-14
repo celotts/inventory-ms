@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
-public class ProductRequestDTO {
+public class ProductRequestDto {
 
     @NotBlank(message = "Product code is required")
     @Size(max = 50, message = "Product code must not exceed 50 characters")

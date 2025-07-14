@@ -6,11 +6,12 @@ import com.celotts.productservice.domain.port.product.brand.output.ProductBrandR
 import com.celotts.productservice.domain.port.product.root.input.ProductUseCase;
 import com.celotts.productservice.domain.port.product.root.output.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductDtoMapper;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -50,7 +51,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
     }
 
     @Override
-    public ProductModel createProduct(ProductRequestDTO dto) {
+    public ProductModel createProduct(@Valid ProductRequestDto dto) {
         if (repository.findByCode(dto.getCode()).isPresent()) {
             throw new ProductAlreadyExistsException("Product code already exists: " + dto.getCode());
         }
@@ -61,7 +62,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
     }
 
     @Override
-    public ProductModel updateProduct(UUID id, ProductRequestDTO dto) {
+    public ProductModel updateProduct(UUID id, @Valid ProductRequestDto dto) {
         ProductModel existing = getProductById(id);
         validateReferences(dto);
         ProductRequestMapper.updateModelFromDto(existing, ProductDtoMapper.toUpdateDto(dto));
@@ -165,7 +166,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
         return productUnitPort.findNameByCode(code);
     }
 
-    private void validateReferences(ProductRequestDTO dto) {
+    private void validateReferences(ProductRequestDto dto) {
         if (!productUnitPort.existsByCode(dto.getUnitCode())) {
             throw new ProductNotFoundException("Invalid unit code: " + dto.getUnitCode());
         }

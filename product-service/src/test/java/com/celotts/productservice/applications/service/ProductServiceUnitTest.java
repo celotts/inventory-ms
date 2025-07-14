@@ -5,7 +5,7 @@ import com.celotts.productservice.domain.port.category.output.CategoryRepository
 import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
 import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
 import com.celotts.productservice.domain.port.product.root.output.ProductRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,7 +55,7 @@ class ProductServiceUnitTest {
         UUID brandId = UUID.randomUUID();
         UUID categoryId = UUID.randomUUID();
 
-        ProductRequestDTO dto = new ProductRequestDTO();
+        ProductRequestDto dto = new ProductRequestDto();
         dto.setCode("NEW001");
         dto.setName("New Product");
         dto.setCreatedBy("admin");
@@ -95,7 +95,7 @@ class ProductServiceUnitTest {
 
     @Test
     void createProduct_shouldThrowProductAlreadyExistsExceptionWhenCodeAlreadyExists() {
-        ProductRequestDTO dto = new ProductRequestDTO();
+        ProductRequestDto dto = new ProductRequestDto();
         dto.setCode("EXISTING_CODE");
         dto.setName("New Product");
         dto.setCreatedBy("admin");
@@ -126,11 +126,11 @@ class ProductServiceUnitTest {
 
         when(productRepositoryPort.findById(nonExistentId)).thenReturn(Optional.empty());
 
-        ProductRequestDTO dto = new ProductRequestDTO();
+        ProductRequestDto dto = new ProductRequestDto();
         dto.setCode("NEWCODE999");
 
         ProductNotFoundException exception = assertThrows(ProductNotFoundException.class, () -> {
-            productService.updateProduct(nonExistentId, dto);
+            productService.updateProduct(nonExistentId,dto);
         });
 
         assertTrue(exception.getMessage().contains(nonExistentId.toString()));
@@ -153,7 +153,7 @@ class ProductServiceUnitTest {
                 .createdBy("tester")
                 .build();
 
-        ProductRequestDTO dto = new ProductRequestDTO();
+        ProductRequestDto dto = new ProductRequestDto();
         dto.setCode("UPDATEDCODE");
         dto.setName("Updated Name");
         dto.setUnitCode("UNIT01");

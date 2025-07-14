@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class ProductStockUpdateDTO {
+public class ProductStockUpdateDto {
 
     @NotNull(message = "Stock value is required")
     @Min(value = 0, message = "Stock must be greater than or equal to 0")

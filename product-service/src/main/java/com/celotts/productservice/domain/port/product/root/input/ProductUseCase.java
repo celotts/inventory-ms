@@ -1,7 +1,8 @@
 package com.celotts.productservice.domain.port.product.root.input;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -12,8 +13,8 @@ import java.util.UUID;
 public interface ProductUseCase {
 
     // --- CRUD ---
-    ProductModel createProduct(ProductRequestDTO requestDTO);
-    ProductModel updateProduct(UUID id, ProductRequestDTO requestDTO);
+    ProductModel createProduct(@Valid ProductRequestDto requestDTO);
+    ProductModel updateProduct(UUID id, @Valid ProductRequestDto requestDTO);
     ProductModel getProductById(UUID id);
     ProductModel getProductByCode(String code);
     void hardDeleteProduct(UUID id);
