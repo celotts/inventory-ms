@@ -1,4 +1,4 @@
-package com.celotts.productservice.domain.port.product.brand.input;
+package com.celotts.productservice.domain.port.product.unit.input;
 
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.*;
 import java.util.List;
