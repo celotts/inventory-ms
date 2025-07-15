@@ -35,4 +35,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID> {
             @Param("name") String name,
             @Param("description") String description
     );
+
+    @Query("SELECT p.code FROM ProductEntity p")
+    List<String> findAllCodes();
 }

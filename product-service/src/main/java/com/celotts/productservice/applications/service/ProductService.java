@@ -1,13 +1,14 @@
 package com.celotts.productservice.applications.service;
 
-import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
+import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductDtoMapper;
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.product.ProductBrandPort;
-import com.celotts.productservice.domain.port.prodcut_brand.ProductRepositoryPort;
-import com.celotts.productservice.domain.port.product.ProductUnitPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
+import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
+import com.celotts.productservice.domain.port.product.root.output.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
+
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
@@ -31,22 +32,24 @@ import java.util.stream.Collectors;
 public class ProductService {
 
     private final ProductRepositoryPort repository;
-    private final ProductUnitPort productUnitPort;
+    private final ProductUnitRepositoryPort productUnitPort;
     private final ProductBrandPort productBrandPort;
     private final CategoryRepositoryPort categoryPort;
 
+
     public ProductService(
             @Qualifier("productRepositoryAdapter") ProductRepositoryPort repository,
-            ProductUnitPort productUnitPort,
-            ProductBrandPort productBrandPort,
-            @Qualifier("categoryRepositoryAdapter") CategoryRepositoryPort categoryPort) {
+            ProductUnitRepositoryPort productUnitPort,
+            @Qualifier("productBrandService") ProductBrandPort productBrandPort,
+            @Qualifier("categoryRepositoryAdapter") CategoryRepositoryPort categoryPort
+    ) {
         this.repository = repository;
         this.productUnitPort = productUnitPort;
         this.productBrandPort = productBrandPort;
         this.categoryPort = categoryPort;
     }
 
-    public ProductModel createProduct(ProductRequestDTO dto) {
+    public ProductModel createProduct(ProductRequestDto dto) {
         // Verificar que el código no existe
         if (repository.findByCode(dto.getCode()).isPresent()) {
             throw new ProductAlreadyExistsException("Product code already exists: " + dto.getCode());
@@ -79,11 +82,11 @@ public class ProductService {
         return repository.save(model);
     }
 
-    public ProductModel updateProduct(UUID id, ProductRequestDTO dto) {
+    public ProductModel updateProduct(UUID id, ProductRequestDto dto) {
         ProductModel existing = getProductById(id);
         validateReferences(dto);
 
-        ProductUpdateDTO updateDto = ProductDtoMapper.toUpdateDto(dto);
+        ProductUpdateDto updateDto = ProductDtoMapper.toUpdateDto(dto);
         ProductRequestMapper.updateModelFromDto(existing, updateDto);
 
         return repository.save(existing);
@@ -111,25 +114,24 @@ public class ProductService {
         return repository.findAllWithFilters(pageable, code, name, description);
     }
 
-    public void deleteProduct(UUID id) {
-        repository.findById(id).orElseThrow(() ->
-                new ProductNotFoundException(id));
-    }
-
+    // Este método se invoca desde ProductController en el endpoint DELETE /{id}/hard
     public void hardDeleteProduct(UUID id) {
         repository.deleteById(id);
     }
 
+    // Este método se invoca desde ProductController en PATCH /{id}/enable
     public ProductModel enableProduct(UUID id) {
         ProductModel product = getProductById(id);
         return repository.save(product.withEnabled(true));
     }
 
+    // Este método se invoca desde ProductController en PATCH /{id}/disable
     public ProductModel disableProduct(UUID id) {
         ProductModel product = getProductById(id);
         return repository.save(product.withEnabled(false));
     }
 
+    // Este método se invoca desde ProductController en PATCH /{id}/stock
     public ProductModel updateStock(UUID id, int stock) {
         ProductModel product = getProductById(id);
         return repository.save(product.withCurrentStock(stock));
@@ -139,19 +141,23 @@ public class ProductService {
         return repository.existsById(id);
     }
 
+    // Este método se invoca desde ProductController en GET /active
     public Page<ProductModel> getActiveProducts(Pageable pageable) {
         return repository.findByEnabled(true, pageable);
     }
 
+    // Este método se invoca desde ProductController en GET /inactive
     public List<ProductModel> getInactiveProducts() {
         Pageable pageable = Pageable.unpaged();
         return repository.findByEnabled(false, pageable).getContent();
     }
 
+    // Este método se invoca desde ProductController en GET /category/{categoryId}
     public List<ProductModel> getProductsByCategory(UUID categoryId) {
         return repository.findByCategoryId(categoryId);
     }
 
+    // Este método se invoca desde ProductController en GET /category/{categoryId}/low-stock
     public List<ProductModel> getLowStockByCategory(UUID categoryId) {
         return repository.findByCategoryId(categoryId)
                 .stream()
@@ -159,25 +165,29 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
+    // Este método se invoca desde ProductController en GET /low-stock
     public List<ProductModel> getLowStockProducts() {
         return repository.findAll().stream()
                 .filter(ProductModel::lowStock)
                 .toList();
     }
 
+    // Este método se invoca desde ProductController en GET /brand/{brandId}
     public List<ProductModel> getProductsByBrand(UUID brandId) {
         return repository.findByBrandId(brandId);
     }
 
+    // Este método se invoca desde ProductController en GET /count
     public long countProducts() {
         return repository.findAll().size();
     }
 
+    // Este método se invoca desde ProductController en GET /count/active
     public long countActiveProducts() {
         return repository.findByEnabled(true, Pageable.unpaged()).getTotalElements();
     }
 
-    private void validateReferences(ProductRequestDTO dto) {
+    private void validateReferences(ProductRequestDto dto) {
         // Validar que unitCode existe
         if (!productUnitPort.existsByCode(dto.getUnitCode())) {
             throw new IllegalArgumentException("Invalid unit code: " + dto.getUnitCode());
@@ -194,8 +204,12 @@ public class ProductService {
         }
     }
 
+    // Este método se invoca desde ProductController en GET /validate-unit/{code}
+    @Transactional(readOnly = true)
     public Optional<String> validateUnitCode(String code) {
+        if (!productUnitPort.existsByCode(code)) {
+            return Optional.empty();
+        }
         return productUnitPort.findNameByCode(code);
     }
-
 }

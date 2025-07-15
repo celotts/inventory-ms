@@ -1,12 +1,12 @@
 package com.celotts.productservice.applications.service;
 
-import static org.mockito.Mockito.lenient;
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
-import com.celotts.productservice.domain.port.prodcut_brand.ProductRepositoryPort;
-import com.celotts.productservice.domain.port.product.ProductBrandPort;
-import com.celotts.productservice.domain.port.product.ProductUnitPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
+import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
+import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
+import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
+import com.celotts.productservice.domain.port.product.root.output.ProductRepositoryPort;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,6 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,7 +30,7 @@ class ProductServiceUnitTest {
     private ProductRepositoryPort productRepositoryPort;
 
     @Mock
-    private ProductUnitPort productUnitPort;
+    private ProductUnitRepositoryPort productUnitPort;
 
     @Mock
     private ProductBrandPort productBrandPort;
@@ -52,23 +51,11 @@ class ProductServiceUnitTest {
     }
 
     @Test
-    void debug_checkDependencyInjection() {
-        assertNotNull(productRepositoryPort, "productRepositoryPort should be injected");
-        assertNotNull(productUnitPort, "productUnitPort should be injected");
-        assertNotNull(productBrandPort, "productBrandPort should be injected");
-        assertNotNull(categoryRepositoryPort, "categoryRepositoryPort should be injected");
-        assertNotNull(productService, "productService should be created");
-
-        System.out.println("✅ All dependencies are properly injected");
-    }
-
-    @Test
     void createProduct_shouldCreateProductSuccessfully() {
-        // Arrange
         UUID brandId = UUID.randomUUID();
         UUID categoryId = UUID.randomUUID();
 
-        ProductRequestDTO dto = new ProductRequestDTO();
+        ProductRequestDto dto = new ProductRequestDto();
         dto.setCode("NEW001");
         dto.setName("New Product");
         dto.setCreatedBy("admin");
@@ -80,7 +67,6 @@ class ProductServiceUnitTest {
         dto.setUnitPrice(BigDecimal.valueOf(29.99));
         dto.setEnabled(true);
 
-        // Mock todas las validaciones que tu ProductService necesita
         when(productRepositoryPort.findByCode(dto.getCode())).thenReturn(Optional.empty());
         when(productUnitPort.existsByCode("UNIT01")).thenReturn(true);
         when(productBrandPort.existsById(brandId)).thenReturn(true);
@@ -96,10 +82,8 @@ class ProductServiceUnitTest {
                         .build()
         );
 
-        // Act
         ProductModel result = productService.createProduct(dto);
 
-        // Assert
         assertNotNull(result);
         assertEquals(dto.getCode(), result.getCode());
         verify(productRepositoryPort).findByCode(dto.getCode());
@@ -110,14 +94,15 @@ class ProductServiceUnitTest {
     }
 
     @Test
-    void createProduct_shouldThrowExceptionWhenCodeAlreadyExists() {
-        ProductRequestDTO dto = new ProductRequestDTO();
+    void createProduct_shouldThrowProductAlreadyExistsExceptionWhenCodeAlreadyExists() {
+        ProductRequestDto dto = new ProductRequestDto();
         dto.setCode("EXISTING_CODE");
         dto.setName("New Product");
         dto.setCreatedBy("admin");
         dto.setUnitCode("UNIT01");
+        dto.setBrandId(UUID.randomUUID());
+        dto.setCategoryId(UUID.randomUUID());
 
-        // Mock para que findByCode devuelva un producto existente
         ProductModel existingProduct = ProductModel.builder()
                 .id(UUID.randomUUID())
                 .code("EXISTING_CODE")
@@ -126,30 +111,35 @@ class ProductServiceUnitTest {
 
         when(productRepositoryPort.findByCode(dto.getCode())).thenReturn(Optional.of(existingProduct));
 
-        Exception exception = assertThrows(Exception.class, () -> {
+        ProductAlreadyExistsException exception = assertThrows(ProductAlreadyExistsException.class, () -> {
             productService.createProduct(dto);
         });
 
-        System.out.println("Exception type: " + exception.getClass().getSimpleName());
-        System.out.println("Exception message: " + exception.getMessage());
-
+        assertTrue(exception.getMessage().contains("EXISTING_CODE"));
         verify(productRepositoryPort).findByCode(dto.getCode());
         verify(productRepositoryPort, never()).save(any());
     }
 
-    // TODO: Este test específico de update requiere más investigación
-    // Comentado temporalmente para no bloquear el desarrollo
-    /*
     @Test
-    void updateProduct_shouldUpdateOnlyProvidedFields() {
-        // Test comentado - ProductService.updateProduct() requiere validaciones específicas
-        // que no estamos mockeando correctamente. Investigar más tarde.
+    void updateProduct_shouldThrowProductNotFoundExceptionWhenProductDoesNotExist() {
+        UUID nonExistentId = UUID.randomUUID();
+
+        when(productRepositoryPort.findById(nonExistentId)).thenReturn(Optional.empty());
+
+        ProductRequestDto dto = new ProductRequestDto();
+        dto.setCode("NEWCODE999");
+
+        ProductNotFoundException exception = assertThrows(ProductNotFoundException.class, () -> {
+            productService.updateProduct(nonExistentId,dto);
+        });
+
+        assertTrue(exception.getMessage().contains(nonExistentId.toString()));
+        verify(productRepositoryPort).findById(nonExistentId);
+        verify(productRepositoryPort, never()).save(any());
     }
-    */
 
     @Test
-    void debug_updateProduct_whatIsTheError() {
-        // Test para ver exactamente qué está fallando en update
+    void updateProduct_shouldUpdateProductSuccessfully() {
         UUID productId = UUID.randomUUID();
 
         ProductModel existingProduct = ProductModel.builder()
@@ -163,39 +153,24 @@ class ProductServiceUnitTest {
                 .createdBy("tester")
                 .build();
 
+        ProductRequestDto dto = new ProductRequestDto();
+        dto.setCode("UPDATEDCODE");
+        dto.setName("Updated Name");
+        dto.setUnitCode("UNIT01");
+        dto.setBrandId(existingProduct.getBrandId());
+        dto.setCategoryId(existingProduct.getCategoryId());
+
         when(productRepositoryPort.findById(productId)).thenReturn(Optional.of(existingProduct));
+        when(productUnitPort.existsByCode("UNIT01")).thenReturn(true);
+        when(productBrandPort.existsById(existingProduct.getBrandId())).thenReturn(true);
+        when(categoryRepositoryPort.existsById(existingProduct.getCategoryId())).thenReturn(true);
+        when(productRepositoryPort.save(any(ProductModel.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ProductRequestDTO dto = new ProductRequestDTO();
-        dto.setCode("NEWCODE999");
-        dto.setUpdatedBy("admin");
+        ProductModel result = productService.updateProduct(productId, dto);
 
-        System.out.println("🔍 Testing updateProduct...");
-
-        try {
-            ProductModel result = productService.updateProduct(productId, dto);
-            System.out.println("✅ SUCCESS: Product updated to code: " + result.getCode());
-        } catch (Exception e) {
-            System.out.println("❌ UPDATE ERROR:");
-            System.out.println("   Exception type: " + e.getClass().getSimpleName());
-            System.out.println("   Exception message: " + e.getMessage());
-            System.out.println("   Stack trace:");
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    void updateProduct_shouldThrowExceptionWhenProductNotFound() {
-        UUID nonExistentId = UUID.randomUUID();
-        when(productRepositoryPort.findById(nonExistentId)).thenReturn(Optional.empty());
-
-        ProductRequestDTO dto = new ProductRequestDTO();
-        dto.setCode("NEWCODE999");
-
-        assertThrows(ProductNotFoundException.class, () -> {
-            productService.updateProduct(nonExistentId, dto);
-        });
-
-        verify(productRepositoryPort).findById(nonExistentId);
-        verify(productRepositoryPort, never()).save(any());
+        assertNotNull(result);
+        assertEquals(dto.getCode(), result.getCode());
+        assertEquals(dto.getName(), result.getName());
+        verify(productRepositoryPort).save(any(ProductModel.class));
     }
 }

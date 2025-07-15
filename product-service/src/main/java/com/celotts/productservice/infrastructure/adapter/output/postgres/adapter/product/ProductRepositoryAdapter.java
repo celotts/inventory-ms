@@ -1,7 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.prodcut_brand.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.product.root.output.ProductRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -59,8 +59,9 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {  // Qui
 
     @Override
     public ProductModel save(ProductModel product) {
+        //TODO: revisar
         return productEntityMapper.toModel(
-                productRepository.save(productEntityMapper.toEntity(product))
+                productRepository.save(ProductEntityMapper.toEntity(product))
         );
     }
 
@@ -94,4 +95,7 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {  // Qui
     public void deleteById(UUID id) {
         productRepository.deleteById(id);
     }
+
+
+
 }

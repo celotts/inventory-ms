@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Data
 @Builder
-public class ProductUpdateDTO {
+public class ProductUpdateDto {
 
     @Size(max = 50, message = "Product code must not exceed 50 characters")
     private String code;

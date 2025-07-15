@@ -4,17 +4,25 @@ import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-@Repository
-public interface ProductUnitRepository extends JpaRepository<ProductUnitEntity, String> {
-    
+/**
+ * Repositorio JPA para la tabla product_unit.
+ * Usa UUID como clave primaria.
+ */
+public interface ProductUnitRepository extends JpaRepository<ProductUnitEntity, UUID> {
+
+    /* -------- lecturas “light” -------- */
+
     boolean existsByCode(String code);
-    
-    Optional<ProductUnitEntity> findByCode(String code);
-    
-    @Query("SELECT p.name FROM ProductUnitEntity p WHERE p.code = :code")
+
+    @Query("select pu.name from ProductUnitEntity pu where pu.code = :code")
     Optional<String> findNameByCode(@Param("code") String code);
+
+    /** Devuelve únicamente la lista de códigos existentes */
+    @Query("select pu.code from ProductUnitEntity pu")
+    List<String> findAllCodes();
 }

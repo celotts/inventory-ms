@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 @Entity
 @Table(name = "product_unit")
 @Data
@@ -15,12 +18,21 @@ import lombok.NoArgsConstructor;
 public class ProductUnitEntity {
 
     @Id
-    @Column(name = "code", length = 30)
-    private String code;
+    @GeneratedValue
+    private UUID id;
 
-    @Column(name = "name", length = 100, nullable = false)
+    @Column(unique = true, nullable = false)
+    private String code;          //  ← NUEVO
+
     private String name;
+    private String description;
 
-    @Column(name = "symbol", length = 10)
-    private String symbol;
+    @Column(nullable = false)
+    private String symbol; // ✅ AGREGADO
+
+    private Boolean enabled;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private String createdBy;
+    private String updatedBy;
 }

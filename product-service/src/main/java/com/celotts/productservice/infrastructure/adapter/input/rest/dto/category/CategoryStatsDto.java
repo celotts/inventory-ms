@@ -19,33 +19,8 @@ public class CategoryStatsDto {
     private long inactiveCategories;
     private long deletedCategories;
 
-    /**
-     * Calcula el porcentaje de categorías activas
-     */
-    public double getActivePercentage() {
-        if (totalCategories == 0) {
-            return 0.0;
-        }
-        return (double) activeCategories / totalCategories * 100;
-    }
+    private double activePercentage;
+    private double inactivePercentage;
+    private double deletedPercentage;
 
-    /**
-     * Calcula el porcentaje de categorías inactivas
-     */
-    public double getInactivePercentage() {
-        if (totalCategories == 0) {
-            return 0.0;
-        }
-        return (double) inactiveCategories / totalCategories * 100;
-    }
-
-    /**
-     * Calcula el porcentaje de categorías eliminadas
-     */
-    public double getDeletedPercentage() {
-        if (totalCategories == 0) {
-            return 0.0;
-        }
-        return (double) deletedCategories / totalCategories * 100;
-    }
 }
