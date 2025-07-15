@@ -1,7 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.category;
 
 import com.celotts.productservice.domain.model.CategoryModel;
-import com.celotts.productservice.domain.port.category.CategoryRepositoryPort;
+import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.category.CategoryEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.category.CategoryEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.category.CategoryRepository;

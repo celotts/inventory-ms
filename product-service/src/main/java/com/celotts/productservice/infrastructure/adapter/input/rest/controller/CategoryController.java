@@ -23,7 +23,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/categories")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "${app.cors.allowed-origin}")
+@CrossOrigin(origins = "${app.cors.allowed-origin:*}")
 public class CategoryController {
 
     private final CategoryService categoryService;

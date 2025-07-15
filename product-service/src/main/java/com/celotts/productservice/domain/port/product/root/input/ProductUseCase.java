@@ -1,7 +1,8 @@
-package com.celotts.productservice.domain.port.product;
+package com.celotts.productservice.domain.port.product.root.input;
 
-import com.celotts.productservice.domain.model.ProductBrandModel;
 import com.celotts.productservice.domain.model.ProductModel;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -10,32 +11,33 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ProductUseCase {
-    //TODO: NO SE USA
-    ProductModel updateProduct(UUID id, ProductModel model);
+
+    // --- CRUD ---
+    ProductModel createProduct(@Valid ProductRequestDto requestDTO);
+    ProductModel updateProduct(UUID id, @Valid ProductRequestDto requestDTO);
+    ProductModel getProductById(UUID id);
     ProductModel getProductByCode(String code);
-    List<ProductModel> getAllProducts();
+    void hardDeleteProduct(UUID id);
+
+    // --- Activación / Estado ---
+    ProductModel enableProduct(UUID id);
+    void disableProduct(UUID id);
+    ProductModel updateStock(UUID id, int stock);
+
+    // --- Consultas ---
     Page<ProductModel> getAllProducts(Pageable pageable);
     Page<ProductModel> getAllProductsWithFilters(Pageable pageable, String code, String name, String description);
-    void deleteProduct(UUID id);
-    void hardDeleteProduct(UUID id);
-    ProductModel enableProduct(UUID id);
-    ProductModel disableProduct(UUID id);
-    ProductModel updateStock(UUID id, int stock);
-    boolean existsById(UUID id);
     Page<ProductModel> getActiveProducts(Pageable pageable);
     List<ProductModel> getInactiveProducts();
     List<ProductModel> getProductsByCategory(UUID categoryId);
     List<ProductModel> getLowStockByCategory(UUID categoryId);
     List<ProductModel> getLowStockProducts();
     List<ProductModel> getProductsByBrand(UUID brandId);
+
+    // --- Métricas ---
     long countProducts();
     long countActiveProducts();
+
+    // --- Utilidades ---
     Optional<String> validateUnitCode(String code);
-    ProductBrandModel enableBrand(UUID id);
-    ProductBrandModel disableBrand(UUID id);
-    List<String> findAllUnitCodes();
-
-    ProductModel getProductById(UUID id);
-
-    ProductModel createProduct(ProductModel requestDTO);
 }

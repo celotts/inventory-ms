@@ -1,4 +1,4 @@
-package com.celotts.productservice.domain.port.category;
+package com.celotts.productservice.domain.port.category.output;
 
 import com.celotts.productservice.domain.model.CategoryModel;
 import org.springframework.data.domain.Page;

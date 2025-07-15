@@ -1,8 +1,8 @@
 package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.model.ProductBrandModel;
-import com.celotts.productservice.domain.port.product.ProductBrandPort;
-import com.celotts.productservice.domain.port.product_brand.ProductBrandUseCase;
+import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
+import com.celotts.productservice.domain.port.product.brand.input.ProductBrandUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;

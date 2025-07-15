@@ -1,10 +1,8 @@
 
-package com.celotts.productservice.domain.port.product;
+package com.celotts.productservice.domain.port.product.brand.input;
 
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public interface ProductBrandPort {

@@ -1,4 +1,4 @@
-package com.celotts.productservice.domain.port.product_brand;
+package com.celotts.productservice.domain.port.product.brand.input;
 
 import com.celotts.productservice.domain.model.ProductBrandModel;
 

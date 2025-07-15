@@ -1,8 +1,8 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -14,7 +14,7 @@ public class ProductRequestMapper {
      * Actualiza un ProductModel existente con datos del ProductUpdateDTO
      * Solo actualiza campos que no son null
      */
-    public static void updateModelFromDto(ProductModel existingModel, ProductUpdateDTO dto) {
+    public static void updateModelFromDto(ProductModel existingModel, ProductUpdateDto dto) {
         if (dto == null) return;
 
         if (dto.getCode() != null) {
@@ -55,7 +55,7 @@ public class ProductRequestMapper {
         existingModel.setUpdatedAt(LocalDateTime.now());
     }
 
-    public ProductModel toModel(ProductRequestDTO dto) {
+    public ProductModel toModel(ProductRequestDto dto) {
         if (dto == null) {
             return null;
         }

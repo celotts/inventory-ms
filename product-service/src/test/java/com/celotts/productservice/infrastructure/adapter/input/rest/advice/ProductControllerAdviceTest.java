@@ -2,7 +2,8 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.advice;
 
 import com.celotts.productservice.infrastructure.adapter.input.rest.controller.ProductController;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
-import com.celotts.productservice.domain.port.product.ProductUseCase;
+import com.celotts.productservice.domain.port.product.root.input.ProductUseCase;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductResponseMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,6 @@ import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class ProductControllerAdviceTest {
 
@@ -26,7 +26,10 @@ class ProductControllerAdviceTest {
     @BeforeEach
     void setup() {
         productUseCase = Mockito.mock(ProductUseCase.class);
-        ProductController controller = new ProductController(productUseCase, null, null);
+        ProductResponseMapper responseMapper = Mockito.mock(ProductResponseMapper.class);
+
+        ProductController controller = new ProductController(productUseCase, responseMapper);
+
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new ProductControllerAdvice())
                 .build();

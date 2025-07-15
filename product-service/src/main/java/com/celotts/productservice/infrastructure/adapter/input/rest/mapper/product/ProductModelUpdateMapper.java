@@ -1,7 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import com.celotts.productservice.infrastructure.common.util.MapperUtils;
 
 import java.time.LocalDateTime;
@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 public class ProductModelUpdateMapper {
 
     //TODO: NO SE USA
-    public static void apply(ProductModel model, ProductUpdateDTO dto) {
+    public static void apply(ProductModel model, ProductUpdateDto dto) {
         MapperUtils.updateFieldIfNotNull(dto.getCode(), model::setCode);
         MapperUtils.updateFieldIfNotNull(dto.getDescription(), model::setDescription);
         MapperUtils.updateFieldIfNotNull(dto.getCategoryId(), model::setCategoryId);

@@ -1,9 +1,9 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDTO;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDTO;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDTO;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,7 +14,7 @@ public class ProductDtoMapper {
     /**
      * Convierte ProductRequestDTO a ProductModel para crear
      */
-    public static ProductModel toModel(ProductRequestDTO dto) {
+    public static ProductModel toModel(ProductRequestDto dto) {
         if (dto == null) return null;
 
         return ProductModel.builder()
@@ -36,10 +36,10 @@ public class ProductDtoMapper {
     /**
      * Convierte ProductRequestDTO a ProductUpdateDTO
      */
-    public static ProductUpdateDTO toUpdateDto(ProductRequestDTO dto) {
+    public static ProductUpdateDto toUpdateDto(ProductRequestDto dto) {
         if (dto == null) return null;
 
-        return ProductUpdateDTO.builder()
+        return ProductUpdateDto.builder()
                 .code(dto.getCode())
                 .name(dto.getName())
                 .description(dto.getDescription())
@@ -57,10 +57,10 @@ public class ProductDtoMapper {
     /**
      * Convierte ProductModel a ProductResponseDTO
      */
-    public static ProductResponseDTO toResponseDto(ProductModel model) {
+    public static ProductResponseDto toResponseDto(ProductModel model) {
         if (model == null) return null;
 
-        return ProductResponseDTO.builder()
+        return ProductResponseDto.builder()
                 .id(model.getId())
                 .code(model.getCode())
                 .name(model.getName())
@@ -83,7 +83,7 @@ public class ProductDtoMapper {
      * Convierte lista de ProductModel a lista de ProductResponseDTO
      */
     //TODO: NO SE USA
-    public static List<ProductResponseDTO> toResponseDtoList(List<ProductModel> models) {
+    public static List<ProductResponseDto> toResponseDtoList(List<ProductModel> models) {
         if (models == null) return null;
         return models.stream()
                 .map(ProductDtoMapper::toResponseDto)
