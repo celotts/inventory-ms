@@ -28,6 +28,9 @@ public class ProductUnitCreateDto {
     @NotNull(message = "Enabled flag is required")
     private Boolean enabled;
 
+    @NotBlank(message = "Symbol is required")
+    private String symbol;
+
     @NotBlank(message = "createdBy is required")
     private String createdBy;
 

@@ -31,6 +31,8 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
 app:
+  cors:
+    allowed-origin: "*"
   pagination:
     default-page: ${PAGINATION_DEFAULT_PAGE:0}
     default-size: ${PAGINATION_DEFAULT_SIZE:10}

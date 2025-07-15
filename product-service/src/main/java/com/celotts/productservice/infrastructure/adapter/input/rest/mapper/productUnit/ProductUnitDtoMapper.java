@@ -16,8 +16,10 @@ public class ProductUnitDtoMapper {
         }
 
         return ProductUnitModel.builder()
+                .code(createDto.getCode())
                 .name(createDto.getName())
                 .description(createDto.getDescription())
+                .symbol(createDto.getSymbol())
                 .enabled(createDto.getEnabled())
                 .createdBy(createDto.getCreatedBy())
                 .updatedBy(createDto.getUpdatedBy())

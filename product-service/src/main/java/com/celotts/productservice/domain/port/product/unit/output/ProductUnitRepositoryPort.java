@@ -14,4 +14,5 @@ public interface ProductUnitRepositoryPort {
     ProductUnitModel save(ProductUnitModel model);
     Optional<ProductUnitModel> findById(UUID id);
     void deleteById(UUID id);
+    List<ProductUnitModel> findAll();
 }

@@ -21,7 +21,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/product-brands")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "${app.cors.allowed-origin:*}")
 @Tag(name = "Product Brand API", description = "API para gestionar marcas de productos")
 public class ProductBrandController {
 

@@ -21,7 +21,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("api/v1/product-unit")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "${app.cors.allowed-origin:*}")
 public class ProductUnitController {
 
     private final ProductUnitService productUnitService;
@@ -32,6 +32,7 @@ public class ProductUnitController {
             @ApiResponse(responseCode = "201", description = "Unidad creada exitosamente"),
             @ApiResponse(responseCode = "400", description = "Datos inválidos")
     })
+
     @PostMapping
     public ResponseEntity<ProductUnitResponseDto> create(@Valid @RequestBody ProductUnitCreateDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(productUnitService.create(dto));

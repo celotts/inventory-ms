@@ -23,6 +23,8 @@ spring:
 
 # Configuración de paginación
 app:
+  cors:
+    allowed-origin: "*"
   pagination:
     default-page: 0
     default-size: 10

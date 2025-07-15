@@ -54,4 +54,12 @@ public class ProductUnitAdapter implements ProductUnitRepositoryPort {
     public void deleteById(UUID id) {
         jpaRepo.deleteById(id);
     }
+
+    @Override
+    public List<ProductUnitModel> findAll() {
+        return jpaRepo.findAll()
+                .stream()
+                .map(mapper::toModel)
+                .toList();
+    }
 }

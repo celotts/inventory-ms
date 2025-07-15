@@ -18,6 +18,7 @@ import java.util.UUID;
 public class ProductUnitEntity {
 
     @Id
+    @GeneratedValue
     private UUID id;
 
     @Column(unique = true, nullable = false)
@@ -25,6 +26,10 @@ public class ProductUnitEntity {
 
     private String name;
     private String description;
+
+    @Column(nullable = false)
+    private String symbol; // ✅ AGREGADO
+
     private Boolean enabled;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

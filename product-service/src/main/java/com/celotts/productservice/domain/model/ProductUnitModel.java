@@ -17,6 +17,7 @@ public class ProductUnitModel {
     private String code;          //  ← NUEVO
     private String name;
     private String description;
+    private String symbol;
     private Boolean enabled;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

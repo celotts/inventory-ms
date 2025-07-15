@@ -29,7 +29,7 @@ public class ProductUnitUseCaseImpl implements ProductUnitUseCase {
     @Transactional(readOnly = true)
     public List<ProductUnitModel> findAll() {     /* tu lógica */
         // p.e. mapear repo.findAllEntities() a Model
-        throw new UnsupportedOperationException();
+        return repo.findAll();
     }
 
     @Override public void deleteById(UUID id){ repo.deleteById(id); }

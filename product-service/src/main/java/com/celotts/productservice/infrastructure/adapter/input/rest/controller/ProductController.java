@@ -19,7 +19,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/v1/products")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "${app.cors.allowed-origin:*}")
 @Slf4j
 @Tag(name = "Product API", description = "API para gestionar productos")
 public class ProductController {
