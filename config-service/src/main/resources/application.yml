@@ -16,22 +16,26 @@ spring:
           default-label: main
           search-paths: config
       fail-fast: true
+
     gateway:
-      - id: product-service
-        uti: lb://product-service
-        predicates:
-          - Path=/product/**
-        filters:
-          - RewritePath=/api/products/(?<path>.*), /$\{pat}
-  eureka:
-    client:
-      service-url:
-        defaultZone: http://discovery-service:8761/eureka/
-      register-with-eureka: true
-      fetch-registry: false
-    instance:
-      prefer-ip-address: true
-      instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+      routes:
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/product/**
+          filters:
+            - RewritePath=/product/(?<path>.*), /${path}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-service:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: false
+
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
 
 management:
   endpoints:
