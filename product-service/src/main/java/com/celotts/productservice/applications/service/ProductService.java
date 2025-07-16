@@ -6,7 +6,7 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductDtoMapper;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
-import com.celotts.productservice.domain.port.product.root.output.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.product.port.output.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
 
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;

@@ -2,7 +2,7 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.advice;
 
 import com.celotts.productservice.infrastructure.adapter.input.rest.controller.ProductController;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
-import com.celotts.productservice.domain.port.product.root.usecase.ProductUseCase;
+import com.celotts.productservice.domain.port.product.port.usecase.ProductUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductResponseMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
