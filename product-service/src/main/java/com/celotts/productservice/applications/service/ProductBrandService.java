@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Service("productBrandService") // Asegúrate de que coincida con tu @Qualifier
+@Service// Asegúrate de que coincida con tu @Qualifier
 @Transactional
 @RequiredArgsConstructor
 @Slf4j
