@@ -3,7 +3,7 @@ package com.celotts.productservice.applications.usecase;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
 import com.celotts.productservice.domain.port.product.brand.output.ProductBrandRepositoryPort;
-import com.celotts.productservice.domain.port.product.root.input.ProductUseCase;
+import com.celotts.productservice.domain.port.product.root.usecase.ProductUseCase;
 import com.celotts.productservice.domain.port.product.root.output.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;

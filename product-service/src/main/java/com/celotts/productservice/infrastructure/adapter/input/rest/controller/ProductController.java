@@ -1,7 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.product.root.input.ProductUseCase;
+import com.celotts.productservice.domain.port.product.root.usecase.ProductUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.*;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductResponseMapper;
 import io.swagger.v3.oas.annotations.Operation;
