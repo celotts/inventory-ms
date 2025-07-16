@@ -1,5 +1,3 @@
-// Crear: src/main/java/com/celotts/productservice/repository/ProductTypeRepository.java
-
 package com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product;
 
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
