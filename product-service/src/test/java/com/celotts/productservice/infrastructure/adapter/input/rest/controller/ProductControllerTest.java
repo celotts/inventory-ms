@@ -45,11 +45,18 @@ class ProductControllerTest {
     }
 
     @Test
-    void getInactiveProducts_shouldReturnOk() throws Exception {
+    void getInactiveProducts_shouldReturnExpectedStatus() throws Exception {
+        // Caso: productos inactivos disponibles
         Mockito.when(productUseCase.getInactiveProducts()).thenReturn(List.of(new ProductModel()));
 
         mockMvc.perform(get("/api/v1/products/inactive"))
                 .andExpect(status().isOk());
+
+        // Caso: sin productos inactivos
+        Mockito.when(productUseCase.getInactiveProducts()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/products/inactive"))
+                .andExpect(status().isNotFound());
     }
 
     @Test

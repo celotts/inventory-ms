@@ -1,18 +1,20 @@
-package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product;
+package com.celotts.productservice.applications.usecase;
 
-import com.celotts.productservice.domain.port.product.type.input.ProductTypePort;
-
+import com.celotts.productservice.domain.port.product.type.usecase.ProductTypeUseCase;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductTypeRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
-@Component
+@Profile("!test") // <- Esta es la clave
+@Service("productTypeUseCaseImpl")
 @RequiredArgsConstructor
-public class ProductTypeAdapter implements ProductTypePort {
+public class ProductTypeUseCaseImpl implements ProductTypeUseCase {
+
     private final ProductTypeRepository productTypeRepository;
 
     @Override

@@ -1,4 +1,4 @@
-package com.celotts.productservice.domain.port.product.type.usecase;
+package com.celotts.productservice.applications.usecase;
 
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
 
@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductTypeUseCase {
+
     boolean existsByCode(String code);
     Optional<String> findNameByCode(String code);
     List<String> findAllCodes();
