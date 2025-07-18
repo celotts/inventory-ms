@@ -1,5 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.advice;
 
+import org.springframework.test.context.ActiveProfiles;
+
 import com.celotts.productservice.infrastructure.adapter.input.rest.controller.ProductController;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
 import com.celotts.productservice.domain.port.product.port.usecase.ProductUseCase;
@@ -20,6 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ActiveProfiles("test")
 class ProductControllerAdviceTest {
 
     private MockMvc mockMvc;

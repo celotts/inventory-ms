@@ -1,5 +1,4 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.exception.GlobalExceptionHandlerTest;
-//import com.celotts.productservice.infrastructure.adapter.input.rest.exception.GlobalExceptionHandler;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;

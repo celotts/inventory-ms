@@ -50,6 +50,9 @@ server:
 app:
   cors:
     allowed-origin: "*"
+eureka:
+  client:
+    enabled: false
 
 logging:
   level:

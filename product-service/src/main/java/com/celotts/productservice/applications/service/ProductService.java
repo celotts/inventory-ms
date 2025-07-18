@@ -13,7 +13,6 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.exception.Pr
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductDtoMapper;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
@@ -27,7 +26,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@RequiredArgsConstructor
 @Service
 @Transactional
 @Slf4j
@@ -35,12 +33,20 @@ public class ProductService implements ProductPort {
 
     private final ProductRepositoryPort repository;
     private final ProductUnitRepositoryPort productUnitPort;
-
-    @Qualifier("productBrandService")
     private final ProductBrandPort productBrandPort;
-
-    @Qualifier("categoryRepositoryAdapter")
     private final CategoryRepositoryPort categoryPort;
+
+    public ProductService(
+        ProductRepositoryPort repository,
+        ProductUnitRepositoryPort productUnitPort,
+        @Qualifier("productBrandService") ProductBrandPort productBrandPort,
+        @Qualifier("categoryRepositoryAdapter") CategoryRepositoryPort categoryPort
+    ) {
+        this.repository = repository;
+        this.productUnitPort = productUnitPort;
+        this.productBrandPort = productBrandPort;
+        this.categoryPort = categoryPort;
+    }
 
     @Override
     public ProductModel create(ProductModel product) {

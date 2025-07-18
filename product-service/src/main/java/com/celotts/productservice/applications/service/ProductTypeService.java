@@ -3,9 +3,9 @@ package com.celotts.productservice.applications.service;
 import com.celotts.productservice.domain.port.product.type.input.ProductTypePort;
 import com.celotts.productservice.domain.port.product.type.usecase.ProductTypeUseCase;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +18,6 @@ import java.util.Optional;
 @Slf4j
 public class ProductTypeService implements ProductTypePort {
 
-    @Qualifier("productTypeUseCaseImpl")
     private final ProductTypeUseCase productTypeUseCase;
 
     @Override
