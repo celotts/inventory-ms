@@ -1,4 +1,4 @@
-package com.celotts.productservice.domain.port.product.root.output;
+package com.celotts.productservice.domain.port.product.port.output;
 
 import com.celotts.productservice.domain.model.ProductModel;
 import org.springframework.data.domain.Page;

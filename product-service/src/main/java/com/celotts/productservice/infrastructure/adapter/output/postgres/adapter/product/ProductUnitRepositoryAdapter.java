@@ -14,7 +14,7 @@ import java.util.UUID;
 
 @Repository
 @RequiredArgsConstructor
-public class ProductUnitAdapter implements ProductUnitRepositoryPort {
+public class ProductUnitRepositoryAdapter implements ProductUnitRepositoryPort {
 
     private final ProductUnitRepository   jpaRepo;
     private final ProductUnitEntityMapper mapper;

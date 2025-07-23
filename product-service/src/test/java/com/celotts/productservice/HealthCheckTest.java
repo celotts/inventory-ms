@@ -2,43 +2,47 @@ package com.celotts.productservice;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+import com.celotts.productservice.domain.port.product.type.usecase.ProductTypeUseCase;
+import com.celotts.productservice.ProductServiceApplication;
+import org.mockito.Mockito;
+
+@SpringBootTest(
+        classes = ProductServiceApplication.class,
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+)
+@Import(HealthCheckTest.MockConfig.class)
 @ActiveProfiles("test")
-@TestPropertySource(properties = {
-        "spring.config.import=optional:classpath:/empty.yml",
-        "spring.cloud.config.enabled=false",
-        "eureka.client.enabled=false"
-})
 class HealthCheckTest {
+
+    @TestConfiguration
+    static class MockConfig {
+        @Bean
+        public ProductTypeUseCase productTypeUseCase() {
+            return Mockito.mock(ProductTypeUseCase.class);
+        }
+    }
 
     @LocalServerPort
     private int port;
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+    private final TestRestTemplate restTemplate = new TestRestTemplate();
 
     @Test
     @DisplayName("Health endpoint debe estar disponible")
     void shouldHaveHealthEndpoint() {
         String url = "http://localhost:" + port + "/actuator/health";
-
-        System.out.println("🏥 Probando health endpoint: " + url);
-
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-
-        System.out.println("✅ Health Status: " + response.getStatusCode());
-        System.out.println("📄 Health Body: " + response.getBody());
-
         assertThat(response.getStatusCode().value()).isLessThan(400);
     }
 }

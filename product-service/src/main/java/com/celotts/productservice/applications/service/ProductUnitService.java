@@ -1,8 +1,8 @@
 package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.model.ProductUnitModel;     // caso de uso
-import com.celotts.productservice.domain.port.product.brand.input.ProductUnitPort;
-import com.celotts.productservice.domain.port.product.unit.input.ProductUnitUseCase;
+import com.celotts.productservice.domain.port.product.unit.input.ProductUnitPort;
+import com.celotts.productservice.domain.port.product.unit.usecase.ProductUnitUseCase;
 import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.*;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productUnit.ProductUnitDtoMapper;
@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Service("productUnitService")
+@Service
 @Transactional
 @RequiredArgsConstructor
 @Slf4j
