@@ -1,4 +1,4 @@
-package com.celotts.productservice.domain.port.product.unit.input;
+package com.celotts.productservice.domain.port.product.unit.usecase;
 
 import com.celotts.productservice.domain.model.ProductUnitModel;
 

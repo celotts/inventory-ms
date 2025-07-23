@@ -1,8 +1,10 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.advice;
 
+import org.springframework.test.context.ActiveProfiles;
+
 import com.celotts.productservice.infrastructure.adapter.input.rest.controller.ProductController;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
-import com.celotts.productservice.domain.port.product.root.input.ProductUseCase;
+import com.celotts.productservice.domain.port.product.port.usecase.ProductUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductResponseMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +19,10 @@ import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ActiveProfiles("test")
 class ProductControllerAdviceTest {
 
     private MockMvc mockMvc;
@@ -46,9 +51,9 @@ class ProductControllerAdviceTest {
         MvcResult result = mockMvc.perform(patch("/api/v1/products/{id}/enable", id)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                // 👇 Temporalmente comenta los assertions para ver el body real
-                // .andExpect(status().isNotFound())
-                // .andExpect(jsonPath(...))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value("Producto con ID " + id + " no encontrado"))
                 .andReturn();
 
         String responseBody = result.getResponse().getContentAsString();
@@ -63,14 +68,13 @@ class ProductControllerAdviceTest {
         Mockito.when(productUseCase.enableProduct(id))
                 .thenThrow(new RuntimeException("Unexpected error"));
 
-        MvcResult result = mockMvc.perform(patch("/api/v1/products/{id}/enable", id)
+        mockMvc.perform(patch("/api/v1/products/{id}/enable", id)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                // .andExpect(status().isInternalServerError())
-                .andReturn();
-
-        String responseBody = result.getResponse().getContentAsString();
-        System.out.println("\n🚀 RESPONSE BODY 500:\n" + responseBody + "\n");
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.message").value("Unexpected error"))
+                .andExpect(jsonPath("$.path").value("/api/v1/products/" + id + "/enable"));
     }
 
 

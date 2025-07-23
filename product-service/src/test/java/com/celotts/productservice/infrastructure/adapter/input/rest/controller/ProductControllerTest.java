@@ -1,8 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.product.root.input.ProductUseCase;
-import com.celotts.productservice.infrastructure.adapter.input.rest.controller.ProductController;
+import com.celotts.productservice.domain.port.product.port.usecase.ProductUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductResponseMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,11 +45,18 @@ class ProductControllerTest {
     }
 
     @Test
-    void getInactiveProducts_shouldReturnOk() throws Exception {
+    void getInactiveProducts_shouldReturnExpectedStatus() throws Exception {
+        // Caso: productos inactivos disponibles
         Mockito.when(productUseCase.getInactiveProducts()).thenReturn(List.of(new ProductModel()));
 
         mockMvc.perform(get("/api/v1/products/inactive"))
                 .andExpect(status().isOk());
+
+        // Caso: sin productos inactivos
+        Mockito.when(productUseCase.getInactiveProducts()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/products/inactive"))
+                .andExpect(status().isNotFound());
     }
 
     @Test

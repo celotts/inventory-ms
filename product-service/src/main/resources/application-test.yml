@@ -4,6 +4,8 @@
 spring:
   application:
     name: product-service
+  security:
+    enabled: false
 
   # H2 Database
   datasource:
@@ -35,3 +37,21 @@ logging:
     com.celotts.productservice: DEBUG
     org.springframework.security: DEBUG
     root: INFO
+
+app:
+  product-type:
+    service:
+      enabled: true
+    use-case:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+  security:
+    enabled: false

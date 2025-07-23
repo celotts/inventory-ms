@@ -1,4 +1,4 @@
-package com.celotts.productservice.domain.port.product.root.input;
+package com.celotts.productservice.domain.port.product.port.usecase;
 
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;

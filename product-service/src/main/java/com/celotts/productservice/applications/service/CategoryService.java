@@ -1,9 +1,11 @@
 package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.model.CategoryModel;
-import com.celotts.productservice.domain.port.category.input.CategoryUseCase;
+import com.celotts.productservice.domain.port.category.usecase.CategoryUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatsDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category.CategoryRequestMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -16,6 +18,7 @@ import java.util.*;
 
 @Service
 @Transactional
+@Slf4j
 public class CategoryService {
 
     private final CategoryUseCase categoryUseCase;

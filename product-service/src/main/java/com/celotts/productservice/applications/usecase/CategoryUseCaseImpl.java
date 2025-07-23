@@ -2,7 +2,7 @@ package com.celotts.productservice.applications.usecase;
 
 import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
-import com.celotts.productservice.domain.port.category.input.CategoryUseCase;
+import com.celotts.productservice.domain.port.category.usecase.CategoryUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatsDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
