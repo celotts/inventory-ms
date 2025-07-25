@@ -35,6 +35,10 @@ public class ProductResponseMapper {
                 .build();
     }
 
+    public ProductResponseDto toResponseDto(ProductModel model) {
+        return toDto(model);
+    }
+
     public ProductResponseDto toDtoWithCategoryName(ProductModel model, String categoryName) {
         if (model == null) return null;
 

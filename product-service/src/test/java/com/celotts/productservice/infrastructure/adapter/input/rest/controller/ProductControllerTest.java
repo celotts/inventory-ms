@@ -2,6 +2,7 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.product.port.usecase.ProductUseCase;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductResponseMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,40 +77,116 @@ class ProductControllerTest {
                 .andExpect(status().isNoContent());
     }
 
-    @Test
+    /*@Test
     void getProductsByCategory_shouldReturnOk() throws Exception {
         Mockito.when(productUseCase.getProductsByCategory(Mockito.any()))
                 .thenReturn(List.of(new ProductModel()));
 
         mockMvc.perform(get("/api/v1/products/category/" + UUID.randomUUID()))
                 .andExpect(status().isOk());
+    } */
+
+    @Test
+    void getProductsByCategory_shouldReturnOk() throws Exception {
+        UUID categoryId = UUID.randomUUID();
+        ProductModel product = ProductModel.builder()
+                .id(UUID.randomUUID())
+                .code("CODE1")
+                .name("Product 1")
+                .enabled(true)
+                .build();
+
+        ProductResponseDto dto = ProductResponseDto.builder()
+                .id(product.getId())
+                .code(product.getCode())
+                .name(product.getName())
+                .enabled(true)
+                .build();
+
+        Mockito.when(productUseCase.getProductsByCategory(categoryId)).thenReturn(List.of(product));
+        Mockito.when(responseMapper.toResponseDtoList(List.of(product))).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/v1/products/category/" + categoryId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].code").value("CODE1"))
+                .andExpect(jsonPath("$[0].enabled").value(true));
     }
 
     @Test
     void getLowStockByCategory_shouldReturnOk() throws Exception {
-        Mockito.when(productUseCase.getLowStockByCategory(Mockito.any()))
-                .thenReturn(List.of(new ProductModel()));
+        UUID categoryId = UUID.randomUUID();
+        ProductModel product = ProductModel.builder()
+                .id(UUID.randomUUID())
+                .code("LOW1")
+                .currentStock(2)
+                .minimumStock(5)
+                .build();
 
-        mockMvc.perform(get("/api/v1/products/category/" + UUID.randomUUID() + "/low-stock"))
-                .andExpect(status().isOk());
+        ProductResponseDto dto = ProductResponseDto.builder()
+                .id(product.getId())
+                .code(product.getCode())
+                .currentStock(2)
+                .minimumStock(5)
+                .build();
+
+        Mockito.when(productUseCase.getLowStockByCategory(categoryId)).thenReturn(List.of(product));
+        Mockito.when(responseMapper.toResponseDtoList(List.of(product))).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/v1/products/category/" + categoryId + "/low-stock"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].code").value("LOW1"))
+                .andExpect(jsonPath("$[0].currentStock").value(2))
+                .andExpect(jsonPath("$[0].minimumStock").value(5));
     }
 
     @Test
     void getLowStockProducts_shouldReturnOk() throws Exception {
-        Mockito.when(productUseCase.getLowStockProducts())
-                .thenReturn(List.of(new ProductModel()));
+        ProductModel product = ProductModel.builder()
+                .id(UUID.randomUUID())
+                .code("LOW2")
+                .currentStock(1)
+                .minimumStock(4)
+                .build();
+
+        ProductResponseDto dto = ProductResponseDto.builder()
+                .id(product.getId())
+                .code(product.getCode())
+                .currentStock(1)
+                .minimumStock(4)
+                .build();
+
+        Mockito.when(productUseCase.getLowStockProducts()).thenReturn(List.of(product));
+        Mockito.when(responseMapper.toResponseDtoList(List.of(product))).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/api/v1/products/low-stock"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].code").value("LOW2"))
+                .andExpect(jsonPath("$[0].currentStock").value(1));
     }
 
     @Test
     void getProductsByBrand_shouldReturnOk() throws Exception {
-        Mockito.when(productUseCase.getProductsByBrand(Mockito.any()))
-                .thenReturn(List.of(new ProductModel()));
+        UUID brandId = UUID.randomUUID();
+        ProductModel product = ProductModel.builder()
+                .id(UUID.randomUUID())
+                .code("BRAND1")
+                .name("Brand Product")
+                .build();
 
-        mockMvc.perform(get("/api/v1/products/brand/" + UUID.randomUUID()))
-                .andExpect(status().isOk());
+        ProductResponseDto dto = ProductResponseDto.builder()
+                .id(product.getId())
+                .code("BRAND1")
+                .name("Brand Product")
+                .build();
+
+        Mockito.when(productUseCase.getProductsByBrand(brandId)).thenReturn(List.of(product));
+        Mockito.when(responseMapper.toResponseDtoList(List.of(product))).thenReturn(List.of(dto));
+
+        mockMvc.perform(get("/api/v1/products/brand/" + brandId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].code").value("BRAND1"))
+                .andExpect(jsonPath("$[0].name").value("Brand Product"));
     }
 
     @Test
@@ -157,10 +234,24 @@ class ProductControllerTest {
 
     @Test
     void getProductByCode_shouldReturnOk() throws Exception {
-        Mockito.when(productUseCase.getProductByCode("CODE123"))
-                .thenReturn(ProductModel.builder().code("CODE123").build());
+        ProductModel product = ProductModel.builder()
+                .id(UUID.randomUUID())
+                .code("CODE123")
+                .name("Product X")
+                .build();
+
+        ProductResponseDto dto = ProductResponseDto.builder()
+                .id(product.getId())
+                .code("CODE123")
+                .name("Product X")
+                .build();
+
+        Mockito.when(productUseCase.getProductByCode("CODE123")).thenReturn(product);
+        Mockito.when(responseMapper.toResponseDto(product)).thenReturn(dto);
 
         mockMvc.perform(get("/api/v1/products/code/CODE123"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("CODE123"))
+                .andExpect(jsonPath("$.name").value("Product X"));
     }
 }

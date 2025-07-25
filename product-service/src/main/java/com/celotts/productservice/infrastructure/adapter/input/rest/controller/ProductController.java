@@ -202,7 +202,15 @@ public class ProductController {
     @GetMapping("/code/{code}")
     @Operation(summary = "Obtener producto por código", description = "Consulta un producto por su código")
     public ResponseEntity<ProductResponseDto> getProductByCode(@PathVariable String code) {
+        if (code == null || code.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+
         ProductModel product = productUseCase.getProductByCode(code);
-        return ResponseEntity.ok(responseMapper.toDto(product));
+        if (product == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(responseMapper.toResponseDto(product));
     }
 }
