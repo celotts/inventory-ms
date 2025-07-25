@@ -203,14 +203,12 @@ public class ProductController {
     @Operation(summary = "Obtener producto por código", description = "Consulta un producto por su código")
     public ResponseEntity<ProductResponseDto> getProductByCode(@PathVariable String code) {
         if (code == null || code.isBlank()) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
         ProductModel product = productUseCase.getProductByCode(code);
-        if (product == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(responseMapper.toResponseDto(product));
+        return (product == null)
+                ? ResponseEntity.status(HttpStatus.NOT_FOUND).build()
+                : ResponseEntity.ok(responseMapper.toResponseDto(product));
     }
 }

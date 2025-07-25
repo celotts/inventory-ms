@@ -23,7 +23,8 @@ public interface ProductUseCase {
 
     // --- Activación / Estado ---
     ProductModel enableProduct(UUID id);
-    void disableProduct(UUID id);
+    //void disableProduct(UUID id);
+    ProductModel disableProduct(UUID id);
     ProductModel updateStock(UUID id, int stock);
 
     // --- Consultas ---
@@ -35,6 +36,7 @@ public interface ProductUseCase {
     List<ProductModel> getLowStockByCategory(UUID categoryId);
     List<ProductModel> getLowStockProducts();
     List<ProductModel> getProductsByBrand(UUID brandId);
+    List<ProductModel> getAll();
 
     // --- Métricas ---
     long countProducts();
@@ -42,6 +44,8 @@ public interface ProductUseCase {
 
     // --- Utilidades ---
     Optional<String> validateUnitCode(String code);
+    boolean existsById(UUID id);
+    boolean existsByCode(String code);
 
 
 }
