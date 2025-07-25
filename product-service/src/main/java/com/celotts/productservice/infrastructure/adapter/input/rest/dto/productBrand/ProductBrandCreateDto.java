@@ -26,5 +26,6 @@ public class ProductBrandCreateDto {
     private String createdBy;
 
     // Opcional al crear — sin @NotBlank
+    @NotBlank(message = "updatedBy is required")
     private String updatedBy;
 }

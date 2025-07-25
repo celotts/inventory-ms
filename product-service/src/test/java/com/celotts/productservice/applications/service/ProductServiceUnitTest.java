@@ -1,17 +1,23 @@
 package com.celotts.productservice.applications.service;
 
+import com.celotts.productservice.applications.usecase.ProductUseCaseImpl;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
 import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
 import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
 import com.celotts.productservice.domain.port.product.port.output.ProductRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;
+import com.celotts.productservice.domain.port.product.port.usecase.ProductUseCase;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -38,15 +44,19 @@ class ProductServiceUnitTest {
     @Mock
     private CategoryRepositoryPort categoryRepositoryPort;
 
-    private ProductService productService;
+    private ProductUseCase productService;
+
+    @Mock
+    private ProductRequestMapper productRequestMapper;
 
     @BeforeEach
     void setUp() {
-        productService = new ProductService(
+        productService = new ProductUseCaseImpl(
                 productRepositoryPort,
                 productUnitPort,
                 productBrandPort,
-                categoryRepositoryPort
+                categoryRepositoryPort,
+                productRequestMapper
         );
     }
 
@@ -55,32 +65,35 @@ class ProductServiceUnitTest {
         UUID brandId = UUID.randomUUID();
         UUID categoryId = UUID.randomUUID();
 
-        ProductRequestDto dto = new ProductRequestDto();
-        dto.setCode("NEW001");
-        dto.setName("New Product");
-        dto.setCreatedBy("admin");
-        dto.setUnitCode("UNIT01");
-        dto.setBrandId(brandId);
-        dto.setCategoryId(categoryId);
-        dto.setMinimumStock(10);
-        dto.setCurrentStock(50);
-        dto.setUnitPrice(BigDecimal.valueOf(29.99));
-        dto.setEnabled(true);
+
+        ProductCreateDto dto = ProductCreateDto.builder()
+                .code("NEW001")
+                .name("New Product")
+                .createdBy("admin")
+                .unitCode("UNIT01")
+                .brandId(brandId)
+                .categoryId(categoryId)
+                .minimumStock(10)
+                .currentStock(50)
+                .unitPrice(BigDecimal.valueOf(29.99))
+                .enabled(true)
+                .build();
+
+        ProductModel productModelMock = ProductModel.builder()
+                .id(UUID.randomUUID())
+                .code(dto.getCode())
+                .name(dto.getName())
+                .unitCode(dto.getUnitCode())
+                .brandId(dto.getBrandId())
+                .categoryId(dto.getCategoryId())
+                .build();
 
         when(productRepositoryPort.findByCode(dto.getCode())).thenReturn(Optional.empty());
         when(productUnitPort.existsByCode("UNIT01")).thenReturn(true);
         when(productBrandPort.existsById(brandId)).thenReturn(true);
         when(categoryRepositoryPort.existsById(categoryId)).thenReturn(true);
-        when(productRepositoryPort.save(any(ProductModel.class))).thenReturn(
-                ProductModel.builder()
-                        .id(UUID.randomUUID())
-                        .code(dto.getCode())
-                        .name(dto.getName())
-                        .unitCode(dto.getUnitCode())
-                        .brandId(dto.getBrandId())
-                        .categoryId(dto.getCategoryId())
-                        .build()
-        );
+        when(productRequestMapper.toModel(any(ProductCreateDto.class))).thenReturn(productModelMock);
+        when(productRepositoryPort.save(any(ProductModel.class))).thenReturn(productModelMock);
 
         ProductModel result = productService.createProduct(dto);
 
@@ -95,13 +108,18 @@ class ProductServiceUnitTest {
 
     @Test
     void createProduct_shouldThrowProductAlreadyExistsExceptionWhenCodeAlreadyExists() {
-        ProductRequestDto dto = new ProductRequestDto();
-        dto.setCode("EXISTING_CODE");
-        dto.setName("New Product");
-        dto.setCreatedBy("admin");
-        dto.setUnitCode("UNIT01");
-        dto.setBrandId(UUID.randomUUID());
-        dto.setCategoryId(UUID.randomUUID());
+        ProductCreateDto dto = ProductCreateDto.builder()
+                .code("EXISTING_CODE")
+                .name("New Product")
+                .createdBy("admin")
+                .unitCode("UNIT01")
+                .brandId(UUID.randomUUID())
+                .categoryId(UUID.randomUUID())
+                .minimumStock(10)
+                .currentStock(50)
+                .unitPrice(BigDecimal.valueOf(99.99))
+                .enabled(true)
+                .build();
 
         ProductModel existingProduct = ProductModel.builder()
                 .id(UUID.randomUUID())
@@ -126,11 +144,11 @@ class ProductServiceUnitTest {
 
         when(productRepositoryPort.findById(nonExistentId)).thenReturn(Optional.empty());
 
-        ProductRequestDto dto = new ProductRequestDto();
+        ProductUpdateDto dto = ProductUpdateDto.builder().build();
         dto.setCode("NEWCODE999");
 
         ProductNotFoundException exception = assertThrows(ProductNotFoundException.class, () -> {
-            productService.updateProduct(nonExistentId,dto);
+            productService.updateProduct(nonExistentId, dto);
         });
 
         assertTrue(exception.getMessage().contains(nonExistentId.toString()));
@@ -153,24 +171,71 @@ class ProductServiceUnitTest {
                 .createdBy("tester")
                 .build();
 
-        ProductRequestDto dto = new ProductRequestDto();
-        dto.setCode("UPDATEDCODE");
-        dto.setName("Updated Name");
-        dto.setUnitCode("UNIT01");
-        dto.setBrandId(existingProduct.getBrandId());
-        dto.setCategoryId(existingProduct.getCategoryId());
-
+        ProductUpdateDto dto = ProductUpdateDto.builder()
+                .code("UPDATEDCODE")
+                .name("Updated Name")
+                .unitCode("UNIT01")
+                .brandId(existingProduct.getBrandId())
+                .categoryId(existingProduct.getCategoryId())
+                .build();
+        dto.setUpdatedBy("test-user");
         when(productRepositoryPort.findById(productId)).thenReturn(Optional.of(existingProduct));
         when(productUnitPort.existsByCode("UNIT01")).thenReturn(true);
         when(productBrandPort.existsById(existingProduct.getBrandId())).thenReturn(true);
         when(categoryRepositoryPort.existsById(existingProduct.getCategoryId())).thenReturn(true);
+
+        ProductModel updatedProduct = ProductModel.builder()
+                .id(productId)
+                .code(dto.getCode())
+                .name(dto.getName())
+                .unitCode(dto.getUnitCode())
+                .brandId(dto.getBrandId())
+                .categoryId(dto.getCategoryId())
+                .createdAt(existingProduct.getCreatedAt())
+                .createdBy(existingProduct.getCreatedBy())
+                .updatedAt(LocalDateTime.now())
+                .updatedBy(dto.getUpdatedBy()) // ← cambia aquí
+                .build();
+
+        doAnswer(invocation -> {
+            ProductModel target = invocation.getArgument(0);
+            ProductUpdateDto source = invocation.getArgument(1);
+
+            target.setCode(source.getCode());
+            target.setName(source.getName());
+            target.setUnitCode(source.getUnitCode());
+            target.setBrandId(source.getBrandId());
+            target.setCategoryId(source.getCategoryId());
+            target.setUpdatedBy(source.getUpdatedBy());
+            target.setUpdatedAt(LocalDateTime.now());
+
+            return null;
+        }).when(productRequestMapper).updateModelFromDto(any(ProductModel.class), any(ProductUpdateDto.class));
+
+        System.out.println("DTO enviado updatedBy: " + dto.getUpdatedBy());
+
         when(productRepositoryPort.save(any(ProductModel.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ProductModel result = productService.updateProduct(productId, dto);
 
         assertNotNull(result);
-        assertEquals(dto.getCode(), result.getCode());
-        assertEquals(dto.getName(), result.getName());
-        verify(productRepositoryPort).save(any(ProductModel.class));
+
+        ArgumentCaptor<ProductModel> captor = ArgumentCaptor.forClass(ProductModel.class);
+        verify(productRepositoryPort).save(captor.capture());
+
+        ProductModel savedProduct = captor.getValue();
+        assertEquals(dto.getCode(), savedProduct.getCode());
+        assertEquals(dto.getName(), savedProduct.getName());
+        assertEquals(dto.getUnitCode(), savedProduct.getUnitCode());
+        assertEquals(dto.getBrandId(), savedProduct.getBrandId());
+        assertEquals(dto.getCategoryId(), savedProduct.getCategoryId());
+        assertEquals(existingProduct.getCreatedAt(), savedProduct.getCreatedAt());
+        assertEquals(existingProduct.getCreatedBy(), savedProduct.getCreatedBy());
+        assertNotNull(savedProduct.getUpdatedAt(), "El campo updatedAt no debe ser null");
+        System.out.println("DEBUG - Valor actual de updatedBy: " + savedProduct.getUpdatedBy());
+        System.out.println(">>> updatedBy actual: " + savedProduct.getUpdatedBy());
+        System.out.println("Valor esperado: " + dto.getUpdatedBy());
+        System.out.println("Valor actual: " + savedProduct.getUpdatedBy());
+        assertEquals("test-user", savedProduct.getUpdatedBy(), "El campo updatedBy no coincide");
     }
 }

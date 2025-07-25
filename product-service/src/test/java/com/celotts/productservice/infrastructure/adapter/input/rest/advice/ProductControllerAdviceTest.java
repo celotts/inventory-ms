@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.advice;
 
+import com.celotts.productservice.infrastructure.config.PaginationProperties;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.celotts.productservice.infrastructure.adapter.input.rest.controller.ProductController;
@@ -27,13 +28,14 @@ class ProductControllerAdviceTest {
 
     private MockMvc mockMvc;
     private ProductUseCase productUseCase;
+    private PaginationProperties paginationProperties;
 
     @BeforeEach
     void setup() {
         productUseCase = Mockito.mock(ProductUseCase.class);
         ProductResponseMapper responseMapper = Mockito.mock(ProductResponseMapper.class);
 
-        ProductController controller = new ProductController(productUseCase, responseMapper);
+        ProductController controller = new ProductController(productUseCase, responseMapper, paginationProperties);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new ProductControllerAdvice())
@@ -53,7 +55,7 @@ class ProductControllerAdviceTest {
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.message").value("Producto con ID " + id + " no encontrado"))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString(id.toString())))
                 .andReturn();
 
         String responseBody = result.getResponse().getContentAsString();

@@ -1,6 +1,5 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.repository.category;
 
-import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.category.CategoryEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

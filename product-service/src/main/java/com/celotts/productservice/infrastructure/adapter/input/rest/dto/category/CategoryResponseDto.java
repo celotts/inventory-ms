@@ -15,7 +15,7 @@ public class CategoryResponseDto {
     private UUID id;
     private String name;
     private String description;
-    private Boolean active;
+    private Boolean active; // Enabled
     private String createdBy;
     private String updatedBy;
     private LocalDateTime createdAt;
