@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
+
+@Component
 public class ProductRequestMapper {
 
     public void updateModelFromDto(ProductModel existingModel, @Valid ProductUpdateDto dto) {

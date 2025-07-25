@@ -2,36 +2,19 @@ package com.celotts.productservice;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.ResponseEntity;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.http.ResponseEntity;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import com.celotts.productservice.domain.port.product.type.usecase.ProductTypeUseCase;
-import com.celotts.productservice.ProductServiceApplication;
-import org.mockito.Mockito;
-
-@SpringBootTest(
-        classes = ProductServiceApplication.class,
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
-)
-@Import(HealthCheckTest.MockConfig.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 class HealthCheckTest {
-
-    @TestConfiguration
-    static class MockConfig {
-        @Bean
-        public ProductTypeUseCase productTypeUseCase() {
-            return Mockito.mock(ProductTypeUseCase.class);
-        }
-    }
 
     @LocalServerPort
     private int port;
@@ -44,5 +27,14 @@ class HealthCheckTest {
         String url = "http://localhost:" + port + "/actuator/health";
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
         assertThat(response.getStatusCode().value()).isLessThan(400);
+    }
+
+    /**
+     * Configuración mínima para evitar carga de beans innecesarios.
+     */
+    @Configuration
+    @EnableAutoConfiguration
+    static class MinimalTestConfig {
+        // No se declara ningún bean. Solo carga lo básico.
     }
 }

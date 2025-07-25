@@ -15,6 +15,7 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.produ
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -63,6 +64,7 @@ class ProductServiceUnitTest {
     void createProduct_shouldCreateProductSuccessfully() {
         UUID brandId = UUID.randomUUID();
         UUID categoryId = UUID.randomUUID();
+
 
         ProductCreateDto dto = ProductCreateDto.builder()
                 .code("NEW001")
@@ -176,19 +178,64 @@ class ProductServiceUnitTest {
                 .brandId(existingProduct.getBrandId())
                 .categoryId(existingProduct.getCategoryId())
                 .build();
-
+        dto.setUpdatedBy("test-user");
         when(productRepositoryPort.findById(productId)).thenReturn(Optional.of(existingProduct));
         when(productUnitPort.existsByCode("UNIT01")).thenReturn(true);
         when(productBrandPort.existsById(existingProduct.getBrandId())).thenReturn(true);
         when(categoryRepositoryPort.existsById(existingProduct.getCategoryId())).thenReturn(true);
-        when(productRequestMapper.toModel((ProductUpdateDto) any())).thenReturn(existingProduct);
+
+        ProductModel updatedProduct = ProductModel.builder()
+                .id(productId)
+                .code(dto.getCode())
+                .name(dto.getName())
+                .unitCode(dto.getUnitCode())
+                .brandId(dto.getBrandId())
+                .categoryId(dto.getCategoryId())
+                .createdAt(existingProduct.getCreatedAt())
+                .createdBy(existingProduct.getCreatedBy())
+                .updatedAt(LocalDateTime.now())
+                .updatedBy(dto.getUpdatedBy()) // ← cambia aquí
+                .build();
+
+        doAnswer(invocation -> {
+            ProductModel target = invocation.getArgument(0);
+            ProductUpdateDto source = invocation.getArgument(1);
+
+            target.setCode(source.getCode());
+            target.setName(source.getName());
+            target.setUnitCode(source.getUnitCode());
+            target.setBrandId(source.getBrandId());
+            target.setCategoryId(source.getCategoryId());
+            target.setUpdatedBy(source.getUpdatedBy());
+            target.setUpdatedAt(LocalDateTime.now());
+
+            return null;
+        }).when(productRequestMapper).updateModelFromDto(any(ProductModel.class), any(ProductUpdateDto.class));
+
+        System.out.println("DTO enviado updatedBy: " + dto.getUpdatedBy());
+
         when(productRepositoryPort.save(any(ProductModel.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ProductModel result = productService.updateProduct(productId, dto);
 
         assertNotNull(result);
-        assertEquals(dto.getCode(), result.getCode());
-        assertEquals(dto.getName(), result.getName());
-        verify(productRepositoryPort).save(any(ProductModel.class));
+
+        ArgumentCaptor<ProductModel> captor = ArgumentCaptor.forClass(ProductModel.class);
+        verify(productRepositoryPort).save(captor.capture());
+
+        ProductModel savedProduct = captor.getValue();
+        assertEquals(dto.getCode(), savedProduct.getCode());
+        assertEquals(dto.getName(), savedProduct.getName());
+        assertEquals(dto.getUnitCode(), savedProduct.getUnitCode());
+        assertEquals(dto.getBrandId(), savedProduct.getBrandId());
+        assertEquals(dto.getCategoryId(), savedProduct.getCategoryId());
+        assertEquals(existingProduct.getCreatedAt(), savedProduct.getCreatedAt());
+        assertEquals(existingProduct.getCreatedBy(), savedProduct.getCreatedBy());
+        assertNotNull(savedProduct.getUpdatedAt(), "El campo updatedAt no debe ser null");
+        System.out.println("DEBUG - Valor actual de updatedBy: " + savedProduct.getUpdatedBy());
+        System.out.println(">>> updatedBy actual: " + savedProduct.getUpdatedBy());
+        System.out.println("Valor esperado: " + dto.getUpdatedBy());
+        System.out.println("Valor actual: " + savedProduct.getUpdatedBy());
+        assertEquals("test-user", savedProduct.getUpdatedBy(), "El campo updatedBy no coincide");
     }
 }
