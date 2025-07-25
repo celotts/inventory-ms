@@ -36,5 +36,5 @@ public class ProductResponseDto {
     private String updatedBy;
 
     // Campo calculado
-    private Boolean lowStock;
+    private Boolean lowStock;  // ✅ Usa getLowStock()
 }

@@ -5,30 +5,26 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productB
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrandEntity;
 import org.springframework.stereotype.Component;
 
-@Component
+@Component("productBrandEntityMapper")
 public class ProductBrandEntityMapper {
 
-    public ProductBrandEntity toEntity(ProductBrandModel productBrandModel) {
-        if (productBrandModel == null) {
-            return null;
-        }
+    public ProductBrandEntity toEntity(ProductBrandModel model) {
+        if (model == null) return null;
 
         return ProductBrandEntity.builder()
-                .id(productBrandModel.getId())
-                .name(productBrandModel.getName())
-                .description(productBrandModel.getDescription())
-                .enabled(productBrandModel.getEnabled())
-                .createdBy(productBrandModel.getCreatedBy())
-                .updatedBy(productBrandModel.getUpdatedBy())
-                .createdAt(productBrandModel.getCreatedAt())
-                .updatedAt(productBrandModel.getUpdatedAt())
+                .id(model.getId())
+                .name(model.getName())
+                .description(model.getDescription())
+                .enabled(model.getEnabled())
+                .createdBy(model.getCreatedBy())
+                .updatedBy(model.getUpdatedBy())
+                .createdAt(model.getCreatedAt())
+                .updatedAt(model.getUpdatedAt())
                 .build();
     }
 
-    public ProductBrandModel toModel(ProductBrandEntity entity) { // ✅ Cambiar ProductBrandEntity por ProductBrand
-        if (entity == null) {
-            return null;
-        }
+    public ProductBrandModel toModel(ProductBrandEntity entity) {
+        if (entity == null) return null;
 
         return ProductBrandModel.builder()
                 .id(entity.getId())
@@ -43,9 +39,7 @@ public class ProductBrandEntityMapper {
     }
 
     public ProductBrandResponseDto toResponseDto(ProductBrandEntity entity) {
-        if (entity == null) {
-            return null;
-        }
+        if (entity == null) return null;
 
         return ProductBrandResponseDto.builder()
                 .id(entity.getId())
