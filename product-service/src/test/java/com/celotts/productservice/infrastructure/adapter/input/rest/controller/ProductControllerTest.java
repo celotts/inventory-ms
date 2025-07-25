@@ -45,18 +45,35 @@ class ProductControllerTest {
     }
 
     @Test
-    void getInactiveProducts_shouldReturnExpectedStatus() throws Exception {
-        // Caso: productos inactivos disponibles
-        Mockito.when(productUseCase.getInactiveProducts()).thenReturn(List.of(new ProductModel()));
+    void getInactiveProducts_shouldReturn200WhenProductsExist() throws Exception {
+        ProductModel mockProduct = new ProductModel();
+        com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto mockDto =
+                com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto.builder()
+                        .id(UUID.randomUUID())
+                        .code("P001")
+                        .name("Mock Product")
+                        .description("Mock Description")
+                        .enabled(false)
+                        .currentStock(0)
+                        .minimumStock(5)
+                        .unitPrice(java.math.BigDecimal.valueOf(99.99))
+                        .createdAt(java.time.LocalDateTime.now())
+                        .updatedAt(java.time.LocalDateTime.now())
+                        .build();
+
+        Mockito.when(productUseCase.getInactiveProducts()).thenReturn(List.of(mockProduct));
+        Mockito.when(responseMapper.toResponseDtoList(List.of(mockProduct))).thenReturn(List.of(mockDto));
 
         mockMvc.perform(get("/api/v1/products/inactive"))
                 .andExpect(status().isOk());
+    }
 
-        // Caso: sin productos inactivos
+    @Test
+    void getInactiveProducts_shouldReturn204WhenNoProductsExist() throws Exception {
         Mockito.when(productUseCase.getInactiveProducts()).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/products/inactive"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNoContent());
     }
 
     @Test

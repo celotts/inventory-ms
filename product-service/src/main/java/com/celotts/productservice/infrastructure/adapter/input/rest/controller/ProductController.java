@@ -121,10 +121,20 @@ public class ProductController {
     @GetMapping("/inactive")
     @Operation(summary = "Obtener productos inactivos", description = "Lista los productos deshabilitados")
     public ResponseEntity<List<ProductResponseDto>> getInactiveProducts() {
-        List<ProductResponseDto> response = responseMapper.toResponseDtoList(
-                productUseCase.getInactiveProducts()
-        );
-        return ResponseEntity.ok(response);
+        try {
+            List<ProductResponseDto> response = responseMapper.toResponseDtoList(
+                    productUseCase.getInactiveProducts()
+            );
+
+            if (response.isEmpty()) {
+                return ResponseEntity.noContent().build(); // 204 No Content
+            }
+
+            return ResponseEntity.ok(response); // 200 OK
+        } catch (Exception e) {
+            log.error("Error al obtener productos inactivos", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500
+        }
     }
 
     @GetMapping("/category/{categoryId}")

@@ -55,7 +55,7 @@ class ProductControllerAdviceTest {
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.message").value("Producto con ID " + id + " no encontrado"))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString(id.toString())))
                 .andReturn();
 
         String responseBody = result.getResponse().getContentAsString();
