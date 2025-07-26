@@ -233,6 +233,16 @@ class ProductControllerTest {
     }
 
     @Test
+    void updateStock_shouldReturnBadRequest_whenInvalidStockValue() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        mockMvc.perform(patch("/api/v1/products/" + id + "/stock")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("\"invalid\"")) // sin comillas, causa error de deserialización
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void getProductByCode_shouldReturnOk() throws Exception {
         ProductModel product = ProductModel.builder()
                 .id(UUID.randomUUID())
