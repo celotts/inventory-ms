@@ -2,17 +2,19 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.entity
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
-@Table(name = "category")
+@Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "category")
 public class CategoryEntity {
 
     @Id
@@ -24,6 +26,7 @@ public class CategoryEntity {
 
     private String description;
 
+    @Builder.Default
     @Column(name = "active")
     private Boolean active = Boolean.TRUE;
 
