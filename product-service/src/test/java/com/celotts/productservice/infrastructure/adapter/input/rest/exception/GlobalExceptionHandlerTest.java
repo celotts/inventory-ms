@@ -36,7 +36,6 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.message", containsString("Ya existe un producto con el código")));
     }
 
-
     @Test
     void handleInvalidBrandIdException() throws Exception {
         UUID id = UUID.randomUUID();
@@ -53,6 +52,7 @@ class GlobalExceptionHandlerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Este argumento no es válido"));
     }
+
 
     @Test
     void handleGlobalException() throws Exception {
