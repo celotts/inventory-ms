@@ -45,7 +45,7 @@ public class TestDummyController {
 
     @GetMapping("/data-integrity-violation")
     public void throwDataIntegrityViolation() {
-        throw new DataIntegrityViolationException("violates foreign key constraint on brand");
+        throw new DataIntegrityViolationException("violates foreign key constraint \"fk_product_brand\"");
     }
 
     @GetMapping("/global-exception")
