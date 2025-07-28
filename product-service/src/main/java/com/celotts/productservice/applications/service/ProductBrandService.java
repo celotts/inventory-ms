@@ -39,13 +39,13 @@ public class ProductBrandService implements ProductBrandPort {
         model.setCreatedBy(createDto.getCreatedBy());
 
         ProductBrandModel saved = productBrandUseCase.save(model);
-        return ProductBrandDtoMapper.toResponseDto(saved);
+        return dtoMapper.toResponseDto(saved);
     }
 
     @Transactional(readOnly = true)
     public List<ProductBrandResponseDto> findAll() {
         return productBrandUseCase.findAll().stream()
-                .map(ProductBrandDtoMapper::toResponseDto)
+                .map(model -> dtoMapper.toResponseDto(model))
                 .toList();
     }
 
@@ -53,7 +53,7 @@ public class ProductBrandService implements ProductBrandPort {
     public ProductBrandResponseDto findById(UUID id) {
         ProductBrandModel model = productBrandUseCase.findById(id)
                 .orElseThrow(() -> new RuntimeException("ProductBrand not found with id: " + id));
-        return ProductBrandDtoMapper.toResponseDto(model);
+        return dtoMapper.toResponseDto(model);
     }
 
     public ProductBrandResponseDto update(UUID id, ProductBrandUpdateDto dto) {
@@ -73,7 +73,7 @@ public class ProductBrandService implements ProductBrandPort {
         existing.setUpdatedAt(LocalDateTime.now());
 
         ProductBrandModel updated = productBrandUseCase.save(existing);
-        return ProductBrandDtoMapper.toResponseDto(updated);
+        return dtoMapper.toResponseDto(updated);
     }
 
     public void delete(UUID id) {
@@ -87,7 +87,7 @@ public class ProductBrandService implements ProductBrandPort {
     public ProductBrandResponseDto findByName(String name) {
         ProductBrandModel model = productBrandUseCase.findByName(name)
                 .orElseThrow(() -> new RuntimeException("ProductBrand not found with name: " + name));
-        return ProductBrandDtoMapper.toResponseDto(model);
+        return dtoMapper.toResponseDto(model);
     }
 
     @Transactional(readOnly = true)
@@ -114,13 +114,13 @@ public class ProductBrandService implements ProductBrandPort {
     @Override
     public ProductBrandResponseDto enableBrand(UUID id) {
         var brand = productBrandUseCase.enableBrand(id);
-        return ProductBrandDtoMapper.toResponseDto(brand);
+        return dtoMapper.toResponseDto(brand);
     }
 
     @Override
     public ProductBrandResponseDto disableBrand(UUID id) {
         var brand = productBrandUseCase.disableBrand(id);
-        return ProductBrandDtoMapper.toResponseDto(brand);
+        return dtoMapper.toResponseDto(brand);
     }
 
 
