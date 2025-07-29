@@ -1,5 +1,8 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryResponseDto;
+
+
 import com.celotts.productservice.applications.service.CategoryService;
 import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryCreateDto;
@@ -7,10 +10,13 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -72,11 +78,16 @@ class CategoryControllerTest {
 
     @Test
     void getPaginatedCategories_shouldReturnPage() {
-        when(categoryService.findAllPaginated(any(), any(), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(categoryModel)));
+        Pageable pageable = Pageable.unpaged(); // Compatible con Java 17
+        PageImpl<CategoryModel> page = new PageImpl<>(List.of(categoryModel));
 
-        ResponseEntity<?> response = categoryController.getPaginatedCategories(null, null, Pageable.ofSize(1));
+        when(categoryService.findAllPaginated(any(), any(), eq(pageable)))
+                .thenReturn(page);
+
+        ResponseEntity<?> response = categoryController.getPaginatedCategories(null, null, pageable);
+
         assertEquals(200, response.getStatusCodeValue());
+        assertNotNull(response.getBody());
     }
 
     @Test
@@ -146,12 +157,311 @@ class CategoryControllerTest {
         ResponseEntity<?> response = categoryController.createCategory(createDto);
 
         assertEquals(201, response.getStatusCodeValue());
-        Object responseBody = response.getBody();
+        CategoryResponseDto responseBody = (CategoryResponseDto) response.getBody();
         assertNotNull(responseBody);
-        System.out.println("Response body type: " + responseBody.getClass());
-
-        String bodyString = responseBody.toString();
-        assertTrue(bodyString.contains("Nueva Categoría"));
-        assertTrue(bodyString.contains("Descripción"));
+        assertEquals(createdModel.getName(), responseBody.getName());
+        assertEquals(createdModel.getDescription(), responseBody.getDescription());
+        assertEquals(createdModel.getActive(), responseBody.getActive());
     }
+
+    // --- Additional tests for uncovered methods ---
+
+    @Test
+    void updateCategory_shouldReturnUpdatedCategory() {
+        UUID id = UUID.randomUUID();
+        // Simulate a DTO for update
+        com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryUpdateDto updateDto =
+                new com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryUpdateDto("Actualizado", "Descripción actualizada", Boolean.TRUE, "test-user");
+        CategoryModel updatedModel = CategoryModel.builder()
+                .id(id)
+                .name(updateDto.getName())
+                .description(updateDto.getDescription())
+                .active(updateDto.getActive())
+                .createdAt(LocalDateTime.now().minusDays(1))
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        when(categoryService.update(eq(id), any(CategoryModel.class))).thenReturn(updatedModel);
+
+        ResponseEntity<?> response = categoryController.updateCategory(id, updateDto);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().toString().contains("Actualizado"));
+    }
+
+    @Test
+    void getAllCategories_shouldReturnAll() {
+        List<CategoryModel> models = List.of(
+                CategoryModel.builder().name("A").description("desc").active(true).build(),
+                CategoryModel.builder().name("B").description("desc").active(true).build()
+        );
+        when(categoryService.findAll()).thenReturn(models);
+
+        ResponseEntity<?> response = categoryController.getAllCategories(null, null, "name", "asc");
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(response.getBody().toString().contains("A"));
+        assertTrue(response.getBody().toString().contains("B"));
+    }
+
+    @Test
+    void getAllCategories_shouldFilterAndSortByNameDesc() {
+        CategoryModel c1 = CategoryModel.builder()
+                .id(UUID.randomUUID())
+                .name("Beta")
+                .description("Test")
+                .active(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+        CategoryModel c2 = CategoryModel.builder()
+                .id(UUID.randomUUID())
+                .name("Alpha")
+                .description("Test")
+                .active(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(categoryService.findAll()).thenReturn(List.of(c1, c2));
+
+        ResponseEntity<?> response = categoryController.getAllCategories(null, true, "name", "desc");
+
+        assertEquals(200, response.getStatusCodeValue());
+        List<CategoryResponseDto> body = (List<CategoryResponseDto>) response.getBody();
+        assertNotNull(body);
+        assertEquals(2, body.size());
+        assertEquals("Beta", body.get(0).getName()); // should be first in descending
+    }
+
+    @Test
+    void getAllCategories_shouldFilterByName() {
+        CategoryModel match = CategoryModel.builder()
+                .id(UUID.randomUUID())
+                .name("Utilities")
+                .description("Something")
+                .active(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+        CategoryModel nonMatch = CategoryModel.builder()
+                .id(UUID.randomUUID())
+                .name("Finance")
+                .description("Something else")
+                .active(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(categoryService.findAll()).thenReturn(List.of(match, nonMatch));
+
+        ResponseEntity<?> response = categoryController.getAllCategories("util", null, "name", "asc");
+
+        assertEquals(200, response.getStatusCodeValue());
+        List<CategoryResponseDto> body = (List<CategoryResponseDto>) response.getBody();
+        assertNotNull(body);
+        assertEquals(1, body.size());
+        assertEquals("Utilities", body.get(0).getName());
+    }
+
+    @Test
+    void getAllCategories_shouldSortByCreatedAt() {
+        CategoryModel c1 = CategoryModel.builder()
+                .id(UUID.randomUUID())
+                .name("A")
+                .description("Test")
+                .createdAt(LocalDateTime.now().minusDays(2))
+                .build();
+        CategoryModel c2 = CategoryModel.builder()
+                .id(UUID.randomUUID())
+                .name("B")
+                .description("Test")
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(categoryService.findAll()).thenReturn(List.of(c1, c2));
+
+        ResponseEntity<?> response = categoryController.getAllCategories(null, null, "create", "asc");
+
+        assertEquals(200, response.getStatusCodeValue());
+        List<CategoryResponseDto> body = (List<CategoryResponseDto>) response.getBody();
+        assertNotNull(body);
+        assertEquals("A", body.get(0).getName());
+    }
+
+    @Test
+    void getAllCategories_shouldSortByUpdatedAtDesc() {
+        CategoryModel c1 = CategoryModel.builder()
+                .id(UUID.randomUUID())
+                .name("A")
+                .updatedAt(LocalDateTime.now().minusHours(3))
+                .build();
+        CategoryModel c2 = CategoryModel.builder()
+                .id(UUID.randomUUID())
+                .name("B")
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        when(categoryService.findAll()).thenReturn(List.of(c1, c2));
+
+        ResponseEntity<?> response = categoryController.getAllCategories(null, null, "update", "desc");
+
+        assertEquals(200, response.getStatusCodeValue());
+        List<CategoryResponseDto> body = (List<CategoryResponseDto>) response.getBody();
+        assertNotNull(body);
+        assertEquals("B", body.get(0).getName());
+    }
+
+    @Test
+    void getAllCategories_shouldSortByActive() {
+        CategoryModel c1 = CategoryModel.builder()
+                .id(UUID.randomUUID())
+                .name("Inactive")
+                .active(false)
+                .build();
+        CategoryModel c2 = CategoryModel.builder()
+                .id(UUID.randomUUID())
+                .name("Active")
+                .active(true)
+                .build();
+
+        when(categoryService.findAll()).thenReturn(List.of(c1, c2));
+
+        ResponseEntity<?> response = categoryController.getAllCategories(null, null, "active", "asc");
+
+        assertEquals(200, response.getStatusCodeValue());
+        List<CategoryResponseDto> body = (List<CategoryResponseDto>) response.getBody();
+        assertNotNull(body);
+        assertEquals("Inactive", body.get(0).getName());
+    }
+
+    @Test
+    void getAllCategories_shouldThrowOnInvalidSortBy() {
+        when(categoryService.findAll()).thenReturn(List.of(categoryModel));
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            categoryController.getAllCategories(null, null, "invalid", "asc");
+        });
+    }
+
+    @Test
+    void findById_shouldReturnCategory() {
+        UUID id = UUID.randomUUID();
+        when(categoryService.findById(id)).thenReturn(Optional.of(categoryModel));
+
+        ResponseEntity<?> response = categoryController.findById(id);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    void deleteCategory_shouldDeleteSuccessfully() {
+        UUID id = UUID.randomUUID();
+        com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryDeleteDto deleteDto =
+                new com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryDeleteDto(id);
+
+        ResponseEntity<Void> response = categoryController.deleteCategory(deleteDto);
+
+        verify(categoryService).permanentDelete(id);
+        assertEquals(204, response.getStatusCodeValue());
+    }
+
+    @Test
+    void sortCategories_shouldReturnUnchangedList_whenInputIsNullOrEmpty() {
+        // Case 1: Null input
+        List<CategoryModel> resultWhenNull = invokeSortCategories(null, "name", "asc");
+        assertNull(resultWhenNull);
+
+        // Case 2: Empty input
+        List<CategoryModel> resultWhenEmpty = invokeSortCategories(Collections.emptyList(), "name", "asc");
+        assertTrue(resultWhenEmpty.isEmpty());
+    }
+
+    // Helper method to invoke private static method via reflection
+    @SuppressWarnings("unchecked")
+    private List<CategoryModel> invokeSortCategories(List<CategoryModel> input, String sortBy, String sortDirection) {
+        try {
+            java.lang.reflect.Method method = CategoryController.class.getDeclaredMethod("sortCategories", List.class, String.class, String.class);
+            method.setAccessible(true);
+            return (List<CategoryModel>) method.invoke(null, input, sortBy, sortDirection);
+        } catch (Exception e) {
+            throw new RuntimeException("Error invoking sortCategories", e);
+        }
+    }
+
+    @Test
+    void getAllCategories_shouldFilterByNameAndSortByNameAsc() {
+        String filterName = "test";
+        CategoryModel cat1 = CategoryModel.builder()
+                .id(UUID.randomUUID())
+                .name("Test Alpha")
+                .active(true)
+                .createdAt(LocalDateTime.now().minusDays(2))
+                .build();
+
+        CategoryModel cat2 = CategoryModel.builder()
+                .id(UUID.randomUUID())
+                .name("Test Beta")
+                .active(true)
+                .createdAt(LocalDateTime.now().minusDays(1))
+                .build();
+
+        when(categoryService.findAll()).thenReturn(List.of(cat2, cat1));
+
+        ResponseEntity<?> response = categoryController.getAllCategories(filterName, null, "name", "asc");
+
+        assertEquals(HttpStatus.OK.value(), response.getStatusCodeValue());
+        List<?> body = (List<?>) response.getBody();
+        assertNotNull(body);
+        assertEquals(2, body.size());
+    }
+
+    @Test
+    void getAllCategories_shouldFilterByActiveTrue() {
+        CategoryModel activeCategory = CategoryModel.builder()
+                .id(UUID.randomUUID())
+                .name("Activa")
+                .active(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+        CategoryModel inactiveCategory = CategoryModel.builder()
+                .id(UUID.randomUUID())
+                .name("Inactiva")
+                .active(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(categoryService.findAll()).thenReturn(List.of(activeCategory, inactiveCategory));
+
+        ResponseEntity<?> response = categoryController.getAllCategories(null, true, "name", "asc");
+
+        assertEquals(HttpStatus.OK.value(), response.getStatusCodeValue());
+        List<CategoryResponseDto> body = (List<CategoryResponseDto>) response.getBody();
+        assertNotNull(body);
+        assertEquals(1, body.size());
+        assertEquals("Activa", body.get(0).getName());
+    }
+
+    @Test
+    void sortCategories_shouldThrowExceptionForUnsupportedSortBy() throws Exception {
+        List<CategoryModel> categories = List.of(
+                CategoryModel.builder().name("Alpha").build(),
+                CategoryModel.builder().name("Beta").build()
+        );
+
+        String unsupportedSortBy = "invalid";
+        String sortDirection = "asc";
+
+        Method method = CategoryController.class.getDeclaredMethod("sortCategories", List.class, String.class, String.class);
+        method.setAccessible(true);
+
+        InvocationTargetException thrown = assertThrows(
+                InvocationTargetException.class,
+                () -> method.invoke(categoryController, categories, unsupportedSortBy, sortDirection)
+        );
+
+        Throwable cause = thrown.getCause();
+        assertNotNull(cause);
+        assertInstanceOf(IllegalArgumentException.class, cause);
+        assertTrue(cause.getMessage().contains("Unsupported sortBy value: invalid"));
+    }
+
+
 }

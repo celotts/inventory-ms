@@ -2,12 +2,13 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.prod
 
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import org.springframework.data.domain.Page;
 @Component
 public class ProductResponseMapper {
 
@@ -76,5 +77,20 @@ public class ProductResponseMapper {
 
     public List<ProductResponseDto> toResponseDtoList(List<ProductModel> models) {
         return toDtoList(models);
+    }
+
+
+    public Page<ProductResponseDto> toDtoPage(Page<ProductModel> page) {
+        if (page == null || page.isEmpty()) {
+            return Page.empty();
+        }
+
+        return new PageImpl<>(
+                page.getContent().stream()
+                        .map(this::toDto)
+                        .collect(Collectors.toList()),
+                page.getPageable(),
+                page.getTotalElements()
+        );
     }
 }

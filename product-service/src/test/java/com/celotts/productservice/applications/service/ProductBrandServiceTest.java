@@ -4,6 +4,7 @@ import com.celotts.productservice.domain.model.ProductBrandModel;
 import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrandUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,11 +14,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.mockito.Mockito.*;
+
 import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 class ProductBrandServiceTest {
@@ -166,4 +169,82 @@ class ProductBrandServiceTest {
 
 
     }
+
+    @Test
+    void update_shouldUpdateAndReturnResponseDto() {
+        ProductBrandUpdateDto updateDto = ProductBrandUpdateDto.builder()
+                .name("NikeUpdated")
+                .description("Updated Description")
+                .enabled(true)
+                .updatedBy("admin")
+                .build();
+
+        ProductBrandModel updatedModel = ProductBrandModel.builder()
+                .id(brandId)
+                .name("NikeUpdated")
+                .description("Updated Description")
+                .enabled(true)
+                .updatedBy("admin")
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        ProductBrandResponseDto updatedResponseDto = ProductBrandResponseDto.builder()
+                .id(updatedModel.getId())
+                .name(updatedModel.getName())
+                .description(updatedModel.getDescription())
+                .enabled(updatedModel.getEnabled())
+                .updatedBy(updatedModel.getUpdatedBy())
+                .updatedAt(updatedModel.getUpdatedAt())
+                .build();
+
+        when(productBrandUseCase.findById(brandId)).thenReturn(Optional.of(brandModel));
+        when(productBrandUseCase.findByName("NikeUpdated")).thenReturn(Optional.empty());
+        assertNotNull(updatedModel.getId(), "updatedModel.getId() is null");
+
+        assertNotNull(updatedModel.getId(), "updatedModel.getId() is null");
+        assertNotNull(updatedModel.getName(), "updatedModel.getName() is null");
+
+        when(productBrandUseCase.save(any(ProductBrandModel.class))).thenReturn(updatedModel);
+
+        ProductBrandResponseDto response = productBrandService.update(brandId, updateDto);
+
+        assertNotNull(response);
+        assertEquals("NikeUpdated", response.getName());
+        verify(productBrandUseCase).save(any(ProductBrandModel.class));
+    }
+
+    @Test
+    void existsByName_shouldReturnTrue() {
+        when(productBrandUseCase.existsByName("Nike")).thenReturn(true);
+
+        boolean exists = productBrandService.existsByName("Nike");
+
+        assertTrue(exists);
+    }
+
+    @Test
+    void findNameById_shouldReturnOptionalName() {
+        when(productBrandUseCase.findNameById(brandId)).thenReturn(Optional.of("Nike"));
+
+        Optional<String> name = productBrandService.findNameById(brandId);
+
+        assertTrue(name.isPresent());
+        assertEquals("Nike", name.get());
+    }
+
+    @Test
+    void findAllIds_shouldReturnListOfIds() {
+        List<UUID> ids = List.of(brandId);
+        when(productBrandUseCase.findAllIds()).thenReturn(ids);
+
+        List<UUID> result = productBrandService.findAllIds();
+
+        assertEquals(1, result.size());
+        assertEquals(brandId, result.get(0));
+    }
+
+
+
+
+
 }

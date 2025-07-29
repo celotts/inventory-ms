@@ -87,7 +87,9 @@ public class ProductController {
                 ? productUseCase.getAllProductsWithFilters(pageable, code, name, description)
                 : productUseCase.getAllProducts(pageable);
 
-        return ResponseEntity.ok(products.map(responseMapper::toDto));
+        Page<ProductModel> result = products;
+        Page<ProductResponseDto> dtoPage = result.map(responseMapper::toDto);
+        return ResponseEntity.ok(dtoPage);
     }
 
     @GetMapping("/{id}")
