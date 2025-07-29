@@ -12,7 +12,7 @@ import java.util.UUID;
 @Table(name = "categories")
 @Getter
 @Setter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
 public class CategoryModel {

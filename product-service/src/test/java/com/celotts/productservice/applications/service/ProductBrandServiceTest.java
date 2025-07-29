@@ -8,6 +8,7 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.produ
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -56,58 +57,6 @@ class ProductBrandServiceTest {
                 .build();
     }
 
-//    @Test
-//    void create_shouldSaveAndReturnResponseDto() {
-//        ProductBrandCreateDto createDto = ProductBrandCreateDto.builder()
-//                .name("Nike")
-//                .description("Description")
-//                .enabled(true)
-//                .createdBy("admin")
-//                .updatedBy("admin")
-//                .build();
-//
-//        LocalDateTime createdAt = LocalDateTime.of(2025, 1, 1, 12, 0);
-//        ProductBrandModel model = ProductBrandModel.builder()
-//                .name("Nike")
-//                .description("Description")
-//                .enabled(true)
-//                .createdBy("admin")
-//                .createdAt(createdAt)
-//                .build();
-//
-//        ProductBrandModel savedModel = ProductBrandModel.builder()
-//                .id(UUID.randomUUID())
-//                .name("Nike")
-//                .description("Description")
-//                .enabled(true)
-//                .createdBy("admin")
-//                .createdAt(createdAt)
-//                .build();
-//
-//        ProductBrandResponseDto expectedResponse = ProductBrandResponseDto.builder()
-//                .id(savedModel.getId())
-//                .name(savedModel.getName())
-//                .description(savedModel.getDescription())
-//                .enabled(savedModel.getEnabled())
-//                .createdBy(savedModel.getCreatedBy())
-//                .createdAt(createdAt)
-//                .build();
-//
-//        when(productBrandUseCase.existsByName("Nike")).thenReturn(false);
-//        when(dtoMapper.toModel(createDto)).thenReturn(model);
-//        when(productBrandUseCase.save(model)).thenReturn(savedModel);
-//        when(dtoMapper.toResponseDto(savedModel)).thenReturn(expectedResponse);
-//
-//        ProductBrandResponseDto result = productBrandService.create(createDto);
-//
-//        assertNotNull(result);
-//        assertEquals("Nike", result.getName());
-//        assertEquals("Description", result.getDescription());
-//
-//        verify(productBrandUseCase).save(model);
-//        verify(dtoMapper).toResponseDto(savedModel);
-//    }
-
     @Test
     void create_shouldThrowIfNameExists() {
         ProductBrandCreateDto dto = ProductBrandCreateDto.builder()
@@ -123,26 +72,7 @@ class ProductBrandServiceTest {
         assertThrows(IllegalArgumentException.class, () -> productBrandService.create(dto));
     }
 
-//    @Test
-//    void findAll_shouldReturnListOfDtos() {
-//        when(productBrandUseCase.findAll()).thenReturn(Collections.singletonList(brandModel));
-//        when(dtoMapper.toResponseDto(brandModel)).thenReturn(responseDto);
-//
-//        List<ProductBrandResponseDto> result = productBrandService.findAll();
-//
-//        assertEquals(1, result.size());
-//        assertEquals("Nike", result.get(0).getName());
-//    }
 
-//    @Test
-//    void findById_shouldReturnDto() {
-//        when(productBrandUseCase.findById(brandId)).thenReturn(Optional.of(brandModel));
-//        when(dtoMapper.toResponseDto(brandModel)).thenReturn(responseDto);
-//
-//        ProductBrandResponseDto result = productBrandService.findById(brandId);
-//
-//        assertEquals("Nike", result.getName());
-//    }
 
     @Test
     void findById_shouldThrowIfNotFound() {
@@ -151,15 +81,7 @@ class ProductBrandServiceTest {
         assertThrows(RuntimeException.class, () -> productBrandService.findById(brandId));
     }
 
-//    @Test
-//    void findByName_shouldReturnDto() {
-//        when(productBrandUseCase.findByName("Nike")).thenReturn(Optional.of(brandModel));
-//        when(dtoMapper.toResponseDto(brandModel)).thenReturn(responseDto);
-//
-//        ProductBrandResponseDto result = productBrandService.findByName("Nike");
-//
-//        assertEquals("Nike", result.getName());
-//    }
+
 
     @Test
     void findByName_shouldThrowIfNotFound() {
@@ -184,30 +106,64 @@ class ProductBrandServiceTest {
         assertThrows(RuntimeException.class, () -> productBrandService.delete(brandId));
     }
 
-//    @Test
-//    void enableBrand_shouldReturnUpdatedDto() {
-//        when(productBrandUseCase.enableBrand(brandId)).thenReturn(brandModel);
-//        when(dtoMapper.toResponseDto(brandModel)).thenReturn(responseDto);
-//
-//        ProductBrandResponseDto result = productBrandService.enableBrand(brandId);
-//
-//        assertEquals("Nike", result.getName());
-//    }
 
-//    @Test
-//    void disableBrand_shouldReturnUpdatedDto() {
-//        when(productBrandUseCase.disableBrand(brandId)).thenReturn(brandModel);
-//        when(dtoMapper.toResponseDto(brandModel)).thenReturn(responseDto);
-//
-//        ProductBrandResponseDto result = productBrandService.disableBrand(brandId);
-//
-//        assertEquals("Nike", result.getName());
-//    }
 
     @Test
     void existsById_shouldReturnTrue() {
         when(productBrandUseCase.existsById(brandId)).thenReturn(true);
 
         assertTrue(productBrandService.existsById(brandId));
+    }
+
+    //
+    @Test
+    void create_shouldSaveAndReturnResponseDto() {
+        ProductBrandCreateDto createDto = ProductBrandCreateDto.builder()
+                .name("Nike")
+                .description("Description")
+                .enabled(true)
+                .createdBy("admin")
+                .updatedBy("admin")
+                .build();
+
+        ProductBrandModel model = ProductBrandModel.builder()
+                .name("Nike")
+                .description("Description")
+                .enabled(true)
+                .createdBy("admin")
+                .build();
+
+        ProductBrandModel savedModel = ProductBrandModel.builder()
+                .id(UUID.randomUUID())
+                .name("Nike")
+                .description("Description")
+                .enabled(true)
+                .createdBy("admin")
+                .createdAt(LocalDateTime.of(2025, 1, 1, 12, 0))
+                .build();
+
+        when(productBrandUseCase.existsByName("Nike")).thenReturn(false);
+        when(dtoMapper.toModel(any(ProductBrandCreateDto.class))).thenReturn(model);
+        when(productBrandUseCase.save(any(ProductBrandModel.class))).thenReturn(savedModel);
+
+        ProductBrandResponseDto result = productBrandService.create(createDto);
+
+        assertNotNull(result);
+        assertEquals("Nike", result.getName());
+        assertEquals("Description", result.getDescription());
+
+        ArgumentCaptor<ProductBrandModel> captor = ArgumentCaptor.forClass(ProductBrandModel.class);
+        verify(productBrandUseCase).save(captor.capture());
+
+        ProductBrandModel captured = captor.getValue();
+        assertEquals("Nike", captured.getName());
+        assertEquals("Description", captured.getDescription());
+
+        // No verificamos dtoMapper si no está completamente mockeado
+
+//clearAllCaches();
+// Captura el argumento también del mapper
+
+
     }
 }
