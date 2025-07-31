@@ -27,6 +27,7 @@ public class ProductBrandController {
 
     private final ProductBrandService productBrandService;
     private final ProductBrandUseCase productBrandUseCase;
+    private final ProductBrandDtoMapper productBrandDtoMapper; // <<--- Añadido aquí
 
     @PostMapping
     public ResponseEntity<ProductBrandResponseDto> create(@Valid @RequestBody ProductBrandCreateDto dto) {
@@ -70,12 +71,12 @@ public class ProductBrandController {
     @PatchMapping("/{id}/enable")
     public ResponseEntity<ProductBrandResponseDto> enableBrand(@PathVariable UUID id) {
         ProductBrandModel brand = productBrandUseCase.enableBrand(id);
-        return ResponseEntity.ok(ProductBrandDtoMapper.toResponseDto(brand));
+        return ResponseEntity.ok(productBrandDtoMapper.toResponseDto(brand));
     }
 
     @PatchMapping("/{id}/disable")
     public ResponseEntity<ProductBrandResponseDto> disableBrand(@PathVariable UUID id) {
         ProductBrandModel brand = productBrandUseCase.disableBrand(id);
-        return ResponseEntity.ok(ProductBrandDtoMapper.toResponseDto(brand));
+        return ResponseEntity.ok(productBrandDtoMapper.toResponseDto(brand));
     }
 }

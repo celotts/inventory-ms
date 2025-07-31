@@ -15,17 +15,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("api/v1/product-unit")
+@RequestMapping("/api/v1/product-unit")
 @CrossOrigin(origins = "${app.cors.allowed-origin:*}")
 public class ProductUnitController {
 
     private final ProductUnitService productUnitService;
-    private final ProductUseCase productUnitUseCase;
 
     @Operation(summary = "Crea una nueva unidad de producto")
     @ApiResponses({
@@ -58,10 +58,10 @@ public class ProductUnitController {
         productUnitService.delete(id);
         return ResponseEntity.noContent().build();
     }
-    
+
     @GetMapping("/exists-by-code/{code}")
-    public ResponseEntity<Boolean> existsByCode(@PathVariable String code) {
-        return ResponseEntity.ok(productUnitService.existsByCode(code));
+    public ResponseEntity<Map<String, Boolean>> existsByCode(@PathVariable String code) {
+        return ResponseEntity.ok(Map.of("exists", productUnitService.existsByCode(code)));
     }
     
     @GetMapping("/name-by-code/{code}")

@@ -34,6 +34,10 @@ spring:
   sql:
     init:
       mode: never
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    date-format: yyyy-MM-dd'T'HH:mm:ss
 
 management:
   endpoints:
