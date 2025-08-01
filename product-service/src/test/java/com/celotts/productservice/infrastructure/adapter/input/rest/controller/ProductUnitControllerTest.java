@@ -14,7 +14,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,13 +25,11 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = ProductUnitController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
-@Import(ProductUnitControllerTest.MockConfig.class) // 👈 Esta clase está dentro del mismo archivo
 class ProductUnitControllerTest {
 
     @Autowired
@@ -73,16 +70,21 @@ class ProductUnitControllerTest {
         mockMvc.perform(post("/api/v1/product-unit")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                {
-                    "code": "UNI02",
-                    "name": "Unidad 02",
-                    "enabled": true
-                }
-                """))
+                        {
+                            "code": "UNI02",
+                            "name": "Unidad 02",
+                            "enabled": true
+                        }
+                        """))
                 .andDo(result -> {
                     System.out.println("STATUS: " + result.getResponse().getStatus());
                     System.out.println("BODY: " + result.getResponse().getContentAsString());
-                });
+                })
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(unitId.toString()))
+                .andExpect(jsonPath("$.code").value("UNI02"))
+                .andExpect(jsonPath("$.name").value("Unidad 02"))
+                .andExpect(jsonPath("$.enabled").value(true));
     }
 
     // ... (los demás tests igual)

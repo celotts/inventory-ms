@@ -31,7 +31,13 @@ public class ProductBrandController {
 
     @PostMapping
     public ResponseEntity<ProductBrandResponseDto> create(@Valid @RequestBody ProductBrandCreateDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(productBrandService.create(dto));
+        System.out.println(">>> [DEBUG] Creating brand: " + dto);
+        ProductBrandResponseDto response = productBrandService.create(dto);
+        System.out.println(">>> [DEBUG] Created brand ID: " + response.getId());
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .header("Location", "/api/v1/product-brands/" + response.getId())
+                .body(response);
     }
 
     @GetMapping

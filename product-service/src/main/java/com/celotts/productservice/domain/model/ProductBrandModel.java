@@ -22,6 +22,9 @@ public class ProductBrandModel {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    public ProductBrandModel(UUID brandId, String coolBrand, boolean b) {
+    }
+
     // Métodos de negocio si los necesitas
     public boolean isActive() {
         return enabled != null && enabled;
