@@ -8,12 +8,15 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.produ
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -25,10 +28,15 @@ import static org.mockito.Mockito.mock;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(controllers = ProductBrandController.class)
-@Import(ProductBrandControllerTest.MockBeans.class)
+@WebMvcTest
+@AutoConfigureMockMvc(addFilters = false)
+@ContextConfiguration(classes = {
+        ProductBrandController.class,
+        ProductBrandControllerTest.MockBeans.class
+})
 @ActiveProfiles("test")
 class ProductBrandControllerTest {
+
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ProductBrandUseCase productBrandUseCase;
@@ -77,7 +85,8 @@ class ProductBrandControllerTest {
     }
 
     @TestConfiguration
-    static class MockBeans {
+    public static class MockBeans {
+
         @Bean
         public ProductBrandService productBrandService() {
             return mock(ProductBrandService.class);

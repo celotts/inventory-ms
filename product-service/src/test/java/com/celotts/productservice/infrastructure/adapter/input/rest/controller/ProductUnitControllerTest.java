@@ -1,7 +1,10 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
+import com.celotts.productservice.applications.service.ProductBrandService;
 import com.celotts.productservice.applications.service.ProductUnitService;
+import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrandUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productUnit.ProductUnitDtoMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -106,20 +109,26 @@ class ProductUnitControllerTest {
     }
 
     @TestConfiguration
-    static class MockBeans {
+    public static class MockBeans {
+
         @Bean
-        public ProductUnitService productUnitService() {
-            return mock(ProductUnitService.class);
+        public ProductBrandUseCase productBrandUseCase() {
+            return mock(ProductBrandUseCase.class);
         }
 
         @Bean
-        public ProductUnitDtoMapper productUnitDtoMapper() {
-            return mock(ProductUnitDtoMapper.class);
+        public ProductBrandDtoMapper productBrandDtoMapper() {
+            return mock(ProductBrandDtoMapper.class);
+        }
+
+        @Bean
+        public ProductBrandService productBrandService() {
+            return mock(ProductBrandService.class);
         }
 
         @Bean
         public ObjectMapper objectMapper() {
-            return new ObjectMapper();
+            return new ObjectMapper().findAndRegisterModules();
         }
     }
 }

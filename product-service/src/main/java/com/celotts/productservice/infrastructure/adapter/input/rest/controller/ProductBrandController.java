@@ -21,13 +21,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/product-brands")
-@CrossOrigin(origins = "${app.cors.allowed-origin:*}")
-@Tag(name = "Product Brand API", description = "API para gestionar marcas de productos")
 public class ProductBrandController {
-
     private final ProductBrandService productBrandService;
     private final ProductBrandUseCase productBrandUseCase;
-    private final ProductBrandDtoMapper productBrandDtoMapper; // <<--- Añadido aquí
+    private final ProductBrandDtoMapper productBrandDtoMapper;
 
     @PostMapping
     public ResponseEntity<ProductBrandResponseDto> create(@Valid @RequestBody ProductBrandCreateDto dto) {
