@@ -1,6 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.applications.service.ProductBrandService;
+import com.celotts.productservice.config.MockBeansConfig;
 import com.celotts.productservice.domain.model.ProductBrandModel;
 import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrandUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
@@ -12,8 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
+
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = ProductBrandController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@Import({ProductBrandController.class, ProductBrandControllerTest.MockBeans.class})
+@Import({ProductBrandController.class, MockBeansConfig.class})
 @ActiveProfiles("test")
 class ProductBrandControllerTest {
 
@@ -253,7 +253,7 @@ class ProductBrandControllerTest {
                 .andExpect(jsonPath("$.enabled").value(false));
     }
 
-    @TestConfiguration
+   /* @TestConfiguration
     public static class MockBeans {
 
         @Bean
@@ -275,5 +275,5 @@ class ProductBrandControllerTest {
         public ObjectMapper objectMapper() {
             return new ObjectMapper().findAndRegisterModules();
         }
-    }
+    } */
 }

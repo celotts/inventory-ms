@@ -10,7 +10,12 @@ import org.springframework.context.annotation.Bean;
 import static org.mockito.Mockito.mock;
 
 @TestConfiguration
-public class ProductBrandControllerMockConfig {
+public class MockBeansConfig {
+
+    @Bean
+    public ProductBrandService productBrandService() {
+        return mock(ProductBrandService.class);
+    }
 
     @Bean
     public ProductBrandUseCase productBrandUseCase() {
@@ -20,11 +25,6 @@ public class ProductBrandControllerMockConfig {
     @Bean
     public ProductBrandDtoMapper productBrandDtoMapper() {
         return mock(ProductBrandDtoMapper.class);
-    }
-
-    @Bean
-    public ProductBrandService productBrandService() {
-        return mock(ProductBrandService.class);
     }
 
     @Bean
