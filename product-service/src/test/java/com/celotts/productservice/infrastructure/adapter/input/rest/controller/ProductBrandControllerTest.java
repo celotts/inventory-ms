@@ -13,7 +13,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = ProductBrandController.class)
 @Import(ProductBrandControllerTest.MockBeans.class)
-@TestPropertySource(properties = "app.cors.allowed-origin=*")
+@ActiveProfiles("test")
 class ProductBrandControllerTest {
 
     @Autowired private MockMvc mockMvc;
@@ -78,7 +78,6 @@ class ProductBrandControllerTest {
 
     @TestConfiguration
     static class MockBeans {
-
         @Bean
         public ProductBrandService productBrandService() {
             return mock(ProductBrandService.class);
