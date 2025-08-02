@@ -1,14 +1,15 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-
-@Data
-@Builder
+@Getter
+@Builder(toBuilder = true)
 @AllArgsConstructor
 public class ProductBrandResponseDto {
 
@@ -20,7 +21,7 @@ public class ProductBrandResponseDto {
     private final String createdBy;
     private final String updatedBy;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING) // ← ISO-8601 por defecto
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private final LocalDateTime createdAt;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING)

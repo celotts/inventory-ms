@@ -1,15 +1,17 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.applications.service.ProductUnitService;
-import com.celotts.productservice.domain.port.product.port.usecase.ProductUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productUnit.ProductUnitDtoMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,19 +21,25 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/v1/product-unit")
-@CrossOrigin(origins = "${app.cors.allowed-origin:*}")
+@RequestMapping("/api/v1/product-units")
 public class ProductUnitController {
 
     private final ProductUnitService productUnitService;
+    private final ProductUnitDtoMapper productUnitDtoMapper;
 
     @Operation(summary = "Crea una nueva unidad de producto")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Unidad creada exitosamente"),
             @ApiResponse(responseCode = "400", description = "Datos inválidos")
     })
+
+    @PostConstruct
+    public void init() {
+        log.info("✅ ProductUnitController fue instanciado correctamente por Spring.");
+    }
 
     @PostMapping
     public ResponseEntity<ProductUnitResponseDto> create(@Valid @RequestBody ProductUnitCreateDto dto) {
@@ -63,7 +71,7 @@ public class ProductUnitController {
     public ResponseEntity<Map<String, Boolean>> existsByCode(@PathVariable String code) {
         return ResponseEntity.ok(Map.of("exists", productUnitService.existsByCode(code)));
     }
-    
+
     @GetMapping("/name-by-code/{code}")
     public ResponseEntity<String> findByName(@PathVariable String code) {
         Optional<String> name = productUnitService.findNameByCode(code);
