@@ -1,27 +1,34 @@
-package com.celotts.productservice.infrastructure.config;
+package com.celotts.productservice.infrastructure.common.config;
 
 import com.celotts.productservice.applications.service.ProductUnitService;
 import com.celotts.productservice.domain.port.product.port.usecase.ProductUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productUnit.ProductUnitResponseMapper;
-import org.mockito.Mockito;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
+import static org.mockito.Mockito.mock;
+
 @TestConfiguration
-public class MockConfig {
+public class ProductControllerTestBeansConfig {
 
     @Bean
     public ProductUnitService productUnitService() {
-        return Mockito.mock(ProductUnitService.class);
+        return mock(ProductUnitService.class);
     }
 
     @Bean
     public ProductUnitResponseMapper productUnitResponseMapper() {
-        return Mockito.mock(ProductUnitResponseMapper.class);
+        return mock(ProductUnitResponseMapper.class);
     }
 
     @Bean
     public ProductUseCase productUseCase() {
-        return Mockito.mock(ProductUseCase.class);
+        return mock(ProductUseCase.class);
+    }
+
+    @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper().findAndRegisterModules();
     }
 }

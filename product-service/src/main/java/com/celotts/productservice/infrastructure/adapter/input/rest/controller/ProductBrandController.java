@@ -7,7 +7,7 @@ import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrand
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;
-import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,9 +22,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/product-brands")
 public class ProductBrandController {
-    private final ProductBrandService productBrandService;
     private final ProductBrandUseCase productBrandUseCase;
     private final ProductBrandDtoMapper productBrandDtoMapper;
+    private final ProductBrandService productBrandService;
 
     @PostMapping
     public ResponseEntity<ProductBrandResponseDto> create(@Valid @RequestBody ProductBrandCreateDto dto) {

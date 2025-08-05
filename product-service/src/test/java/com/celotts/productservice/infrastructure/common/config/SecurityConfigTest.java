@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.config;
+package com.celotts.productservice.infrastructure.common.config;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

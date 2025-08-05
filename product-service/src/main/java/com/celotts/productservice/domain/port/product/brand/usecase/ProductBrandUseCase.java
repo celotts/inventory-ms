@@ -8,12 +8,6 @@ import java.util.UUID;
 
 
 public interface ProductBrandUseCase {
-    /*
-    📍 Ubicación lógica: Dominio → Entrada
-
-    🔧 Rol:
-    Este es el puerto de entrada, define lo que el dominio expone como casos de uso. Por ejemplo, lo que un servicio como ProductBrandService implementa.
-    */
     ProductBrandModel save(ProductBrandModel productBrand);
     Optional<ProductBrandModel> findById(UUID id);
     Optional<ProductBrandModel> findByName(String name);
@@ -25,4 +19,17 @@ public interface ProductBrandUseCase {
     List<UUID> findAllIds();
     ProductBrandModel enableBrand(UUID id);
     ProductBrandModel disableBrand(UUID id);
+
+    default ProductBrandModel create(ProductBrandModel productBrand) {
+        return save(productBrand);
+    }
+
+    default ProductBrandModel update(UUID id, ProductBrandModel productBrand) {
+        productBrand.setId(id);
+        return save(productBrand);
+    }
+
+    default void delete(UUID id) {
+        deleteById(id);
+    }
 }

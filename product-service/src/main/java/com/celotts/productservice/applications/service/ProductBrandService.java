@@ -45,7 +45,7 @@ public class ProductBrandService implements ProductBrandPort {
     @Transactional(readOnly = true)
     public List<ProductBrandResponseDto> findAll() {
         return productBrandUseCase.findAll().stream()
-                .map(model -> dtoMapper.toResponseDto(model))
+                .map(dtoMapper::toResponseDto)
                 .toList();
     }
 

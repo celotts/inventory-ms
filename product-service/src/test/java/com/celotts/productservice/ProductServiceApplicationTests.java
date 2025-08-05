@@ -1,14 +1,12 @@
 package com.celotts.productservice;
 
-import com.celotts.productservice.infrastructure.config.TestBeanConfig;
+import com.celotts.productservice.infrastructure.common.config.TestBeanConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
 
 @SpringBootTest(
 		webEnvironment = SpringBootTest.WebEnvironment.NONE,
