@@ -53,7 +53,7 @@ class CategoryControllerTest {
         when(categoryService.updateStatus(categoryId, false)).thenReturn(categoryModel.toBuilder().active(false).build());
 
         ResponseEntity<?> response = categoryController.toggleCategoryStatus(categoryId, false);
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertEquals(false, response.getBody().toString().contains("true")); // rudimentary check
     }
 
@@ -72,7 +72,7 @@ class CategoryControllerTest {
 
         ResponseEntity<?> response = categoryController.restoreCategory(categoryId);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
     }
 
@@ -86,7 +86,7 @@ class CategoryControllerTest {
 
         ResponseEntity<?> response = categoryController.getPaginatedCategories(null, null, pageable);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
     }
 
@@ -101,7 +101,7 @@ class CategoryControllerTest {
 
         ResponseEntity<?> response = categoryController.getCategoryStats();
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertEquals(stats, response.getBody());
     }
 
@@ -121,7 +121,7 @@ class CategoryControllerTest {
         when(categoryService.findAll()).thenReturn(List.of(categoryModel));
 
         ResponseEntity<?> response = categoryController.getActiveCategories();
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertFalse(((List<?>) response.getBody()).isEmpty());
     }
 
@@ -130,7 +130,7 @@ class CategoryControllerTest {
         when(categoryService.searchByNameOrDescription("Test", 10)).thenReturn(List.of(categoryModel));
 
         ResponseEntity<?> response = categoryController.searchCategories("Test", 10);
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
     }
 
     @Test
@@ -138,7 +138,7 @@ class CategoryControllerTest {
         ResponseEntity<Void> response = categoryController.permanentDeleteCategory(categoryId);
 
         verify(categoryService).permanentDelete(categoryId);
-        assertEquals(204, response.getStatusCodeValue());
+        assertEquals(204, response.getStatusCode().value());
     }
 
     @Test
@@ -156,7 +156,7 @@ class CategoryControllerTest {
 
         ResponseEntity<?> response = categoryController.createCategory(createDto);
 
-        assertEquals(201, response.getStatusCodeValue());
+        assertEquals(201, response.getStatusCode().value());
         CategoryResponseDto responseBody = (CategoryResponseDto) response.getBody();
         assertNotNull(responseBody);
         assertEquals(createdModel.getName(), responseBody.getName());
@@ -185,7 +185,7 @@ class CategoryControllerTest {
 
         ResponseEntity<?> response = categoryController.updateCategory(id, updateDto);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertTrue(response.getBody().toString().contains("Actualizado"));
     }
 
@@ -199,7 +199,7 @@ class CategoryControllerTest {
 
         ResponseEntity<?> response = categoryController.getAllCategories(null, null, "name", "asc");
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertTrue(response.getBody().toString().contains("A"));
         assertTrue(response.getBody().toString().contains("B"));
     }
@@ -225,7 +225,8 @@ class CategoryControllerTest {
 
         ResponseEntity<?> response = categoryController.getAllCategories(null, true, "name", "desc");
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
+        @SuppressWarnings("unchecked")
         List<CategoryResponseDto> body = (List<CategoryResponseDto>) response.getBody();
         assertNotNull(body);
         assertEquals(2, body.size());
@@ -253,7 +254,8 @@ class CategoryControllerTest {
 
         ResponseEntity<?> response = categoryController.getAllCategories("util", null, "name", "asc");
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
+        @SuppressWarnings("unchecked")
         List<CategoryResponseDto> body = (List<CategoryResponseDto>) response.getBody();
         assertNotNull(body);
         assertEquals(1, body.size());
@@ -279,7 +281,8 @@ class CategoryControllerTest {
 
         ResponseEntity<?> response = categoryController.getAllCategories(null, null, "create", "asc");
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
+        @SuppressWarnings("unchecked")
         List<CategoryResponseDto> body = (List<CategoryResponseDto>) response.getBody();
         assertNotNull(body);
         assertEquals("A", body.get(0).getName());
@@ -302,7 +305,8 @@ class CategoryControllerTest {
 
         ResponseEntity<?> response = categoryController.getAllCategories(null, null, "update", "desc");
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
+        @SuppressWarnings("unchecked")
         List<CategoryResponseDto> body = (List<CategoryResponseDto>) response.getBody();
         assertNotNull(body);
         assertEquals("B", body.get(0).getName());
@@ -325,7 +329,8 @@ class CategoryControllerTest {
 
         ResponseEntity<?> response = categoryController.getAllCategories(null, null, "active", "asc");
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
+        @SuppressWarnings("unchecked")
         List<CategoryResponseDto> body = (List<CategoryResponseDto>) response.getBody();
         assertNotNull(body);
         assertEquals("Inactive", body.get(0).getName());
@@ -347,7 +352,7 @@ class CategoryControllerTest {
 
         ResponseEntity<?> response = categoryController.findById(id);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
     }
 
@@ -360,7 +365,7 @@ class CategoryControllerTest {
         ResponseEntity<Void> response = categoryController.deleteCategory(deleteDto);
 
         verify(categoryService).permanentDelete(id);
-        assertEquals(204, response.getStatusCodeValue());
+        assertEquals(204, response.getStatusCode().value());
     }
 
     @Test
@@ -407,7 +412,7 @@ class CategoryControllerTest {
 
         ResponseEntity<?> response = categoryController.getAllCategories(filterName, null, "name", "asc");
 
-        assertEquals(HttpStatus.OK.value(), response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
         List<?> body = (List<?>) response.getBody();
         assertNotNull(body);
         assertEquals(2, body.size());
@@ -432,7 +437,8 @@ class CategoryControllerTest {
 
         ResponseEntity<?> response = categoryController.getAllCategories(null, true, "name", "asc");
 
-        assertEquals(HttpStatus.OK.value(), response.getStatusCodeValue());
+        assertEquals(HttpStatus.OK.value(), response.getStatusCode().value());
+        @SuppressWarnings("unchecked")
         List<CategoryResponseDto> body = (List<CategoryResponseDto>) response.getBody();
         assertNotNull(body);
         assertEquals(1, body.size());

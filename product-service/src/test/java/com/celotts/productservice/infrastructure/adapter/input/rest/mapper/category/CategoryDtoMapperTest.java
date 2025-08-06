@@ -142,7 +142,7 @@ class CategoryDtoMapperTest {
         dto.setName("Vestimenta");
         dto.setDescription("Ropa y accesorios");
 
-        CategoryModel model = CategoryDtoMapper.toModel(dto);
+        CategoryModel model = CategoryDtoMapper.toModelFromCreate(dto);
 
         assertNotNull(model);
         assertEquals("Vestimenta", model.getName());
@@ -156,13 +156,14 @@ class CategoryDtoMapperTest {
         dto.setDescription("Artículos deportivos");
         dto.setActive(true);
 
-        CategoryModel model = CategoryDtoMapper.toModel(dto);
+        CategoryModel model = CategoryDtoMapper.toModelFromUpdate(dto);
 
         assertNotNull(model);
         assertEquals("Deportes", model.getName());
         assertTrue(model.getActive());
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     void toModel_shouldThrowException_whenUnsupportedDto() {
         String unsupported = "invalido";

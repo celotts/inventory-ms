@@ -144,7 +144,8 @@ class CategoryAdapterTest {
         List<CategoryEntity> entities = List.of(entity);
         List<CategoryModel> models = List.of(new CategoryModel());
 
-        TypedQuery<CategoryEntity> query = mock(TypedQuery.class);
+        @SuppressWarnings("unchecked")
+        TypedQuery<CategoryEntity> query = (TypedQuery<CategoryEntity>) mock(TypedQuery.class);
         when(entityManager.createQuery(anyString(), eq(CategoryEntity.class))).thenReturn(query);
         when(query.setParameter(eq("term"), anyString())).thenReturn(query);
         when(query.setMaxResults(anyInt())).thenReturn(query);

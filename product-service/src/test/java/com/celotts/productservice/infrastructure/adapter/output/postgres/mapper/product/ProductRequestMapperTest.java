@@ -3,94 +3,172 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ProductRequestMapperTest {
 
-    private final ProductRequestMapper mapper = new ProductRequestMapper();
+    private ProductRequestMapper mapper;
+
+    @BeforeEach
+    void setUp() {
+        mapper = new ProductRequestMapper();
+    }
 
     @Test
-    void testToModel_FromCreateDto() {
+    void toModel_shouldReturnModel_whenCreateDtoIsValid() {
+        UUID categoryId = UUID.randomUUID();
+        UUID brandId = UUID.randomUUID();
+
         ProductCreateDto dto = ProductCreateDto.builder()
-                .code("P001")
-                .name("Taco")
-                .description("Taco al pastor")
+                .code("PROD-001")
+                .name("Taco al Pastor")
+                .description("Delicioso taco tradicional mexicano")
                 .categoryId(UUID.randomUUID())
-                .unitCode("KG")
+                .unitCode("UNIT001")
                 .brandId(UUID.randomUUID())
                 .minimumStock(10)
                 .currentStock(50)
-                .unitPrice(BigDecimal.valueOf(25.99))
+                .unitPrice(new BigDecimal("15.99"))
                 .enabled(true)
-                .createdBy("admin")
+                .createdBy("test-user")
+                .updatedBy("test-user")
                 .build();
 
         ProductModel model = mapper.toModel(dto);
 
-        assertThat(model).isNotNull();
-        assertThat(model.getCode()).isEqualTo("P001");
-        assertThat(model.getName()).isEqualTo("Taco");
-        assertThat(model.getDescription()).isEqualTo("Taco al pastor");
-        assertThat(model.getCategoryId()).isEqualTo(dto.getCategoryId());
-        assertThat(model.getUnitCode()).isEqualTo("KG");
-        assertThat(model.getBrandId()).isEqualTo(dto.getBrandId());
-        assertThat(model.getMinimumStock()).isEqualTo(10);
-        assertThat(model.getCurrentStock()).isEqualTo(50);
-        assertThat(model.getUnitPrice()).isEqualByComparingTo("25.99");
-        assertThat(model.getEnabled()).isTrue();
-        assertThat(model.getCreatedBy()).isEqualTo("admin");
-        assertThat(model.getId()).isNull(); // no se asigna en CreateDto
+        assertNotNull(model);
+        assertEquals(dto.getCode(), model.getCode());
+        assertEquals(dto.getName(), model.getName());
+        assertEquals(dto.getDescription(), model.getDescription());
+        assertEquals(dto.getCategoryId(), model.getCategoryId());
+        assertEquals(dto.getUnitCode(), model.getUnitCode());
+        assertEquals(dto.getBrandId(), model.getBrandId());
+        assertEquals(dto.getMinimumStock(), model.getMinimumStock());
+        assertEquals(dto.getCurrentStock(), model.getCurrentStock());
+        assertEquals(dto.getUnitPrice(), model.getUnitPrice());
+        assertEquals(dto.getEnabled(), model.getEnabled());
+        assertEquals(dto.getCreatedBy(), model.getCreatedBy());
     }
 
     @Test
-    void testToModel_FromUpdateDto() {
+    void toModel_shouldReturnModel_whenUpdateDtoIsValid() {
         UUID id = UUID.randomUUID();
+        UUID categoryId = UUID.randomUUID();
+        UUID brandId = UUID.randomUUID();
+
         ProductUpdateDto dto = ProductUpdateDto.builder()
                 .id(id)
                 .code("P002")
-                .name("Torta")
-                .description("Torta de milanesa")
-                .categoryId(UUID.randomUUID())
-                .unitCode("UNI")
-                .brandId(UUID.randomUUID())
-                .minimumStock(5)
-                .currentStock(20)
-                .unitPrice(BigDecimal.valueOf(35.50))
+                .name("Producto B")
+                .description("Descripción B")
+                .categoryId(categoryId)
+                .unitCode("LTS")
+                .brandId(brandId)
+                .minimumStock(20)
+                .currentStock(100)
+                .unitPrice(BigDecimal.valueOf(456.78))
+                .createdBy("admin")
                 .enabled(false)
-                .createdBy("system")
-                .updatedBy("manager")
+                .updatedBy("editor")
                 .build();
 
         ProductModel model = mapper.toModel(dto);
 
-        assertThat(model).isNotNull();
-        assertThat(model.getId()).isEqualTo(id);
-        assertThat(model.getCode()).isEqualTo("P002");
-        assertThat(model.getName()).isEqualTo("Torta");
-        assertThat(model.getDescription()).isEqualTo("Torta de milanesa");
-        assertThat(model.getCategoryId()).isEqualTo(dto.getCategoryId());
-        assertThat(model.getUnitCode()).isEqualTo("UNI");
-        assertThat(model.getBrandId()).isEqualTo(dto.getBrandId());
-        assertThat(model.getMinimumStock()).isEqualTo(5);
-        assertThat(model.getCurrentStock()).isEqualTo(20);
-        assertThat(model.getUnitPrice()).isEqualByComparingTo("35.50");
-        assertThat(model.getEnabled()).isFalse();
-        assertThat(model.getCreatedBy()).isEqualTo("system");
-        assertThat(model.getUpdatedBy()).isEqualTo("manager");
+        assertNotNull(model);
+        assertEquals(dto.getId(), model.getId());
+        assertEquals(dto.getCode(), model.getCode());
+        assertEquals(dto.getName(), model.getName());
+        assertEquals(dto.getDescription(), model.getDescription());
+        assertEquals(dto.getCategoryId(), model.getCategoryId());
+        assertEquals(dto.getUnitCode(), model.getUnitCode());
+        assertEquals(dto.getBrandId(), model.getBrandId());
+        assertEquals(dto.getMinimumStock(), model.getMinimumStock());
+        assertEquals(dto.getCurrentStock(), model.getCurrentStock());
+        assertEquals(dto.getUnitPrice(), model.getUnitPrice());
+        assertEquals(dto.getEnabled(), model.getEnabled());
+        assertEquals(dto.getCreatedBy(), model.getCreatedBy());
+        assertEquals(dto.getUpdatedBy(), model.getUpdatedBy());
     }
 
     @Test
-    void testToModel_NullCreateDto() {
-        assertThat(mapper.toModel((ProductCreateDto) null)).isNull();
+    void toModel_shouldReturnNull_whenCreateDtoIsNull() {
+        assertNull(mapper.toModel((ProductCreateDto) null));
     }
 
     @Test
-    void testToModel_NullUpdateDto() {
-        assertThat(mapper.toModel((ProductUpdateDto) null)).isNull();
+    void toModel_shouldReturnNull_whenUpdateDtoIsNull() {
+        assertNull(mapper.toModel((ProductUpdateDto) null));
+    }
+
+    @Test
+    void updateModelFromDto_shouldUpdateFields_whenDtoHasValues() {
+        UUID id = UUID.randomUUID();
+        UUID categoryId = UUID.randomUUID();
+        UUID brandId = UUID.randomUUID();
+
+        ProductModel existing = ProductModel.builder()
+                .id(id)
+                .code("OLD_CODE")
+                .name("Old Name")
+                .description("Old Desc")
+                .categoryId(UUID.randomUUID())
+                .unitCode("OLD_UNIT")
+                .brandId(UUID.randomUUID())
+                .minimumStock(5)
+                .currentStock(10)
+                .unitPrice(BigDecimal.valueOf(10.00))
+                .enabled(true)
+                .updatedBy("old-user")
+                .build();
+
+        ProductUpdateDto dto = ProductUpdateDto.builder()
+                .id(id)
+                .code("P002")
+                .name("Producto B")
+                .description("Descripción B")
+                .categoryId(categoryId)
+                .unitCode("LTS")
+                .brandId(brandId)
+                .minimumStock(20)
+                .currentStock(100)
+                .unitPrice(BigDecimal.valueOf(456.78))
+                .createdBy("admin")
+                .enabled(false)
+                .updatedBy("editor")
+                .build();
+
+        mapper.updateModelFromDto(existing, dto);
+
+        assertEquals("P002", existing.getCode());
+        assertEquals("Producto B", existing.getName());
+        assertEquals("Descripción B", existing.getDescription());
+        assertEquals("LTS", existing.getUnitCode());
+        assertEquals(brandId, existing.getBrandId());
+        assertEquals(categoryId, existing.getCategoryId());
+        assertEquals(20, existing.getMinimumStock());
+        assertEquals(100, existing.getCurrentStock());
+        assertEquals(BigDecimal.valueOf(456.78), existing.getUnitPrice());
+        assertEquals(false, existing.getEnabled());
+        assertEquals("editor", existing.getUpdatedBy());
+        assertNotNull(existing.getUpdatedAt());
+    }
+
+    @Test
+    void updateModelFromDto_shouldNotUpdateAnything_whenDtoIsNull() {
+        ProductModel existing = ProductModel.builder().code("initial").build();
+        mapper.updateModelFromDto(existing, null);
+        assertEquals("initial", existing.getCode()); // unchanged
+    }
+
+    @Test
+    void updateModelFromDto_shouldDoNothing_whenModelIsNull() {
+        ProductUpdateDto dto = ProductUpdateDto.builder().code("new").build();
+        mapper.updateModelFromDto(null, dto); // no exception should be thrown
     }
 }
