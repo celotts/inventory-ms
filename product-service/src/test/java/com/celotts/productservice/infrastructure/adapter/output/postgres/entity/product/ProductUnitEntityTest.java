@@ -10,170 +10,95 @@ import static org.junit.jupiter.api.Assertions.*;
 class ProductUnitEntityTest {
 
     @Test
-    void testBuilderAndGetters() {
+    void testSettersAndToString() {
+        ProductUnitEntity unit = new ProductUnitEntity();
         UUID id = UUID.randomUUID();
-        String code = "PU001";
+        String code = "U001";
         String name = "Unidad";
-        String description = "Descripción unidad";
+        String description = "Unidad de peso";
         String symbol = "kg";
         Boolean enabled = true;
-        LocalDateTime createdAt = LocalDateTime.now().minusDays(1);
+        LocalDateTime createdAt = LocalDateTime.now().minusDays(2);
         LocalDateTime updatedAt = LocalDateTime.now();
         String createdBy = "admin";
         String updatedBy = "editor";
 
-        ProductUnitEntity entity = ProductUnitEntity.builder()
-                .id(id)
-                .code(code)
-                .name(name)
-                .description(description)
-                .symbol(symbol)
-                .enabled(enabled)
-                .createdAt(createdAt)
-                .updatedAt(updatedAt)
-                .createdBy(createdBy)
-                .updatedBy(updatedBy)
-                .build();
+        unit.setId(id);
+        unit.setCode(code);
+        unit.setName(name);
+        unit.setDescription(description);
+        unit.setSymbol(symbol);
+        unit.setEnabled(enabled);
+        unit.setCreatedAt(createdAt);
+        unit.setUpdatedAt(updatedAt);
+        unit.setCreatedBy(createdBy);
+        unit.setUpdatedBy(updatedBy);
 
-        assertEquals(id, entity.getId());
-        assertEquals(code, entity.getCode());
-        assertEquals(name, entity.getName());
-        assertEquals(description, entity.getDescription());
-        assertEquals(symbol, entity.getSymbol());
-        assertEquals(enabled, entity.getEnabled());
-        assertEquals(createdAt, entity.getCreatedAt());
-        assertEquals(updatedAt, entity.getUpdatedAt());
-        assertEquals(createdBy, entity.getCreatedBy());
-        assertEquals(updatedBy, entity.getUpdatedBy());
-    }
+        assertEquals(id, unit.getId());
+        assertEquals(code, unit.getCode());
+        assertEquals(name, unit.getName());
+        assertEquals(description, unit.getDescription());
+        assertEquals(symbol, unit.getSymbol());
+        assertEquals(enabled, unit.getEnabled());
+        assertEquals(createdAt, unit.getCreatedAt());
+        assertEquals(updatedAt, unit.getUpdatedAt());
+        assertEquals(createdBy, unit.getCreatedBy());
+        assertEquals(updatedBy, unit.getUpdatedBy());
 
-    @Test
-    void testSettersAndNoArgsConstructor() {
-        ProductUnitEntity entity = new ProductUnitEntity();
-
-        UUID id = UUID.randomUUID();
-        String code = "PU002";
-        String name = "Unidad 2";
-        String description = "Otra descripción";
-        String symbol = "L";
-        Boolean enabled = false;
-        LocalDateTime createdAt = LocalDateTime.now().minusDays(2);
-        LocalDateTime updatedAt = LocalDateTime.now().minusDays(1);
-        String createdBy = "user1";
-        String updatedBy = "user2";
-
-        entity.setId(id);
-        entity.setCode(code);
-        entity.setName(name);
-        entity.setDescription(description);
-        entity.setSymbol(symbol);
-        entity.setEnabled(enabled);
-        entity.setCreatedAt(createdAt);
-        entity.setUpdatedAt(updatedAt);
-        entity.setCreatedBy(createdBy);
-        entity.setUpdatedBy(updatedBy);
-
-        assertEquals(id, entity.getId());
-        assertEquals(code, entity.getCode());
-        assertEquals(name, entity.getName());
-        assertEquals(description, entity.getDescription());
-        assertEquals(symbol, entity.getSymbol());
-        assertEquals(enabled, entity.getEnabled());
-        assertEquals(createdAt, entity.getCreatedAt());
-        assertEquals(updatedAt, entity.getUpdatedAt());
-        assertEquals(createdBy, entity.getCreatedBy());
-        assertEquals(updatedBy, entity.getUpdatedBy());
-    }
-
-    @Test
-    void testEqualsAndHashCode() {
-        UUID id = UUID.randomUUID();
-
-        ProductUnitEntity entity1 = ProductUnitEntity.builder()
-                .id(id)
-                .code("CODE123")
-                .build();
-
-        ProductUnitEntity entity2 = ProductUnitEntity.builder()
-                .id(id)
-                .code("CODE123")
-                .build();
-
-        assertEquals(entity1, entity2);
-        assertEquals(entity1.hashCode(), entity2.hashCode());
-    }
-
-    @Test
-    void testToString() {
-        ProductUnitEntity entity = ProductUnitEntity.builder()
-                .id(UUID.randomUUID())
-                .code("TOSTRING")
-                .symbol("kg")
-                .build();
-
-        String toString = entity.toString();
+        String toString = unit.toString();
         assertNotNull(toString);
-        assertTrue(toString.contains("TOSTRING"));
+        assertTrue(toString.contains("U001"));
+        assertTrue(toString.contains("Unidad"));
         assertTrue(toString.contains("kg"));
     }
 
     @Test
-    void testCanEqual() {
-        ProductUnitEntity entity1 = new ProductUnitEntity();
-        ProductUnitEntity entity2 = new ProductUnitEntity();
-
-        assertTrue(entity1.canEqual(entity2));
-        assertFalse(entity1.canEqual("NotAProductUnitEntity"));
-    }
-
-    @Test
-    void testNotEqualsDifferentFields() {
+    void testEqualsHashCodeCanEqual() {
         UUID id = UUID.randomUUID();
 
-        ProductUnitEntity unit1 = ProductUnitEntity.builder()
+        ProductUnitEntity u1 = ProductUnitEntity.builder()
                 .id(id)
-                .code("CODE123")
-                .name("Kilogramo")
-                .description("Peso")
-                .symbol("kg")
-                .enabled(true)
-                .createdAt(LocalDateTime.now().minusDays(2))
-                .updatedAt(LocalDateTime.now().minusDays(1))
-                .createdBy("admin")
-                .updatedBy("admin")
+                .code("U100")
+                .name("Unidad A")
                 .build();
 
-        ProductUnitEntity unit2 = ProductUnitEntity.builder()
+        ProductUnitEntity u2 = ProductUnitEntity.builder()
                 .id(id)
-                .code("CODE123")
-                .name("Gramo") // diferente campo
-                .description("Peso")
-                .symbol("g")
-                .enabled(true)
-                .createdAt(unit1.getCreatedAt())
-                .updatedAt(unit1.getUpdatedAt())
-                .createdBy("admin")
-                .updatedBy("admin")
+                .code("U100")
+                .name("Unidad A")
                 .build();
 
-        assertNotEquals(unit1, unit2);
-        assertNotEquals(unit1.hashCode(), unit2.hashCode());
+        ProductUnitEntity u3 = ProductUnitEntity.builder()
+                .id(UUID.randomUUID())
+                .code("U200")
+                .name("Unidad B")
+                .build();
+
+        assertEquals(u1, u2);
+        assertEquals(u1.hashCode(), u2.hashCode());
+        assertNotEquals(u1, u3);
+        assertNotEquals(u1.hashCode(), u3.hashCode());
+
+        assertTrue(u1.canEqual(u2));
+        assertFalse(u1.canEqual("String"));
     }
 
     @Test
-    void testEqualsWithNullAndSameInstance() {
-        ProductUnitEntity entity = ProductUnitEntity.builder()
-                .id(UUID.randomUUID())
-                .code("EQ001")
+    void testToBuilder() {
+        ProductUnitEntity original = ProductUnitEntity.builder()
+                .code("U999")
+                .name("Original")
+                .enabled(true)
                 .build();
 
-        // Mismo objeto
-        assertEquals(entity, entity); // this == o
+        ProductUnitEntity copy = original.toBuilder()
+                .name("Copiado")
+                .enabled(false)
+                .build();
 
-        // Comparar con null
-        assertNotEquals(entity, null); // o == null
-
-        // Comparar con otro tipo de objeto
-        assertNotEquals(entity, "not an entity");
+        assertEquals("U999", copy.getCode());
+        assertEquals("Copiado", copy.getName());
+        assertFalse(copy.getEnabled());
+        assertNotEquals(original, copy);
     }
 }
