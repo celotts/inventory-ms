@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.lang.reflect.InvocationTargetException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -164,5 +165,29 @@ class ProductDtoMapperTest {
     void toResponseDtoList_shouldReturnNull_whenInputIsNull() {
         List<ProductResponseDto> result = ProductDtoMapper.toResponseDtoList(null);
         assertNull(result);
+    }
+
+    @Test
+    void utilityClassConstructor_shouldThrowException() throws Exception {
+        var constructor = ProductDtoMapper.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+
+        try {
+            constructor.newInstance();
+            fail("Se esperaba una UnsupportedOperationException");
+        } catch (InvocationTargetException e) {
+            // ✅ Verificamos que el verdadero error sea UnsupportedOperationException
+            assertTrue(e.getCause() instanceof UnsupportedOperationException);
+        }
+    }
+
+    @Test
+    void toModel_shouldReturnNull_whenInputIsNull() {
+        assertNull(ProductDtoMapper.toModel(null));
+    }
+
+    @Test
+    void toUpdateDto_shouldReturnNull_whenInputIsNull() {
+        assertNull(ProductDtoMapper.toUpdateDto(null));
     }
 }
