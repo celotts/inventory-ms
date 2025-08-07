@@ -2,7 +2,7 @@ package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.domain.port.category.usecase.CategoryUseCase;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatsDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category.CategoryRequestMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -205,13 +205,13 @@ class CategoryServiceTest {
 
     @Test
     void getCategoryStatistics_shouldReturnDto() {
-        CategoryStatsDto stats = new CategoryStatsDto(
+        CategoryStatusDto stats = new CategoryStatusDto(
                 10, 5, 3, 2, 50.0, 30.0, 20.0
         );
 
         when(useCase.getCategoryStatistics()).thenReturn(stats);
 
-        CategoryStatsDto result = service.getCategoryStatistics();
+        CategoryStatusDto result = service.getCategoryStatistics();
 
         assertEquals(10, result.getTotalCategories());
         assertEquals(5, result.getActiveCategories());

@@ -6,7 +6,7 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category
 import com.celotts.productservice.applications.service.CategoryService;
 import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatsDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -92,7 +92,7 @@ class CategoryControllerTest {
 
     @Test
     void getCategoryStats_shouldReturnStats() {
-        CategoryStatsDto stats = new CategoryStatsDto(
+        CategoryStatusDto stats = new CategoryStatusDto(
                 10L, 7L, 2L, 1L,
                 70.0, 20.0, 10.0
         );

@@ -2,7 +2,7 @@ package com.celotts.productservice.applications.usecase;
 
 import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatsDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.*;
@@ -238,7 +238,7 @@ class CategoryUseCaseImplTest {
         when(repository.countByActive(true)).thenReturn(1L);
         when(repository.countByActive(false)).thenReturn(1L);
 
-        CategoryStatsDto stats = useCase.getCategoryStatistics();
+        CategoryStatusDto stats = useCase.getCategoryStatistics();
 
         assertEquals(2, stats.getTotalCategories());
         assertEquals(1, stats.getActiveCategories());

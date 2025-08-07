@@ -119,4 +119,50 @@ class ProductModelTest {
         assertTrue(result.contains("ToStringTest"));
         assertTrue(result.contains("00000000-0000-0000-0000-000000000001"));
     }
+
+
+
+    @Test
+    void noArgsConstructorAndSetters_shouldSetAllFieldsCorrectly_v2() {
+        UUID id = UUID.randomUUID();
+        UUID categoryId = UUID.randomUUID();
+        UUID brandId = UUID.randomUUID();
+        LocalDateTime createdAt = LocalDateTime.now();
+        LocalDateTime updatedAt = LocalDateTime.now();
+        BigDecimal unitPrice = new BigDecimal("99.99");
+
+        ProductModel model = new ProductModel();
+        model.setId(id);
+        model.setCode("PX001");
+        model.setName("Nuevo Producto");
+        model.setDescription("Descripción larga");
+        model.setCategoryId(categoryId);
+        model.setUnitCode("UN001");
+        model.setBrandId(brandId);
+        model.setMinimumStock(10);
+        model.setCurrentStock(5);
+        model.setUnitPrice(unitPrice);
+        model.setEnabled(true);
+        model.setCreatedAt(createdAt);
+        model.setUpdatedAt(updatedAt);
+        model.setCreatedBy("admin");
+        model.setUpdatedBy("editor");
+
+        assertEquals(id, model.getId());
+        assertEquals("PX001", model.getCode());
+        assertEquals("Nuevo Producto", model.getName());
+        assertEquals("Descripción larga", model.getDescription());
+        assertEquals(categoryId, model.getCategoryId());
+        assertEquals("UN001", model.getUnitCode());
+        assertEquals(brandId, model.getBrandId());
+        assertEquals(10, model.getMinimumStock());
+        assertEquals(5, model.getCurrentStock());
+        assertEquals(unitPrice, model.getUnitPrice());
+        assertTrue(model.getEnabled());
+        assertEquals(createdAt, model.getCreatedAt());
+        assertEquals(updatedAt, model.getUpdatedAt());
+        assertEquals("admin", model.getCreatedBy());
+        assertEquals("editor", model.getUpdatedBy());
+    }
+
 }
