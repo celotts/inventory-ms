@@ -3,6 +3,7 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.dto.product
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode; // ✅ ESTA LÍNEA
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.util.UUID;
 @Getter
 @Builder(toBuilder = true)
 @AllArgsConstructor
+@EqualsAndHashCode
 public class ProductBrandResponseDto {
 
     private final UUID id;

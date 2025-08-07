@@ -12,7 +12,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductBrandDeleteDto {
-    @NotBlank(message = "Category ID is required")
-    @NotNull(message = "Category ID is not null")
+    @NotNull(message = "Category ID is required")
     private UUID id;
 }
