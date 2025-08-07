@@ -1,9 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -11,9 +9,11 @@ import java.util.UUID;
 @Entity
 @Table(name = "product_tag")
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductTagEntity {
+
     @Id
     @GeneratedValue
     private UUID id;
@@ -24,5 +24,5 @@ public class ProductTagEntity {
     private String description;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 }

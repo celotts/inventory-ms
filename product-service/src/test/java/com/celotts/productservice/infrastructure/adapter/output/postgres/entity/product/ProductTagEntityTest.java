@@ -9,19 +9,20 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ProductTagEntityTest {
 
+    private static final LocalDateTime FIXED_TIME = LocalDateTime.of(2024, 1, 1, 10, 0, 0);
+
     @Test
     void testAllArgsConstructorAndGetters() {
         UUID id = UUID.randomUUID();
         String name = "Test Tag";
         String description = "A test tag";
-        LocalDateTime createdAt = LocalDateTime.now();
 
-        ProductTagEntity tag = new ProductTagEntity(id, name, description, createdAt);
+        ProductTagEntity tag = new ProductTagEntity(id, name, description, FIXED_TIME);
 
         assertEquals(id, tag.getId());
         assertEquals(name, tag.getName());
         assertEquals(description, tag.getDescription());
-        assertEquals(createdAt, tag.getCreatedAt());
+        assertEquals(FIXED_TIME, tag.getCreatedAt());
     }
 
     @Test
@@ -32,22 +33,20 @@ class ProductTagEntityTest {
         tag.setId(id);
         tag.setName("Set Name");
         tag.setDescription("Set Description");
-        LocalDateTime now = LocalDateTime.now();
-        tag.setCreatedAt(now);
+        tag.setCreatedAt(FIXED_TIME);
 
         assertEquals(id, tag.getId());
         assertEquals("Set Name", tag.getName());
         assertEquals("Set Description", tag.getDescription());
-        assertEquals(now, tag.getCreatedAt());
+        assertEquals(FIXED_TIME, tag.getCreatedAt());
     }
 
     @Test
     void testEqualsAndHashCode_sameValues() {
         UUID id = UUID.randomUUID();
-        LocalDateTime createdAt = LocalDateTime.now();
 
-        ProductTagEntity tag1 = new ProductTagEntity(id, "TAG", "desc", createdAt);
-        ProductTagEntity tag2 = new ProductTagEntity(id, "TAG", "desc", createdAt);
+        ProductTagEntity tag1 = new ProductTagEntity(id, "TAG", "desc", FIXED_TIME);
+        ProductTagEntity tag2 = new ProductTagEntity(id, "TAG", "desc", FIXED_TIME);
 
         assertEquals(tag1, tag2);
         assertEquals(tag1.hashCode(), tag2.hashCode());
@@ -57,8 +56,8 @@ class ProductTagEntityTest {
     void testEqualsAndHashCode_differentValues() {
         UUID id = UUID.randomUUID();
 
-        ProductTagEntity tag1 = new ProductTagEntity(id, "TAG1", "desc1", LocalDateTime.now());
-        ProductTagEntity tag2 = new ProductTagEntity(id, "TAG2", "desc2", LocalDateTime.now());
+        ProductTagEntity tag1 = new ProductTagEntity(id, "TAG1", "desc1", FIXED_TIME);
+        ProductTagEntity tag2 = new ProductTagEntity(id, "TAG2", "desc2", FIXED_TIME);
 
         assertNotEquals(tag1, tag2);
         assertNotEquals(tag1.hashCode(), tag2.hashCode());
@@ -69,7 +68,7 @@ class ProductTagEntityTest {
         ProductTagEntity tag = new ProductTagEntity();
 
         assertNotEquals(tag, null);
-        assertNotEquals(tag, "not a ProductTagEntity");
+        assertNotEquals(tag, new Object());
     }
 
     @Test
@@ -81,10 +80,9 @@ class ProductTagEntityTest {
     @Test
     void testEquals_nameIsNullInOneObject() {
         UUID id = UUID.randomUUID();
-        LocalDateTime createdAt = LocalDateTime.now();
 
-        ProductTagEntity tag1 = new ProductTagEntity(id, null, "desc", createdAt);
-        ProductTagEntity tag2 = new ProductTagEntity(id, "TAG", "desc", createdAt);
+        ProductTagEntity tag1 = new ProductTagEntity(id, null, "desc", FIXED_TIME);
+        ProductTagEntity tag2 = new ProductTagEntity(id, "TAG", "desc", FIXED_TIME);
 
         assertNotEquals(tag1, tag2);
     }
@@ -93,10 +91,9 @@ class ProductTagEntityTest {
     void testEquals_descriptionDifferent() {
         UUID id = UUID.randomUUID();
         String name = "TAG";
-        LocalDateTime createdAt = LocalDateTime.now();
 
-        ProductTagEntity tag1 = new ProductTagEntity(id, name, "desc1", createdAt);
-        ProductTagEntity tag2 = new ProductTagEntity(id, name, "desc2", createdAt);
+        ProductTagEntity tag1 = new ProductTagEntity(id, name, "desc1", FIXED_TIME);
+        ProductTagEntity tag2 = new ProductTagEntity(id, name, "desc2", FIXED_TIME);
 
         assertNotEquals(tag1, tag2);
     }
@@ -107,8 +104,8 @@ class ProductTagEntityTest {
         String name = "TAG";
         String desc = "desc";
 
-        ProductTagEntity tag1 = new ProductTagEntity(id, name, desc, LocalDateTime.now());
-        ProductTagEntity tag2 = new ProductTagEntity(id, name, desc, LocalDateTime.now().plusSeconds(10));
+        ProductTagEntity tag1 = new ProductTagEntity(id, name, desc, FIXED_TIME);
+        ProductTagEntity tag2 = new ProductTagEntity(id, name, desc, FIXED_TIME.plusDays(1));
 
         assertNotEquals(tag1, tag2);
     }
@@ -118,9 +115,8 @@ class ProductTagEntityTest {
         UUID id = UUID.randomUUID();
         String name = "TestTag";
         String description = "Some description";
-        LocalDateTime createdAt = LocalDateTime.now();
 
-        ProductTagEntity tag = new ProductTagEntity(id, name, description, createdAt);
+        ProductTagEntity tag = new ProductTagEntity(id, name, description, FIXED_TIME);
 
         String result = tag.toString();
 
@@ -136,6 +132,6 @@ class ProductTagEntityTest {
         ProductTagEntity tag2 = new ProductTagEntity();
 
         assertTrue(tag1.canEqual(tag2));
-        assertFalse(tag1.canEqual("not a ProductTagEntity"));
+        assertFalse(tag1.canEqual(new Object()));
     }
 }
