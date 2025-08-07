@@ -105,4 +105,51 @@ class ProductCategoryModelTest {
         String str = model.toString();
         assertTrue(str.contains("ProductCategoryModel"));
     }
+
+    @Test
+    void settersAndWithers_shouldSetAllFieldsCorrectly() {
+        ProductCategoryModel model = new ProductCategoryModel();
+
+        UUID id = UUID.randomUUID();
+        UUID productId = UUID.randomUUID();
+        UUID categoryId = UUID.randomUUID();
+        LocalDateTime now = LocalDateTime.now();
+
+        model.setId(id);
+        model.setProductId(productId);
+        model.setCategoryId(categoryId);
+        model.setAssignedAt(now);
+        model.setEnabled(true);
+        model.setCreatedAt(now);
+        model.setCreatedBy("creator");
+        model.setActive(true);
+        model.setUpdatedBy("updater");
+        model.setUpdatedAt(now);
+
+        assertEquals(id, model.getId());
+        assertEquals(productId, model.getProductId());
+        assertEquals(categoryId, model.getCategoryId());
+        assertEquals(now, model.getAssignedAt());
+        assertTrue(model.getEnabled());
+        assertEquals(now, model.getCreatedAt());
+        assertEquals("creator", model.getCreatedBy());
+        assertTrue(model.getActive());
+        assertEquals("updater", model.getUpdatedBy());
+        assertEquals(now, model.getUpdatedAt());
+
+        // probar withX methods también
+        ProductCategoryModel copy = model
+                .withId(UUID.randomUUID())
+                .withProductId(UUID.randomUUID())
+                .withCategoryId(UUID.randomUUID())
+                .withAssignedAt(LocalDateTime.now())
+                .withEnabled(false)
+                .withCreatedAt(LocalDateTime.now())
+                .withCreatedBy("newCreator")
+                .withActive(false)
+                .withUpdatedBy("newUpdater")
+                .withUpdatedAt(LocalDateTime.now());
+
+        assertNotEquals(model, copy); // asegurar que los cambios sean reales
+    }
 }

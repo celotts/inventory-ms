@@ -119,4 +119,43 @@ class ProductUnitModelTest {
         assertEquals("modified", modified.getCode());
         assertNotEquals(original, modified);
     }
+
+    @Test
+    void testAllWithMethods() {
+        UUID id = UUID.randomUUID();
+        LocalDateTime now = LocalDateTime.now();
+
+        ProductUnitModel base = ProductUnitModel.builder()
+                .id(id)
+                .code("CODE")
+                .name("Name")
+                .description("Desc")
+                .symbol("S")
+                .enabled(true)
+                .createdAt(now.minusDays(1))
+                .updatedAt(now)
+                .createdBy("admin")
+                .updatedBy("editor")
+                .build();
+
+        ProductUnitModel modified = base
+                .withId(UUID.randomUUID())
+                .withCode("NEW_CODE")
+                .withName("NewName")
+                .withDescription("NewDesc")
+                .withSymbol("kg")
+                .withEnabled(false)
+                .withCreatedAt(now.minusDays(2))
+                .withUpdatedAt(now.plusDays(1))
+                .withCreatedBy("nuevo")
+                .withUpdatedBy("otro");
+
+        assertNotEquals(base, modified);
+    }
+
+    @Test
+    void testCanEqualWithDifferentObject() {
+        ProductUnitModel model = ProductUnitModel.builder().code("A").build();
+        assertNotEquals(model, "some string"); // Esto fuerza la ejecución de canEqual()
+    }
 }
