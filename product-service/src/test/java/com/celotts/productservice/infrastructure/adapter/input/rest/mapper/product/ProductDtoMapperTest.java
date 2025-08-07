@@ -190,4 +190,40 @@ class ProductDtoMapperTest {
     void toUpdateDto_shouldReturnNull_whenInputIsNull() {
         assertNull(ProductDtoMapper.toUpdateDto(null));
     }
+
+    @Test
+    void toModel_shouldUseProvidedEnabledValue_whenEnabledIsNotNull() {
+        ProductRequestDto dto = ProductRequestDto.builder()
+                .code("P001")
+                .name("Producto")
+                .enabled(false)
+                .createdBy("tester")
+                .build();
+
+        ProductModel model = ProductDtoMapper.toModel(dto);
+
+        assertNotNull(model);
+        assertFalse(model.getEnabled());
+    }
+
+    @Test
+    void toModel_shouldDefaultToEnabledTrue_whenEnabledIsNull() {
+        ProductRequestDto dto = ProductRequestDto.builder()
+                .code("P001")
+                .name("Producto")
+                .enabled(null)
+                .createdBy("tester")
+                .build();
+
+        ProductModel model = ProductDtoMapper.toModel(dto);
+
+        assertNotNull(model);
+        assertTrue(model.getEnabled()); // <- Esta es la parte no cubierta aún
+    }
+
+    @Test
+    void toResponseDto_shouldReturnNull_whenModelIsNull() {
+        ProductResponseDto response = ProductDtoMapper.toResponseDto(null);
+        assertNull(response);
+    }
 }

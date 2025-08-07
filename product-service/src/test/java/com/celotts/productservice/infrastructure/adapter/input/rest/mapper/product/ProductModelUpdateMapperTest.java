@@ -4,7 +4,7 @@ import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -109,4 +109,14 @@ class ProductModelUpdateMapperTest {
         assertEquals("system", existingModel.getUpdatedBy());
         assertNotNull(existingModel.getUpdatedAt());
     }
+
+    @Test
+    void constructor_shouldThrowException() throws Exception {
+        var constructor = ProductModelUpdateMapper.class.getDeclaredConstructor();
+        constructor.setAccessible(true);
+        Exception exception = assertThrows(InvocationTargetException.class, constructor::newInstance);
+        assertTrue(exception.getCause() instanceof UnsupportedOperationException);
+        assertEquals("Utility class - instantiation not allowed", exception.getCause().getMessage());
+    }
+
 }
