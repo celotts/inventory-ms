@@ -9,20 +9,12 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.context.annotation.Import;
 
 @SpringBootTest(
-		webEnvironment = SpringBootTest.WebEnvironment.NONE,
+		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
 		classes = {
 				ProductServiceApplication.class,  // ← tu clase principal con @SpringBootApplication
 				TestBeanConfig.class              // ← mocks personalizados
 		}
 )
-/*@ComponentScan(
-		basePackages = "com.celotts.productservice",
-		excludeFilters = {
-				@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = com.celotts.productservice.applications.service.ProductTypeService.class),
-				@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = com.celotts.productservice.applications.service.ProductBrandService.class),
-				@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = com.celotts.productservice.applications.service.ProductUnitService.class)
-		}
-)*/
 @ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @TestPropertySource(properties = {
