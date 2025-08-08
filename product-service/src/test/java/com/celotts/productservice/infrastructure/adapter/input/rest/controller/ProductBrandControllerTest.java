@@ -1,4 +1,4 @@
-/*package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
+package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.applications.service.ProductBrandService;
 import com.celotts.productservice.domain.model.ProductBrandModel;
@@ -9,15 +9,19 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productB
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
 
 
-import com.celotts.productservice.infrastructure.common.config.ProductBrandControllerTestConfig;
+import com.celotts.productservice.infrastructure.common.config.MockBeansConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -35,17 +39,16 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Import(com.celotts.productservice.infrastructure.common.config.ProductBrandControllerTestConfig.class)
-@WebMvcTest(ProductBrandController.class)
+@SpringBootTest
 @AutoConfigureMockMvc
+@Import(MockBeansConfig.class)
 @ActiveProfiles("test")
-public class ProductBrandControllerTest  {
-
+class ProductBrandControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @Autowired private ProductBrandUseCase productBrandUseCase;
     @Autowired private ProductBrandDtoMapper productBrandDtoMapper;
-    @Autowired private ProductBrandService productBrandService; // ✅ Este debe estar
+    @Autowired private ProductBrandService productBrandService;
 
 
     private UUID brandId;
@@ -64,24 +67,9 @@ public class ProductBrandControllerTest  {
                 .build();
     }
 
-    // Este test accede directamente al contexto web, lo cual puede romper el aislamiento de @WebMvcTest
-    // @Test
-    // void printOnlyMyBeans() throws Exception {
-    //     assertNotNull(mockMvc, "MockMvc no está inicializado");
-    //     var context = (org.springframework.web.context.WebApplicationContext)
-    //             mockMvc.getDispatcherServlet().getWebApplicationContext();
-    //     assertNotNull(context, "Contexto web no se pudo obtener");
-    //     String[] beanNames = context.getBeanDefinitionNames();
-    //     System.out.println("======= BEANS IN CONTEXT =======");
-    //     for (String name : beanNames) {
-    //         if (name.toLowerCase().contains("productbrand")) {
-    //             System.out.println(name);
-    //         }
-    //     }
-    //     System.out.println("================================");
-    // }
 
-    /*@Test
+
+    @Test
     void getAllBrands_shouldReturnList() throws Exception {
         when(productBrandService.findAll()).thenReturn(List.of(responseDto));
 
@@ -89,9 +77,8 @@ public class ProductBrandControllerTest  {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value(brandId.toString()));
-    }*/
-
-    /*@Test
+    }
+    @Test
     void getBrandById_shouldReturnDto() throws Exception {
         ProductBrandModel brandModel = ProductBrandModel.builder()
                 .id(brandId)
@@ -109,7 +96,7 @@ public class ProductBrandControllerTest  {
                 .andExpect(jsonPath("$.id").value(brandId.toString()));
     }
 
-    /*@Test
+    @Test
     void getAllBrandIds_shouldReturnListOfIds() throws Exception {
         when(productBrandService.findAllIds()).thenReturn(List.of(brandId));
 
@@ -117,9 +104,9 @@ public class ProductBrandControllerTest  {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0]").value(brandId.toString()));
-    }*/
+    }
 
-   /* @Test
+   @Test
     void getBrandNameById_shouldReturnName() throws Exception {
         when(productBrandService.findNameById(brandId)).thenReturn(Optional.of("BrandX"));
 
@@ -238,23 +225,23 @@ public class ProductBrandControllerTest  {
                 .andExpect(jsonPath("$.enabled").value(false));
     }
 
-    /*@Test
+    @Test
     void getBrandById_shouldReturnNotFound_whenNotExists() throws Exception {
         when(productBrandService.findById(brandId)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         mockMvc.perform(get("/api/v1/product-brands/{id}", brandId))
                 .andExpect(status().isNotFound());
-    }*/
+    }
 
-    /*@Test
+    @Test
     void getBrandNameById_shouldReturnNotFound_whenNotExists() throws Exception {
         when(productBrandService.findNameById(brandId)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/v1/product-brands/brands/{id}/name", brandId))
                 .andExpect(status().isNotFound());
-    }*/
+    }
 
-    /*@Test
+    @Test
     void contextLoads() {
         // Verifica que el contexto arranca y los beans fueron inyectados correctamente
         assertNotNull(mockMvc);
@@ -286,8 +273,46 @@ public class ProductBrandControllerTest  {
     //     }
     // }
 
+    @Test
+    @Disabled("Solo para depuración. Eliminar o desactivar en producción.")
+    void printBeansInContext() throws Exception {
+        String[] beans = ((org.springframework.web.context.WebApplicationContext)
+                mockMvc.getDispatcherServlet().getWebApplicationContext())
+                .getBeanDefinitionNames();
+
+        System.out.println("========== BEANS ==========");
+        for (String bean : beans) {
+            if (bean.toLowerCase().contains("productbrand")) {
+                System.out.println(bean);
+            }
+        }
+        System.out.println("===========================");
+    }
 
 
-}*/
 
+    // --- MockBeans configuration for test context ---
+    @TestConfiguration
+    static class MockBeans {
 
+        @Bean
+        public ProductBrandUseCase productBrandUseCase() {
+            return mock(ProductBrandUseCase.class);
+        }
+
+        @Bean
+        public ProductBrandDtoMapper productBrandDtoMapper() {
+            return mock(ProductBrandDtoMapper.class);
+        }
+
+        @Bean
+        public ProductBrandService productBrandService() {
+            return mock(ProductBrandService.class);
+        }
+
+        @Bean
+        public ObjectMapper objectMapper() {
+            return new ObjectMapper().findAndRegisterModules();
+        }
+    }
+}

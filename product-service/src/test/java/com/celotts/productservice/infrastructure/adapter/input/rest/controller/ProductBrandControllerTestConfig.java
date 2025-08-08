@@ -1,5 +1,6 @@
-package com.celotts.productservice.infrastructure.common.config;
+package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
+import com.celotts.productservice.applications.service.ProductBrandService;
 import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrandUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,6 +20,14 @@ public class ProductBrandControllerTestConfig {
     @Bean
     public ProductBrandDtoMapper productBrandDtoMapper() {
         return mock(ProductBrandDtoMapper.class);
+    }
+
+    @Bean
+    public ProductBrandService productBrandService(
+            ProductBrandUseCase productBrandUseCase,
+            ProductBrandDtoMapper productBrandDtoMapper
+    ) {
+        return new ProductBrandService(productBrandUseCase, productBrandDtoMapper);
     }
 
     @Bean

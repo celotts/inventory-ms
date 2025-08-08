@@ -42,6 +42,19 @@ class CategoryModelTest {
     }
 
     @Test
+    void shouldUseAllArgsConstructor() {
+        UUID id = UUID.randomUUID();
+        LocalDateTime now = LocalDateTime.now();
+
+        CategoryModel category = new CategoryModel(
+                id, "Enlatados", "Comida en lata", true, "admin", "admin", now, now, false
+        );
+
+        assertEquals(id, category.getId());
+        assertEquals("Enlatados", category.getName());
+    }
+
+    @Test
     void shouldUseNoArgsConstructorAndSetters() {
         CategoryModel category = new CategoryModel();
         UUID id = UUID.randomUUID();
@@ -66,5 +79,96 @@ class CategoryModelTest {
         assertEquals("admin", category.getUpdatedBy());
         assertEquals(now, category.getUpdatedAt());
         assertTrue(category.isDeleted());
+    }
+
+    @Test
+    void shouldPrintToString() {
+        CategoryModel category = CategoryModel.builder()
+                .id(UUID.randomUUID())
+                .name("Snacks")
+                .description("Algo rico")
+                .active(true)
+                .createdBy("tester")
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        String output = category.toString();
+        assertNotNull(output); // Verifica que no sea null
+        assertTrue(output.contains("Snacks")); // Verifica contenido
+    }
+
+    @Test
+    void shouldCallToString() {
+        CategoryModel category = CategoryModel.builder()
+                .id(UUID.randomUUID())
+                .name("Snacks")
+                .description("Comida rápida")
+                .active(true)
+                .createdBy("admin")
+                .updatedBy("editor")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .deleted(false)
+                .build();
+
+        String result = category.toString();
+
+        assertNotNull(result);                  // Verifica que no sea null
+        assertTrue(result.contains("Snacks"));  // Verifica contenido esperado
+    }
+
+    @Test
+    void shouldCoverToStringCompletely() {
+        UUID id = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+        LocalDateTime now = LocalDateTime.of(2023, 8, 7, 12, 0);
+
+        CategoryModel category = CategoryModel.builder()
+                .id(id)
+                .name("Snacks")
+                .description("Comida rápida")
+                .active(false)
+                .createdBy("admin")
+                .updatedBy("editor")
+                .createdAt(now)
+                .updatedAt(now)
+                .deleted(true)
+                .build();
+
+        String expected = "CategoryModel{" +
+                "id=" + id +
+                ", name='Snacks'" +
+                ", description='Comida rápida'" +
+                ", active=false" +
+                ", createdBy='admin'" +
+                ", updatedBy='editor'" +
+                ", createdAt=" + now +
+                ", updatedAt=" + now +
+                ", deleted=true" +
+                '}';
+
+        assertEquals(expected, category.toString());
+    }
+
+    @Test
+    void shouldCoverToStringWithNullFields() {
+        UUID id = UUID.fromString("123e4567-e89b-12d3-a456-426614174001");
+
+        CategoryModel category = CategoryModel.builder()
+                .id(id)
+                .name(null)
+                .description(null)
+                .active(null)
+                .createdBy(null)
+                .updatedBy(null)
+                .createdAt(null)
+                .updatedAt(null)
+                .deleted(false)
+                .build();
+
+        String result = category.toString();
+
+        assertNotNull(result);
+        assertTrue(result.contains("id=" + id));
+        assertTrue(result.contains("name='null'")); // Lombok lo imprimirá así
     }
 }

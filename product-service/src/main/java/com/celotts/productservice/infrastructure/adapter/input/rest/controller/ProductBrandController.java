@@ -22,6 +22,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/product-brands")
 public class ProductBrandController {
+
     private final ProductBrandUseCase productBrandUseCase;
     private final ProductBrandDtoMapper productBrandDtoMapper;
     private final ProductBrandService productBrandService;

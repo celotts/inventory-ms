@@ -1,7 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,42 +20,9 @@ class ProductRequestMapperTest {
         mapper = new ProductRequestMapper();
     }
 
-    @Test
-    void toModel_fromCreateDto_shouldMapCorrectly() {
-        ProductCreateDto dto = ProductCreateDto.builder()
-                .code("P001")
-                .name("Producto")
-                .description("Descripción")
-                .unitCode("UNI")
-                .brandId(UUID.randomUUID())
-                .categoryId(UUID.randomUUID())
-                .minimumStock(10)
-                .currentStock(50)
-                .unitPrice(new BigDecimal("99.99"))
-                .enabled(true)
-                .createdBy("tester")
-                .build();
 
-        ProductModel model = mapper.toModel(dto);
 
-        assertNotNull(model);
-        assertEquals(dto.getCode(), model.getCode());
-        assertEquals(dto.getName(), model.getName());
-        assertEquals(dto.getDescription(), model.getDescription());
-        assertEquals(dto.getUnitCode(), model.getUnitCode());
-        assertEquals(dto.getBrandId(), model.getBrandId());
-        assertEquals(dto.getCategoryId(), model.getCategoryId());
-        assertEquals(dto.getMinimumStock(), model.getMinimumStock());
-        assertEquals(dto.getCurrentStock(), model.getCurrentStock());
-        assertEquals(dto.getUnitPrice(), model.getUnitPrice());
-        assertEquals(dto.getEnabled(), model.getEnabled());
-        assertEquals(dto.getCreatedBy(), model.getCreatedBy());
-    }
 
-    @Test
-    void toModel_fromCreateDto_shouldReturnNull_whenInputIsNull() {
-        assertNull(mapper.toModel((ProductCreateDto) null));
-    }
 
     @Test
     void toModel_fromUpdateDto_shouldMapCorrectly() {

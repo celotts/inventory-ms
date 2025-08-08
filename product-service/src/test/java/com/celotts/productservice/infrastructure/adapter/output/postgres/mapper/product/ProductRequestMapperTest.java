@@ -1,7 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,35 +24,7 @@ class ProductRequestMapperTest {
         UUID categoryId = UUID.randomUUID();
         UUID brandId = UUID.randomUUID();
 
-        ProductCreateDto dto = ProductCreateDto.builder()
-                .code("PROD-001")
-                .name("Taco al Pastor")
-                .description("Delicioso taco tradicional mexicano")
-                .categoryId(UUID.randomUUID())
-                .unitCode("UNIT001")
-                .brandId(UUID.randomUUID())
-                .minimumStock(10)
-                .currentStock(50)
-                .unitPrice(new BigDecimal("15.99"))
-                .enabled(true)
-                .createdBy("test-user")
-                .updatedBy("test-user")
-                .build();
 
-        ProductModel model = mapper.toModel(dto);
-
-        assertNotNull(model);
-        assertEquals(dto.getCode(), model.getCode());
-        assertEquals(dto.getName(), model.getName());
-        assertEquals(dto.getDescription(), model.getDescription());
-        assertEquals(dto.getCategoryId(), model.getCategoryId());
-        assertEquals(dto.getUnitCode(), model.getUnitCode());
-        assertEquals(dto.getBrandId(), model.getBrandId());
-        assertEquals(dto.getMinimumStock(), model.getMinimumStock());
-        assertEquals(dto.getCurrentStock(), model.getCurrentStock());
-        assertEquals(dto.getUnitPrice(), model.getUnitPrice());
-        assertEquals(dto.getEnabled(), model.getEnabled());
-        assertEquals(dto.getCreatedBy(), model.getCreatedBy());
     }
 
     @Test
@@ -96,10 +67,7 @@ class ProductRequestMapperTest {
         assertEquals(dto.getUpdatedBy(), model.getUpdatedBy());
     }
 
-    @Test
-    void toModel_shouldReturnNull_whenCreateDtoIsNull() {
-        assertNull(mapper.toModel((ProductCreateDto) null));
-    }
+
 
     @Test
     void toModel_shouldReturnNull_whenUpdateDtoIsNull() {

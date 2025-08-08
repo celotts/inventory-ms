@@ -3,12 +3,17 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.dto.product
 import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class ProductUpdateDto implements ProductReferenceDto {
 
     private UUID id;

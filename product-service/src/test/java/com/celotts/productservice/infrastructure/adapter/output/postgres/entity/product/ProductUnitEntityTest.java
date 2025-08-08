@@ -83,22 +83,5 @@ class ProductUnitEntityTest {
         assertFalse(u1.canEqual("String"));
     }
 
-    @Test
-    void testToBuilder() {
-        ProductUnitEntity original = ProductUnitEntity.builder()
-                .code("U999")
-                .name("Original")
-                .enabled(true)
-                .build();
 
-        ProductUnitEntity copy = original.toBuilder()
-                .name("Copiado")
-                .enabled(false)
-                .build();
-
-        assertEquals("U999", copy.getCode());
-        assertEquals("Copiado", copy.getName());
-        assertFalse(copy.getEnabled());
-        assertNotEquals(original, copy);
-    }
 }
