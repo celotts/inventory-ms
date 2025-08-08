@@ -10,11 +10,11 @@ import org.springframework.test.context.ActiveProfiles;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@ActiveProfiles("integration") // o cualquier perfil distinto de "test"
+@ActiveProfiles("integration") // Asegúrate de que este perfil no sea "test"
 class SecurityConfigTest {
 
     @Autowired
-    @Qualifier("filterChain")  // 👈 Solución clave
+    @Qualifier("filterChain")  // Esto buscará el bean definido en SecurityConfig
     private SecurityFilterChain securityFilterChain;
 
     @Test

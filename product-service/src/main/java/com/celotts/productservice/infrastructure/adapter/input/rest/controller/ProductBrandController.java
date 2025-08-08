@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -39,8 +40,14 @@ public class ProductBrandController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductBrandResponseDto>> getAllBrands() {
-        return ResponseEntity.ok(productBrandService.findAll());
+    public ResponseEntity<Map<String, Object>> getAllBrands() {
+        List<ProductBrandResponseDto> brands = productBrandService.findAll();
+        return ResponseEntity.ok(
+            Map.of(
+                "data", brands,
+                "total", brands != null ? brands.size() : 0
+            )
+        );
     }
 
     @GetMapping("/{id}")
@@ -67,9 +74,10 @@ public class ProductBrandController {
     }
 
     @GetMapping("/brands/{id}/name")
-    public String getBrandNameById(@PathVariable UUID id) {
+    public ResponseEntity<String> getBrandNameById(@PathVariable UUID id) {
         return productBrandService.findNameById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Brand name not found"));
     }
 
     @PatchMapping("/{id}/enable")

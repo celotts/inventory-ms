@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +38,9 @@ class ProductTypeServiceTest {
                 .build();
     }
 
-    @Test
+    @Test 
+@WithMockUser(username = "tester", roles = {"ADMIN"})
+    
     void existsByCode_shouldReturnTrue_whenExists() {
         when(productTypeUseCase.existsByCode(code)).thenReturn(true);
 
@@ -48,6 +51,7 @@ class ProductTypeServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void findNameByCode_shouldReturnName_whenExists() {
         when(productTypeUseCase.findNameByCode(code)).thenReturn(Optional.of("Food"));
 
@@ -58,7 +62,8 @@ class ProductTypeServiceTest {
         verify(productTypeUseCase).findNameByCode(code);
     }
 
-    @Test
+    @Test 
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void findAllCodes_shouldReturnListOfCodes() {
         List<String> codes = List.of("FOOD", "DRINK");
         when(productTypeUseCase.findAllCodes()).thenReturn(codes);
@@ -70,7 +75,8 @@ class ProductTypeServiceTest {
         verify(productTypeUseCase).findAllCodes();
     }
 
-    @Test
+    @Test 
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void findByCode_shouldReturnEntity_whenExists() {
         when(productTypeUseCase.findByCode(code)).thenReturn(Optional.of(productTypeEntity));
 
@@ -81,7 +87,8 @@ class ProductTypeServiceTest {
         verify(productTypeUseCase).findByCode(code);
     }
 
-    @Test
+    @Test 
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void findByCode_shouldReturnEmpty_whenNotExists() {
         when(productTypeUseCase.findByCode(code)).thenReturn(Optional.empty());
 

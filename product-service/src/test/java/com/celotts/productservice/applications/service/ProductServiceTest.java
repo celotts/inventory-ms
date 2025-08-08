@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -63,6 +64,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldGetAllProducts() {
         when(repository.findAll()).thenReturn(List.of(product));
         List<ProductModel> result = productService.getAll();
@@ -70,6 +72,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldGetPaginatedProducts() {
         Pageable pageable = PageRequest.of(0, 10);
         when(repository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(product)));
@@ -78,6 +81,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldGetProductsWithFilters() {
         Pageable pageable = PageRequest.of(0, 10);
         when(repository.findAllWithFilters(pageable, "C", "N", "D"))
@@ -87,6 +91,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldGetDisabledProducts() {
         when(repository.findByEnabled(false, Pageable.unpaged())).thenReturn(new PageImpl<>(List.of(product.withEnabled(false))));
         List<ProductModel> result = productService.getDisabledProducts();
@@ -95,6 +100,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldGetByCategory() {
         UUID categoryId = product.getCategoryId();
         when(repository.findByCategoryId(categoryId)).thenReturn(List.of(product));
@@ -103,6 +109,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldGetLowStockByCategory() {
         UUID categoryId = product.getCategoryId();
         when(repository.findByCategoryId(categoryId)).thenReturn(List.of(product));
@@ -111,6 +118,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldGetLowStockProducts() {
         when(repository.findAll()).thenReturn(List.of(product));
         List<ProductModel> result = productService.getLowStockProducts();
@@ -126,6 +134,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldUpdateStock() {
         UUID id = product.getId();
         when(repository.findById(id)).thenReturn(Optional.of(product));
@@ -135,6 +144,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldCountProducts() {
         when(repository.findAll()).thenReturn(List.of(product));
         assertEquals(1, productService.count());
@@ -148,6 +158,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldCreateProduct() {
         when(repository.save(product)).thenReturn(product);
         ProductModel result = productService.create(product);
@@ -156,6 +167,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldUpdateProduct() {
         UUID id = product.getId();
         when(repository.findById(id)).thenReturn(Optional.of(product));
@@ -166,6 +178,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldGetProductById() {
         UUID id = product.getId();
         when(repository.findById(id)).thenReturn(Optional.of(product));
@@ -174,6 +187,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldThrowWhenProductByIdNotFound() {
         UUID id = UUID.randomUUID();
         when(repository.findById(id)).thenReturn(Optional.empty());
@@ -181,6 +195,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldGetProductByCode() {
         when(repository.findByCode("CODE01")).thenReturn(Optional.of(product));
         ProductModel result = productService.getProductByCode("CODE01");
@@ -188,12 +203,14 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldThrowWhenProductByCodeNotFound() {
         when(repository.findByCode("XXX")).thenReturn(Optional.empty());
         assertThrows(Exception.class, () -> productService.getProductByCode("XXX"));
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldEnableProduct() {
         when(repository.findById(product.getId())).thenReturn(Optional.of(product.withEnabled(false)));
         when(repository.save(any())).thenReturn(product.withEnabled(true));
@@ -202,6 +219,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldDisableProduct() {
         when(repository.findById(product.getId())).thenReturn(Optional.of(product));
         productService.disable(product.getId());
@@ -209,18 +227,21 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldCheckExistsById() {
         when(repository.existsById(product.getId())).thenReturn(true);
         assertTrue(productService.existsById(product.getId()));
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldCheckExistsByCode() {
         when(repository.findByCode("CODE01")).thenReturn(Optional.of(product));
         assertTrue(productService.existsByCode("CODE01"));
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldValidateUnitCodeExists() {
         when(unitPort.existsByCode("UNIT01")).thenReturn(true);
         when(unitPort.findNameByCode("UNIT01")).thenReturn(Optional.of("Kilogramo"));
@@ -230,6 +251,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldValidateUnitCodeNotExists() {
         when(unitPort.existsByCode("X")).thenReturn(false);
         Optional<String> result = productService.validateUnitCode("X");
@@ -237,6 +259,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldDeleteProductById() {
         UUID id = product.getId();
 
@@ -247,6 +270,7 @@ class ProductServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void shouldGetEnabledProductsPaginated() {
         Pageable pageable = PageRequest.of(0, 10);
         Page<ProductModel> expectedPage = new PageImpl<>(List.of(product));

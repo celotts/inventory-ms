@@ -15,6 +15,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.test.context.support.WithMockUser;
 
 @ExtendWith(MockitoExtension.class)
 class ProductCategoryServiceTest {
@@ -59,6 +60,7 @@ class ProductCategoryServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void assignCategoryToProduct_shouldConvertDtoAndSave() {
         when(adapter.save(any())).thenReturn(model);
 
@@ -71,6 +73,7 @@ class ProductCategoryServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void getById_shouldReturnModel() {
         when(adapter.getById(id)).thenReturn(model);
 
@@ -82,6 +85,7 @@ class ProductCategoryServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void getAll_shouldReturnList() {
         when(adapter.getAll()).thenReturn(List.of(model));
 
@@ -93,6 +97,7 @@ class ProductCategoryServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void deleteById_shouldCallAdapter() {
         service.deleteById(id);
 
@@ -100,6 +105,7 @@ class ProductCategoryServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void disableById_shouldCallAdapter() {
         service.disableById(id);
 

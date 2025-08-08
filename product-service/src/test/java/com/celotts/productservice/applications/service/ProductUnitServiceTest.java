@@ -16,6 +16,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.test.context.support.WithMockUser;
 
 @ExtendWith(MockitoExtension.class)
 class ProductUnitServiceTest {
@@ -80,6 +81,7 @@ class ProductUnitServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void create_shouldSaveAndReturnResponse() {
         when(repository.existsByCode("KG")).thenReturn(false);
         when(mapper.toModel(createDto)).thenReturn(model);
@@ -94,6 +96,7 @@ class ProductUnitServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void create_shouldThrowException_whenCodeExists() {
         when(repository.existsByCode("KG")).thenReturn(true);
 
@@ -101,6 +104,7 @@ class ProductUnitServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void findAll_shouldReturnListOfResponses() {
         when(useCase.findAll()).thenReturn(List.of(model));
         when(mapper.toResponse(model)).thenReturn(response);
@@ -112,6 +116,7 @@ class ProductUnitServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void findById_shouldReturnResponse() {
         when(useCase.findById(id)).thenReturn(Optional.of(model));
         when(mapper.toResponse(model)).thenReturn(response);
@@ -123,6 +128,7 @@ class ProductUnitServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void findById_shouldThrow_whenNotFound() {
         when(useCase.findById(id)).thenReturn(Optional.empty());
 
@@ -130,6 +136,7 @@ class ProductUnitServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void update_shouldModifyAndReturnResponse() {
         when(useCase.findById(id)).thenReturn(Optional.of(model));
         when(useCase.save(any())).thenReturn(model);
@@ -142,6 +149,7 @@ class ProductUnitServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void update_shouldThrow_whenNotFound() {
         when(useCase.findById(id)).thenReturn(Optional.empty());
 
@@ -149,6 +157,7 @@ class ProductUnitServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void delete_shouldCallDelete_whenExists() {
         when(useCase.existsById(id)).thenReturn(true);
 
@@ -158,6 +167,7 @@ class ProductUnitServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void delete_shouldThrow_whenNotExists() {
         when(useCase.existsById(id)).thenReturn(false);
 
@@ -165,6 +175,7 @@ class ProductUnitServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void existsByCode_shouldReturnTrue() {
         when(useCase.existsByCode("KG")).thenReturn(true);
 
@@ -172,6 +183,7 @@ class ProductUnitServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void findNameByCode_shouldReturnName() {
         when(useCase.findNameByCode("KG")).thenReturn(Optional.of("Kilogramo"));
 
@@ -182,6 +194,7 @@ class ProductUnitServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void findAllCodes_shouldReturnCodes() {
         when(useCase.findAllCodes()).thenReturn(List.of("KG", "G"));
 

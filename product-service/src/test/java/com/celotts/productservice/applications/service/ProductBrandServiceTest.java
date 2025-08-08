@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -74,6 +75,7 @@ class ProductBrandServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void create_shouldReturnResponseDto_whenBrandIsCreatedSuccessfully() {
         // Arrange
         when(productBrandUseCase.existsByName(eq("BrandX"))).thenReturn(false);
@@ -96,6 +98,7 @@ class ProductBrandServiceTest {
     }
 
     @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void create_shouldThrowException_whenBrandAlreadyExists() {
         when(productBrandUseCase.existsByName("BrandX")).thenReturn(true);
 
