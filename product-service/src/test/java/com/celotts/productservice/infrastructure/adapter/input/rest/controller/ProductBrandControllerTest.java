@@ -37,6 +37,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -73,11 +74,20 @@ class ProductBrandControllerTest {
     void getAllBrands_shouldReturnList() throws Exception {
         when(productBrandService.findAll()).thenReturn(List.of(responseDto));
 
-        mockMvc.perform(get("/api/v1/product-brands"))
+        String content = mockMvc.perform(get("/api/v1/product-brands"))
+                .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(brandId.toString()));
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].id").value(brandId.toString()))
+                .andExpect(jsonPath("$.total").value(1))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        System.out.println("🔎 RESPONSE CONTENT:");
+        System.out.println(content);
     }
+
     @Test
     void getBrandById_shouldReturnDto() throws Exception {
         ProductBrandModel brandModel = ProductBrandModel.builder()
