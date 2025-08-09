@@ -5,71 +5,123 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ProductCategoryResponseDtoTest {
 
     @Test
-    void testAllArgsConstructorAndGetters() {
+    void builder_callsEveryMethod_andBuilds() {
         UUID id = UUID.randomUUID();
         UUID productId = UUID.randomUUID();
         UUID categoryId = UUID.randomUUID();
-        boolean enabled = true;
-        String createdBy = "creator";
-        String updatedBy = "updater";
         LocalDateTime now = LocalDateTime.now();
 
-        ProductCategoryResponseDto dto = new ProductCategoryResponseDto(
-                id, productId, categoryId, enabled, updatedBy, createdBy, now, now, now
-        );
+        // Llamamos a TODOS los métodos del builder para cubrir la clase interna *Builder
+        ProductCategoryResponseDto dto = ProductCategoryResponseDto.builder()
+                .id(id)
+                .productId(productId)
+                .categoryId(categoryId)
+                .enabled(Boolean.TRUE)
+                .updatedBy("upd")
+                .createdBy("creator")
+                .assignedAt(now)
+                .createdAt(now.minusDays(1))
+                .updatedAt(now)
+                .build();
 
-        assertEquals(id, dto.getId());
-        assertEquals(productId, dto.getProductId());
-        assertEquals(categoryId, dto.getCategoryId());
-        assertEquals(enabled, dto.getEnabled());
-        assertEquals(createdBy, dto.getCreatedBy());
-        assertEquals(updatedBy, dto.getUpdatedBy());
-        assertEquals(now, dto.getAssignedAt());
-        assertEquals(now, dto.getCreatedAt());
-        assertEquals(now, dto.getUpdatedAt());
+        assertThat(dto.getId()).isEqualTo(id);
+        assertThat(dto.getProductId()).isEqualTo(productId);
+        assertThat(dto.getCategoryId()).isEqualTo(categoryId);
+        assertThat(dto.getEnabled()).isTrue();
+        assertThat(dto.getUpdatedBy()).isEqualTo("upd");
+        assertThat(dto.getCreatedBy()).isEqualTo("creator");
+        assertThat(dto.getAssignedAt()).isEqualTo(now);
+        assertThat(dto.getCreatedAt()).isEqualTo(now.minusDays(1));
+        assertThat(dto.getUpdatedAt()).isEqualTo(now);
     }
 
     @Test
-    void testSettersAndToStringAndEquality() {
+    void noArgsAndSetters_equalsHashCode_andToString() {
         UUID id = UUID.randomUUID();
         UUID productId = UUID.randomUUID();
         UUID categoryId = UUID.randomUUID();
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime a1 = LocalDateTime.now().minusDays(2);
+        LocalDateTime c1 = LocalDateTime.now().minusDays(1);
+        LocalDateTime u1 = LocalDateTime.now();
 
-        ProductCategoryResponseDto dto1 = new ProductCategoryResponseDto();
-        dto1.setId(id);
-        dto1.setProductId(productId);
-        dto1.setCategoryId(categoryId);
-        dto1.setEnabled(false);
-        dto1.setCreatedBy("admin");
-        dto1.setUpdatedBy("admin");
-        dto1.setAssignedAt(now);
-        dto1.setCreatedAt(now);
-        dto1.setUpdatedAt(now);
+        ProductCategoryResponseDto a = new ProductCategoryResponseDto();
+        a.setId(id);
+        a.setProductId(productId);
+        a.setCategoryId(categoryId);
+        a.setEnabled(false);
+        a.setUpdatedBy("upd");
+        a.setCreatedBy("creator");
+        a.setAssignedAt(a1);
+        a.setCreatedAt(c1);
+        a.setUpdatedAt(u1);
 
-        ProductCategoryResponseDto dto2 = ProductCategoryResponseDto.builder()
+        ProductCategoryResponseDto b = ProductCategoryResponseDto.builder()
                 .id(id)
                 .productId(productId)
                 .categoryId(categoryId)
                 .enabled(false)
-                .createdBy("admin")
-                .updatedBy("admin")
-                .assignedAt(now)
-                .createdAt(now)
-                .updatedAt(now)
+                .updatedBy("upd")
+                .createdBy("creator")
+                .assignedAt(a1)
+                .createdAt(c1)
+                .updatedAt(u1)
                 .build();
 
-        assertEquals(dto1, dto2);
-        assertEquals(dto1.hashCode(), dto2.hashCode());
+        // equals/hashCode (iguales)
+        assertThat(a).isEqualTo(b);
+        assertThat(a.hashCode()).isEqualTo(b.hashCode());
 
-        String toString = dto1.toString();
-        assertNotNull(toString);
-        assertTrue(toString.contains("admin"));
-        assertTrue(toString.contains("false"));
+        // equals: misma instancia / null / otra clase
+        assertThat(a).isEqualTo(a);
+        assertThat(a).isNotEqualTo(null);
+        assertThat(a).isNotEqualTo("other");
+
+        // equals: diferente en un campo
+        ProductCategoryResponseDto c = ProductCategoryResponseDto.builder()
+                .id(UUID.randomUUID()) // solo cambia el id
+                .productId(productId)
+                .categoryId(categoryId)
+                .enabled(false)
+                .updatedBy("upd")
+                .createdBy("creator")
+                .assignedAt(a1)
+                .createdAt(c1)
+                .updatedAt(u1)
+                .build();
+        assertThat(a).isNotEqualTo(c);
+
+        // toString contiene valores representativos
+        String ts = a.toString();
+        assertThat(ts).contains("creator").contains("upd");
+    }
+
+    @Test
+    void allArgsConstructor_setsAllFields() {
+        UUID id = UUID.randomUUID();
+        UUID productId = UUID.randomUUID();
+        UUID categoryId = UUID.randomUUID();
+        LocalDateTime assignedAt = LocalDateTime.now().minusDays(3);
+        LocalDateTime createdAt = LocalDateTime.now().minusDays(2);
+        LocalDateTime updatedAt = LocalDateTime.now().minusDays(1);
+
+        ProductCategoryResponseDto dto = new ProductCategoryResponseDto(
+                id, productId, categoryId, true, "upd", "creator",
+                assignedAt, createdAt, updatedAt
+        );
+
+        assertThat(dto.getId()).isEqualTo(id);
+        assertThat(dto.getProductId()).isEqualTo(productId);
+        assertThat(dto.getCategoryId()).isEqualTo(categoryId);
+        assertThat(dto.getEnabled()).isTrue();
+        assertThat(dto.getUpdatedBy()).isEqualTo("upd");
+        assertThat(dto.getCreatedBy()).isEqualTo("creator");
+        assertThat(dto.getAssignedAt()).isEqualTo(assignedAt);
+        assertThat(dto.getCreatedAt()).isEqualTo(createdAt);
+        assertThat(dto.getUpdatedAt()).isEqualTo(updatedAt);
     }
 }

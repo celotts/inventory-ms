@@ -134,4 +134,43 @@ class ProductTagEntityTest {
         assertTrue(tag1.canEqual(tag2));
         assertFalse(tag1.canEqual(new Object()));
     }
+
+    @Test
+    void builder_covers_setters_build_and_builderToString() {
+        UUID id = UUID.randomUUID();
+        LocalDateTime now = LocalDateTime.now();
+
+        // Usamos el builder y llamamos a toString() del BUILDER antes de build()
+        ProductTagEntity.ProductTagEntityBuilder builder = ProductTagEntity.builder()
+                .id(id)
+                .name("summer")
+                .description("seasonal tag")
+                .createdAt(now);
+
+        String builderStr = builder.toString(); // cubre toString() del builder
+        assertNotNull(builderStr);
+        assertTrue(builderStr.contains("name=summer"));
+
+        ProductTagEntity tag = builder.build(); // cubre build()
+
+        // Verificamos la instancia resultante
+        assertEquals(id, tag.getId());
+        assertEquals("summer", tag.getName());
+        assertEquals("seasonal tag", tag.getDescription());
+        assertEquals(now, tag.getCreatedAt());
+
+        // toString() de la ENTIDAD (generado por Lombok @Data)
+        assertNotNull(tag.toString());
+
+        // equals/hashCode básicos (también generados por @Data)
+        ProductTagEntity tag2 = ProductTagEntity.builder()
+                .id(id)
+                .name("summer")
+                .description("seasonal tag")
+                .createdAt(now)
+                .build();
+
+        assertEquals(tag, tag2);
+        assertEquals(tag.hashCode(), tag2.hashCode());
+    }
 }
