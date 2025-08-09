@@ -1,134 +1,181 @@
-/*package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
+package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.applications.service.ProductBrandService;
 import com.celotts.productservice.applications.service.ProductUnitService;
-import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrandUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitResponseDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productUnit.ProductUnitDtoMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
-@WebMvcTest(ProductUnitController.class)
-@AutoConfigureMockMvc(addFilters = false)
-@ActiveProfiles("test")
-@ContextConfiguration(classes = {
-        ProductUnitController.class,
-        ProductUnitControllerTest.MockBeans.class
-})
+@ExtendWith(MockitoExtension.class)
 class ProductUnitControllerTest {
 
-    @Autowired
+    private static final String BASE = "/api/v1/product-units";
+
+    @Mock private ProductUnitService productUnitService;
+    @Mock private ProductUnitDtoMapper productUnitDtoMapper;
+
     private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
 
-    @Autowired
-    private ProductUnitService productUnitService;
-
-    @Autowired
-    private ProductUnitDtoMapper productUnitDtoMapper;
-
-    @Test
-    void findAll_shouldReturnListOfProductUnits() throws Exception {
-        UUID id1 = UUID.randomUUID();
-        UUID id2 = UUID.randomUUID();
-
-        var dto1 = ProductUnitResponseDto.builder()
-                .id(id1)
-                .name("Unit One")
-                .code("U1")
-                .enabled(true)
-                .build();
-
-        var dto2 = ProductUnitResponseDto.builder()
-                .id(id2)
-                .name("Unit Two")
-                .code("U2")
-                .enabled(true)
-                .build();
-
-        List<ProductUnitResponseDto> responseList = List.of(dto1, dto2);
-
-        when(productUnitService.findAll()).thenReturn(responseList);
-
-        mockMvc.perform(get("/api/v1/product-units"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.size()").value(2))
-                .andExpect(jsonPath("$[0].id").value(id1.toString()))
-                .andExpect(jsonPath("$[0].name").value("Unit One"))
-                .andExpect(jsonPath("$[0].code").value("U1"))
-                .andExpect(jsonPath("$[1].id").value(id2.toString()))
-                .andExpect(jsonPath("$[1].name").value("Unit Two"))
-                .andExpect(jsonPath("$[1].code").value("U2"));
+    @BeforeEach
+    void setup() {
+        ProductUnitController controller = new ProductUnitController(productUnitService, productUnitDtoMapper);
+        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        objectMapper = new ObjectMapper();
     }
 
     @Test
-    void findById_shouldReturnProductUnit_whenFound() throws Exception {
-        UUID id = UUID.randomUUID();
+    @DisplayName("POST /product-units -> 201 Created con body")
+    void create_returns201() throws Exception {
+        ProductUnitResponseDto resp = ProductUnitResponseDto.builder()
+                .id(UUID.fromString("00000000-0000-0000-0000-000000000001"))
+                .code("KG").name("Kilogramo").symbol("kg").enabled(true).build();
 
-        ProductUnitResponseDto responseDto = ProductUnitResponseDto.builder()
-                .id(id)
-                .code("U1")
-                .name("Unit One")
-                .enabled(true)
-                .build();
+        when(productUnitService.create(any())).thenReturn(resp);
 
-        when(productUnitService.findById(id)).thenReturn(responseDto);
+        Map<String, Object> req = Map.of(
+                "code", "KG",
+                "name", "Kilogramo",
+                "description", "Unidad de masa",
+                "enabled", true,
+                "symbol", "kg",
+                "createdBy", "tester"
+        );
 
-        mockMvc.perform(get("/api/v1/product-units/{id}", id))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id.toString()))
-                .andExpect(jsonPath("$.code").value("U1"))
-                .andExpect(jsonPath("$.name").value("Unit One"))
+        mockMvc.perform(post(BASE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(req)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value("00000000-0000-0000-0000-000000000001"))
+                .andExpect(jsonPath("$.code").value("KG"))
+                .andExpect(jsonPath("$.name").value("Kilogramo"))
+                .andExpect(jsonPath("$.symbol").value("kg"))
                 .andExpect(jsonPath("$.enabled").value(true));
     }
 
     @Test
-    void existsByCode_shouldReturnTrue() throws Exception {
-        String code = "U1";
+    void create_returns400_whenInvalid() throws Exception {
+        Map<String, Object> invalid = Map.of("enabled", true); // faltan campos @Valid
 
-        when(productUnitService.existsByCode(code)).thenReturn(true);
+        mockMvc.perform(post(BASE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(invalid)))
+                .andExpect(status().isBadRequest());
 
-        mockMvc.perform(get("/api/v1/product-units/exists-by-code/{code}", code))
+        verify(productUnitService, never()).create(any());
+    }
+
+    @Test
+    void findAll_returnsList() throws Exception {
+        var u1 = ProductUnitResponseDto.builder().id(UUID.randomUUID()).code("KG").name("Kilogramo").symbol("kg").enabled(true).build();
+        var u2 = ProductUnitResponseDto.builder().id(UUID.randomUUID()).code("LT").name("Litro").symbol("l").enabled(true).build();
+        when(productUnitService.findAll()).thenReturn(List.of(u1, u2));
+
+        mockMvc.perform(get(BASE))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].code").value("KG"))
+                .andExpect(jsonPath("$[1].code").value("LT"));
+    }
+
+    @Test
+    void findById_returnsDto() throws Exception {
+        UUID id = UUID.fromString("00000000-0000-0000-0000-000000000010");
+        var u = ProductUnitResponseDto.builder().id(id).code("KG").name("Kilogramo").symbol("kg").enabled(true).build();
+        when(productUnitService.findById(id)).thenReturn(u);
+
+        mockMvc.perform(get(BASE + "/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.code").value("KG"));
+    }
+
+    @Test
+    void update_returnsDto() throws Exception {
+        UUID id = UUID.fromString("00000000-0000-0000-0000-000000000020");
+        var u = ProductUnitResponseDto.builder().id(id).code("KG").name("Kilogramo actualizado").symbol("kg").enabled(true).build();
+        when(productUnitService.update(eq(id), any())).thenReturn(u);
+
+        Map<String, Object> req = Map.of(
+                "name", "Kilogramo actualizado",
+                "description", "desc",
+                "symbol", "kg",
+                "enabled", true,
+                "updatedBy", "tester"
+        );
+
+        mockMvc.perform(put(BASE + "/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.name").value("Kilogramo actualizado"));
+    }
+
+    @Test
+    void delete_returns204() throws Exception {
+        UUID id = UUID.fromString("00000000-0000-0000-0000-000000000030");
+        doNothing().when(productUnitService).delete(id);
+
+        mockMvc.perform(delete(BASE + "/{id}", id))
+                .andExpect(status().isNoContent());
+
+        verify(productUnitService).delete(id);
+    }
+
+    @Test
+    void existsByCode_returnsMap() throws Exception {
+        when(productUnitService.existsByCode("KG")).thenReturn(true);
+
+        mockMvc.perform(get(BASE + "/exists-by-code/{code}", "KG"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exists").value(true));
     }
 
-    @TestConfiguration
-    public static class MockBeans {
+    @Test
+    void findByName_returns200_whenPresent() throws Exception {
+        when(productUnitService.findNameByCode("KG")).thenReturn(Optional.of("Kilogramo"));
 
-        @Bean
-        public ProductBrandUseCase productBrandUseCase() {
-            return mock(ProductBrandUseCase.class);
-        }
-
-        @Bean
-        public ProductBrandDtoMapper productBrandDtoMapper() {
-            return mock(ProductBrandDtoMapper.class);
-        }
-
-        @Bean
-        public ProductBrandService productBrandService() {
-            return mock(ProductBrandService.class);
-        }
-
-        @Bean
-        public ObjectMapper objectMapper() {
-            return new ObjectMapper().findAndRegisterModules();
-        }
+        mockMvc.perform(get(BASE + "/name-by-code/{code}", "KG"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Kilogramo"));
     }
-}*/
+
+    @Test
+    void findByName_returns404_whenEmpty() throws Exception {
+        when(productUnitService.findNameByCode("XX")).thenReturn(Optional.empty());
+
+        mockMvc.perform(get(BASE + "/name-by-code/{code}", "XX"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void findAllByCode_returnsList() throws Exception {
+        when(productUnitService.findAllCodes()).thenReturn(List.of("KG", "LT"));
+
+        mockMvc.perform(get(BASE + "/code"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0]").value("KG"))
+                .andExpect(jsonPath("$[1]").value("LT"));
+    }
+}

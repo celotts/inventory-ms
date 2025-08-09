@@ -1,62 +1,118 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.category;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class CategoryRequestDtoTest {
 
-    @Test
-    void testAllArgsConstructorAndGetters() {
-        var dto = new CategoryRequestDto("Salsas", "Salsas caseras", true, "admin", "admin");
+    private static Validator validator;
 
-        assertEquals("Salsas", dto.getName());
-        assertEquals("Salsas caseras", dto.getDescription());
+    @BeforeAll
+    static void setupValidator() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
+    }
+
+    @Test
+    void testGettersAndSetters() {
+        CategoryRequestDto dto = new CategoryRequestDto();
+        dto.setName("Beverages");
+        dto.setDescription("Soft drinks and juices");
+        dto.setActive(true);
+        dto.setCreatedBy("admin");
+        dto.setUpdatedBy("admin2");
+
+        assertEquals("Beverages", dto.getName());
+        assertEquals("Soft drinks and juices", dto.getDescription());
         assertTrue(dto.getActive());
         assertEquals("admin", dto.getCreatedBy());
-        assertEquals("admin", dto.getUpdatedBy());
+        assertEquals("admin2", dto.getUpdatedBy());
     }
 
     @Test
-    void testBuilder() {
-        var dto = CategoryRequestDto.builder()
-                .name("Postres")
-                .description("Dulces y postres")
-                .active(false)
-                .createdBy("test")
-                .updatedBy("test")
+    void testBuilderAndEqualsHashCode() {
+        CategoryRequestDto dto1 = CategoryRequestDto.builder()
+                .name("Snacks")
+                .description("Salty snacks")
+                .active(true)
+                .createdBy("admin")
+                .updatedBy("admin")
                 .build();
 
-        assertEquals("Postres", dto.getName());
-        assertFalse(dto.getActive());
-    }
+        CategoryRequestDto dto2 = CategoryRequestDto.builder()
+                .name("Snacks")
+                .description("Salty snacks")
+                .active(true)
+                .createdBy("admin")
+                .updatedBy("admin")
+                .build();
 
-
-    @Test
-    void testNoArgsConstructorAndSetters() {
-        var dto = new CategoryRequestDto();
-        dto.setName("Bebidas");
-        dto.setDescription("Refrescos y jugos");
-        dto.setActive(true);
-        dto.setCreatedBy("creator");
-        dto.setUpdatedBy("updater");
-
-        assertEquals("Bebidas", dto.getName());
-        assertEquals("Refrescos y jugos", dto.getDescription());
-        assertTrue(dto.getActive());
-        assertEquals("creator", dto.getCreatedBy());
-        assertEquals("updater", dto.getUpdatedBy());
+        assertEquals(dto1, dto2);
+        assertEquals(dto1.hashCode(), dto2.hashCode());
     }
 
     @Test
     void testToString() {
-        var dto = new CategoryRequestDto("Panadería", "Productos de panadería", true, "autor", "editor");
-        String toString = dto.toString();
+        CategoryRequestDto dto = CategoryRequestDto.builder()
+                .name("Frozen")
+                .description("Frozen foods")
+                .active(false)
+                .createdBy("user1")
+                .updatedBy("user2")
+                .build();
 
-        assertNotNull(toString);
-        assertTrue(toString.contains("Panadería"));
-        assertTrue(toString.contains("Productos de panadería"));
-        assertTrue(toString.contains("true"));
-        assertTrue(toString.contains("autor"));
-        assertTrue(toString.contains("editor"));
+        String toString = dto.toString();
+        assertTrue(toString.contains("Frozen"));
+        assertTrue(toString.contains("Frozen foods"));
+        assertTrue(toString.contains("user1"));
+        assertTrue(toString.contains("user2"));
+    }
+
+    @Test
+    void testValidation_NameIsBlank() {
+        CategoryRequestDto dto = CategoryRequestDto.builder()
+                .name(" ")
+                .description("Test")
+                .active(true)
+                .build();
+
+        Set<ConstraintViolation<CategoryRequestDto>> violations = validator.validate(dto);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("Name is required")));
+    }
+
+    @Test
+    void testValidation_NameTooShort() {
+        CategoryRequestDto dto = CategoryRequestDto.builder()
+                .name("A")
+                .description("Test")
+                .active(true)
+                .build();
+
+        Set<ConstraintViolation<CategoryRequestDto>> violations = validator.validate(dto);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream().anyMatch(v -> v.getMessage().contains("between 2 and 100")));
+    }
+
+    @Test
+    void testValidation_DescriptionTooLong() {
+        String longDescription = "a".repeat(501);
+        CategoryRequestDto dto = CategoryRequestDto.builder()
+                .name("ValidName")
+                .description(longDescription)
+                .active(true)
+                .build();
+
+        Set<ConstraintViolation<CategoryRequestDto>> violations = validator.validate(dto);
+        assertFalse(violations.isEmpty());
+        assertTrue(violations.stream().anyMatch(v -> v.getMessage().contains("cannot exceed 500 characters")));
     }
 }

@@ -7,120 +7,126 @@ import static org.junit.jupiter.api.Assertions.*;
 class CategoryStatusDtoTest {
 
     @Test
-    void testAllArgsConstructorAndGetters() {
-        CategoryStatusDto dto = new CategoryStatusDto(
-                50, 40, 5, 5,
-                80.0, 10.0, 10.0
-        );
-
-        assertEquals(50, dto.getTotalCategories());
-        assertEquals(40, dto.getActiveCategories());
-        assertEquals(5, dto.getInactiveCategories());
-        assertEquals(5, dto.getDeletedCategories());
-        assertEquals(80.0, dto.getActivePercentage());
-        assertEquals(10.0, dto.getInactivePercentage());
-        assertEquals(10.0, dto.getDeletedPercentage());
-    }
-
-    @Test
-    void testNoArgsConstructorAndSetters() {
+    void noArgsConstructor_andSetters_shouldWork() {
         CategoryStatusDto dto = new CategoryStatusDto();
 
-        dto.setTotalCategories(100);
-        dto.setActiveCategories(90);
-        dto.setInactiveCategories(5);
-        dto.setDeletedCategories(5);
-        dto.setActivePercentage(90.0);
-        dto.setInactivePercentage(5.0);
+        dto.setTotalCategories(100L);
+        dto.setActiveCategories(70L);
+        dto.setInactiveCategories(25L);
+        dto.setDeletedCategories(5L);
+
+        dto.setActivePercentage(70.0);
+        dto.setInactivePercentage(25.0);
         dto.setDeletedPercentage(5.0);
 
-        assertEquals(100, dto.getTotalCategories());
-        assertEquals(90, dto.getActiveCategories());
-        assertEquals(5, dto.getInactiveCategories());
-        assertEquals(5, dto.getDeletedCategories());
-        assertEquals(90.0, dto.getActivePercentage());
-        assertEquals(5.0, dto.getInactivePercentage());
-        assertEquals(5.0, dto.getDeletedPercentage());
+        assertEquals(100L, dto.getTotalCategories());
+        assertEquals(70L, dto.getActiveCategories());
+        assertEquals(25L, dto.getInactiveCategories());
+        assertEquals(5L, dto.getDeletedCategories());
+
+        assertEquals(70.0, dto.getActivePercentage(), 1e-9);
+        assertEquals(25.0, dto.getInactivePercentage(), 1e-9);
+        assertEquals(5.0, dto.getDeletedPercentage(), 1e-9);
     }
 
     @Test
-    void testBuilder() {
+    void allArgsConstructor_andGetters_shouldWork() {
+        CategoryStatusDto dto = new CategoryStatusDto(
+                120L, 80L, 30L, 10L,
+                66.6667, 25.0, 8.3333
+        );
+
+        assertEquals(120L, dto.getTotalCategories());
+        assertEquals(80L, dto.getActiveCategories());
+        assertEquals(30L, dto.getInactiveCategories());
+        assertEquals(10L, dto.getDeletedCategories());
+
+        assertEquals(66.6667, dto.getActivePercentage(), 1e-9);
+        assertEquals(25.0, dto.getInactivePercentage(), 1e-9);
+        assertEquals(8.3333, dto.getDeletedPercentage(), 1e-9);
+    }
+
+    @Test
+    void builder_shouldSetAllFields() {
         CategoryStatusDto dto = CategoryStatusDto.builder()
-                .totalCategories(200)
-                .activeCategories(150)
-                .inactiveCategories(30)
-                .deletedCategories(20)
-                .activePercentage(75.0)
-                .inactivePercentage(15.0)
+                .totalCategories(50L)
+                .activeCategories(35L)
+                .inactiveCategories(10L)
+                .deletedCategories(5L)
+                .activePercentage(70.0)
+                .inactivePercentage(20.0)
                 .deletedPercentage(10.0)
                 .build();
 
-        assertEquals(200, dto.getTotalCategories());
-        assertEquals(150, dto.getActiveCategories());
-        assertEquals(15.0, dto.getInactivePercentage());
+        assertEquals(50L, dto.getTotalCategories());
+        assertEquals(35L, dto.getActiveCategories());
+        assertEquals(10L, dto.getInactiveCategories());
+        assertEquals(5L, dto.getDeletedCategories());
+        assertEquals(70.0, dto.getActivePercentage(), 1e-9);
+        assertEquals(20.0, dto.getInactivePercentage(), 1e-9);
+        assertEquals(10.0, dto.getDeletedPercentage(), 1e-9);
     }
 
     @Test
-    void testEqualsAndHashCode_sameValues() {
-        CategoryStatusDto dto1 = CategoryStatusDto.builder()
-                .totalCategories(10)
-                .activeCategories(5)
-                .inactiveCategories(3)
-                .deletedCategories(2)
-                .activePercentage(50.0)
-                .inactivePercentage(30.0)
-                .deletedPercentage(20.0)
+    void equalsAndHashCode_sameValues_shouldBeEqual() {
+        CategoryStatusDto a = CategoryStatusDto.builder()
+                .totalCategories(10L).activeCategories(6L).inactiveCategories(3L).deletedCategories(1L)
+                .activePercentage(60.0).inactivePercentage(30.0).deletedPercentage(10.0)
                 .build();
 
-        CategoryStatusDto dto2 = CategoryStatusDto.builder()
-                .totalCategories(10)
-                .activeCategories(5)
-                .inactiveCategories(3)
-                .deletedCategories(2)
-                .activePercentage(50.0)
-                .inactivePercentage(30.0)
-                .deletedPercentage(20.0)
+        CategoryStatusDto b = CategoryStatusDto.builder()
+                .totalCategories(10L).activeCategories(6L).inactiveCategories(3L).deletedCategories(1L)
+                .activePercentage(60.0).inactivePercentage(30.0).deletedPercentage(10.0)
                 .build();
 
-        assertEquals(dto1, dto2);
-        assertEquals(dto1.hashCode(), dto2.hashCode());
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
     }
 
     @Test
-    void testEqualsAndHashCode_differentValues() {
-        CategoryStatusDto dto1 = CategoryStatusDto.builder().totalCategories(1).build();
-        CategoryStatusDto dto2 = CategoryStatusDto.builder().totalCategories(99).build();
+    void equalsAndHashCode_differentValues_shouldNotBeEqual() {
+        CategoryStatusDto a = CategoryStatusDto.builder()
+                .totalCategories(10L).activeCategories(6L).inactiveCategories(3L).deletedCategories(1L)
+                .activePercentage(60.0).inactivePercentage(30.0).deletedPercentage(10.0)
+                .build();
 
-        assertNotEquals(dto1, dto2);
-        assertNotEquals(dto1.hashCode(), dto2.hashCode());
+        CategoryStatusDto c = CategoryStatusDto.builder()
+                .totalCategories(12L).activeCategories(7L).inactiveCategories(4L).deletedCategories(1L)
+                .activePercentage(58.3333).inactivePercentage(33.3333).deletedPercentage(8.3333)
+                .build();
+
+        assertNotEquals(a, c);
+        assertNotEquals(a.hashCode(), c.hashCode());
     }
 
     @Test
-    void testEqualsWithNullAndDifferentClass() {
+    void equals_shouldHandleNullAndDifferentClass() {
         CategoryStatusDto dto = new CategoryStatusDto();
         assertNotEquals(dto, null);
-        assertNotEquals(dto, "not a dto");
+        assertNotEquals(dto, "string");
     }
 
     @Test
-    void testEqualsSameInstance() {
-        CategoryStatusDto dto = new CategoryStatusDto();
-        assertEquals(dto, dto);
-    }
-
-    @Test
-    void testToStringIsNotNull() {
+    void toString_shouldContainKeyValues() {
         CategoryStatusDto dto = CategoryStatusDto.builder()
-                .totalCategories(1)
-                .activeCategories(1)
-                .inactiveCategories(0)
-                .deletedCategories(0)
-                .activePercentage(100.0)
-                .inactivePercentage(0.0)
-                .deletedPercentage(0.0)
+                .totalCategories(5L)
+                .activeCategories(3L)
+                .inactiveCategories(1L)
+                .deletedCategories(1L)
+                .activePercentage(60.0)
+                .inactivePercentage(20.0)
+                .deletedPercentage(20.0)
                 .build();
 
-        assertNotNull(dto.toString());
-        assertTrue(dto.toString().contains("totalCategories=1"));
+        String s = dto.toString();
+        assertNotNull(s);
+        assertTrue(s.contains("totalCategories=5"));
+        assertTrue(s.contains("activeCategories=3"));
+        assertTrue(s.contains("inactiveCategories=1"));
+        assertTrue(s.contains("deletedCategories=1"));
+        // no forzamos formato exacto de double, solo presencia del texto clave
+        assertTrue(s.contains("activePercentage"));
+        assertTrue(s.contains("inactivePercentage"));
+        assertTrue(s.contains("deletedPercentage"));
     }
 }

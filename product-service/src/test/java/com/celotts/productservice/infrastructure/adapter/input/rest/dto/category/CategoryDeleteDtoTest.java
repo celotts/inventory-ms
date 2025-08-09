@@ -1,32 +1,84 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.category;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+
+import java.util.Set;
 import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class CategoryDeleteDtoTest {
 
-    @Test
-    void testAllArgsConstructorAndGetters() {
-        UUID id = UUID.randomUUID();
-        var dto = new CategoryDeleteDto(id);
+    private Validator validator;
 
-        assertEquals(id, dto.getId());
+    @BeforeEach
+    void setUp() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
     }
 
     @Test
-    void testSetters() {
-        UUID id = UUID.randomUUID();
-        var dto = new CategoryDeleteDto();
-        dto.setId(id);
-
-        assertEquals(id, dto.getId());
-    }
-
-
-    @Test
-    void testNoArgsConstructorAndToString() {
+    void noArgsConstructor_shouldCreateObject() {
         CategoryDeleteDto dto = new CategoryDeleteDto();
-        assertNotNull(dto.toString()); // Verifica que toString no sea null
+        assertNull(dto.getId());
+    }
+
+    @Test
+    void allArgsConstructor_shouldSetFields() {
+        UUID id = UUID.randomUUID();
+        CategoryDeleteDto dto = new CategoryDeleteDto(id);
+        assertEquals(id, dto.getId());
+    }
+
+    @Test
+    void settersAndGetters_shouldWorkCorrectly() {
+        UUID id = UUID.randomUUID();
+        CategoryDeleteDto dto = new CategoryDeleteDto();
+        dto.setId(id);
+        assertEquals(id, dto.getId());
+    }
+
+    @Test
+    void equalsAndHashCode_shouldBeBasedOnId() {
+        UUID id = UUID.randomUUID();
+        CategoryDeleteDto dto1 = new CategoryDeleteDto(id);
+        CategoryDeleteDto dto2 = new CategoryDeleteDto(id);
+
+        assertEquals(dto1, dto2);
+        assertEquals(dto1.hashCode(), dto2.hashCode());
+    }
+
+    @Test
+    void toString_shouldContainFieldValues() {
+        UUID id = UUID.randomUUID();
+        CategoryDeleteDto dto = new CategoryDeleteDto(id);
+        String toString = dto.toString();
+
+        assertTrue(toString.contains("id"));
+        assertTrue(toString.contains(id.toString()));
+    }
+
+    @Test
+    void validation_shouldFailWhenIdIsNull() {
+        CategoryDeleteDto dto = new CategoryDeleteDto(null);
+        Set<ConstraintViolation<CategoryDeleteDto>> violations = validator.validate(dto);
+
+        assertFalse(violations.isEmpty());
+        assertEquals("Category ID must not be null",
+                violations.iterator().next().getMessage());
+    }
+
+    @Test
+    void validation_shouldPassWhenIdIsNotNull() {
+        CategoryDeleteDto dto = new CategoryDeleteDto(UUID.randomUUID());
+        Set<ConstraintViolation<CategoryDeleteDto>> violations = validator.validate(dto);
+
+        assertTrue(violations.isEmpty());
     }
 }
