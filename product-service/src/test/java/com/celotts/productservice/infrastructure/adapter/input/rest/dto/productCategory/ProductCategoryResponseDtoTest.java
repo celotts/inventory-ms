@@ -124,4 +124,23 @@ class ProductCategoryResponseDtoTest {
         assertThat(dto.getCreatedAt()).isEqualTo(createdAt);
         assertThat(dto.getUpdatedAt()).isEqualTo(updatedAt);
     }
+
+    @Test
+    void builder_toString_covers_inner_builder() {
+        String s = ProductCategoryResponseDto.builder()
+                .id(UUID.randomUUID())
+                .productId(UUID.randomUUID())
+                .categoryId(UUID.randomUUID())
+                .enabled(true)
+                .updatedBy("upd")
+                .createdBy("creator")
+                .assignedAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .toString(); // toString del *builder*
+
+        assertThat(s).isNotNull().isNotBlank();
+        // si tu Lombok incluye el nombre del builder:
+        assertThat(s).contains("ProductCategoryResponseDtoBuilder");
+    }
 }

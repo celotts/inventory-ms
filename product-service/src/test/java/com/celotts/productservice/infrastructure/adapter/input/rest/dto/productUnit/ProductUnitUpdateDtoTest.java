@@ -118,4 +118,21 @@ class ProductUnitUpdateDtoTest {
         b.setSymbol("LT");
         assertEquals("LT", b.getSymbol());
     }
+
+    @Test
+    @DisplayName("Builder.toString() se ejecuta (cubre clase interna del builder)")
+    void builder_toString_isNotBlank() {
+        String s = ProductUnitUpdateDto.builder()
+                .name("Unit")
+                .description("Any")
+                .symbol("U")
+                .enabled(true)
+                .updatedBy("tester")
+                .toString(); // <-- cubre el toString() del builder
+
+        assertNotNull(s);
+        assertFalse(s.isBlank());
+        // opcional, suele incluir el nombre de la clase interna generada por Lombok
+        assertTrue(s.contains("ProductUnitUpdateDtoBuilder"));
+    }
 }

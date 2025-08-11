@@ -138,4 +138,23 @@ class ProductUnitCreateDtoTest {
         b.setName("Liter (US)");
         assertEquals("Liter (US)", b.getName());
     }
+
+    @Test
+    @DisplayName("Builder.toString() cubre ProductUnitCreateDtoBuilder")
+    void builder_toString_isNotBlank() {
+        String s = ProductUnitCreateDto.builder()
+                .code("KG")
+                .name("Kilogram")
+                .description("Metric mass unit")
+                .enabled(true)
+                .symbol("kg")
+                .createdBy("tester")
+                .updatedBy("tester2")
+                .toString(); // <- cubre el toString() del builder
+
+        assertNotNull(s);
+        assertFalse(s.isBlank());
+        // opcional: muchos Lombok incluyen el nombre de la clase interna
+        assertTrue(s.contains("ProductUnitCreateDtoBuilder"));
+    }
 }

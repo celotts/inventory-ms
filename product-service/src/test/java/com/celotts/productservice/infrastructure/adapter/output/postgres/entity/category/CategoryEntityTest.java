@@ -577,4 +577,106 @@ class CategoryEntityTest {
         assertNotNull(entity.getUpdatedAt());
         assertTrue(entity.getUpdatedAt().isAfter(previous));
     }
+
+    @Test
+    void equals_and_hashCode_whenAllFieldsNull_shouldBeEqual() {
+        // Dos entidades “vacías” (todos los campos null)
+        CategoryEntity a = new CategoryEntity();
+        CategoryEntity b = new CategoryEntity();
+
+        // Lombok @Data compara campo a campo con Objects.equals, así que null==null
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+
+        // Además, cubrir null-vs-no-null para un campo: name
+        b.setName("N1");
+        assertNotEquals(a, b);
+        assertNotEquals(a.hashCode(), b.hashCode());
+
+        // Ahora igualamos el campo para cubrir la rama “ambos null -> luego iguales”
+        a.setName("N1");
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+    }
+
+
+    @Test
+    private static CategoryEntity copy(CategoryEntity s) {
+        CategoryEntity c = new CategoryEntity();
+        c.setId(s.getId());
+        c.setName(s.getName());
+        c.setDescription(s.getDescription());
+        c.setActive(s.getActive());
+        c.setCreatedBy(s.getCreatedBy());
+        c.setUpdatedBy(s.getUpdatedBy());
+        c.setCreatedAt(s.getCreatedAt());
+        c.setUpdatedAt(s.getUpdatedAt());
+        return c;
+    }
+
+    @Test
+    void equals_basic_contract_and_hashCode_consistency() {
+        UUID id = UUID.randomUUID();
+        LocalDateTime t = LocalDateTime.of(2024, 1, 1, 1, 1, 1);
+
+        CategoryEntity a = new CategoryEntity(id, "N", "D", true, "c", "u", t, t);
+        CategoryEntity b = new CategoryEntity(id, "N", "D", true, "c", "u", t, t);
+
+        // Misma data -> equals true y hashCode igual
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+
+        // Id distinto -> NOT equals
+        CategoryEntity diffId = new CategoryEntity(UUID.randomUUID(), "N", "D", true, "c", "u", t, t);
+        assertNotEquals(a, diffId);
+
+        // name distinto -> NOT equals
+        CategoryEntity diffName = new CategoryEntity(id, "X", "D", true, "c", "u", t, t);
+        assertNotEquals(a, diffName);
+
+        // createdAt distinto -> NOT equals
+        CategoryEntity diffCreatedAt = new CategoryEntity(id, "N", "D", true, "c", "u",
+                t.minusSeconds(1), t);
+        assertNotEquals(a, diffCreatedAt);
+
+        // updatedAt distinto -> NOT equals
+        CategoryEntity diffUpdatedAt = new CategoryEntity(id, "N", "D", true, "c", "u",
+                t, t.plusSeconds(1));
+        assertNotEquals(a, diffUpdatedAt);
+
+        // null y clase distinta
+        assertNotEquals(a, null);
+        assertNotEquals(a, "otro");
+    }
+
+    @Test
+    void equals_null_vs_nonNull_on_single_fields() {
+        UUID id = UUID.randomUUID();
+        LocalDateTime t = LocalDateTime.of(2024, 1, 1, 1, 1, 1);
+
+        // Base: todo explícito y no-nulo
+        CategoryEntity base = new CategoryEntity(id, "N", "D", true, "c", "u", t, t);
+
+        // name -> null
+        assertNotEquals(base, new CategoryEntity(id, null, "D", true, "c", "u", t, t));
+
+        // description -> null
+        assertNotEquals(base, new CategoryEntity(id, "N", null, true, "c", "u", t, t));
+
+        // active -> null
+        assertNotEquals(base, new CategoryEntity(id, "N", "D", null, "c", "u", t, t));
+
+        // createdBy -> null
+        assertNotEquals(base, new CategoryEntity(id, "N", "D", true, null, "u", t, t));
+
+        // updatedBy -> null
+        assertNotEquals(base, new CategoryEntity(id, "N", "D", true, "c", null, t, t));
+
+        // createdAt -> null
+        assertNotEquals(base, new CategoryEntity(id, "N", "D", true, "c", "u", null, t));
+
+        // updatedAt -> null
+        assertNotEquals(base, new CategoryEntity(id, "N", "D", true, "c", "u", t, null));
+    }
+
 }

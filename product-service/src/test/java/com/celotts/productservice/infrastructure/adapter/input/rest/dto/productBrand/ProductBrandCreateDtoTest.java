@@ -151,4 +151,41 @@ class ProductBrandCreateDtoTest {
         assertTrue(toString.contains("admin"));
         assertTrue(toString.contains("enabled=true"));
     }
+
+    @Test
+    void builder_toString_shouldIncludeFields() {
+        // No hacemos build(), queremos cubrir el toString() del BUILDER
+        var builder = ProductBrandCreateDto.builder()
+                .name("Nike")
+                .description("Sports brand")
+                .enabled(true)
+                .createdBy("admin")
+                .updatedBy("editor");
+
+        String s = builder.toString();
+
+        assertNotNull(s);
+        assertTrue(s.contains("Nike"));
+        assertTrue(s.contains("Sports brand"));
+        assertTrue(s.contains("enabled=true"));
+        assertTrue(s.contains("admin"));
+        assertTrue(s.contains("editor"));
+    }
+
+    @Test
+    void builder_build_getters_shouldWork() {
+        var dto = ProductBrandCreateDto.builder()
+                .name("Adidas")
+                .description("Shoes")
+                .enabled(false)
+                .createdBy("user1")
+                .updatedBy("user2")
+                .build();
+
+        assertEquals("Adidas", dto.getName());
+        assertEquals("Shoes", dto.getDescription());
+        assertFalse(dto.getEnabled());
+        assertEquals("user1", dto.getCreatedBy());
+        assertEquals("user2", dto.getUpdatedBy());
+    }
 }

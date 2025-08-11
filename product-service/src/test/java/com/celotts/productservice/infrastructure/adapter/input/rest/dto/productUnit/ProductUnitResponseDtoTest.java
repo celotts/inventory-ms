@@ -116,4 +116,132 @@ class ProductUnitResponseDtoTest {
         assertEquals("s", full.getSymbol());
         assertTrue(full.isEnabled());
     }
+
+    @Test
+    void equals_returnsFalse_withNullAndDifferentClass() {
+        var base = ProductUnitResponseDto.builder()
+                .id(UUID.randomUUID())
+                .code("C1")
+                .name("N1")
+                .description("D1")
+                .symbol("kg")
+                .enabled(true)
+                .createdBy("c")
+                .updatedBy("u")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        assertNotEquals(base, null);          // rama: other == null
+        assertNotEquals(base, "no-dto");      // rama: other.getClass() distinto
+    }
+
+    @Test
+    void equals_and_hashCode_change_whenAnyFieldDiffers() {
+        var id  = UUID.randomUUID();
+        var t1  = LocalDateTime.of(2024,1,1,1,1,1);
+        var t2  = LocalDateTime.of(2024,1,1,1,1,2);
+
+        var base = ProductUnitResponseDto.builder()
+                .id(id).code("C").name("N").description("D").symbol("kg").enabled(true)
+                .createdBy("c").updatedBy("u").createdAt(t1).updatedAt(t1)
+                .build();
+
+        // Cambia uno por uno (sin toBuilder)
+        assertNotEquals(base, ProductUnitResponseDto.builder()
+                .id(UUID.randomUUID()).code("C").name("N").description("D").symbol("kg").enabled(true)
+                .createdBy("c").updatedBy("u").createdAt(t1).updatedAt(t1).build());
+
+        assertNotEquals(base, ProductUnitResponseDto.builder()
+                .id(id).code("C2").name("N").description("D").symbol("kg").enabled(true)
+                .createdBy("c").updatedBy("u").createdAt(t1).updatedAt(t1).build());
+
+        assertNotEquals(base, ProductUnitResponseDto.builder()
+                .id(id).code("C").name("N2").description("D").symbol("kg").enabled(true)
+                .createdBy("c").updatedBy("u").createdAt(t1).updatedAt(t1).build());
+
+        assertNotEquals(base, ProductUnitResponseDto.builder()
+                .id(id).code("C").name("N").description("D2").symbol("kg").enabled(true)
+                .createdBy("c").updatedBy("u").createdAt(t1).updatedAt(t1).build());
+
+        assertNotEquals(base, ProductUnitResponseDto.builder()
+                .id(id).code("C").name("N").description("D").symbol("g").enabled(true)
+                .createdBy("c").updatedBy("u").createdAt(t1).updatedAt(t1).build());
+
+        assertNotEquals(base, ProductUnitResponseDto.builder()
+                .id(id).code("C").name("N").description("D").symbol("kg").enabled(false)
+                .createdBy("c").updatedBy("u").createdAt(t1).updatedAt(t1).build());
+
+        assertNotEquals(base, ProductUnitResponseDto.builder()
+                .id(id).code("C").name("N").description("D").symbol("kg").enabled(true)
+                .createdBy("c2").updatedBy("u").createdAt(t1).updatedAt(t1).build());
+
+        assertNotEquals(base, ProductUnitResponseDto.builder()
+                .id(id).code("C").name("N").description("D").symbol("kg").enabled(true)
+                .createdBy("c").updatedBy("u2").createdAt(t1).updatedAt(t1).build());
+
+        assertNotEquals(base, ProductUnitResponseDto.builder()
+                .id(id).code("C").name("N").description("D").symbol("kg").enabled(true)
+                .createdBy("c").updatedBy("u").createdAt(t2).updatedAt(t1).build());
+
+        assertNotEquals(base, ProductUnitResponseDto.builder()
+                .id(id).code("C").name("N").description("D").symbol("kg").enabled(true)
+                .createdBy("c").updatedBy("u").createdAt(t1).updatedAt(t2).build());
+
+        // hashCode también cambia cuando cambia un campo relevante
+        var changed = ProductUnitResponseDto.builder()
+                .id(id).code("C2").name("N").description("D").symbol("kg").enabled(true)
+                .createdBy("c").updatedBy("u").createdAt(t1).updatedAt(t1).build();
+        assertNotEquals(base.hashCode(), changed.hashCode());
+    }
+
+    @Test
+    @DisplayName("Setters establecen todos los campos correctamente")
+    void setters_setAllFields() {
+        var id = UUID.randomUUID();
+        var created = LocalDateTime.of(2024, 1, 2, 3, 4, 5);
+        var updated = LocalDateTime.of(2024, 6, 7, 8, 9, 10);
+
+        // no-args + setters (cubre todos los setters que marcaban 0%)
+        ProductUnitResponseDto dto = new ProductUnitResponseDto();
+        dto.setId(id);
+        dto.setCode("COD-01");
+        dto.setName("Nombre");
+        dto.setDescription("Descripción");
+        dto.setSymbol("kg");
+        dto.setEnabled(true);
+        dto.setCreatedBy("creator");
+        dto.setUpdatedBy("updater");
+        dto.setCreatedAt(created);
+        dto.setUpdatedAt(updated);
+
+        // verificaciones con getters
+        assertEquals(id, dto.getId());
+        assertEquals("COD-01", dto.getCode());
+        assertEquals("Nombre", dto.getName());
+        assertEquals("Descripción", dto.getDescription());
+        assertEquals("kg", dto.getSymbol());
+        assertTrue(dto.isEnabled());
+        assertEquals("creator", dto.getCreatedBy());
+        assertEquals("updater", dto.getUpdatedBy());
+        assertEquals(created, dto.getCreatedAt());
+        assertEquals(updated, dto.getUpdatedAt());
+    }
+
+    @Test
+    @DisplayName("Builder.toString() se ejecuta (cubre clase interna del builder)")
+    void builder_toString_isNotEmpty() {
+        // no hace falta construir el DTO; solo invocar el toString del builder
+        String s = ProductUnitResponseDto.builder()
+                .code("C1")
+                .name("N1")
+                .description("D1")
+                .symbol("kg")
+                .toString(); // <-- cubre el método rojo
+
+        assertNotNull(s);
+        assertFalse(s.isBlank());
+        // opcional: suele incluir el nombre de la clase interna
+        assertTrue(s.contains("ProductUnitResponseDtoBuilder"));
+    }
 }

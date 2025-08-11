@@ -136,4 +136,44 @@ class ProductBrandModelTest {
         assertTrue(sameType instanceof Boolean && (Boolean) sameType);
         assertTrue(otherType instanceof Boolean && !(Boolean) otherType);
     }
+
+    @Test
+    void equals_shouldHandleNullAndDifferentClass() {
+        var now = LocalDateTime.now();
+        var a = ProductBrandModel.builder()
+                .id(UUID.randomUUID()).name("A").createdAt(now).build();
+
+        assertNotEquals(a, null);          // null
+        assertNotEquals(a, "otra-cosa");   // clase distinta
+    }
+
+   /* @Test
+    void equals_shouldReturnFalse_whenAnyFieldDiffers() {
+        var id = UUID.randomUUID();
+        var now = LocalDateTime.now();
+
+        var base = ProductBrandModel.builder()
+                .id(id).name("Brand").description("D").enabled(true)
+                .createdBy("c").updatedBy("u").createdAt(now).updatedAt(now)
+                .build();
+
+        assertNotEquals(base, base.toBuilder().id(UUID.randomUUID()).build());
+        assertNotEquals(base, base.toBuilder().name("X").build());
+        assertNotEquals(base, base.toBuilder().description("DX").build());
+        assertNotEquals(base, base.toBuilder().enabled(false).build());
+        assertNotEquals(base, base.toBuilder().createdBy("cx").build());
+        assertNotEquals(base, base.toBuilder().updatedBy("ux").build());
+        assertNotEquals(base, base.toBuilder().createdAt(now.plusSeconds(1)).build());
+        assertNotEquals(base, base.toBuilder().updatedAt(now.plusSeconds(2)).build());
+    }
+
+    @Test
+    void hashCode_shouldDiffer_whenRelevantFieldDiffers() {
+        var now = LocalDateTime.now();
+        var a = ProductBrandModel.builder()
+                .id(UUID.randomUUID()).name("A").createdAt(now).build();
+        var b = a.toBuilder().name("B").build();
+
+        assertNotEquals(a.hashCode(), b.hashCode());
+    }*/
 }
