@@ -429,5 +429,17 @@ class ProductUseCaseImplTest {
         assertTrue(ex.getMessage().contains("Invalid category ID"));
     }
 
+    @Test
+    @DisplayName("hardDeleteProduct delega en el repositorio")
+    void hardDeleteProduct_callsRepository() {
+        UUID id = UUID.randomUUID();
+
+        // act
+        useCase.hardDeleteProduct(id);
+
+        // assert
+        verify(productRepositoryPort).deleteById(id);
+        verifyNoMoreInteractions(productRepositoryPort);
+    }
 
 }

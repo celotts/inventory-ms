@@ -112,4 +112,26 @@ class ProductBrandResponseDtoTest {
         assertEquals(original.getId(), copy.getId());
         assertNotEquals(original.getName(), copy.getName());
     }
+
+    @Test
+    void builder_toString_covers_inner_builder() {
+        LocalDateTime now = LocalDateTime.of(2024, 1, 2, 3, 4, 5);
+
+        // Llamamos a toString() DEL BUILDER para cubrir ProductBrandResponseDto.ProductBrandResponseDtoBuilder.toString()
+        String s = ProductBrandResponseDto.builder()
+                .id(UUID.fromString("00000000-0000-0000-0000-000000000001"))
+                .name("Brand")
+                .description("Desc")
+                .enabled(true)
+                .createdBy("creator")
+                .updatedBy("updater")
+                .createdAt(now)
+                .updatedAt(now)
+                .toString();
+
+        assertNotNull(s);
+        assertFalse(s.isBlank());
+        // si tu Lombok incluye el nombre del builder, esto también suma:
+        // assertTrue(s.contains("ProductBrandResponseDtoBuilder"));
+    }
 }
