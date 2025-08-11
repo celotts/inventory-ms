@@ -1,7 +1,7 @@
 package com.celotts.productservice.domain.port.product.port.usecase;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreate;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,7 +13,7 @@ import java.util.UUID;
 public interface ProductUseCase {
 
 
-    ProductModel createProduct(ProductCreateDto dto);
+    ProductModel createProduct(ProductCreate dto);
     ProductModel updateProduct(UUID id, ProductUpdateDto dto);
 
     ProductModel getProductById(UUID id);

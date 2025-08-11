@@ -36,7 +36,7 @@ public class ProductController {
 
     @PostMapping
     @Operation(summary = "Crear un nuevo producto", description = "Crea un producto en el sistema")
-    public ResponseEntity<ProductResponseDto> createProduct(@RequestBody @Valid ProductCreateDto createDto) {
+    public ResponseEntity<ProductResponseDto> createProduct(@RequestBody @Valid ProductCreate createDto) {
         log.info("Creating new product with code: {}", createDto.getCode());
         ProductModel created = productUseCase.createProduct(createDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseMapper.toDto(created));

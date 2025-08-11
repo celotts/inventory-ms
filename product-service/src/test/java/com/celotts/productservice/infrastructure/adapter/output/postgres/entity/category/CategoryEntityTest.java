@@ -14,12 +14,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.lang.reflect.Method;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.when;
+
 
 class CategoryEntityTest {
 
@@ -46,7 +47,6 @@ class CategoryEntityTest {
         assertEquals("user1", entity.getUpdatedBy());
         assertEquals(now, entity.getCreatedAt());
         assertEquals(now, entity.getUpdatedAt());
-
     }
 
     @Test
@@ -56,14 +56,7 @@ class CategoryEntityTest {
         LocalDateTime updatedAt = LocalDateTime.now();
 
         CategoryEntity entity = new CategoryEntity(
-                id,
-                "Snacks",
-                "Comida rápida",
-                true,
-                "system",
-                "editor",
-                createdAt,
-                updatedAt
+                id,"Snacks","Comida rápida",true,"system","editor",createdAt,updatedAt
         );
 
         assertEquals(id, entity.getId());
@@ -102,39 +95,37 @@ class CategoryEntityTest {
     void testPrePersistSetsCreatedAtAndActiveWhenBothNull() {
         CategoryEntity entity = new CategoryEntity();
         entity.setCreatedAt(null);
-        entity.setActive(null); // ⚠️ Necesario para cubrir esa línea
+        entity.setActive(null);
 
         entity.prePersist();
 
         assertNotNull(entity.getCreatedAt());
-        assertTrue(entity.getActive()); // ⚠️ Esto cubre la línea resaltada
+        assertTrue(entity.getActive());
     }
 
     @Test
     void testPrePersist_WhenCreatedAtNotNull_ShouldNotChangeIt() {
         CategoryEntity entity = new CategoryEntity();
         LocalDateTime original = LocalDateTime.of(2023, 1, 1, 0, 0);
-        entity.setCreatedAt(original); // valor NO null
-        entity.setActive(null); // para no interferir en otra rama
+        entity.setCreatedAt(original);
+        entity.setActive(null);
 
         entity.prePersist();
 
-        assertEquals(original, entity.getCreatedAt()); // se mantiene
+        assertEquals(original, entity.getCreatedAt());
     }
 
     @Test
     void testPrePersist_WhenActiveNotNull_ShouldNotChangeIt() {
         CategoryEntity entity = new CategoryEntity();
-        entity.setCreatedAt(null); // para cubrir ese if
-        entity.setActive(false); // valor NO null
+        entity.setCreatedAt(null);
+        entity.setActive(false);
 
         entity.prePersist();
 
-        assertFalse(entity.getActive()); // no se sobreescribe a true
-        assertNotNull(entity.getCreatedAt()); // se setea correctamente
+        assertFalse(entity.getActive());
+        assertNotNull(entity.getCreatedAt());
     }
-
-
 
     @Test
     void testAllArgsConstructorAndGetters() {
@@ -161,7 +152,6 @@ class CategoryEntityTest {
         assertEquals(updatedAt, category.getUpdatedAt());
     }
 
-
     @Test
     void testBuilder() {
         CategoryEntity category = CategoryEntity.builder()
@@ -171,7 +161,7 @@ class CategoryEntityTest {
 
         assertEquals("Built Category", category.getName());
         assertEquals("desc", category.getDescription());
-        assertTrue(category.getActive()); // Builder.Default
+        assertTrue(category.getActive()); // @Builder.Default
     }
 
     @Test
@@ -218,7 +208,7 @@ class CategoryEntityTest {
         category.setCreatedAt(now);
         category.setActive(false);
 
-        category.prePersist(); // Should NOT override
+        category.prePersist();
 
         assertEquals(now, category.getCreatedAt());
         assertFalse(category.getActive());
@@ -233,6 +223,7 @@ class CategoryEntityTest {
         assertNotNull(category.getUpdatedAt());
     }
 
+    // ===== Adapter tests (inner class) =====
     class CategoryRepositoryAdapterTest {
 
         private CategoryRepository categoryRepository;
@@ -358,7 +349,6 @@ class CategoryEntityTest {
         void testFindAllPageable() {
             Pageable pageable = PageRequest.of(0, 10);
             var entityPage = new PageImpl<>(List.of(createEntity()));
-            var modelPage = new PageImpl<>(List.of(createModel()));
 
             when(categoryRepository.findAll(pageable)).thenReturn(entityPage);
             when(categoryEntityMapper.toDomain(any())).thenReturn(createModel());
@@ -517,5 +507,74 @@ class CategoryEntityTest {
 
             assertThat(result.getContent()).hasSize(1);
         }
+    }
+
+    @Test
+    void equals_shouldBeReflexiveSymmetricAndTransitive() {
+        UUID id = UUID.randomUUID();
+        LocalDateTime now = LocalDateTime.now();
+
+        CategoryEntity a = new CategoryEntity(id, "N", "D", true, "c", "u", now, now);
+        CategoryEntity b = new CategoryEntity(id, "N", "D", true, "c", "u", now, now);
+        CategoryEntity c = new CategoryEntity(id, "N", "D", true, "c", "u", now, now);
+
+        // reflexivo
+        assertEquals(a, a);
+        // simétrico
+        assertEquals(a, b);
+        assertEquals(b, a);
+        // transitivo
+        assertEquals(b, c);
+        assertEquals(a, c);
+        // null y clase distinta
+        assertNotEquals(a, null);
+        assertNotEquals(a, "otro");
+    }
+
+    @Test
+    void equals_shouldReturnFalse_whenAnySingleFieldDiffers() {
+        UUID id = UUID.randomUUID();
+        LocalDateTime t = LocalDateTime.now();
+
+        CategoryEntity base = new CategoryEntity(id, "N", "D", true, "c", "u", t, t);
+
+        // Para cada campo, creamos una copia con solo ese campo distinto.
+        assertNotEquals(base, new CategoryEntity(UUID.randomUUID(), "N", "D", true, "c", "u", t, t));               // id
+        assertNotEquals(base, new CategoryEntity(id, "X", "D", true, "c", "u", t, t));                              // name
+        assertNotEquals(base, new CategoryEntity(id, "N", "DX", true, "c", "u", t, t));                             // description
+        assertNotEquals(base, new CategoryEntity(id, "N", "D", false, "c", "u", t, t));                             // active
+        assertNotEquals(base, new CategoryEntity(id, "N", "D", true, "cx", "u", t, t));                             // createdBy
+        assertNotEquals(base, new CategoryEntity(id, "N", "D", true, "c", "ux", t, t));                             // updatedBy
+        assertNotEquals(base, new CategoryEntity(id, "N", "D", true, "c", "u", t.minusSeconds(1), t));             // createdAt
+        assertNotEquals(base, new CategoryEntity(id, "N", "D", true, "c", "u", t, t.plusSeconds(1)));              // updatedAt
+    }
+
+    @Test
+    void hashCode_shouldMatchWhenEqual_andDifferWhenFieldChanges() {
+        UUID id = UUID.randomUUID();
+        LocalDateTime t = LocalDateTime.now();
+
+        CategoryEntity a = new CategoryEntity(id, "N", "D", true, "c", "u", t, t);
+        CategoryEntity b = new CategoryEntity(id, "N", "D", true, "c", "u", t, t);
+        CategoryEntity diff = new CategoryEntity(id, "N2", "D", true, "c", "u", t, t);
+
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());   // consistencia con equals
+        assertNotEquals(a.hashCode(), diff.hashCode()); // cambia si cambia un campo relevante
+    }
+
+    @Test
+    void preUpdate_shouldOverwriteExistingUpdatedAt() throws InterruptedException {
+        CategoryEntity entity = new CategoryEntity();
+        // Simulamos que ya venía con fecha previa
+        LocalDateTime previous = LocalDateTime.now().minusDays(1);
+        entity.setUpdatedAt(previous);
+
+        // Pausita mínima para asegurar comparación temporal si el reloj es muy rápido
+        Thread.sleep(2);
+        entity.preUpdate();
+
+        assertNotNull(entity.getUpdatedAt());
+        assertTrue(entity.getUpdatedAt().isAfter(previous));
     }
 }

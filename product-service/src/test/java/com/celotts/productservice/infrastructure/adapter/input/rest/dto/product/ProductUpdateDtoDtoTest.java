@@ -7,7 +7,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ProductUpdateDtoTest {
+class ProductUpdateDtoDtoTest {
 
     @Test
     void testNoArgsConstructorAndSetters() {

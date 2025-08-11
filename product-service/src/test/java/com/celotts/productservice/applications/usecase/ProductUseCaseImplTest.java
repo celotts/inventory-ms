@@ -5,8 +5,8 @@ import com.celotts.productservice.domain.port.category.output.CategoryRepository
 import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
 import com.celotts.productservice.domain.port.product.port.output.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductReferenceDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreate;
+import com.celotts.productservice.domain.model.ProductReference;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
@@ -51,8 +51,8 @@ class ProductUseCaseImplTest {
     }
 
     // ---------- helpers ----------
-    private ProductCreateDto createDto(String code, UUID brandId, UUID categoryId, String unitCode) {
-        ProductCreateDto dto = mock(ProductCreateDto.class);
+    private ProductCreate createDto(String code, UUID brandId, UUID categoryId, String unitCode) {
+        ProductCreate dto = mock(ProductCreate.class);
         when(dto.getCode()).thenReturn(code);
         when(dto.getBrandId()).thenReturn(brandId);
         when(dto.getCategoryId()).thenReturn(categoryId);
@@ -68,8 +68,8 @@ class ProductUseCaseImplTest {
         return dto;
     }
 
-    private ProductReferenceDto refs(String unitCode, UUID brandId, UUID categoryId) {
-        ProductReferenceDto dto = mock(ProductReferenceDto.class);
+    private ProductReference refs(String unitCode, UUID brandId, UUID categoryId) {
+        ProductReference dto = mock(ProductReference.class);
         when(dto.getUnitCode()).thenReturn(unitCode);
         when(dto.getBrandId()).thenReturn(brandId);
         when(dto.getCategoryId()).thenReturn(categoryId);
@@ -80,7 +80,7 @@ class ProductUseCaseImplTest {
     @Test
     @DisplayName("createProduct lanza ProductAlreadyExistsException si el código ya existe")
     void createProduct_codeExists_throws() {
-        ProductCreateDto dto = createDto("P-1", UUID.randomUUID(), UUID.randomUUID(), "KG");
+        ProductCreate dto = createDto("P-1", UUID.randomUUID(), UUID.randomUUID(), "KG");
         when(productRepositoryPort.findByCode("P-1")).thenReturn(Optional.of(mock(ProductModel.class)));
 
         assertThrows(ProductAlreadyExistsException.class, () -> useCase.createProduct(dto));
@@ -90,7 +90,7 @@ class ProductUseCaseImplTest {
     @Test
     @DisplayName("createProduct valida referencias, mapea y guarda")
     void createProduct_ok_saves() {
-        ProductCreateDto dto = createDto("P-2", UUID.randomUUID(), UUID.randomUUID(), "KG");
+        ProductCreate dto = createDto("P-2", UUID.randomUUID(), UUID.randomUUID(), "KG");
 
         when(productRepositoryPort.findByCode("P-2")).thenReturn(Optional.empty());
         when(productUnitPort.existsByCode("KG")).thenReturn(true);
@@ -370,7 +370,7 @@ class ProductUseCaseImplTest {
         UUID brandId = UUID.randomUUID();
         UUID categoryId = UUID.randomUUID();
 
-        ProductCreateDto create = mock(ProductCreateDto.class);
+        ProductCreate create = mock(ProductCreate.class);
         when(create.getCode()).thenReturn(code);
         when(create.getBrandId()).thenReturn(brandId);
         when(create.getCategoryId()).thenReturn(categoryId);
@@ -391,7 +391,7 @@ class ProductUseCaseImplTest {
         UUID brand = UUID.randomUUID();
         UUID category = UUID.randomUUID();
 
-        ProductCreateDto create = mock(ProductCreateDto.class);
+        ProductCreate create = mock(ProductCreate.class);
         when(create.getCode()).thenReturn(code);
         when(create.getUnitCode()).thenReturn(unit);
         when(create.getBrandId()).thenReturn(brand);
@@ -413,7 +413,7 @@ class ProductUseCaseImplTest {
         UUID brand = UUID.randomUUID();
         UUID category = UUID.randomUUID();
 
-        ProductCreateDto create = mock(ProductCreateDto.class);
+        ProductCreate create = mock(ProductCreate.class);
         when(create.getCode()).thenReturn(code);
         when(create.getUnitCode()).thenReturn(unit);
         when(create.getBrandId()).thenReturn(brand);

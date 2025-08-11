@@ -2,6 +2,7 @@ package com.celotts.productservice.domain.model;
 
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -118,8 +119,21 @@ class ProductBrandModelTest {
     void customConstructor_shouldInitializeValues() {
         UUID id = UUID.randomUUID();
         ProductBrandModel brand = new ProductBrandModel(id, "Cool Brand", true);
+        assertNotNull(brand); // cobertura del ctor custom
+    }
 
-        assertNotNull(brand);
-        // Aunque no se seteen los campos en este constructor, lo invocas para cobertura
+    // Opcional: si quieres cubrir canEqual de Lombok vía reflexión
+    @Test
+    void canEqual_shouldReturnTrueForSameType_andFalseForDifferentType_viaReflection() throws Exception {
+        ProductBrandModel brand = new ProductBrandModel();
+
+        Method m = ProductBrandModel.class.getDeclaredMethod("canEqual", Object.class);
+        m.setAccessible(true);
+
+        Object sameType = m.invoke(brand, new ProductBrandModel());
+        Object otherType = m.invoke(brand, "other");
+
+        assertTrue(sameType instanceof Boolean && (Boolean) sameType);
+        assertTrue(otherType instanceof Boolean && !(Boolean) otherType);
     }
 }

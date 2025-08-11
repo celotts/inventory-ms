@@ -10,21 +10,21 @@ public class ProductCreateDtoTest {
 
     @Test
     void testEquals_withNullAndDifferentClass() {
-        ProductCreateDto dto = ProductCreateDto.builder().build();
+        ProductCreate dto = ProductCreate.builder().build();
         assertNotEquals(dto, null); // null comparison
         assertNotEquals(dto, "Not a DTO"); // other class
     }
 
     @Test
     void testEquals_sameReference() {
-        ProductCreateDto dto = ProductCreateDto.builder().build();
+        ProductCreate dto = ProductCreate.builder().build();
         assertEquals(dto, dto);
     }
 
     @Test
     void testEquals_differentObjectsWithDifferentValues() {
-        ProductCreateDto dto1 = ProductCreateDto.builder().code("X").build();
-        ProductCreateDto dto2 = ProductCreateDto.builder().code("Y").build();
+        ProductCreate dto1 = ProductCreate.builder().code("X").build();
+        ProductCreate dto2 = ProductCreate.builder().code("Y").build();
         assertNotEquals(dto1, dto2);
     }
 
@@ -33,7 +33,7 @@ public class ProductCreateDtoTest {
         UUID categoryId = UUID.randomUUID();
         UUID brandId = UUID.randomUUID();
 
-        ProductCreateDto dto1 = ProductCreateDto.builder()
+        ProductCreate dto1 = ProductCreate.builder()
                 .code("PRD001")
                 .name("Product A")
                 .description("Description")
@@ -48,7 +48,7 @@ public class ProductCreateDtoTest {
                 .updatedBy("user")
                 .build();
 
-        ProductCreateDto dto2 = ProductCreateDto.builder()
+        ProductCreate dto2 = ProductCreate.builder()
                 .code("PRD001")
                 .name("Product A")
                 .description("Description")
@@ -69,21 +69,21 @@ public class ProductCreateDtoTest {
 
     @Test
     void testHashCode_differentValues() {
-        ProductCreateDto dto1 = ProductCreateDto.builder().code("A").build();
-        ProductCreateDto dto2 = ProductCreateDto.builder().code("B").build();
+        ProductCreate dto1 = ProductCreate.builder().code("A").build();
+        ProductCreate dto2 = ProductCreate.builder().code("B").build();
 
         assertNotEquals(dto1.hashCode(), dto2.hashCode());
     }
 
     @Test
     void testCanEqual() {
-        ProductCreateDto dto = ProductCreateDto.builder().build();
-        assertTrue(dto.canEqual(ProductCreateDto.builder().build()));
+        ProductCreate dto = ProductCreate.builder().build();
+        assertTrue(dto.canEqual(ProductCreate.builder().build()));
     }
 
     @Test
     void testDefaultEnabledIsTrue() {
-        ProductCreateDto dto = ProductCreateDto.builder().build();
+        ProductCreate dto = ProductCreate.builder().build();
         assertTrue(dto.getEnabled());
     }
 }

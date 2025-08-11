@@ -1,6 +1,7 @@
 package com.celotts.productservice.applications.usecase;
 
 import com.celotts.productservice.domain.model.ProductModel;
+import com.celotts.productservice.domain.model.ProductReference;
 import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
 import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
 import com.celotts.productservice.domain.port.product.port.usecase.ProductUseCase;
@@ -49,7 +50,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
     }
 
     @Override
-    public ProductModel createProduct(ProductCreateDto dto) {
+    public ProductModel createProduct(ProductCreate dto) {
         if (productRepositoryPort.findByCode(dto.getCode()).isPresent()) {
             throw new ProductAlreadyExistsException(dto.getCode());
         }
@@ -159,7 +160,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
         return productUnitPort.findNameByCode(code);
     }
 
-    private void validateReferences(@Valid ProductReferenceDto dto) {
+    private void validateReferences(@Valid ProductReference dto) {
         if (!productUnitPort.existsByCode(dto.getUnitCode())) {
             throw new ProductNotFoundException("Invalid unit code: " + dto.getUnitCode());
         }

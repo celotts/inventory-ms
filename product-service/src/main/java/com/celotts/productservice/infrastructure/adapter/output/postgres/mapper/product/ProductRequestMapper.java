@@ -1,14 +1,14 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreate;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import jakarta.validation.Valid;
 
 
 public class ProductRequestMapper {
 
-    public ProductModel toModel(ProductCreateDto dto) {
+    public ProductModel toModel(ProductCreate dto) {
         if (dto == null) return null;
 
         return ProductModel.builder()
