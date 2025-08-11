@@ -7,7 +7,7 @@ import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrand
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;
-import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,26 +16,38 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/product-brands")
-@CrossOrigin(origins = "${app.cors.allowed-origin:*}")
-@Tag(name = "Product Brand API", description = "API para gestionar marcas de productos")
 public class ProductBrandController {
 
-    private final ProductBrandService productBrandService;
     private final ProductBrandUseCase productBrandUseCase;
+    private final ProductBrandDtoMapper productBrandDtoMapper;
+    private final ProductBrandService productBrandService;
 
     @PostMapping
     public ResponseEntity<ProductBrandResponseDto> create(@Valid @RequestBody ProductBrandCreateDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(productBrandService.create(dto));
+        System.out.println(">>> [DEBUG] Creating brand: " + dto);
+        ProductBrandResponseDto response = productBrandService.create(dto);
+        System.out.println(">>> [DEBUG] Created brand ID: " + response.getId());
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .header("Location", "/api/v1/product-brands/" + response.getId())
+                .body(response);
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductBrandResponseDto>> getAllBrands() {
-        return ResponseEntity.ok(productBrandService.findAll());
+    public ResponseEntity<Map<String, Object>> getAllBrands() {
+        List<ProductBrandResponseDto> brands = productBrandService.findAll();
+        return ResponseEntity.ok(
+            Map.of(
+                "data", brands,
+                "total", brands != null ? brands.size() : 0
+            )
+        );
     }
 
     @GetMapping("/{id}")
@@ -62,20 +74,21 @@ public class ProductBrandController {
     }
 
     @GetMapping("/brands/{id}/name")
-    public String getBrandNameById(@PathVariable UUID id) {
+    public ResponseEntity<String> getBrandNameById(@PathVariable UUID id) {
         return productBrandService.findNameById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Brand name not found"));
     }
 
     @PatchMapping("/{id}/enable")
     public ResponseEntity<ProductBrandResponseDto> enableBrand(@PathVariable UUID id) {
         ProductBrandModel brand = productBrandUseCase.enableBrand(id);
-        return ResponseEntity.ok(ProductBrandDtoMapper.toResponseDto(brand));
+        return ResponseEntity.ok(productBrandDtoMapper.toResponseDto(brand));
     }
 
     @PatchMapping("/{id}/disable")
     public ResponseEntity<ProductBrandResponseDto> disableBrand(@PathVariable UUID id) {
         ProductBrandModel brand = productBrandUseCase.disableBrand(id);
-        return ResponseEntity.ok(ProductBrandDtoMapper.toResponseDto(brand));
+        return ResponseEntity.ok(productBrandDtoMapper.toResponseDto(brand));
     }
 }

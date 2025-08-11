@@ -3,7 +3,7 @@ package com.celotts.productservice.applications.usecase;
 import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
 import com.celotts.productservice.domain.port.category.usecase.CategoryUseCase;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatsDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -152,12 +152,12 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
     }
 
     @Override
-    public CategoryStatsDto getCategoryStatistics() {
+    public CategoryStatusDto getCategoryStatistics() {
         long total = repository.findAll().size();  // Podrías optimizar también a un count si lo tienes
         long active = repository.countByActive(true);
         long inactive = repository.countByActive(false);
 
-        return CategoryStatsDto.builder()
+        return CategoryStatusDto.builder()
                 .totalCategories(total)
                 .activeCategories(active)
                 .inactiveCategories(inactive)

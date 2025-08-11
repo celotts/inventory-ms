@@ -1,9 +1,9 @@
 package com.celotts.productservice.applications.usecase;
 
 import com.celotts.productservice.domain.model.ProductModel;
+import com.celotts.productservice.domain.model.ProductReference;
 import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
 import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
-import com.celotts.productservice.domain.port.product.brand.output.ProductBrandRepositoryPort;
 import com.celotts.productservice.domain.port.product.port.usecase.ProductUseCase;
 import com.celotts.productservice.domain.port.product.port.output.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
@@ -50,7 +50,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
     }
 
     @Override
-    public ProductModel createProduct(ProductCreateDto dto) {
+    public ProductModel createProduct(ProductCreate dto) {
         if (productRepositoryPort.findByCode(dto.getCode()).isPresent()) {
             throw new ProductAlreadyExistsException(dto.getCode());
         }
@@ -91,11 +91,6 @@ public class ProductUseCaseImpl implements ProductUseCase {
         return productRepositoryPort.save(product.withEnabled(true));
     }
 
-    @Override
-    public void disableProduct(UUID id) {
-        ProductModel product = getProductById(id);
-        productRepositoryPort.save(product.withEnabled(false));
-    }
 
     @Override
     public ProductModel updateStock(UUID id, int stock) {
@@ -165,7 +160,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
         return productUnitPort.findNameByCode(code);
     }
 
-    private void validateReferences(@Valid ProductReferenceDto dto) {
+    private void validateReferences(@Valid ProductReference dto) {
         if (!productUnitPort.existsByCode(dto.getUnitCode())) {
             throw new ProductNotFoundException("Invalid unit code: " + dto.getUnitCode());
         }
@@ -175,6 +170,31 @@ public class ProductUseCaseImpl implements ProductUseCase {
         if (!categoryRepositoryPort.existsById(dto.getCategoryId())) {
             throw new ProductNotFoundException("Invalid category ID: " + dto.getCategoryId());
         }
+    }
+
+    @Override
+    public boolean existsById(UUID id) {
+        return productRepositoryPort.existsById(id); // ✅
+    }
+
+    @Override
+    public boolean existsByCode(String code) {
+        return productRepositoryPort.findByCode(code).isPresent(); // ✅
+    }
+
+    @Override
+    public List<ProductModel> getAll() {
+        return productRepositoryPort.findAll();
+    }
+
+    @Override
+    public ProductModel disableProduct(UUID id) {
+        ProductModel product = productRepositoryPort.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("No se encontró el producto con ID: " + id));
+
+        ProductModel updatedProduct = product.withEnabled(false);
+
+        return productRepositoryPort.save(updatedProduct);
     }
 
 

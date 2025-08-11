@@ -2,12 +2,14 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.dto.product
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
+@Builder
 public class ProductCategoryCreateDto {
 
     @NotNull(message = "Product ID is required")

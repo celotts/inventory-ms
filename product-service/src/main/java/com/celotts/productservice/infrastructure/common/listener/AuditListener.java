@@ -8,48 +8,55 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
-//TODO: NO SE USA
+
 @Slf4j
 public class AuditListener {
-    //TODO: NO SE USA
+
     @PrePersist
     public void prePersist(Object entity) {
-        if (entity instanceof Auditable auditable) {
-            LocalDateTime now = LocalDateTime.now();
-            String currentUser = getCurrentUser();
+        if (!(entity instanceof Auditable auditable)) return;
 
-            log.debug("PrePersist: Setting audit fields for entity: {}", entity.getClass().getSimpleName());
+        LocalDateTime now = LocalDateTime.now();
+        String currentUser = getCurrentUser();
 
-            auditable.setCreatedAt(now);
-            auditable.setCreatedBy(currentUser);
-            auditable.setUpdatedAt(null);
-            auditable.setUpdatedBy(null);
-        }
+        log.debug("PrePersist: Setting audit fields for entity: {}", entity.getClass().getSimpleName());
+
+        auditable.setCreatedAt(now);
+        auditable.setCreatedBy(currentUser);
+        auditable.setUpdatedAt(null);
+        auditable.setUpdatedBy(null);
     }
 
     @PreUpdate
     public void preUpdate(Object entity) {
-        if (entity instanceof Auditable auditable) {
-            LocalDateTime now = LocalDateTime.now();
-            String currentUser = getCurrentUser();
+        if (!(entity instanceof Auditable auditable)) return;
 
-            log.debug("PreUpdate: Setting audit fields for entity: {}", entity.getClass().getSimpleName());
+        LocalDateTime now = LocalDateTime.now();
+        String currentUser = getCurrentUser();
 
-            auditable.setUpdatedAt(now);
-            auditable.setUpdatedBy(currentUser);
-        }
+        log.debug("PreUpdate: Setting audit fields for entity: {}", entity.getClass().getSimpleName());
+
+        auditable.setUpdatedAt(now);
+        auditable.setUpdatedBy(currentUser);
     }
 
-    private String getCurrentUser() {
+    /**
+     * Devuelve el nombre del usuario autenticado, o "system" si no hay autenticación válida.
+     */
+    String getCurrentUser() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication != null && authentication.isAuthenticated() &&
+
+            if (authentication != null &&
+                    authentication.isAuthenticated() &&
                     !"anonymousUser".equals(authentication.getPrincipal())) {
                 return authentication.getName();
             }
+
         } catch (Exception e) {
             log.debug("Could not get current user from security context: {}", e.getMessage());
         }
+
         return "system";
     }
 }

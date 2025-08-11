@@ -2,7 +2,9 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.dto.product
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -10,6 +12,8 @@ import java.util.UUID;
 
 @Getter
 @Builder
+@EqualsAndHashCode
+@ToString
 public class ProductResponseDto {
 
     private UUID id;

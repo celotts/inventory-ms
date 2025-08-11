@@ -221,7 +221,7 @@ public class CategoryController {
      * GET /api/v1/categories/stats
      */
     @GetMapping("/stats")
-    public ResponseEntity<CategoryStatsDto> getCategoryStats() {
+    public ResponseEntity<CategoryStatusDto> getCategoryStats() {
         var stats = categoryService.getCategoryStatistics();
         return ResponseEntity.ok(stats);
     }

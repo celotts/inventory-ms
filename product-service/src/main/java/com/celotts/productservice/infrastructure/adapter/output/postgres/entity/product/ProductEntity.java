@@ -13,7 +13,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "product")
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductEntity {

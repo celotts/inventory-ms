@@ -79,5 +79,35 @@ class ProductControllerAdviceTest {
                 .andExpect(jsonPath("$.path").value("/api/v1/products/" + id + "/enable"));
     }
 
+    @Test
+    @DisplayName("GET /api/v1/products/{id} debe responder 400 si el id no es UUID")
+    void shouldReturn400WhenInvalidUUID() throws Exception {
+        mockMvc.perform(patch("/api/v1/products/abc/enable") // ⚠️ "abc" no es UUID válido
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Invalid parameter")))
+                .andExpect(jsonPath("$.path").value("/api/v1/products/abc/enable"));
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/products/{id}/enable debe responder 400 si se lanza IllegalArgumentException")
+    void shouldReturn400WhenIllegalArgumentException() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        Mockito.when(productUseCase.enableProduct(id))
+                .thenThrow(new IllegalArgumentException("Producto inválido"));
+
+        mockMvc.perform(patch("/api/v1/products/{id}/enable", id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Producto inválido"))
+                .andExpect(jsonPath("$.path").value("/api/v1/products/" + id + "/enable"));
+    }
+
 
 }

@@ -36,7 +36,7 @@ public class ProductController {
 
     @PostMapping
     @Operation(summary = "Crear un nuevo producto", description = "Crea un producto en el sistema")
-    public ResponseEntity<ProductResponseDto> createProduct(@RequestBody @Valid ProductCreateDto createDto) {
+    public ResponseEntity<ProductResponseDto> createProduct(@RequestBody @Valid ProductCreate createDto) {
         log.info("Creating new product with code: {}", createDto.getCode());
         ProductModel created = productUseCase.createProduct(createDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseMapper.toDto(created));
@@ -87,7 +87,9 @@ public class ProductController {
                 ? productUseCase.getAllProductsWithFilters(pageable, code, name, description)
                 : productUseCase.getAllProducts(pageable);
 
-        return ResponseEntity.ok(products.map(responseMapper::toDto));
+        Page<ProductModel> result = products;
+        Page<ProductResponseDto> dtoPage = result.map(responseMapper::toDto);
+        return ResponseEntity.ok(dtoPage);
     }
 
     @GetMapping("/{id}")
@@ -202,7 +204,13 @@ public class ProductController {
     @GetMapping("/code/{code}")
     @Operation(summary = "Obtener producto por código", description = "Consulta un producto por su código")
     public ResponseEntity<ProductResponseDto> getProductByCode(@PathVariable String code) {
+        if (code == null || code.isBlank()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+
         ProductModel product = productUseCase.getProductByCode(code);
-        return ResponseEntity.ok(responseMapper.toDto(product));
+        return (product == null)
+                ? ResponseEntity.status(HttpStatus.NOT_FOUND).build()
+                : ResponseEntity.ok(responseMapper.toResponseDto(product));
     }
 }
