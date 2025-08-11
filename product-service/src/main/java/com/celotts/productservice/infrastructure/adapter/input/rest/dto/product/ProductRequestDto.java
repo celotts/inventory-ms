@@ -1,14 +1,19 @@
-
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.product;
 
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ProductRequestDto {
 
     @NotBlank(message = "Product code is required")
@@ -25,8 +30,7 @@ public class ProductRequestDto {
     private String description;
 
     @NotNull(message = "Category is required")
-    private UUID categoryId;  // ← AGREGAR ESTO
-
+    private UUID categoryId;
 
     @NotBlank(message = "Unit code is required")
     private String unitCode;
@@ -48,10 +52,9 @@ public class ProductRequestDto {
     private BigDecimal unitPrice;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean enabled = true;
 
     private String createdBy;
-
     private String updatedBy;
 }
-

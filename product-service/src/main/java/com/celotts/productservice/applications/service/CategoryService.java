@@ -2,9 +2,8 @@ package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.domain.port.category.usecase.CategoryUseCase;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatsDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category.CategoryRequestMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -122,7 +121,7 @@ public class CategoryService {
     }
 
     @Transactional(readOnly = true)
-    public CategoryStatsDto getCategoryStatistics() {
+    public CategoryStatusDto getCategoryStatistics() {
         return categoryUseCase.getCategoryStatistics();
     }
 }

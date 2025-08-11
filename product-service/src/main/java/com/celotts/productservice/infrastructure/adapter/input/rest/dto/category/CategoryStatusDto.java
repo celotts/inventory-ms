@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CategoryStatsDto {
+public class CategoryStatusDto {
 
     private long totalCategories;
     private long activeCategories;

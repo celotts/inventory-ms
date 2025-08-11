@@ -12,7 +12,7 @@ import java.util.UUID;
 @Table(name = "categories")
 @Getter
 @Setter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
 public class CategoryModel {
@@ -35,6 +35,21 @@ public class CategoryModel {
         this.active = active;
         this.updatedBy = updatedBy;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    @Override
+    public String toString() {
+        return "CategoryModel{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", active=" + active +
+                ", createdBy='" + createdBy + '\'' +
+                ", updatedBy='" + updatedBy + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                ", deleted=" + deleted +
+                '}';
     }
 
 }

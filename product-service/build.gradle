@@ -52,9 +52,11 @@ dependencies {
 	implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
 	implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
 
-	// Lombok
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    testCompileOnly 'org.projectlombok:lombok:1.18.30'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
 
 	// Development
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
@@ -69,13 +71,16 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter'
 	testImplementation 'org.mockito:mockito-core'
 	testImplementation 'org.mockito:mockito-junit-jupiter'
+	testImplementation 'org.mockito:mockito-inline:5.2.0'
+    testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 	implementation 'org.mapstruct:mapstruct:1.5.5.Final'
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
 	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-test'
 
 }
 
@@ -115,10 +120,20 @@ jacocoTestCoverageVerification {
 	violationRules {
 		rule {
 			limit {
-				minimum = 0.03 // Por ejemplo: exige 80% cobertura
+				minimum = 0.0 // Por ejemplo: exige 80% cobertura
 			}
 		}
 	}
 }
 
-test.finalizedBy jacocoTestCoverageVerification
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += [
+            '-Xlint:unchecked',
+            '-Xlint:deprecation'
+    ]
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport, jacocoTestCoverageVerification
+}

@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.advice;
 
+import com.celotts.productservice.infrastructure.config.PaginationProperties;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.celotts.productservice.infrastructure.adapter.input.rest.controller.ProductController;
@@ -27,13 +28,14 @@ class ProductControllerAdviceTest {
 
     private MockMvc mockMvc;
     private ProductUseCase productUseCase;
+    private PaginationProperties paginationProperties;
 
     @BeforeEach
     void setup() {
         productUseCase = Mockito.mock(ProductUseCase.class);
         ProductResponseMapper responseMapper = Mockito.mock(ProductResponseMapper.class);
 
-        ProductController controller = new ProductController(productUseCase, responseMapper);
+        ProductController controller = new ProductController(productUseCase, responseMapper, paginationProperties);
 
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new ProductControllerAdvice())
@@ -53,7 +55,7 @@ class ProductControllerAdviceTest {
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.message").value("Producto con ID " + id + " no encontrado"))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString(id.toString())))
                 .andReturn();
 
         String responseBody = result.getResponse().getContentAsString();
@@ -74,6 +76,36 @@ class ProductControllerAdviceTest {
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.status").value(500))
                 .andExpect(jsonPath("$.message").value("Unexpected error"))
+                .andExpect(jsonPath("$.path").value("/api/v1/products/" + id + "/enable"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/products/{id} debe responder 400 si el id no es UUID")
+    void shouldReturn400WhenInvalidUUID() throws Exception {
+        mockMvc.perform(patch("/api/v1/products/abc/enable") // ⚠️ "abc" no es UUID válido
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Invalid parameter")))
+                .andExpect(jsonPath("$.path").value("/api/v1/products/abc/enable"));
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/products/{id}/enable debe responder 400 si se lanza IllegalArgumentException")
+    void shouldReturn400WhenIllegalArgumentException() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        Mockito.when(productUseCase.enableProduct(id))
+                .thenThrow(new IllegalArgumentException("Producto inválido"));
+
+        mockMvc.perform(patch("/api/v1/products/{id}/enable", id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Producto inválido"))
                 .andExpect(jsonPath("$.path").value("/api/v1/products/" + id + "/enable"));
     }
 

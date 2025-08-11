@@ -4,11 +4,13 @@ import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
+import lombok.experimental.UtilityClass;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@UtilityClass
 public class ProductDtoMapper {
 
     /**

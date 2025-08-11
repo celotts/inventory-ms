@@ -1,8 +1,8 @@
 package com.celotts.productservice.domain.port.product.port.usecase;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;
-import jakarta.validation.Valid;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreate;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -12,16 +12,18 @@ import java.util.UUID;
 
 public interface ProductUseCase {
 
-    // --- CRUD ---
-    ProductModel createProduct(@Valid ProductRequestDto requestDTO);
-    ProductModel updateProduct(UUID id, @Valid ProductRequestDto requestDTO);
+
+    ProductModel createProduct(ProductCreate dto);
+    ProductModel updateProduct(UUID id, ProductUpdateDto dto);
+
     ProductModel getProductById(UUID id);
     ProductModel getProductByCode(String code);
     void hardDeleteProduct(UUID id);
 
     // --- Activación / Estado ---
     ProductModel enableProduct(UUID id);
-    void disableProduct(UUID id);
+    //void disableProduct(UUID id);
+    ProductModel disableProduct(UUID id);
     ProductModel updateStock(UUID id, int stock);
 
     // --- Consultas ---
@@ -33,6 +35,7 @@ public interface ProductUseCase {
     List<ProductModel> getLowStockByCategory(UUID categoryId);
     List<ProductModel> getLowStockProducts();
     List<ProductModel> getProductsByBrand(UUID brandId);
+    List<ProductModel> getAll();
 
     // --- Métricas ---
     long countProducts();
@@ -40,4 +43,8 @@ public interface ProductUseCase {
 
     // --- Utilidades ---
     Optional<String> validateUnitCode(String code);
+    boolean existsById(UUID id);
+    boolean existsByCode(String code);
+
+
 }

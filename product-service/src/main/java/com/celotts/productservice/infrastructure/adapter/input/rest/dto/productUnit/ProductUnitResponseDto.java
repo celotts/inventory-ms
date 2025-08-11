@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -11,20 +12,22 @@ import java.util.UUID;
 @Data
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class ProductUnitResponseDto {
 
-    private final UUID   id;
-    private final String code;          // ← NUEVO
-    private final String name;
-    private final String description;
-    private final boolean enabled;
+    private UUID id;
+    private String code;
+    private String name;
+    private String description;
+    private String symbol; // ← NUEVO CAMPO AGREGADO
+    private boolean enabled;
 
-    private final String createdBy;
-    private final String updatedBy;
-
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
-    private final LocalDateTime createdAt;
+    private String createdBy;
+    private String updatedBy;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING)
-    private final LocalDateTime updatedAt;
+    private LocalDateTime createdAt;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private LocalDateTime updatedAt;
 }

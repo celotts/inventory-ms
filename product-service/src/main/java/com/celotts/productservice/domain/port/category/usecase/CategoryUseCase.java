@@ -1,7 +1,7 @@
 package com.celotts.productservice.domain.port.category.usecase;
 
 import com.celotts.productservice.domain.model.CategoryModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatsDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -26,7 +26,7 @@ public interface CategoryUseCase {
     CategoryModel updateStatus(UUID id, Boolean active);
     CategoryModel restore(UUID id);
     void permanentDelete(UUID id);
-    CategoryStatsDto getCategoryStatistics();
+    CategoryStatusDto getCategoryStatistics();
 
     List<CategoryModel> findByNameOrDescription(String query, int limit);
 
