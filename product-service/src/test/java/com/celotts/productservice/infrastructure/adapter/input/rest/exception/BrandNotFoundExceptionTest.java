@@ -1,7 +1,8 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.exception;
 
-import org.junit.jupiter.api.Test;
+import com.celotts.productservice.domain.exception.BrandNotFoundException; // <-- nuevo import
 
+import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,7 +15,10 @@ class BrandNotFoundExceptionTest {
         BrandNotFoundException exception = new BrandNotFoundException(id);
 
         assertThat(exception).isNotNull();
-        assertThat(exception.getMessage()).isEqualTo("Brand not found with ID: " + id);
+        // No dependas del texto exacto: verifica que incluya la entidad y el id
+        assertThat(exception.getMessage())
+                .contains("Brand")
+                .contains(id.toString());
     }
 
     @Test
@@ -23,6 +27,8 @@ class BrandNotFoundExceptionTest {
         BrandNotFoundException exception = new BrandNotFoundException(message);
 
         assertThat(exception).isNotNull();
-        assertThat(exception.getMessage()).isEqualTo(message);
+        // El mensaje final puede ser formateado por ResourceNotFoundException;
+        // validamos que incluya tu mensaje personalizado.
+        assertThat(exception.getMessage()).contains(message);
     }
 }

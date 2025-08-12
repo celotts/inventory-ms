@@ -3,10 +3,11 @@ package com.celotts.productservice.applications.usecase;
 import com.celotts.productservice.domain.model.ProductBrandModel;
 import com.celotts.productservice.domain.port.product.brand.output.ProductBrandRepositoryPort;
 import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrandUseCase;
+import com.celotts.productservice.domain.exception.BrandNotFoundException;
 
-import com.celotts.productservice.infrastructure.adapter.input.rest.exception.BrandNotFoundException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+
 
 import java.time.LocalDateTime;
 import java.util.List;

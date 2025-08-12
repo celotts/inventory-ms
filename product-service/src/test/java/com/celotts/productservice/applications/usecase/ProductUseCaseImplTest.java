@@ -8,9 +8,12 @@ import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRep
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreate;
 import com.celotts.productservice.domain.model.ProductReference;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
-import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
+
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
+import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
+import com.celotts.productservice.domain.exception.BrandNotFoundException; // donde aplique
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -83,7 +86,7 @@ class ProductUseCaseImplTest {
         ProductCreate dto = createDto("P-1", UUID.randomUUID(), UUID.randomUUID(), "KG");
         when(productRepositoryPort.findByCode("P-1")).thenReturn(Optional.of(mock(ProductModel.class)));
 
-        assertThrows(ProductAlreadyExistsException.class, () -> useCase.createProduct(dto));
+        assertThrows(ResourceAlreadyExistsException.class, () -> useCase.createProduct(dto));
         verify(productRepositoryPort, never()).save(any());
     }
 
@@ -117,7 +120,7 @@ class ProductUseCaseImplTest {
         UUID id = UUID.randomUUID();
         when(productRepositoryPort.findById(id)).thenReturn(Optional.empty());
 
-        assertThrows(ProductNotFoundException.class, () -> useCase.updateProduct(id, updateDto(UUID.randomUUID(), UUID.randomUUID(), "KG")));
+        assertThrows(ResourceNotFoundException.class, () -> useCase.updateProduct(id, updateDto(UUID.randomUUID(), UUID.randomUUID(), "KG")));
         verify(productRepositoryPort, never()).save(any());
     }
 
@@ -159,7 +162,7 @@ class ProductUseCaseImplTest {
     void getProductById_notFound_throws() {
         UUID id = UUID.randomUUID();
         when(productRepositoryPort.findById(id)).thenReturn(Optional.empty());
-        assertThrows(ProductNotFoundException.class, () -> useCase.getProductById(id));
+        assertThrows(ResourceNotFoundException.class, () -> useCase.getProductById(id));
     }
 
     @Test
@@ -172,7 +175,7 @@ class ProductUseCaseImplTest {
     @Test
     void getProductByCode_notFound_throws() {
         when(productRepositoryPort.findByCode("C-2")).thenReturn(Optional.empty());
-        assertThrows(ProductNotFoundException.class, () -> useCase.getProductByCode("C-2"));
+        assertThrows(ResourceNotFoundException.class, () -> useCase.getProductByCode("C-2"));
     }
 
     // ---------- enable / disable / stock ----------
@@ -195,7 +198,7 @@ class ProductUseCaseImplTest {
     void disableProduct_notFound_throws() {
         UUID id = UUID.randomUUID();
         when(productRepositoryPort.findById(id)).thenReturn(Optional.empty());
-        assertThrows(ProductNotFoundException.class, () -> useCase.disableProduct(id));
+        assertThrows(ResourceNotFoundException.class, () -> useCase.disableProduct(id));
     }
 
     @Test
@@ -379,7 +382,7 @@ class ProductUseCaseImplTest {
         when(productRepositoryPort.findByCode(code)).thenReturn(Optional.empty());
         when(productUnitPort.existsByCode("BAD")).thenReturn(false);
 
-        ProductNotFoundException ex = assertThrows(ProductNotFoundException.class,
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class,
                 () -> useCase.createProduct(create));
         assertTrue(ex.getMessage().contains("Invalid unit code"));
     }
@@ -401,7 +404,7 @@ class ProductUseCaseImplTest {
         when(productUnitPort.existsByCode(unit)).thenReturn(true);
         when(productBrandPort.existsById(brand)).thenReturn(false);
 
-        ProductNotFoundException ex = assertThrows(ProductNotFoundException.class,
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class,
                 () -> useCase.createProduct(create));
         assertTrue(ex.getMessage().contains("Invalid brand ID"));
     }
@@ -424,7 +427,7 @@ class ProductUseCaseImplTest {
         when(productBrandPort.existsById(brand)).thenReturn(true);
         when(categoryRepositoryPort.existsById(category)).thenReturn(false);
 
-        ProductNotFoundException ex = assertThrows(ProductNotFoundException.class,
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class,
                 () -> useCase.createProduct(create));
         assertTrue(ex.getMessage().contains("Invalid category ID"));
     }

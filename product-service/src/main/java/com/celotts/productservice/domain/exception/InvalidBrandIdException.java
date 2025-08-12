@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.exception;
+package com.celotts.productservice.domain.exception;
 
 import java.util.UUID;
 

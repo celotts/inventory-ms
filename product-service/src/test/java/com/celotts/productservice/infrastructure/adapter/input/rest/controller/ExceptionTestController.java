@@ -1,6 +1,9 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.infrastructure.adapter.input.rest.exception.*;
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
+import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
+
+import com.celotts.productservice.domain.exception.InvalidBrandIdException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.context.annotation.Profile;
 
@@ -13,12 +16,12 @@ public class ExceptionTestController {
 
     @GetMapping("/product-not-found/{id}")
     public void throwProductNotFound(@PathVariable UUID id) {
-        throw new ProductNotFoundException(id);
+        throw new ResourceNotFoundException("Product", id);
     }
 
     @GetMapping("/product-already-exists")
     public void throwProductAlreadyExists() {
-        throw new ProductAlreadyExistsException("Ya existe un producto con el código");
+        throw new ResourceAlreadyExistsException("Product", "Ya existe un producto con el código");
     }
 
     @GetMapping("/invalid-brand-id/{id}")

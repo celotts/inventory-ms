@@ -1,19 +1,27 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.exception;
 
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
 
-import java.time.LocalDateTime;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
+import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
+import com.celotts.productservice.domain.exception.InvalidBrandIdException;
+import com.celotts.productservice.domain.exception.InvalidProductTypeCodeException;
+import com.celotts.productservice.domain.exception.InvalidUnitCodeException;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,235 +29,80 @@ import java.util.Map;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleProductNotFoundException(
-            ProductNotFoundException ex, WebRequest request) {
+    @Value("${spring.application.name:product-service}")
+    private String appName;
 
-        log.warn("Product not found: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.NOT_FOUND.value())
-                .error("Product Not Found")
-                .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
-                .build();
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    @ExceptionHandler(ResourceNotFoundException.class)
+    ResponseEntity<ProblemDetail> notFound(ResourceNotFoundException ex, HttpServletRequest req) {
+        ProblemDetail pd = problem(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage(), "ERR_NOT_FOUND", req);
+        return new ResponseEntity<>(pd, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(ProductAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleProductAlreadyExistsException(
-            ProductAlreadyExistsException ex, WebRequest request) {
-
-        log.warn("Product already exists: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.CONFLICT.value())
-                .error("Product Already Exists")
-                .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
-                .build();
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    ResponseEntity<ProblemDetail> conflict(ResourceAlreadyExistsException ex, HttpServletRequest req) {
+        ProblemDetail pd = problem(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), "ERR_CONFLICT", req);
+        return new ResponseEntity<>(pd, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(
-            MethodArgumentNotValidException ex, WebRequest request) {
-
-        log.warn("Validation error occurred: {}", ex.getMessage());
-
-        Map<String, String> validationErrors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            validationErrors.put(fieldName, errorMessage);
-            log.debug("Validation error - Field: {}, Message: {}, Rejected value: {}",
-                    fieldName, errorMessage, ((FieldError) error).getRejectedValue());
+    ResponseEntity<ProblemDetail> validation(MethodArgumentNotValidException ex, HttpServletRequest req) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach(err -> {
+            String field = ((FieldError) err).getField();
+            errors.put(field, err.getDefaultMessage());
         });
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Validation Failed")
-                .message("Los datos enviados no cumplen con las validaciones requeridas")
-                .path(request.getDescription(false).replace("uri=", ""))
-                .validationErrors(validationErrors)
-                .build();
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        ProblemDetail pd = problem(HttpStatus.BAD_REQUEST, "Validation Failed",
+                "Los datos enviados no cumplen con las validaciones requeridas", "ERR_VALIDATION", req);
+        pd.setProperty("validationErrors", errors);
+        return new ResponseEntity<>(pd, HttpStatus.BAD_REQUEST);
     }
 
-    /**
-     * Maneja errores de formato JSON malformado o campos faltantes
-     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleJsonParseError(
-            HttpMessageNotReadableException ex, WebRequest request) {
-
-        log.error("JSON parse error: {}", ex.getMessage());
-
-        String userMessage = "Error en el formato del JSON enviado";
-
-        // Detectar tipos específicos de errores JSON
-        if (ex.getCause() instanceof InvalidFormatException invalidFormat) {
-            String fieldName = invalidFormat.getPath().isEmpty() ? "unknown" :
-                    invalidFormat.getPath().get(invalidFormat.getPath().size() - 1).getFieldName();
-            userMessage = String.format("El campo '%s' tiene un formato inválido. Valor recibido: %s",
-                    fieldName, invalidFormat.getValue());
-        } else if (ex.getCause() instanceof MismatchedInputException mismatchedInput) {
-            String fieldName = mismatchedInput.getPath().isEmpty() ? "unknown" :
-                    mismatchedInput.getPath().get(mismatchedInput.getPath().size() - 1).getFieldName();
-            userMessage = String.format("El campo '%s' es requerido pero no fue enviado o tiene el tipo de dato incorrecto", fieldName);
-        }
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Invalid JSON Format")
-                .message(userMessage)
-                .path(request.getDescription(false).replace("uri=", ""))
-                .build();
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    ResponseEntity<ProblemDetail> badJson(HttpMessageNotReadableException ex, HttpServletRequest req) {
+        ProblemDetail pd = problem(HttpStatus.BAD_REQUEST, "Invalid JSON",
+                "Error en el formato del JSON enviado", "ERR_JSON", req);
+        return new ResponseEntity<>(pd, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(
-            DataIntegrityViolationException ex, WebRequest request) {
-
-        log.error("Data integrity violation: {}", ex.getMessage());
-
-        String customMessage = "Error de integridad en la base de datos";
-        String rawMessage = ex.getMostSpecificCause().getMessage().toLowerCase();
-
-        // Detectar tipos específicos de violaciones de integridad
-        if (rawMessage.contains("duplicate") || rawMessage.contains("unique")) {
-            if (rawMessage.contains("code")) {
-                customMessage = "Ya existe un producto con el código especificado";
-            } else {
-                customMessage = "Ya existe un registro con los datos especificados";
-            }
-        } else if (rawMessage.contains("foreign key") || rawMessage.contains("constraint")) {
-            if (rawMessage.contains("brand")) {
-                customMessage = "La marca especificada no existe en el sistema";
-            } else if (rawMessage.contains("product_type")) {
-                customMessage = "El tipo de producto especificado no existe en el sistema";
-            } else if (rawMessage.contains("unit")) {
-                customMessage = "La unidad especificada no existe en el sistema";
-            } else {
-                customMessage = "Uno o más datos de referencia no existen en el sistema";
-            }
-        } else if (rawMessage.contains("not null")) {
-            customMessage = "Uno o más campos obligatorios están vacíos";
-        }
-
-        // Usar CONFLICT para duplicados, BAD_REQUEST para otros errores de integridad
-        HttpStatus status = (rawMessage.contains("duplicate") || rawMessage.contains("unique"))
-                ? HttpStatus.CONFLICT
-                : HttpStatus.BAD_REQUEST;
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(status.value())
-                .error("Data Integrity Violation")
-                .message(customMessage)
-                .path(request.getDescription(false).replace("uri=", ""))
-                .build();
-
-        return new ResponseEntity<>(errorResponse, status);
+    ResponseEntity<ProblemDetail> dataIntegrity(DataIntegrityViolationException ex, HttpServletRequest req) {
+        ProblemDetail pd = problem(HttpStatus.BAD_REQUEST, "Data Integrity Violation",
+                "Error de integridad en la base de datos", "ERR_DB_INTEGRITY", req);
+        return new ResponseEntity<>(pd, HttpStatus.BAD_REQUEST);
     }
 
-    /**
-     * Maneja argumentos ilegales (lógica de negocio)
-     */
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
-            IllegalArgumentException ex, WebRequest request) {
-
-        log.warn("Illegal argument: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Invalid Argument")
-                .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
-                .build();
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    ResponseEntity<ProblemDetail> illegalArg(IllegalArgumentException ex, HttpServletRequest req) {
+        ProblemDetail pd = problem(HttpStatus.BAD_REQUEST, "Invalid Argument", ex.getMessage(), "ERR_ARGUMENT", req);
+        return new ResponseEntity<>(pd, HttpStatus.BAD_REQUEST);
     }
 
-    /**
-     * Maneja cualquier otra excepción no capturada
-     */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(
-            Exception ex, WebRequest request) {
-
-        log.error("Unexpected error occurred: {}", ex.getMessage(), ex);
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .error("Internal Server Error")
-                .message("Ha ocurrido un error interno. Por favor contacte al administrador del sistema")
-                .path(request.getDescription(false).replace("uri=", ""))
-                .build();
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    ResponseEntity<ProblemDetail> unexpected(Exception ex, HttpServletRequest req) {
+        log.error("Unexpected error", ex);
+        ProblemDetail pd = problem(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error",
+                "Ha ocurrido un error interno. Contacte al administrador.", "ERR_INTERNAL", req);
+        return new ResponseEntity<>(pd, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(InvalidProductTypeCodeException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidProductTypeCodeException(
-            InvalidProductTypeCodeException ex, WebRequest request) {
-
-        log.warn("Invalid product type code: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Invalid Product Type Code")
-                .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
-                .build();
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    private ProblemDetail problem(HttpStatus status, String title, String detail, String code, HttpServletRequest req) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, detail);
+        pd.setTitle(title);
+        pd.setProperty("service", appName);
+        pd.setProperty("code", code);
+        pd.setProperty("path", req.getRequestURI());
+        return pd;
     }
 
-    @ExceptionHandler(InvalidUnitCodeException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidUnitCodeException(
-            InvalidUnitCodeException ex, WebRequest request) {
-
-        log.warn("Invalid unit code: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Invalid Unit Code")
-                .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
-                .build();
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(InvalidBrandIdException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidBrandIdException(
-            InvalidBrandIdException ex, WebRequest request) {
-
-        log.warn("Invalid brand ID: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error("Invalid Brand ID")
-                .message(ex.getMessage())
-                .path(request.getDescription(false).replace("uri=", ""))
-                .build();
-
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    ResponseEntity<ProblemDetail> typeMismatch(MethodArgumentTypeMismatchException ex,
+                                               HttpServletRequest req) {
+        String detail = "Parámetro inválido: " + ex.getName();
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
+        pd.setTitle("Bad Request");
+        pd.setProperty("service", appName);
+        pd.setProperty("code", "ERR_PARAM_TYPE");
+        pd.setProperty("path", req.getRequestURI());
+        return new ResponseEntity<>(pd, HttpStatus.BAD_REQUEST);
     }
 }

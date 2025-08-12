@@ -6,8 +6,10 @@ import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPo
 import com.celotts.productservice.domain.port.product.port.input.ProductPort;
 import com.celotts.productservice.domain.port.product.port.output.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
+
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
@@ -69,7 +71,7 @@ public class ProductService implements ProductPort {
     }
 
     public ProductModel getProductById(UUID id) {
-        return getById(id).orElseThrow(() -> new ProductNotFoundException(id));
+        return getById(id).orElseThrow(() -> new ResourceNotFoundException("Product", id));
     }
 
     @Override
@@ -78,7 +80,7 @@ public class ProductService implements ProductPort {
     }
 
     public ProductModel getProductByCode(String code) {
-        return getByCode(code).orElseThrow(() -> new ProductNotFoundException("Product not found with code: " + code));
+        return getByCode(code).orElseThrow(() -> new ResourceNotFoundException("Product", "Product not found with code: " + code));
     }
 
     @Override

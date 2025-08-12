@@ -1,5 +1,7 @@
 package com.celotts.productservice.applications.usecase;
 
+// si la sigues usando
+
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.model.ProductReference;
 import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
@@ -8,9 +10,11 @@ import com.celotts.productservice.domain.port.product.port.usecase.ProductUseCas
 import com.celotts.productservice.domain.port.product.port.output.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.*;
-import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
-import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
+
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
+import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
+
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +23,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
+import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -52,7 +58,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public ProductModel createProduct(ProductCreate dto) {
         if (productRepositoryPort.findByCode(dto.getCode()).isPresent()) {
-            throw new ProductAlreadyExistsException(dto.getCode());
+            throw new ResourceAlreadyExistsException("Product", dto.getCode());
         }
         validateReferences(dto);
         ProductModel model = productRequestMapper.toModel(dto);
@@ -62,7 +68,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public ProductModel updateProduct(UUID id, ProductUpdateDto dto) {
         ProductModel existing = productRepositoryPort.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException(id));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", id));
         validateReferences(dto);
         productRequestMapper.updateModelFromDto(existing, dto);
         return productRepositoryPort.save(existing);
@@ -71,13 +77,13 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public ProductModel getProductById(UUID id) {
         return productRepositoryPort.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException(id));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", id));
     }
 
     @Override
     public ProductModel getProductByCode(String code) {
         return productRepositoryPort.findByCode(code)
-                .orElseThrow(() -> new ProductNotFoundException("Product not found with code: " + code));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "Product not found with code: " + code));
     }
 
     @Override
@@ -162,13 +168,13 @@ public class ProductUseCaseImpl implements ProductUseCase {
 
     private void validateReferences(@Valid ProductReference dto) {
         if (!productUnitPort.existsByCode(dto.getUnitCode())) {
-            throw new ProductNotFoundException("Invalid unit code: " + dto.getUnitCode());
+            throw new ResourceNotFoundException("Product", "Invalid unit code: " + dto.getUnitCode());
         }
         if (!productBrandPort.existsById(dto.getBrandId())) {
-            throw new ProductNotFoundException("Invalid brand ID: " + dto.getBrandId());
+            throw new ResourceNotFoundException("Product", "Invalid brand ID: " + dto.getBrandId());
         }
         if (!categoryRepositoryPort.existsById(dto.getCategoryId())) {
-            throw new ProductNotFoundException("Invalid category ID: " + dto.getCategoryId());
+            throw new ResourceNotFoundException("Product", "Invalid category ID: " + dto.getCategoryId());
         }
     }
 
@@ -190,7 +196,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public ProductModel disableProduct(UUID id) {
         ProductModel product = productRepositoryPort.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException("No se encontró el producto con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "No se encontró el producto con ID: " + id));
 
         ProductModel updatedProduct = product.withEnabled(false);
 

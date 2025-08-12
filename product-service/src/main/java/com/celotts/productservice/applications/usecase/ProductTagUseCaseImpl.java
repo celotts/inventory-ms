@@ -3,12 +3,13 @@ package com.celotts.productservice.applications.usecase;
 import com.celotts.productservice.domain.model.ProductTagModel;
 import com.celotts.productservice.domain.port.product.tag.input.ProductTagUseCase;
 import com.celotts.productservice.domain.port.product.tag.output.ProductTagRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductAlreadyExistsException;
-import com.celotts.productservice.infrastructure.adapter.input.rest.exception.ProductNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
+import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +24,7 @@ public class ProductTagUseCaseImpl implements ProductTagUseCase {
     @Override
     public ProductTagModel create(ProductTagModel model) {
         if (repo.existsByName(model.getName())) {
-            throw new ProductAlreadyExistsException(model.getName());
+            throw new ResourceAlreadyExistsException("Product", model.getName());
         }
         return repo.save(model);
     }
@@ -51,7 +52,7 @@ public class ProductTagUseCaseImpl implements ProductTagUseCase {
 
     @Override
     public ProductTagModel findById(UUID id) {
-        return repo.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
+        return repo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product", id));
     }
 
     @Override public Optional<ProductTagModel> findByName(String name){ return repo.findByName(name); }
