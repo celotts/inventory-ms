@@ -7,14 +7,15 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class BrandNotFoundExceptionTest {
+class ProductUnitNotFoundExceptionTest {
+
     @Test
     void ctor_con_id() {
         UUID id = UUID.randomUUID();
-        ResourceNotFoundException ex = new ResourceNotFoundException("Product", id);
+        ResourceNotFoundException ex = new ResourceNotFoundException("ProductUnit", id);
 
         assertThat(ex.getMessage())
-                .containsIgnoringCase("product")
+                .containsIgnoringCase("productunit")
                 .containsIgnoringCase("not found")
                 .contains(id.toString());
     }

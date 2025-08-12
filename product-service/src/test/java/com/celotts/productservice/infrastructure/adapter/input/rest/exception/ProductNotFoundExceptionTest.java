@@ -7,7 +7,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class BrandNotFoundExceptionTest {
+class ProductNotFoundExceptionTest {
+
     @Test
     void ctor_con_id() {
         UUID id = UUID.randomUUID();
