@@ -227,4 +227,51 @@ class ProductUnitModelTest {
         assertFalse(base.equals(sub));  // base.canEqual(sub) -> true, pero sub.canEqual(base) -> false
         assertFalse(sub.equals(base));  // aquí directamente canEqual false
     }
+
+    //---------------
+    @Test
+    void equals_true_whenAllFieldsNonNullAndEqual() {
+        LocalDateTime now = LocalDateTime.now();
+        UUID id = UUID.randomUUID();
+
+        ProductUnitModel a = ProductUnitModel.builder()
+                .id(id).code("C").name("N").description("D").symbol("S")
+                .enabled(Boolean.TRUE).createdAt(now.minusDays(1)).updatedAt(now)
+                .createdBy("creator").updatedBy("updater")
+                .build();
+
+        ProductUnitModel b = ProductUnitModel.builder()
+                .id(id).code("C").name("N").description("D").symbol("S")
+                .enabled(Boolean.TRUE).createdAt(now.minusDays(1)).updatedAt(now)
+                .createdBy("creator").updatedBy("updater")
+                .build();
+
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+    }
+
+    // 2) null vs no-null específico para Boolean 'enabled'
+    @Test
+    void equals_false_whenEnabledNullVsTrue() {
+        ProductUnitModel a = ProductUnitModel.builder().enabled(null).build();
+        ProductUnitModel b = ProductUnitModel.builder().enabled(Boolean.TRUE).build();
+        assertNotEquals(a, b);
+    }
+
+    // 3) null vs no-null específico para 'createdAt' (LocalDateTime)
+    @Test
+    void equals_false_whenCreatedAtNullVsNonNull() {
+        ProductUnitModel a = ProductUnitModel.builder().createdAt(null).build();
+        ProductUnitModel b = ProductUnitModel.builder().createdAt(LocalDateTime.now()).build();
+        assertNotEquals(a, b);
+    }
+
+    // 4) ambos no-nulos pero distintos para 'updatedAt'
+    @Test
+    void equals_false_whenUpdatedAtBothNonNullAndDifferent() {
+        ProductUnitModel a = ProductUnitModel.builder().updatedAt(LocalDateTime.now()).build();
+        ProductUnitModel b = ProductUnitModel.builder().updatedAt(LocalDateTime.now().plusSeconds(1)).build();
+        assertNotEquals(a, b);
+    }
+
 }

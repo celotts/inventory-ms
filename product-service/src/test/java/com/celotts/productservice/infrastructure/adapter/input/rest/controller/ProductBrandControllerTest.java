@@ -152,4 +152,100 @@ class ProductBrandControllerTest {
         assertNotNull(productBrandUseCase);
         assertNotNull(productBrandDtoMapper);
     }
+
+    @Test
+    void delete_shouldReturnNoContent_andInvokeService() throws Exception {
+        UUID id = UUID.randomUUID();
+
+        mockMvc.perform(delete("/api/v1/product-brands/{id}", id))
+                .andExpect(status().isNoContent());
+
+        verify(productBrandService).delete(eq(id));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
+    void getAllBrands_shouldReturnDataAndTotal() throws Exception {
+        ProductBrandResponseDto b1 = ProductBrandResponseDto.builder()
+                .id(UUID.randomUUID()).name("A").enabled(true).build();
+        ProductBrandResponseDto b2 = ProductBrandResponseDto.builder()
+                .id(UUID.randomUUID()).name("B").enabled(false).build();
+
+        when(productBrandService.findAll()).thenReturn(java.util.List.of(b1, b2));
+
+        mockMvc.perform(get("/api/v1/product-brands").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.data", org.hamcrest.Matchers.hasSize(2)))
+                .andExpect(jsonPath("$.data[0].name").value("A"))
+                .andExpect(jsonPath("$.data[1].name").value("B"))
+                .andExpect(jsonPath("$.total").value(2));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
+    void getBrandById_shouldReturnDto() throws Exception {
+        when(productBrandService.findById(brandId)).thenReturn(responseDto);
+
+        mockMvc.perform(get("/api/v1/product-brands/{id}", brandId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(brandId.toString()))
+                .andExpect(jsonPath("$.name").value("BrandX"))
+                .andExpect(jsonPath("$.enabled").value(true));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
+    void getAllBrandIds_shouldReturnUuidArray() throws Exception {
+        UUID a = UUID.randomUUID();
+        UUID b = UUID.randomUUID();
+        when(productBrandService.findAllIds()).thenReturn(java.util.List.of(a, b));
+
+        mockMvc.perform(get("/api/v1/product-brands/brands/ids"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", org.hamcrest.Matchers.hasSize(2)))
+                .andExpect(jsonPath("$[0]").value(a.toString()))
+                .andExpect(jsonPath("$[1]").value(b.toString()));
+    }
+
+
+    @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
+    void getAllBrands_shouldReturnTotalZero_whenServiceReturnsNull() throws Exception {
+        when(productBrandService.findAll()).thenReturn(null);
+
+        mockMvc.perform(get("/api/v1/product-brands").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.data", org.hamcrest.Matchers.hasSize(0)))
+                .andExpect(jsonPath("$.total").value(0));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
+    void getBrandNameById_shouldMapToResponseEntityOk() throws Exception {
+        String expectedName = "BrandMapped";
+        when(productBrandService.findNameById(brandId))
+                .thenReturn(Optional.of(expectedName));
+
+        mockMvc.perform(get("/api/v1/product-brands/brands/{id}/name", brandId))
+                .andExpect(status().isOk())
+                .andExpect(content().string(expectedName));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ROLE_ADMIN")
+    void getAllBrands_whenServiceReturnsEmptyList_shouldReturnTotalZero_andEmptyArray() throws Exception {
+        when(productBrandService.findAll()).thenReturn(java.util.List.of());
+
+        mockMvc.perform(get("/api/v1/product-brands").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.data", org.hamcrest.Matchers.hasSize(0)))
+                .andExpect(jsonPath("$.total").value(0));
+    }
+
+
 }
