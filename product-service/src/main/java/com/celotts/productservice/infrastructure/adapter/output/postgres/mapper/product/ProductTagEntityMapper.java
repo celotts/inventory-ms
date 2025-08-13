@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.productTag;
+package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product;
 
 import com.celotts.productservice.domain.model.ProductTagModel;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTagEntity; // <- cambia esto

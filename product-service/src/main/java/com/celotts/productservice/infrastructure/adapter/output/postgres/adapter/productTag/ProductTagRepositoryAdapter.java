@@ -4,7 +4,7 @@ import com.celotts.productservice.infrastructure.adapter.output.postgres.reposit
 import com.celotts.productservice.domain.model.ProductTagModel;
 import com.celotts.productservice.domain.port.product.tag.output.ProductTagRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTagEntity;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.productTag.ProductTagEntityMapper;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductTagEntityMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
