@@ -1,6 +1,11 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.exception;
 
 
+import com.celotts.productservice.domain.exception.InvalidBrandIdException;
+import com.celotts.productservice.domain.exception.InvalidProductTypeCodeException;
+import com.celotts.productservice.domain.exception.InvalidUnitCodeException;
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
+import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,12 +20,12 @@ public class TestDummyController {
 
     @GetMapping("/product-not-found/{id}")
     public void throwProductNotFound(@PathVariable UUID id) {
-        throw new ProductNotFoundException(id);
+        throw new ResourceNotFoundException("Product", id);
     }
 
     @GetMapping("/product-already-exists")
     public void throwProductAlreadyExists() {
-        throw new ProductAlreadyExistsException("Ya existe un producto con el código: P-001");
+        throw new ResourceAlreadyExistsException("Product", "Ya existe un producto con el código: P-001");
     }
 
     @GetMapping("/invalid-product-type")

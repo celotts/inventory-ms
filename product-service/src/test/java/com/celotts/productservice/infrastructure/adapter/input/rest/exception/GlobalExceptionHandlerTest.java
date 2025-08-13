@@ -1,248 +1,168 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.exception;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.MethodParameter;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.http.HttpInputMessage;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
+import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
+
+import org.springframework.core.MethodParameter;
 import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.context.request.WebRequest;
-
 import java.lang.reflect.Method;
-import java.time.LocalDateTime;
 import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class GlobalExceptionHandlerTest {
 
     private GlobalExceptionHandler handler;
-    private WebRequest webRequest;
+    private HttpServletRequest req;
+
+    private static class Dummy {
+        @jakarta.validation.Valid
+        void m(String name) { /* no-op */ }
+    }
 
     @BeforeEach
-    void setUp() {
+    void setup() throws Exception {
         handler = new GlobalExceptionHandler();
-        webRequest = mock(WebRequest.class);
-        when(webRequest.getDescription(false)).thenReturn("uri=/test-path");
-    }
+        // inyecta appName
+        var f = GlobalExceptionHandler.class.getDeclaredField("appName");
+        f.setAccessible(true);
+        f.set(handler, "product-service");
 
-    // --- utils for MethodArgumentNotValidException ---
-    private MethodParameter dummyMethodParameter() {
-        try {
-            Method m = this.getClass().getDeclaredMethod("dummyMethod", String.class);
-            return new MethodParameter(m, 0);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    @SuppressWarnings("unused")
-    private void dummyMethod(String any) {}
-
-    @Test
-    @DisplayName("404 cuando el producto no existe")
-    void handleProductNotFoundException() {
-        ProductNotFoundException ex = mock(ProductNotFoundException.class);
-        when(ex.getMessage()).thenReturn("Producto ABC no encontrado");
-
-        ResponseEntity<ErrorResponse> response = handler.handleProductNotFoundException(ex, webRequest);
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertEquals("Product Not Found", response.getBody().getError());
-        assertEquals("Producto ABC no encontrado", response.getBody().getMessage());
-        assertEquals("/test-path", response.getBody().getPath());
+        req = mock(HttpServletRequest.class);
+        when(req.getRequestURI()).thenReturn("/api/v1/test");
     }
 
     @Test
-    @DisplayName("409 cuando el producto ya existe")
-    void handleProductAlreadyExistsException() {
-        ProductAlreadyExistsException ex = mock(ProductAlreadyExistsException.class);
-        when(ex.getMessage()).thenReturn("Código duplicado PR-001");
+    void notFound_returns_404_problem() {
+        ResponseEntity<ProblemDetail> resp =
+                handler.notFound(new ResourceNotFoundException("Thing", "1"), req);
 
-        ResponseEntity<ErrorResponse> response = handler.handleProductAlreadyExistsException(ex, webRequest);
-
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals("Product Already Exists", response.getBody().getError());
-        assertEquals("/test-path", response.getBody().getPath());
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().getTitle()).isEqualTo("Not Found");
+        assertThat(resp.getBody().getProperties()).containsEntry("code", "ERR_NOT_FOUND");
+        assertThat(resp.getBody().getProperties()).containsEntry("service", "product-service");
     }
 
     @Test
-    @DisplayName("400 con mapa de errores cuando falla la validación")
-    void handleValidationExceptions() throws Exception {
+    void conflict_returns_409_problem() {
+        // CORREGIDO: tu excepción requiere (resource, idOrKey)
+        ResponseEntity<ProblemDetail> resp =
+                handler.conflict(new ResourceAlreadyExistsException("Thing", "1"), req);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().getTitle()).isEqualTo("Conflict");
+        assertThat(resp.getBody().getProperties()).containsEntry("code", "ERR_CONFLICT");
+    }
+
+    @Test
+    void badJson_returns_400_problem() {
+        // Usa el ctor NO deprecado: (String, Throwable, HttpInputMessage)
+        ResponseEntity<ProblemDetail> resp =
+                handler.badJson(
+                        new HttpMessageNotReadableException("bad json", new RuntimeException(), (HttpInputMessage) null),
+                        req
+                );
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        ProblemDetail pd = resp.getBody();
+        assertThat(pd).isNotNull();
+        assertThat(pd.getTitle()).isEqualTo("Invalid JSON");
+        assertThat(pd.getProperties()).containsEntry("code", "ERR_JSON");
+    }
+
+    @Test
+    void dataIntegrity_returns_400_problem() {
+        ResponseEntity<ProblemDetail> resp =
+                handler.dataIntegrity(new DataIntegrityViolationException("db"), req);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().getTitle()).isEqualTo("Data Integrity Violation");
+    }
+
+    @Test
+    void illegalArg_returns_400_problem() {
+        ResponseEntity<ProblemDetail> resp =
+                handler.illegalArg(new IllegalArgumentException("bad"), req);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().getTitle()).isEqualTo("Invalid Argument");
+    }
+
+    @Test
+    void unexpected_returns_500_problem() {
+        ResponseEntity<ProblemDetail> resp =
+                handler.unexpected(new RuntimeException("oops"), req);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().getTitle()).isEqualTo("Internal Server Error");
+    }
+
+    @Test
+    void typeMismatch_returns_400_problem() {
+        MethodArgumentTypeMismatchException ex =
+                new MethodArgumentTypeMismatchException("123", Integer.class, "id", null, new IllegalArgumentException());
+
+        ResponseEntity<ProblemDetail> resp = handler.typeMismatch(ex, req);
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().getTitle()).isEqualTo("Bad Request");
+        assertThat(resp.getBody().getProperties()).containsEntry("code", "ERR_PARAM_TYPE");
+    }
+
+    @Test
+    void validation_returns_400_with_validationErrors_map() throws Exception {
+        // Construye un BindingResult con un FieldError simulado
         Object target = new Object();
-        BindingResult binding = new BeanPropertyBindingResult(target, "target");
-        binding.addError(new FieldError("ProductCreateDto", "code", "no debe estar vacío"));
-        binding.addError(new FieldError("ProductCreateDto", "name", "tamaño mínimo 3"));
+        BeanPropertyBindingResult br = new BeanPropertyBindingResult(target, "dto");
+        br.addError(new FieldError("dto", "name", "must not be blank"));
+        br.addError(new FieldError("dto", "enabled", "must be true or false"));
 
-        MethodArgumentNotValidException ex =
-                new MethodArgumentNotValidException(dummyMethodParameter(), binding);
+        // Crea un MethodParameter de un método dummy con parámetro @Valid
+        Method method = Dummy.class.getDeclaredMethod("m", String.class);
+        MethodParameter mp = new MethodParameter(method, 0);
 
-        ResponseEntity<ErrorResponse> response = handler.handleValidationExceptions(ex, webRequest);
+        // Crea la excepción que maneja el handler
+        MethodArgumentNotValidException ex = new MethodArgumentNotValidException(mp, br);
 
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Validation Failed", response.getBody().getError());
-        Map<String, String> errors = response.getBody().getValidationErrors();
-        assertEquals("no debe estar vacío", errors.get("code"));
-        assertEquals("tamaño mínimo 3", errors.get("name"));
-        assertEquals("/test-path", response.getBody().getPath());
-    }
+        // Ejecuta el handler
+        ResponseEntity<ProblemDetail> resp = handler.validation(ex, req);
 
-    @Test
-    @DisplayName("400 cuando JSON tiene formato inválido (InvalidFormatException)")
-    void handleJsonParseError_invalidFormat() {
-        InvalidFormatException cause = new InvalidFormatException(
-                (JsonParser) null, "invalid format", "ABC", Integer.class);
-        HttpMessageNotReadableException ex =
-                new HttpMessageNotReadableException("JSON error", cause, null);
+        // Asserts
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        ProblemDetail pd = resp.getBody();
+        assertThat(pd).isNotNull();
+        assertThat(pd.getTitle()).isEqualTo("Validation Failed");
+        assertThat(pd.getDetail())
+                .isEqualTo("Los datos enviados no cumplen con las validaciones requeridas");
+        assertThat(pd.getProperties()).containsEntry("code", "ERR_VALIDATION");
+        assertThat(pd.getProperties()).containsEntry("service", "product-service");
+        assertThat(pd.getProperties()).containsEntry("path", "/api/v1/test");
 
-        ResponseEntity<ErrorResponse> response = handler.handleJsonParseError(ex, webRequest);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Invalid JSON Format", response.getBody().getError());
-        assertTrue(response.getBody().getMessage().contains("formato inválido"));
-    }
-
-    @Test
-    @DisplayName("400 cuando JSON tiene tipo incorrecto/campo faltante (MismatchedInputException)")
-    void handleJsonParseError_mismatchedInput() {
-        MismatchedInputException cause =
-                MismatchedInputException.from((JsonParser) null, Integer.class, "bad type");
-        HttpMessageNotReadableException ex =
-                new HttpMessageNotReadableException("JSON error", cause, null);
-
-        ResponseEntity<ErrorResponse> response = handler.handleJsonParseError(ex, webRequest);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Invalid JSON Format", response.getBody().getError());
-        assertTrue(response.getBody().getMessage().contains("es requerido")
-                || response.getBody().getMessage().contains("tipo de dato incorrecto"));
-    }
-
-    @Test
-    @DisplayName("409 cuando hay violación de UNIQUE en código de producto")
-    void handleDataIntegrityViolation_duplicateCode() {
-        RuntimeException mostSpecific =
-                new RuntimeException("duplicate key value violates unique constraint 'product_code_key'");
-        DataIntegrityViolationException ex =
-                new DataIntegrityViolationException("dup", mostSpecific);
-
-        ResponseEntity<ErrorResponse> response =
-                handler.handleDataIntegrityViolationException(ex, webRequest);
-
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals("Ya existe un producto con el código especificado",
-                response.getBody().getMessage());
-    }
-
-    @Test
-    @DisplayName("400 cuando hay violación de FOREIGN KEY de brand")
-    void handleDataIntegrityViolation_foreignKey_brand() {
-        RuntimeException mostSpecific =
-                new RuntimeException("insert or update on table \"product\" violates foreign key constraint \"fk_product_brand\": foreign key (brand_id) references brand(id)");
-        DataIntegrityViolationException ex =
-                new DataIntegrityViolationException("fk", mostSpecific);
-
-        ResponseEntity<ErrorResponse> response =
-                handler.handleDataIntegrityViolationException(ex, webRequest);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("La marca especificada no existe en el sistema",
-                response.getBody().getMessage());
-    }
-
-    @Test
-    @DisplayName("400 cuando hay NOT NULL violation")
-    void handleDataIntegrityViolation_notNull() {
-        RuntimeException mostSpecific =
-                new RuntimeException("null value in column \"name\" violates not null constraint");
-        DataIntegrityViolationException ex =
-                new DataIntegrityViolationException("nn", mostSpecific);
-
-        ResponseEntity<ErrorResponse> response =
-                handler.handleDataIntegrityViolationException(ex, webRequest);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertTrue(
-                "Uno o más campos obligatorios están vacíos".equals(response.getBody().getMessage())
-                        || "Uno o más datos de referencia no existen en el sistema".equals(response.getBody().getMessage()),
-                "Mensaje inesperado: " + response.getBody().getMessage());
-    }
-
-    @Test
-    @DisplayName("400 para IllegalArgumentException")
-    void handleIllegalArgumentException() {
-        IllegalArgumentException ex = new IllegalArgumentException("Argumento inválido");
-        ResponseEntity<ErrorResponse> response =
-                handler.handleIllegalArgumentException(ex, webRequest);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Invalid Argument", response.getBody().getError());
-        assertEquals("Argumento inválido", response.getBody().getMessage());
-    }
-
-    @Test
-    @DisplayName("500 para excepciones no controladas")
-    void handleGlobalException() {
-        Exception ex = new Exception("boom");
-        ResponseEntity<ErrorResponse> response =
-                handler.handleGlobalException(ex, webRequest);
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals("Internal Server Error", response.getBody().getError());
-        assertNotNull(response.getBody().getTimestamp());
-        assertTrue(response.getBody().getTimestamp()
-                .isBefore(LocalDateTime.now().plusSeconds(2)));
-    }
-
-    @Test
-    @DisplayName("400 para InvalidProductTypeCodeException")
-    void handleInvalidProductTypeCodeException() {
-        InvalidProductTypeCodeException ex = mock(InvalidProductTypeCodeException.class);
-        when(ex.getMessage()).thenReturn("tipo inválido");
-
-        ResponseEntity<ErrorResponse> response =
-                handler.handleInvalidProductTypeCodeException(ex, webRequest);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Invalid Product Type Code", response.getBody().getError());
-        assertEquals("/test-path", response.getBody().getPath());
-    }
-
-    @Test
-    @DisplayName("400 para InvalidUnitCodeException")
-    void handleInvalidUnitCodeException() {
-        InvalidUnitCodeException ex = mock(InvalidUnitCodeException.class);
-        when(ex.getMessage()).thenReturn("unidad inválida");
-
-        ResponseEntity<ErrorResponse> response =
-                handler.handleInvalidUnitCodeException(ex, webRequest);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Invalid Unit Code", response.getBody().getError());
-        assertEquals("/test-path", response.getBody().getPath());
-    }
-
-    @Test
-    @DisplayName("400 para InvalidBrandIdException")
-    void handleInvalidBrandIdException() {
-        InvalidBrandIdException ex = mock(InvalidBrandIdException.class);
-        when(ex.getMessage()).thenReturn("brand inválido");
-
-        ResponseEntity<ErrorResponse> response =
-                handler.handleInvalidBrandIdException(ex, webRequest);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Invalid Brand ID", response.getBody().getError());
-        assertEquals("/test-path", response.getBody().getPath());
+        // Verifica el mapa "validationErrors"
+        @SuppressWarnings("unchecked")
+        Map<String, String> errors = (Map<String, String>) pd.getProperties().get("validationErrors");
+        assertThat(errors)
+                .containsEntry("name", "must not be blank")
+                .containsEntry("enabled", "must be true or false");
     }
 }

@@ -158,4 +158,120 @@ class ProductUnitModelTest {
         ProductUnitModel model = ProductUnitModel.builder().code("A").build();
         assertNotEquals(model, "some string"); // Esto fuerza la ejecución de canEqual()
     }
+
+    @Test
+    void equals_nullVsNonNull_branch_onAnotherField() {
+        // null vs non-null en un campo distinto para cubrir otra rama ternaria
+        ProductUnitModel a = ProductUnitModel.builder()
+                .name(null).build();
+        ProductUnitModel b = ProductUnitModel.builder()
+                .name("Name").build();
+        assertNotEquals(a, b);                   // rama: left null, right non-null
+    }
+
+    @Test
+    void equals_nonNullAndDifferentValue_branch() {
+        // Ambos no-nulos pero distintos en al menos un campo → false
+        ProductUnitModel a = ProductUnitModel.builder().code("A").build();
+        ProductUnitModel b = ProductUnitModel.builder().code("B").build();
+        assertNotEquals(a, b);                   // rama: nonNull && !equals
+    }
+
+    private ProductUnitModel full(UUID id) {
+        LocalDateTime now = LocalDateTime.now();
+        return ProductUnitModel.builder()
+                .id(id)
+                .code("C")
+                .name("N")
+                .description("D")
+                .symbol("kg")
+                .enabled(Boolean.TRUE)
+                .createdAt(now.minusDays(1))
+                .updatedAt(now)
+                .createdBy("creator")
+                .updatedBy("updater")
+                .build();
+    }
+
+    @Test
+    void equals_allNullFields_branch_and_hashCode_nullPath() {
+        // Ambos con todos (o casi todos) los campos nulos → camino null==null
+        ProductUnitModel a = ProductUnitModel.builder()
+                .id(null).code(null).name(null).description(null)
+                .symbol(null).enabled(null).createdAt(null).updatedAt(null)
+                .createdBy(null).updatedBy(null)
+                .build();
+
+        ProductUnitModel b = ProductUnitModel.builder()
+                .id(null).code(null).name(null).description(null)
+                .symbol(null).enabled(null).createdAt(null).updatedAt(null)
+                .createdBy(null).updatedBy(null)
+                .build();
+
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode()); // rama de hash con nulos
+    }
+
+    // Subclase que fuerza canEqual=false
+    static class FakeSubclass extends ProductUnitModel {
+        public FakeSubclass() { super(); }
+        @Override public boolean canEqual(Object other) { return false; }
+    }
+
+    @Test
+    void equals_shouldBeFalse_whenCanEqualReturnsFalse() {
+        ProductUnitModel base = ProductUnitModel.builder().code("X").build();
+        FakeSubclass sub = new FakeSubclass();
+
+        // Ambas direcciones ejercitan la llamada a canEqual(...)
+        assertFalse(base.equals(sub));  // base.canEqual(sub) -> true, pero sub.canEqual(base) -> false
+        assertFalse(sub.equals(base));  // aquí directamente canEqual false
+    }
+
+    //---------------
+    @Test
+    void equals_true_whenAllFieldsNonNullAndEqual() {
+        LocalDateTime now = LocalDateTime.now();
+        UUID id = UUID.randomUUID();
+
+        ProductUnitModel a = ProductUnitModel.builder()
+                .id(id).code("C").name("N").description("D").symbol("S")
+                .enabled(Boolean.TRUE).createdAt(now.minusDays(1)).updatedAt(now)
+                .createdBy("creator").updatedBy("updater")
+                .build();
+
+        ProductUnitModel b = ProductUnitModel.builder()
+                .id(id).code("C").name("N").description("D").symbol("S")
+                .enabled(Boolean.TRUE).createdAt(now.minusDays(1)).updatedAt(now)
+                .createdBy("creator").updatedBy("updater")
+                .build();
+
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
+    }
+
+    // 2) null vs no-null específico para Boolean 'enabled'
+    @Test
+    void equals_false_whenEnabledNullVsTrue() {
+        ProductUnitModel a = ProductUnitModel.builder().enabled(null).build();
+        ProductUnitModel b = ProductUnitModel.builder().enabled(Boolean.TRUE).build();
+        assertNotEquals(a, b);
+    }
+
+    // 3) null vs no-null específico para 'createdAt' (LocalDateTime)
+    @Test
+    void equals_false_whenCreatedAtNullVsNonNull() {
+        ProductUnitModel a = ProductUnitModel.builder().createdAt(null).build();
+        ProductUnitModel b = ProductUnitModel.builder().createdAt(LocalDateTime.now()).build();
+        assertNotEquals(a, b);
+    }
+
+    // 4) ambos no-nulos pero distintos para 'updatedAt'
+    @Test
+    void equals_false_whenUpdatedAtBothNonNullAndDifferent() {
+        ProductUnitModel a = ProductUnitModel.builder().updatedAt(LocalDateTime.now()).build();
+        ProductUnitModel b = ProductUnitModel.builder().updatedAt(LocalDateTime.now().plusSeconds(1)).build();
+        assertNotEquals(a, b);
+    }
+
 }

@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.exception;
+package com.celotts.productservice.domain.exception;
 
 public class InvalidProductTypeCodeException extends RuntimeException {
     public InvalidProductTypeCodeException(String code) {

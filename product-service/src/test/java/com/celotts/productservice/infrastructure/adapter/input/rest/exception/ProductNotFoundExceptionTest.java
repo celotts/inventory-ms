@@ -1,32 +1,22 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.exception;
 
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ProductNotFoundExceptionTest {
 
     @Test
-    void testConstructorWithMessage() {
-        String message = "Product not found with code: CODE123";
-        ProductNotFoundException exception = new ProductNotFoundException(message);
-
-        assertEquals(message, exception.getMessage());
-    }
-
-    @Test
-    void testConstructorWithUUID() {
+    void ctor_con_id() {
         UUID id = UUID.randomUUID();
-        ProductNotFoundException exception = new ProductNotFoundException(id);
+        ResourceNotFoundException ex = new ResourceNotFoundException("Product", id);
 
-        assertEquals("Product not found with ID: " + id, exception.getMessage());
-    }
-
-    @Test
-    void testIsRuntimeException() {
-        ProductNotFoundException exception = new ProductNotFoundException("some message");
-        assertTrue(exception instanceof RuntimeException);
+        assertThat(ex.getMessage())
+                .containsIgnoringCase("product")
+                .containsIgnoringCase("not found")
+                .contains(id.toString());
     }
 }

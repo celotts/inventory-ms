@@ -39,7 +39,7 @@ public class ProductBrandController {
                 .body(response);
     }
 
-    @GetMapping
+    /*@GetMapping
     public ResponseEntity<Map<String, Object>> getAllBrands() {
         List<ProductBrandResponseDto> brands = productBrandService.findAll();
         return ResponseEntity.ok(
@@ -47,6 +47,20 @@ public class ProductBrandController {
                 "data", brands,
                 "total", brands != null ? brands.size() : 0
             )
+        );
+    }*/
+
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> getAllBrands() {
+        List<ProductBrandResponseDto> brands = productBrandService.findAll();
+        int total = (brands == null) ? 0 : brands.size();
+        List<ProductBrandResponseDto> safe = (brands == null) ? java.util.List.of() : brands;
+
+        return ResponseEntity.ok(
+                java.util.Map.of(
+                        "data", safe,   // nunca null
+                        "total", total
+                )
         );
     }
 
