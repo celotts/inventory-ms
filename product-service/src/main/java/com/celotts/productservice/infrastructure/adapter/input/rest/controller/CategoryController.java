@@ -3,6 +3,7 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 import com.celotts.productservice.applications.service.CategoryService;
 import com.celotts.productservice.domain.model.CategoryModel;
 
+import com.celotts.productservice.domain.port.category.usecase.CategoryUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.*;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category.CategoryDtoMapper;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category.CategoryResponseMapper;
@@ -26,7 +27,7 @@ import java.util.UUID;
 @CrossOrigin(origins = "${app.cors.allowed-origin:*}")
 public class CategoryController {
 
-    private final CategoryService categoryService;
+    private final CategoryUseCase categoryUseCase;
 
     /**
      * Crear una nueva categoría.
@@ -37,7 +38,7 @@ public class CategoryController {
             @Valid @RequestBody CategoryCreateDto categoryCreateDto) {
 
         var categoryModel = CategoryDtoMapper.toModelFromCreate(categoryCreateDto);
-        var createdCategory = categoryService.create(categoryModel);
+        var createdCategory = categoryUseCase.create(categoryModel);
         var responseDto = CategoryDtoMapper.toResponseDto(createdCategory);
 
         return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
@@ -49,7 +50,7 @@ public class CategoryController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<CategoryResponseDto> findById(@PathVariable UUID id) {
-        return categoryService.findById(id)
+        return categoryUseCase.findById(id)
                 .map(CategoryResponseMapper::toDto)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -65,7 +66,7 @@ public class CategoryController {
             @Valid @RequestBody CategoryUpdateDto categoryUpdateDto) {
 
         var dto = CategoryDtoMapper.toModelFromUpdate(categoryUpdateDto);
-        var updatedCategory = categoryService.update(id, dto);
+        var updatedCategory = categoryUseCase.update(id, dto);
 
         var responseDto = CategoryDtoMapper.toResponseDto(updatedCategory);
 
@@ -86,15 +87,15 @@ public class CategoryController {
         List<CategoryModel> categories;
 
         if (name != null && !name.trim().isEmpty()) {
-            categories = categoryService.findAll().stream()
+            categories = categoryUseCase.findAll().stream()
                 .filter(c -> c.getName() != null && c.getName().toLowerCase().contains(name.trim().toLowerCase()))
                 .toList();
         } else if (active != null) {
-            categories = categoryService.findAll().stream()
+            categories = categoryUseCase.findAll().stream()
                 .filter(c -> Objects.equals(c.getActive(), active))
                 .toList();
         } else {
-            categories = categoryService.findAll();
+            categories = categoryUseCase.findAll();
         }
 
         // Aplicar ordenamiento si es necesario.
@@ -138,7 +139,7 @@ public class CategoryController {
             @RequestParam(required = false) Boolean active,
             Pageable pageable) {
 
-        Page<CategoryModel> categoriesPage = categoryService.findAllPaginated(name, active, pageable);
+        Page<CategoryModel> categoriesPage = categoryUseCase.findAllPaginated(name, active, pageable);
         Page<CategoryResponseDto> responsePage = categoriesPage.map(CategoryDtoMapper::toResponseDto);
 
         return ResponseEntity.ok(responsePage);
@@ -150,7 +151,7 @@ public class CategoryController {
      */
     @GetMapping("/active")
     public ResponseEntity<List<CategoryResponseDto>> getActiveCategories() {
-        List<CategoryModel> activeCategories = categoryService.findAll().stream()
+        List<CategoryModel> activeCategories = categoryUseCase.findAll().stream()
             .filter(c -> Boolean.TRUE.equals(c.getActive()))
             .toList();
         List<CategoryResponseDto> responseDtos = CategoryDtoMapper.toResponseDtoList(activeCategories);
@@ -166,7 +167,7 @@ public class CategoryController {
             @RequestParam String query,
             @RequestParam(defaultValue = "10") int limit) {
 
-        List<CategoryModel> categories = categoryService.searchByNameOrDescription(query, limit);
+        List<CategoryModel> categories = categoryUseCase.searchByNameOrDescription(query, limit);
         List<CategoryResponseDto> responseDtos = CategoryDtoMapper.toResponseDtoList(categories);
         return ResponseEntity.ok(responseDtos);
     }
@@ -180,7 +181,7 @@ public class CategoryController {
             @PathVariable UUID id,
             @RequestParam Boolean active) {
 
-        var updatedCategory = categoryService.updateStatus(id, active);
+        var updatedCategory = categoryUseCase.updateStatus(id, active);
         if (updatedCategory == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found");
         }
@@ -195,13 +196,13 @@ public class CategoryController {
      */
     @DeleteMapping("/{id}/permanent")
     public ResponseEntity<Void> permanentDeleteCategory(@PathVariable UUID id) {
-        categoryService.permanentDelete(id);
+        categoryUseCase.permanentDelete(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping
     public ResponseEntity<Void> deleteCategory(@Valid @RequestBody CategoryDeleteDto deleteDto) {
-        categoryService.permanentDelete(deleteDto.getId());
+        categoryUseCase.permanentDelete(deleteDto.getId());
         return ResponseEntity.noContent().build();
     }
 
@@ -211,7 +212,7 @@ public class CategoryController {
      */
     @PatchMapping("/{id}/restore")
     public ResponseEntity<CategoryResponseDto> restoreCategory(@PathVariable UUID id) {
-        var restoredCategory = categoryService.restore(id);
+        var restoredCategory = categoryUseCase.restore(id);
         var responseDto = CategoryDtoMapper.toResponseDto(restoredCategory);
         return ResponseEntity.ok(responseDto);
     }
@@ -222,7 +223,7 @@ public class CategoryController {
      */
     @GetMapping("/stats")
     public ResponseEntity<CategoryStatusDto> getCategoryStats() {
-        var stats = categoryService.getCategoryStatistics();
+        var stats = categoryUseCase.getCategoryStatistics();
         return ResponseEntity.ok(stats);
     }
 
@@ -231,7 +232,7 @@ public class CategoryController {
      */
     @GetMapping("/exists")
     public ResponseEntity<Boolean> categoryExists(@RequestParam String name) {
-        boolean exists = categoryService.existsByName(name);
+        boolean exists = categoryUseCase.existsByName(name);
         return ResponseEntity.ok(exists);
     }
 

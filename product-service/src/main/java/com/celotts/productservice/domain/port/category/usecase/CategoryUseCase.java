@@ -28,6 +28,9 @@ public interface CategoryUseCase {
     void permanentDelete(UUID id);
     CategoryStatusDto getCategoryStatistics();
 
+    CategoryModel create(CategoryModel category);
+    CategoryModel update(UUID id, CategoryModel category);
+
     List<CategoryModel> findByNameOrDescription(String query, int limit);
 
     List<CategoryModel> searchByNameOrDescription(String query, int limit);

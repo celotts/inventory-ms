@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class CategoryUseCaseImplTest {
-
+    private static final UUID ID = UUID.randomUUID();
     private CategoryRepositoryPort repository;
     private CategoryUseCaseImpl useCase;
 
@@ -87,9 +87,22 @@ class CategoryUseCaseImplTest {
 
     @Test
     void deleteById_ShouldCallRepository() {
-        UUID id = UUID.randomUUID();
-        useCase.deleteById(id);
-        verify(repository).deleteById(id);
+        when(repository.existsById(ID)).thenReturn(true);
+
+        useCase.deleteById(ID);
+
+        verify(repository).existsById(ID);
+        verify(repository).deleteById(ID);
+    }
+
+    @Test
+    void deleteById_WhenNotExists_ShouldThrow() {
+        when(repository.existsById(ID)).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class, () -> useCase.deleteById(ID));
+
+        verify(repository).existsById(ID);
+        verify(repository, never()).deleteById(any());
     }
 
     @Test

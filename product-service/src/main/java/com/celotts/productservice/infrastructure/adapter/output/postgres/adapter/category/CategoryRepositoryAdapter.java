@@ -6,6 +6,7 @@ import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.category.CategoryEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.category.CategoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Primary
 @Repository("categoryRepositoryAdapter")
 @RequiredArgsConstructor
 public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
