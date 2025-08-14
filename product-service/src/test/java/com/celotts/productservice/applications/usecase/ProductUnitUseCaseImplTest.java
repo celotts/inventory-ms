@@ -1,7 +1,8 @@
 package com.celotts.productservice.applications.usecase;
 
-import com.celotts.productservice.domain.model.ProductUnitModel;
-import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
+import com.celotts.productserviceOld.applications.usecase.ProductUnitUseCaseImpl;
+import com.celotts.productserviceOld.domain.model.ProductUnitModel;
+import com.celotts.productserviceOld.domain.port.product.unit.output.ProductUnitRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product;
 
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrandEntity;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.product.ProductBrandEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

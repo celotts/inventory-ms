@@ -1,19 +1,18 @@
 package com.celotts.productservice.applications.service;
 
-import com.celotts.productservice.domain.model.ProductBrandModel;
-import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrandUseCase;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
-import org.junit.jupiter.api.BeforeEach;
+import com.celotts.productserviceOld.applications.service.ProductBrandService;
+import com.celotts.productserviceOld.domain.model.ProductBrandModel;
+import com.celotts.productserviceOld.domain.port.product.brand.usecase.ProductBrandUseCase;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

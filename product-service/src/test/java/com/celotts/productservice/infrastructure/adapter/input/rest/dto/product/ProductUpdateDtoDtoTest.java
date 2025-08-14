@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.product;
 
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;

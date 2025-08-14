@@ -16,11 +16,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import com.celotts.productservice.domain.exception.ResourceNotFoundException;
-import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
-import com.celotts.productservice.domain.exception.InvalidBrandIdException;
-import com.celotts.productservice.domain.exception.InvalidProductTypeCodeException;
-import com.celotts.productservice.domain.exception.InvalidUnitCodeException;
+import com.celotts.productserviceOld.domain.exception.ResourceNotFoundException;
+import com.celotts.productserviceOld.domain.exception.ResourceAlreadyExistsException;
 
 import java.util.HashMap;
 import java.util.Map;

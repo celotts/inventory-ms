@@ -1,9 +1,9 @@
 package com.celotts.productservice.infrastructure.common.config;
 
-import com.celotts.productservice.applications.service.ProductUnitService;
-import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
-import com.celotts.productservice.domain.port.product.unit.usecase.ProductUnitUseCase;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productUnit.ProductUnitDtoMapper;
+import com.celotts.productserviceOld.applications.service.ProductUnitService;
+import com.celotts.productserviceOld.domain.port.product.unit.output.ProductUnitRepositoryPort;
+import com.celotts.productserviceOld.domain.port.product.unit.usecase.ProductUnitUseCase;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.mapper.productUnit.ProductUnitDtoMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;

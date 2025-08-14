@@ -2,9 +2,9 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.prod
 
 
 
-import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
-import com.celotts.productservice.infrastructure.common.util.MapperUtils;
+import com.celotts.productserviceOld.domain.model.ProductModel;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
+import com.celotts.productserviceOld.infrastructure.common.util.MapperUtils;
 
 import java.time.LocalDateTime;
 

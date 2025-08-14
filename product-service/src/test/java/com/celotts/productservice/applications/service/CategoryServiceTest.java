@@ -1,9 +1,10 @@
 package com.celotts.productservice.applications.service;
 
-import com.celotts.productservice.domain.model.CategoryModel;
-import com.celotts.productservice.domain.port.category.usecase.CategoryUseCase;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category.CategoryRequestMapper;
+import com.celotts.productserviceOld.applications.service.CategoryService;
+import com.celotts.productserviceOld.domain.model.CategoryModel;
+import com.celotts.productserviceOld.domain.port.category.usecase.CategoryUseCase;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.mapper.category.CategoryRequestMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

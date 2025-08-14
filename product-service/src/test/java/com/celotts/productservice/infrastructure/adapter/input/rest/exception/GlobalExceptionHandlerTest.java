@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.exception;
 
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.exception.GlobalExceptionHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,8 +12,8 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import com.celotts.productservice.domain.exception.ResourceNotFoundException;
-import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
+import com.celotts.productserviceOld.domain.exception.ResourceNotFoundException;
+import com.celotts.productserviceOld.domain.exception.ResourceAlreadyExistsException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;

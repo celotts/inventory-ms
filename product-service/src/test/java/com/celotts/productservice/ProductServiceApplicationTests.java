@@ -1,6 +1,7 @@
 package com.celotts.productservice;
 
 import com.celotts.productservice.infrastructure.common.config.TestBeanConfig;
+import com.celotts.productserviceOld.ProductServiceApplication;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;

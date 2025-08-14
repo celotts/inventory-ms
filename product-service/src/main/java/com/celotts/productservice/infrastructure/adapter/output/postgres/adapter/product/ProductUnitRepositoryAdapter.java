@@ -1,10 +1,10 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product;
 
-import com.celotts.productservice.domain.model.ProductUnitModel;
-import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductUnitEntity;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductUnitEntityMapper;  // ← import corregido
-import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductUnitRepository;
+import com.celotts.productserviceOld.domain.model.ProductUnitModel;
+import com.celotts.productserviceOld.domain.port.product.unit.output.ProductUnitRepositoryPort;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.product.ProductUnitEntity;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.mapper.product.ProductUnitEntityMapper;  // ← import corregido
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.repository.product.ProductUnitRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 

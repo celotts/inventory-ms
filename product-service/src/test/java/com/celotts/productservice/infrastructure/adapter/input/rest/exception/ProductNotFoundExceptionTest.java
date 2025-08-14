@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.exception;
 
-import com.celotts.productservice.domain.exception.ResourceNotFoundException;
+import com.celotts.productserviceOld.domain.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;

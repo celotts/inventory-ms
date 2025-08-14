@@ -1,9 +1,10 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity.category;
 
-import com.celotts.productservice.domain.model.CategoryModel;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.category.CategoryRepositoryAdapter;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.category.CategoryEntityMapper;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.category.CategoryRepository;
+import com.celotts.productserviceOld.domain.model.CategoryModel;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.adapter.category.CategoryRepositoryAdapter;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.category.CategoryEntity;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.mapper.category.CategoryEntityMapper;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.repository.category.CategoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageImpl;
@@ -14,7 +15,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.lang.reflect.Method;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;

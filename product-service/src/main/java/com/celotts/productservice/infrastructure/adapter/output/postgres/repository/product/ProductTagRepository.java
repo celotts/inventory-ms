@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product;
 
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTagEntity;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.product.ProductTagEntity;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

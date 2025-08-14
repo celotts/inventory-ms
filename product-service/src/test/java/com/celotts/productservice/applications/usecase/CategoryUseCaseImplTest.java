@@ -1,8 +1,9 @@
 package com.celotts.productservice.applications.usecase;
 
-import com.celotts.productservice.domain.model.CategoryModel;
-import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
+import com.celotts.productserviceOld.applications.usecase.CategoryUseCaseImpl;
+import com.celotts.productserviceOld.domain.model.CategoryModel;
+import com.celotts.productserviceOld.domain.port.category.output.CategoryRepositoryPort;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.*;

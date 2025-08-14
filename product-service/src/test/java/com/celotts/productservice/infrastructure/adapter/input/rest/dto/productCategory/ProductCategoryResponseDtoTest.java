@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory;
 
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryResponseDto;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

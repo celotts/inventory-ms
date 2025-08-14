@@ -1,8 +1,9 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.applications.service.ProductBrandService;
-import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrandUseCase;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
+import com.celotts.productserviceOld.applications.service.ProductBrandService;
+import com.celotts.productserviceOld.domain.port.product.brand.usecase.ProductBrandUseCase;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.controller.ProductBrandController;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,7 +24,8 @@ class ProductBrandControllerNotFoundTest {
     @Mock ProductBrandDtoMapper productBrandDtoMapper;
     @Mock ProductBrandService productBrandService;
 
-    @InjectMocks ProductBrandController controller;
+    @InjectMocks
+    ProductBrandController controller;
 
     @Test
     void getBrandNameById_shouldThrow404_whenServiceReturnsEmpty() {

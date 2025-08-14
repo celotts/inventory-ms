@@ -1,7 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.category;
 
-import com.celotts.productservice.domain.model.CategoryModel;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.category.CategoryEntity;
+import com.celotts.productserviceOld.domain.model.CategoryModel;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.category.CategoryEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

@@ -1,9 +1,9 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product;
 
-import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.product.port.output.ProductRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductEntityMapper;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductRepository;
+import com.celotts.productserviceOld.domain.model.ProductModel;
+import com.celotts.productserviceOld.domain.port.product.port.output.ProductRepositoryPort;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.mapper.product.ProductEntityMapper;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.repository.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

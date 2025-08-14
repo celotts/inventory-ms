@@ -2,9 +2,9 @@
 
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand;
 
-import com.celotts.productservice.domain.model.ProductBrandModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
+import com.celotts.productserviceOld.domain.model.ProductBrandModel;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;

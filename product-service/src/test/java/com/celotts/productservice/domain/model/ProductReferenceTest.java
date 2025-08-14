@@ -1,5 +1,6 @@
 package com.celotts.productservice.domain.model;
 
+import com.celotts.productserviceOld.domain.model.ProductReference;
 import org.junit.jupiter.api.Test;
 import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;

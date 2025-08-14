@@ -1,10 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category;
 
-import com.celotts.productservice.domain.model.CategoryModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryResponseDto;
-
-import java.util.List;
-import java.util.stream.Collectors;
+import com.celotts.productserviceOld.domain.model.CategoryModel;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.CategoryResponseDto;
 
 public class CategoryResponseMapper {
 

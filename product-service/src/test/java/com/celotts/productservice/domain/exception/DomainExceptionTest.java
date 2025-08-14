@@ -1,6 +1,7 @@
 package com.celotts.productservice.domain.exception;
 
-import com.celotts.productservice.infrastructure.common.error.ErrorCode;
+import com.celotts.productserviceOld.domain.exception.DomainException;
+import com.celotts.productserviceOld.infrastructure.common.error.ErrorCode;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

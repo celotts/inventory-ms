@@ -1,11 +1,12 @@
 package com.celotts.productservice.applications.service;
 
-import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
-import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
-import com.celotts.productservice.domain.port.product.port.output.ProductRepositoryPort;
-import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
+import com.celotts.productserviceOld.applications.service.ProductService;
+import com.celotts.productserviceOld.domain.model.ProductModel;
+import com.celotts.productserviceOld.domain.port.category.output.CategoryRepositoryPort;
+import com.celotts.productserviceOld.domain.port.product.brand.input.ProductBrandPort;
+import com.celotts.productserviceOld.domain.port.product.port.output.ProductRepositoryPort;
+import com.celotts.productserviceOld.domain.port.product.unit.output.ProductUnitRepositoryPort;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;

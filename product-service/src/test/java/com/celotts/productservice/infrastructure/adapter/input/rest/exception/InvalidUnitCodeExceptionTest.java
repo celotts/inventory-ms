@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.exception;
 
-import com.celotts.productservice.domain.exception.InvalidUnitCodeException;
+import com.celotts.productserviceOld.domain.exception.InvalidUnitCodeException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

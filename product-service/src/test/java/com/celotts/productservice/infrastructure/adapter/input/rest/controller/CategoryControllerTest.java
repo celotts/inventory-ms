@@ -1,12 +1,15 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryResponseDto;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.controller.CategoryController;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.CategoryResponseDto;
 
 
-import com.celotts.productservice.applications.service.CategoryService;
-import com.celotts.productservice.domain.model.CategoryModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
+import com.celotts.productserviceOld.applications.service.CategoryService;
+import com.celotts.productserviceOld.domain.model.CategoryModel;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.CategoryCreateDto;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.CategoryDeleteDto;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.CategoryUpdateDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
@@ -170,8 +173,8 @@ class CategoryControllerTest {
     void updateCategory_shouldReturnUpdatedCategory() {
         UUID id = UUID.randomUUID();
         // Simulate a DTO for update
-        com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryUpdateDto updateDto =
-                new com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryUpdateDto("Actualizado", "Descripción actualizada", Boolean.TRUE, "test-user");
+        CategoryUpdateDto updateDto =
+                new CategoryUpdateDto("Actualizado", "Descripción actualizada", Boolean.TRUE, "test-user");
         CategoryModel updatedModel = CategoryModel.builder()
                 .id(id)
                 .name(updateDto.getName())
@@ -359,8 +362,8 @@ class CategoryControllerTest {
     @Test
     void deleteCategory_shouldDeleteSuccessfully() {
         UUID id = UUID.randomUUID();
-        com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryDeleteDto deleteDto =
-                new com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryDeleteDto(id);
+        CategoryDeleteDto deleteDto =
+                new CategoryDeleteDto(id);
 
         ResponseEntity<Void> response = categoryController.deleteCategory(deleteDto);
 

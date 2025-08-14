@@ -1,7 +1,8 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product;
 
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductTypeRepository;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.adapter.product.ProductTypeRepositoryAdapter;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.repository.product.ProductTypeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

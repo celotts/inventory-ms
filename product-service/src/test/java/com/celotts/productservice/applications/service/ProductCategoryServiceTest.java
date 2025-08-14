@@ -1,8 +1,9 @@
 package com.celotts.productservice.applications.service;
 
-import com.celotts.productservice.domain.model.ProductCategoryModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryCreateDto;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product.ProductCategoryAdapter;
+import com.celotts.productserviceOld.applications.service.ProductCategoryService;
+import com.celotts.productserviceOld.domain.model.ProductCategoryModel;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryCreateDto;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.adapter.product.ProductCategoryAdapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
