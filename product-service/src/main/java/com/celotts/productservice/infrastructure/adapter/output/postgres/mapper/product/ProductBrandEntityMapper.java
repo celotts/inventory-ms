@@ -1,8 +1,8 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product;
 
-import com.celotts.productserviceOld.domain.model.ProductBrandModel;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
-import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.product.ProductBrandEntity;
+import com.celotts.productservice.domain.model.ProductBrandModel;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrandEntity;
 import org.springframework.stereotype.Component;
 
 @Component("productBrandEntityMapper")

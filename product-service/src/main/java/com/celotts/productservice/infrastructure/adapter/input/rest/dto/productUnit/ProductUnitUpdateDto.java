@@ -30,6 +30,4 @@ public class ProductUnitUpdateDto {
 
     @NotBlank(message = "updatedBy is required")
     private String updatedBy;
-
-
 }

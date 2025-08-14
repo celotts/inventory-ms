@@ -1,12 +1,12 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
-import com.celotts.productserviceOld.applications.service.ProductBrandService;
-import com.celotts.productserviceOld.domain.model.ProductBrandModel;
-import com.celotts.productserviceOld.domain.port.product.brand.usecase.ProductBrandUseCase;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
+
+import com.celotts.productservice.domain.model.ProductBrandModel;
+import com.celotts.productservice.domain.port.input.product.ProductBrandUseCase;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

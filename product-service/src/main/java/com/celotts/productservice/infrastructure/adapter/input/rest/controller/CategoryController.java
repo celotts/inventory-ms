@@ -1,12 +1,12 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productserviceOld.applications.service.CategoryService;
-import com.celotts.productserviceOld.domain.model.CategoryModel;
+
+import com.celotts.productservice.domain.model.CategoryModel;
 
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.*;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.*;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.mapper.category.CategoryDtoMapper;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.mapper.category.CategoryResponseMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.*;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category.CategoryDtoMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category.CategoryResponseMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

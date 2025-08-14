@@ -1,54 +1,44 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.category;
 
-import com.celotts.productserviceOld.domain.model.CategoryModel;
-import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.category.CategoryEntity;
-import org.springframework.stereotype.Component;
+import com.celotts.productservice.domain.model.CategoryModel;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.category.CategoryEntity;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component
 public class CategoryEntityMapper {
-
-    public CategoryModel toDomain(CategoryEntity entity) {
-        if (entity == null) return null;
-
-        return CategoryModel.builder()
-                .id(entity.getId())
-                .name(entity.getName())
-                .description(entity.getDescription())
-                .active(entity.getActive())
-                .createdBy(entity.getCreatedBy())
-                .updatedBy(entity.getUpdatedBy())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .build();
-    }
 
     public CategoryEntity toEntity(CategoryModel model) {
         if (model == null) return null;
-
-        CategoryEntity entity = new CategoryEntity();
-        entity.setId(model.getId());
-        entity.setName(model.getName());
-        entity.setDescription(model.getDescription());
-        entity.setActive(model.getActive());
-        entity.setCreatedBy(model.getCreatedBy());
-        entity.setUpdatedBy(model.getUpdatedBy());
-        entity.setCreatedAt(model.getCreatedAt());
-        entity.setUpdatedAt(model.getUpdatedAt());
-        return entity;
+        CategoryEntity e = new CategoryEntity();
+        e.setId(model.getId());
+        e.setName(model.getName());
+        e.setDescription(model.getDescription());
+        e.setActive(model.getActive());
+        e.setDeleted(model.getDeleted());
+        e.setCreatedAt(model.getCreatedAt());
+        e.setUpdatedAt(model.getUpdatedAt());
+        e.setCreatedBy(model.getCreatedBy());
+        e.setUpdatedBy(model.getUpdatedBy());
+        return e;
     }
 
-    public List<CategoryModel> toDomainList(List<CategoryEntity> entities) {
-        return entities.stream()
-                .map(this::toDomain)
-                .collect(Collectors.toList());
+    public CategoryModel toModel(CategoryEntity e) {
+        if (e == null) return null;
+        CategoryModel m = new CategoryModel();
+        m.setId(e.getId());
+        m.setName(e.getName());
+        m.setDescription(e.getDescription());
+        m.setActive(e.getActive());
+        m.setDeleted(e.getDeleted());
+        m.setCreatedAt(e.getCreatedAt());
+        m.setUpdatedAt(e.getUpdatedAt());
+        m.setCreatedBy(e.getCreatedBy());
+        m.setUpdatedBy(e.getUpdatedBy());
+        return m;
     }
 
-    public List<CategoryEntity> toEntityList(List<CategoryModel> models) {
-        return models.stream()
-                .map(this::toEntity)
-                .collect(Collectors.toList());
+    public List<CategoryModel> toModelList(List<CategoryEntity> entities) {
+        return entities.stream().map(this::toModel).collect(Collectors.toList());
     }
 }

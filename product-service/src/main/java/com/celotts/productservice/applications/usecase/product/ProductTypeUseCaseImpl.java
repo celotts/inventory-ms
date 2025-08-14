@@ -1,8 +1,8 @@
 package com.celotts.productservice.applications.usecase.product;
 
-import com.celotts.productserviceOld.domain.port.product.type.usecase.ProductTypeUseCase;
-import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
-import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.repository.product.ProductTypeRepository;
+import com.celotts.productservice.domain.port.input.product.ProductTypeUseCase;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductTypeJpaRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 
@@ -17,7 +17,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProductTypeUseCaseImpl implements ProductTypeUseCase {
 
-    private final ProductTypeRepository productTypeRepository;
+    private final ProductTypeRepositoryPort productTypeRepository; // <-- PUERTO
 
     @PostConstruct
     public void log() {

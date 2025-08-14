@@ -3,10 +3,12 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.dto.Product
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.Builder;
-import lombok.Value;
+import lombok.*;
 
-@Value @Builder
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ProductTagCreateDto {
     @NotBlank
     @Size(min=2, max=50)

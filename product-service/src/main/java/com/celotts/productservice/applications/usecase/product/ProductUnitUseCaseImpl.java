@@ -1,8 +1,8 @@
 package com.celotts.productservice.applications.usecase.product;
 
-import com.celotts.productserviceOld.domain.model.ProductUnitModel;
-import com.celotts.productserviceOld.domain.port.product.unit.usecase.ProductUnitUseCase;
-import com.celotts.productserviceOld.domain.port.product.unit.output.ProductUnitRepositoryPort;
+import com.celotts.productservice.domain.model.ProductUnitModel;
+import com.celotts.productservice.domain.port.input.product.ProductUnitUseCase;
+import com.celotts.productservice.domain.port.output.product.ProductUnitRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,4 +1,4 @@
-package com.celotts.productservice.domain.exception.model;
+package com.celotts.productservice.domain.model;
 
 import lombok.Builder;
 import lombok.Value;
@@ -8,14 +8,14 @@ import java.util.UUID;
 @Value
 @Builder(toBuilder = true)
 public class ProductTagModel {
-    UUID id;
-    String name;
-    String description;
-    Boolean enabled;
-    String createdBy;
-    String updatedBy;
-    LocalDateTime createdAt;
-    LocalDateTime updatedAt;
+    private UUID id;
+    private String name;
+    private String description;
+    private Boolean enabled;
+    private String createdBy;
+    private String updatedBy;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public ProductTagModel withEnabled(boolean enabled){
         return this.toBuilder().enabled(enabled).build();

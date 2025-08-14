@@ -1,15 +1,15 @@
 package com.celotts.productservice.applications.usecase.product;
 
-import com.celotts.productserviceOld.domain.model.ProductTagModel;
-import com.celotts.productserviceOld.domain.port.product.tag.input.ProductTagUseCase;
-import com.celotts.productserviceOld.domain.port.product.tag.output.ProductTagRepositoryPort;
+import com.celotts.productservice.domain.model.ProductTagModel;
+import com.celotts.productservice.domain.port.input.product.ProductTagUseCase;
+import com.celotts.productservice.domain.port.output.product.ProductTagRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import com.celotts.productserviceOld.domain.exception.ResourceNotFoundException;
-import com.celotts.productserviceOld.domain.exception.ResourceAlreadyExistsException;
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
+import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
 
 import java.util.List;
 import java.util.Optional;

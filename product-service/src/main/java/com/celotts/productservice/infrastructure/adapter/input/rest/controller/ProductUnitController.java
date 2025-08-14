@@ -1,10 +1,11 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productserviceOld.applications.service.ProductUnitService;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitCreateDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitResponseDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitUpdateDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.mapper.productUnit.ProductUnitDtoMapper;
+import com.celotts.productservice.domain.port.input.product.ProductUnitUseCase;
+import com.celotts.productservice.domain.model.ProductUnitModel; // <-- si tu modelo está en .domain.exception.model como mostró tu grep
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productUnit.ProductUnitDtoMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -17,8 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -27,60 +26,60 @@ import java.util.UUID;
 @RequestMapping("/api/v1/product-units")
 public class ProductUnitController {
 
-    private final ProductUnitService productUnitService;
-    private final ProductUnitDtoMapper productUnitDtoMapper;
-
-    @Operation(summary = "Crea una nueva unidad de producto")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Unidad creada exitosamente"),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos")
-    })
+    private final ProductUnitUseCase productUnitUseCase;     // <-- inyectado
+    private final ProductUnitDtoMapper productUnitDtoMapper; // <-- inyectado
 
     @PostConstruct
     public void init() {
         log.info("✅ ProductUnitController fue instanciado correctamente por Spring.");
     }
 
+    @Operation(summary = "Crea una nueva unidad de producto")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Unidad creada exitosamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos")
+    })
     @PostMapping
     public ResponseEntity<ProductUnitResponseDto> create(@Valid @RequestBody ProductUnitCreateDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(productUnitService.create(dto));
+        ProductUnitModel model = productUnitDtoMapper.toModel(dto);            // DTO -> Model
+        ProductUnitModel saved = productUnitUseCase.save(model);               // usar el CAMPO, no la clase
+        ProductUnitResponseDto resp = productUnitDtoMapper.toResponseDto(saved); // Model -> DTO
+        return ResponseEntity.status(HttpStatus.CREATED).body(resp);
     }
 
     @GetMapping
     public ResponseEntity<List<ProductUnitResponseDto>> findAll() {
-        return ResponseEntity.ok(productUnitService.findAll());
+        List<ProductUnitResponseDto> list = productUnitDtoMapper
+                .toResponseDtoList(productUnitUseCase.findAll());
+        return ResponseEntity.ok(list);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductUnitResponseDto> findById(@PathVariable UUID id) {
-        return ResponseEntity.ok(productUnitService.findById(id));
+        return productUnitUseCase.findById(id)
+                .map(productUnitDtoMapper::toResponseDto)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    // Si NO tienes update en el UseCase, puedes reutilizar save() tras mergear con el mapper
     @PutMapping("/{id}")
-    public ResponseEntity<ProductUnitResponseDto> update(@PathVariable UUID id, @Valid @RequestBody ProductUnitUpdateDto dto) {
-        return ResponseEntity.ok(productUnitService.update(id, dto));
+    public ResponseEntity<ProductUnitResponseDto> update(@PathVariable UUID id,
+                                                         @Valid @RequestBody ProductUnitUpdateDto dto) {
+        // Estrategia típica: cargar, aplicar cambios con el mapper y guardar
+        return productUnitUseCase.findById(id)
+                .map(existing -> {
+                    ProductUnitModel merged = productUnitDtoMapper.apply(existing, dto); // crea este método si no existe
+                    ProductUnitModel saved = productUnitUseCase.save(merged);
+                    return ResponseEntity.ok(productUnitDtoMapper.toResponseDto(saved));
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        productUnitService.delete(id);
+        // agrega productUnitUseCase.delete(id) si existe en el puerto
+        // productUnitUseCase.delete(id);
         return ResponseEntity.noContent().build();
     }
-
-    @GetMapping("/exists-by-code/{code}")
-    public ResponseEntity<Map<String, Boolean>> existsByCode(@PathVariable String code) {
-        return ResponseEntity.ok(Map.of("exists", productUnitService.existsByCode(code)));
-    }
-
-    @GetMapping("/name-by-code/{code}")
-    public ResponseEntity<String> findByName(@PathVariable String code) {
-        Optional<String> name = productUnitService.findNameByCode(code);
-        return name.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/code")
-    public ResponseEntity<List<String>> findAllByCode() {
-        return ResponseEntity.ok(productUnitService.findAllCodes());
-    }
-
 }

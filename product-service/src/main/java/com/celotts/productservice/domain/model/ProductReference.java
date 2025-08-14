@@ -1,4 +1,4 @@
-package com.celotts.productservice.domain.exception.model;
+package com.celotts.productservice.domain.model;
 
 import java.util.UUID;
 

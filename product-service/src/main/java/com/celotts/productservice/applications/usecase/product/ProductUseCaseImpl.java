@@ -2,20 +2,20 @@ package com.celotts.productservice.applications.usecase.product;
 
 // si la sigues usando
 
-import com.celotts.productserviceOld.domain.model.ProductModel;
-import com.celotts.productserviceOld.domain.model.ProductReference;
-import com.celotts.productserviceOld.domain.port.category.output.CategoryRepositoryPort;
-import com.celotts.productserviceOld.domain.port.product.brand.input.ProductBrandPort;
-import com.celotts.productserviceOld.domain.port.product.port.usecase.ProductUseCase;
-import com.celotts.productserviceOld.domain.port.product.port.output.ProductRepositoryPort;
-import com.celotts.productserviceOld.domain.port.product.unit.output.ProductUnitRepositoryPort;
+import com.celotts.productservice.domain.model.ProductModel;
+import com.celotts.productservice.domain.model.ProductReference;
+import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
+import com.celotts.productservice.domain.port.input.product.ProductBrandPort;
+import com.celotts.productservice.domain.port.input.product.ProductUseCase;
+import com.celotts.productservice.domain.port.output.product.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.output.product.ProductUnitRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.*;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.product.ProductCreate;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreate;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
 
-import com.celotts.productserviceOld.domain.exception.ResourceNotFoundException;
-import com.celotts.productserviceOld.domain.exception.ResourceAlreadyExistsException;
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
+import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;

@@ -1,10 +1,10 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.productTag;
 
-import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.repository.product.ProductTagRepository;
-import com.celotts.productserviceOld.domain.model.ProductTagModel;
-import com.celotts.productserviceOld.domain.port.product.tag.output.ProductTagRepositoryPort;
-import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.product.ProductTagEntity;
-import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.mapper.product.ProductTagEntityMapper;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductTagJpaRepository;
+import com.celotts.productservice.domain.model.ProductTagModel;
+import com.celotts.productservice.domain.port.output.product.ProductTagRepositoryPort;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTagEntity;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductTagEntityMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

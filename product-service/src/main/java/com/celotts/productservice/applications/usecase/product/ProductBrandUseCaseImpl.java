@@ -1,10 +1,9 @@
 package com.celotts.productservice.applications.usecase.product;
 
-import com.celotts.productserviceOld.domain.model.ProductBrandModel;
-import com.celotts.productserviceOld.domain.port.product.brand.output.ProductBrandRepositoryPort;
-import com.celotts.productserviceOld.domain.port.product.brand.usecase.ProductBrandUseCase;
-import com.celotts.productserviceOld.domain.exception.BrandNotFoundException;
 
+import com.celotts.productservice.domain.exception.BrandNotFoundException;
+import com.celotts.productservice.domain.model.ProductBrandModel;
+import com.celotts.productservice.domain.port.input.product.ProductBrandUseCase;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 

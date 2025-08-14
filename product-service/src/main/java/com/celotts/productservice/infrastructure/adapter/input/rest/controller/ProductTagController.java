@@ -1,12 +1,12 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productserviceOld.domain.model.ProductTagModel;
-import com.celotts.productserviceOld.domain.port.product.tag.input.ProductTagUseCase;
+import com.celotts.productservice.domain.model.ProductTagModel;
+import com.celotts.productservice.domain.port.input.product.ProductTagUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTag.*;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagCreateDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagResponseDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagUpdateDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.mapper.productTag.ProductTagRequestMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productTag.ProductTagRequestMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

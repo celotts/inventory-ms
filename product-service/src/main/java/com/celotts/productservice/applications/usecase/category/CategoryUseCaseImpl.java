@@ -1,28 +1,25 @@
 package com.celotts.productservice.applications.usecase.category;
 
-import com.celotts.productserviceOld.domain.model.CategoryModel;
-import com.celotts.productserviceOld.domain.port.category.output.CategoryRepositoryPort;
-import com.celotts.productserviceOld.domain.port.category.usecase.CategoryUseCase;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
-import org.springframework.beans.factory.annotation.Qualifier;
+import com.celotts.productservice.domain.model.CategoryModel;
+import com.celotts.productservice.domain.model.CategoryStats;
+import com.celotts.productservice.domain.port.input.category.CategoryUseCase;
+import com.celotts.productservice.domain.port.output.category.CategoryRepositoryPort;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.UUID;
 
 @Service
+@Transactional
 public class CategoryUseCaseImpl implements CategoryUseCase {
 
     private final CategoryRepositoryPort repository;
 
-    // Constructor con @Qualifier para resolver ambigüedad
-    public CategoryUseCaseImpl(
-            @Qualifier("categoryRepositoryAdapter") CategoryRepositoryPort repository
-    ) {
+    // La implementación depende del puerto, no del nombre del adapter
+    public CategoryUseCaseImpl(CategoryRepositoryPort repository) {
         this.repository = repository;
     }
 
@@ -32,28 +29,39 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<CategoryModel> findById(UUID id) {
         return repository.findById(id);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<CategoryModel> findByName(String name) {
         return repository.findByName(name);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CategoryModel> findAll() {
         return repository.findAll();
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<CategoryModel> findAllById(List<UUID> ids) {
+        return repository.findAllById(ids);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<CategoryModel> findByNameContaining(String name) {
         return repository.findByNameContaining(name);
     }
 
     @Override
-    public boolean existsByName(String name) {
-        return repository.existsByName(name);
+    @Transactional(readOnly = true)
+    public List<CategoryModel> searchByNameOrDescription(String query, int limit) {
+        return repository.findByNameOrDescription(query, limit);
     }
 
     @Override
@@ -62,61 +70,43 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean existsById(UUID id) {
         return repository.existsById(id);
     }
 
     @Override
-    public List<CategoryModel> findByActive(Boolean active) {
-        return repository.findByActive(active);
+    @Transactional(readOnly = true)
+    public boolean existsByName(String name) {
+        return repository.existsByName(name);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<CategoryModel> findAll(Pageable pageable) {
         return repository.findAll(pageable);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<CategoryModel> findByNameContaining(String name, Pageable pageable) {
         return repository.findByNameContaining(name, pageable);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<CategoryModel> findByActive(Boolean active, Pageable pageable) {
         return repository.findByActive(active, pageable);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<CategoryModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable) {
         return repository.findByNameContainingAndActive(name, active, pageable);
     }
 
     @Override
-    public List<CategoryModel> findByNameOrDescription(String query, int limit) {
-        return repository.findByNameOrDescription(query, limit);
-    }
-
-
-    @Override
-    public List<CategoryModel> searchByNameOrDescription(String query, int limit) {
-        return repository.findByNameOrDescription(query, limit);
-    }
-
-    @Override
-    public List<CategoryModel> findAllById(List<UUID> ids) {
-        return repository.findAllById(ids);
-    }
-
-    /**
-     * Devuelve categorías paginadas filtradas por nombre y/o estado activo.
-     * Este método depende internamente de los métodos:
-     * - findByNameContaining
-     * - findByActive
-     * - findByNameContainingAndActive
-     *
-     * ⚠️ No eliminar esos métodos del puerto o repositorio aunque el IDE los marque sin usos directos.
-     */
-    @Override
+    @Transactional(readOnly = true)
     public Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable) {
         return repository.findAllPaginated(name, active, pageable);
     }
@@ -125,10 +115,8 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
     public CategoryModel updateStatus(UUID id, Boolean active) {
         CategoryModel existing = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
-
         existing.setActive(active);
         existing.setUpdatedAt(LocalDateTime.now());
-
         return repository.save(existing);
     }
 
@@ -136,10 +124,8 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
     public CategoryModel restore(UUID id) {
         CategoryModel existing = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found"));
-
         existing.setDeleted(false);
         existing.setUpdatedAt(LocalDateTime.now());
-
         return repository.save(existing);
     }
 
@@ -152,12 +138,12 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
     }
 
     @Override
-    public CategoryStatusDto getCategoryStatistics() {
-        long total = repository.findAll().size();  // Podrías optimizar también a un count si lo tienes
+    @Transactional(readOnly = true)
+    public CategoryStats getCategoryStatistics() {
+        long total = repository.count();           // mejor que findAll().size()
         long active = repository.countByActive(true);
         long inactive = repository.countByActive(false);
-
-        return CategoryStatusDto.builder()
+        return CategoryStats.builder()
                 .totalCategories(total)
                 .activeCategories(active)
                 .inactiveCategories(inactive)
@@ -165,14 +151,8 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long countByActive(boolean active) {
         return repository.countByActive(active);
     }
-
-
-
-
-
-
-
 }

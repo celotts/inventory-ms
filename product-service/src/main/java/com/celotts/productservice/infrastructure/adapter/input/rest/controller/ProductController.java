@@ -1,13 +1,13 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productserviceOld.domain.model.ProductModel;
-import com.celotts.productserviceOld.domain.port.product.port.usecase.ProductUseCase;
+import com.celotts.productservice.domain.model.ProductModel;
+import com.celotts.productservice.domain.port.input.product.ProductUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.*;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.product.ProductCreate;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.product.ProductResponseDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.mapper.product.ProductResponseMapper;
-import com.celotts.productserviceOld.infrastructure.config.PaginationProperties;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreate;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductResponseMapper;
+import com.celotts.productservice.infrastructure.config.PaginationProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

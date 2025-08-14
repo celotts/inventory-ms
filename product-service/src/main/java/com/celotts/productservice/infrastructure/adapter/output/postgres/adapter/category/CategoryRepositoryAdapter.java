@@ -1,11 +1,10 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.category;
 
-import com.celotts.productserviceOld.domain.model.CategoryModel;
-import com.celotts.productserviceOld.domain.port.category.output.CategoryRepositoryPort;
-import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.category.CategoryEntity;
-import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.mapper.category.CategoryEntityMapper;
-import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.repository.category.CategoryRepository;
-import lombok.RequiredArgsConstructor;
+import com.celotts.productservice.domain.model.CategoryModel;
+import com.celotts.productservice.domain.port.output.category.CategoryRepositoryPort;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.category.CategoryEntity;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.category.CategoryEntityMapper;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.category.CategoryJpaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
@@ -15,121 +14,86 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository("categoryRepositoryAdapter")
-@RequiredArgsConstructor
 public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
 
-    private final CategoryRepository categoryRepository;
-    private final CategoryEntityMapper categoryEntityMapper;
+    private final CategoryJpaRepository jpa;
+    private final CategoryEntityMapper mapper;
 
-
-    // ========== MÉTODOS BÁSICOS CRUD ==========
-
-    @Override
-    public CategoryModel save(CategoryModel category) {
-        CategoryEntity categoryEntity = categoryEntityMapper.toEntity(category);
-        return categoryEntityMapper.toDomain(categoryRepository.save(categoryEntity));
+    public CategoryRepositoryAdapter(CategoryJpaRepository jpa, CategoryEntityMapper mapper) {
+        this.jpa = jpa;
+        this.mapper = mapper;
     }
 
-    @Override
-    public Optional<CategoryModel> findById(UUID id) {
-        return categoryRepository.findById(id).map(categoryEntityMapper::toDomain);
+    @Override public CategoryModel save(CategoryModel category) {
+        CategoryEntity saved = jpa.save(mapper.toEntity(category));
+        return mapper.toModel(saved);
     }
 
-    @Override
-    public List<CategoryModel> findAll() {
-        return categoryEntityMapper.toDomainList(categoryRepository.findAll());
+    @Override public Optional<CategoryModel> findById(UUID id) {
+        return jpa.findById(id).map(mapper::toModel);
     }
 
-    @Override
-    public void deleteById(UUID id) {
-        categoryRepository.deleteById(id);
+    @Override public Optional<CategoryModel> findByName(String name) {
+        return jpa.findByName(name).map(mapper::toModel); // o findByNameIgnoreCase
     }
 
-    @Override
-    public boolean existsById(UUID id) {
-        return categoryRepository.existsById(id);
+    @Override public List<CategoryModel> findAll() {
+        return mapper.toModelList(jpa.findAll());
     }
 
-    // ========== MÉTODOS DE BÚSQUEDA ==========
-
-    @Override
-    public Optional<CategoryModel> findByName(String name) {
-        return categoryRepository.findByName(name).map(categoryEntityMapper::toDomain);
+    @Override public List<CategoryModel> findAllById(List<UUID> ids) {
+        return mapper.toModelList(jpa.findAllById(ids));
     }
 
-    @Override
-    public List<CategoryModel> findByNameContaining(String name) {
-        return categoryEntityMapper.toDomainList(categoryRepository.findByNameContaining(name));
+    @Override public List<CategoryModel> findByNameContaining(String name) {
+        return mapper.toModelList(jpa.findByNameContaining(name)); // o ...IgnoreCase
     }
 
-    @Override
-    public boolean existsByName(String name) {
-        return categoryRepository.existsByName(name);
+    @Override public boolean existsByName(String name) { return jpa.existsByName(name); }
+
+    @Override public void deleteById(UUID id) { jpa.deleteById(id); }
+
+    @Override public boolean existsById(UUID id) { return jpa.existsById(id); }
+
+    // --------- añadidos paginados/activos ----------
+    @Override public List<CategoryModel> findByActive(Boolean active) {
+        return mapper.toModelList(jpa.findByActive(active));
     }
 
-    @Override
-    public List<CategoryModel> findByActive(Boolean active) {
-        return categoryEntityMapper.toDomainList(categoryRepository.findByActive(active));
+    @Override public Page<CategoryModel> findAll(Pageable pageable) {
+        return jpa.findAll(pageable).map(mapper::toModel);
     }
 
-    // ========== MÉTODOS CON PAGINACIÓN ==========
-
-    @Override
-    public Page<CategoryModel> findAll(Pageable pageable) {
-        return categoryRepository.findAll(pageable).map(categoryEntityMapper::toDomain);
+    @Override public Page<CategoryModel> findByNameContaining(String name, Pageable pageable) {
+        return jpa.findByNameContaining(name, pageable).map(mapper::toModel);
     }
 
-    @Override
-    public Page<CategoryModel> findByActive(Boolean active, Pageable pageable) {
-        return categoryRepository.findByActive(active, pageable).map(categoryEntityMapper::toDomain);
+    @Override public Page<CategoryModel> findByActive(Boolean active, Pageable pageable) {
+        return jpa.findByActive(active, pageable).map(mapper::toModel);
     }
 
-    @Override
-    public Page<CategoryModel> findByNameContaining(String name, Pageable pageable) {
-        return categoryRepository.findByNameContaining(name, pageable).map(categoryEntityMapper::toDomain);
+    @Override public Page<CategoryModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable) {
+        return jpa.findByNameContainingAndActive(name, active, pageable).map(mapper::toModel);
     }
 
-    // ========== MÉTODOS ADICIONALES ==========
-
-    @Override
-    public List<CategoryModel> findAllById(Iterable<UUID> ids) {
-        return categoryEntityMapper.toDomainList(categoryRepository.findAllById(ids));
-    }
-
-    @Override
-    public List<CategoryModel> findByNameOrDescription(String term, int limit) {
-        return categoryEntityMapper.toDomainList(categoryRepository.findByNameOrDescription(term, limit));
-    }
-
-    @Override
-    public long countByActive(Boolean active) {
-        return categoryRepository.countByActive(active);
-    }
-
-
-    @Override
-    public Page<CategoryModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable) {
-        return categoryRepository.findByNameContainingAndActive(name, active, pageable)
-                .map(categoryEntityMapper::toDomain);
-    }
-
-    @Override
-    public Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable) {
+    @Override public Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable) {
         if (name != null && !name.isBlank() && active != null) {
-            return mapToDomain(categoryRepository.findByNameContainingAndActive(name, active, pageable));
+            return findByNameContainingAndActive(name, active, pageable);
         } else if (name != null && !name.isBlank()) {
-            return mapToDomain(categoryRepository.findByNameContaining(name, pageable));
+            return findByNameContaining(name, pageable);
         } else if (active != null) {
-            return mapToDomain(categoryRepository.findByActive(active, pageable));
-        } else {
-            return mapToDomain(categoryRepository.findAll(pageable));
+            return findByActive(active, pageable);
         }
+        return findAll(pageable);
     }
 
-    private Page<CategoryModel> mapToDomain(Page<CategoryEntity> entityPage) {
-        return entityPage.map(categoryEntityMapper::toDomain);
+    @Override public long count() { return jpa.count(); }
+
+    @Override public long countByActive(boolean active) { return jpa.countByActive(active); }
+
+    @Override public List<CategoryModel> findByNameOrDescription(String term, int limit) {
+        // Si quieres mantener esta búsqueda “libre”, crea un método en el repositorio JPA
+        // o usa aquí un EntityManager inyectado y un mapper:
+        return mapper.toModelList(jpa.searchByNameOrDescription(term.toLowerCase(), limit));
     }
-
-
-
 }

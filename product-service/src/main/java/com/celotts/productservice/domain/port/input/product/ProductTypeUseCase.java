@@ -1,6 +1,6 @@
 package com.celotts.productservice.domain.port.input.product;
 
-import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
 
 import java.util.List;
 import java.util.Optional;

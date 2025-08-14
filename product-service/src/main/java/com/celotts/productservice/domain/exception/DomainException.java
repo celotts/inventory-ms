@@ -1,7 +1,7 @@
 // domain/shared/DomainException.java
 package com.celotts.productservice.domain.exception;
 
-import com.celotts.productserviceOld.infrastructure.common.error.ErrorCode;
+import com.celotts.productservice.infrastructure.common.error.ErrorCode;
 import lombok.Getter;
 
 @Getter

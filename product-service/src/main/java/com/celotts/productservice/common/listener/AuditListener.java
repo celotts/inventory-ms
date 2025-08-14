@@ -1,6 +1,6 @@
 package com.celotts.productservice.common.listener;
 
-import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.repository.Auditable;
+import com.celotts.productservice.infrastructure.common.entity.Auditable;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.extern.slf4j.Slf4j;
