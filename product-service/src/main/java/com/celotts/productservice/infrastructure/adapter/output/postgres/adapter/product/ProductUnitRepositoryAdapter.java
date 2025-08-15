@@ -3,20 +3,22 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.adapte
 import com.celotts.productservice.domain.model.ProductUnitModel;
 import com.celotts.productservice.domain.port.output.product.ProductUnitRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductUnitEntity;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductUnitEntityMapper;  // ← import corregido
-import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductUnitJpaRepository;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductUnitEntityMapper;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductUnitJpaRepository; // ✅
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional; // ✅ Spring, no jakarta
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository
+@Component
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ProductUnitRepositoryAdapter implements ProductUnitRepositoryPort {
 
-    private final ProductUnitRepository   jpaRepo;
+    private final ProductUnitJpaRepository jpaRepo;   // ✅ tipo correcto
     private final ProductUnitEntityMapper mapper;
 
     /* ---------- lecturas “light” ---------- */
@@ -36,9 +38,15 @@ public class ProductUnitRepositoryAdapter implements ProductUnitRepositoryPort {
         return jpaRepo.findAllCodes();
     }
 
+    @Override
+    public boolean existsById(UUID id) {
+        return jpaRepo.existsById(id);
+    }
+
     /* ---------- CRUD completo ---------- */
 
     @Override
+    @Transactional
     public ProductUnitModel save(ProductUnitModel model) {
         ProductUnitEntity entity = mapper.toEntity(model);
         ProductUnitEntity saved  = jpaRepo.save(entity);
@@ -51,15 +59,13 @@ public class ProductUnitRepositoryAdapter implements ProductUnitRepositoryPort {
     }
 
     @Override
+    @Transactional
     public void deleteById(UUID id) {
         jpaRepo.deleteById(id);
     }
 
     @Override
     public List<ProductUnitModel> findAll() {
-        return jpaRepo.findAll()
-                .stream()
-                .map(mapper::toModel)
-                .toList();
+        return jpaRepo.findAll().stream().map(mapper::toModel).toList();
     }
 }
