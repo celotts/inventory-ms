@@ -8,14 +8,18 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category.CategoryDtoMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Map;
+import static com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category.CategoryDtoMapper.toResponseDto;
+
 import java.util.UUID;
+
+
 
 @RequiredArgsConstructor
 @RestController
@@ -23,33 +27,41 @@ import java.util.UUID;
 public class CategoryController {
 
     private final CategoryUseCase categoryUseCase;
-    private final CategoryDtoMapper categoryDtoMapper;
 
     @PostMapping
     public ResponseEntity<CategoryResponseDto> create(@Valid @RequestBody CategoryCreateDto dto) {
-        CategoryModel model = categoryDtoMapper.toModel(dto);
+        CategoryModel model = CategoryDtoMapper.toModelFromCreate(dto);
         CategoryModel saved = categoryUseCase.save(model);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .header("Location", "/api/v1/categories/" + saved.getId())
-                .body(categoryDtoMapper.toResponseDto(saved));
+        return ResponseEntity.ok(toResponseDto(saved));
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<CategoryResponseDto> getById(@PathVariable UUID id) {
         CategoryModel model = categoryUseCase.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found: " + id));
-        return ResponseEntity.ok(categoryDtoMapper.toResponseDto(model));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Category not found: " + id));
+        return ResponseEntity.ok(toResponseDto(model)); // <- estático
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<CategoryResponseDto> update(@PathVariable UUID id,
                                                       @Valid @RequestBody CategoryUpdateDto dto) {
-        CategoryModel current = categoryUseCase.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found: " + id));
-        CategoryModel merged = categoryDtoMapper.updateModelFromDto(current, dto);
-        CategoryModel saved = categoryUseCase.save(merged);
-        return ResponseEntity.ok(categoryDtoMapper.toResponseDto(saved));
+        return categoryUseCase.findById(id)
+                .map(existing -> {
+                    // Si tu use case espera el modelo mergeado, hazlo ahí;
+                    // aquí ejemplo simple: copiar campos del dto sobre existing
+                    CategoryModel patch = CategoryDtoMapper.toModelFromUpdate(dto);
+                    if (patch.getName() != null)        existing.setName(patch.getName());
+                    if (patch.getDescription() != null) existing.setDescription(patch.getDescription());
+                    if (patch.getActive() != null)      existing.setActive(patch.getActive());
+                    existing.setUpdatedBy(patch.getUpdatedBy());
+                    existing.setUpdatedAt(patch.getUpdatedAt());
+
+                    CategoryModel saved = categoryUseCase.save(existing);
+                    return ResponseEntity.ok(toResponseDto(saved));
+                })
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
@@ -59,13 +71,9 @@ public class CategoryController {
     }
 
     @GetMapping
-    public ResponseEntity<Map<String, Object>> list(Pageable pageable,
-                                                    @RequestParam(required = false) String term) {
-        var page = (term == null || term.isBlank())
-                ? categoryUseCase.findAll(pageable)
-                : categoryUseCase.searchByNameOrDescription(term, pageable);
-
-        var data = page.map(categoryDtoMapper::toResponseDto).getContent();
-        return ResponseEntity.ok(Map.of("data", data, "total", page.getTotalElements()));
+    public ResponseEntity<Page<CategoryResponseDto>> list(Pageable pageable) {
+        Page<CategoryModel> page = categoryUseCase.findAll(pageable);
+        Page<CategoryResponseDto> out = page.map(CategoryDtoMapper::toResponseDto); // método estático
+        return ResponseEntity.ok(out);
     }
 }

@@ -1,7 +1,8 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.category;
 
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.CategoryUpdateDto;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.Assert.*;
 
 class CategoryUpdateDtoTest {
 

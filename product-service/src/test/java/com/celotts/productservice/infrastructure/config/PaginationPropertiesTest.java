@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.config;
 
-import com.celotts.productserviceOld.infrastructure.config.PaginationProperties;
+import com.celotts.productservice.infrastructure.config.PaginationProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 

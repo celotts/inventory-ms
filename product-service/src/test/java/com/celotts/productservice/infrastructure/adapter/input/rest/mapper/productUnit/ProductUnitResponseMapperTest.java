@@ -1,8 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productUnit;
 
-import com.celotts.productserviceOld.domain.model.ProductUnitModel;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitResponseDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.mapper.productUnit.ProductUnitResponseMapper;
+import com.celotts.productservice.domain.model.ProductUnitModel;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitResponseDto;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

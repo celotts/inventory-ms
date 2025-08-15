@@ -1,12 +1,12 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productserviceOld.applications.service.ProductBrandService;
-import com.celotts.productserviceOld.domain.model.ProductBrandModel;
-import com.celotts.productserviceOld.domain.port.product.brand.usecase.ProductBrandUseCase;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
+import com.celotts.productservice.applications.service.ProductBrandService;
+import com.celotts.productservice.domain.model.ProductBrandModel;
+import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrandUseCase;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,8 +21,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Optional;
 import java.util.UUID;
 
-import static net.bytebuddy.matcher.ElementMatchers.is;
-import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;

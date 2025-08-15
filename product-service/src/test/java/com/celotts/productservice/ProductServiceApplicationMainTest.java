@@ -1,6 +1,6 @@
 package com.celotts.productservice;
 
-import com.celotts.productserviceOld.ProductServiceApplication;
+import com.celotts.productservice.ProductServiceApplication;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;

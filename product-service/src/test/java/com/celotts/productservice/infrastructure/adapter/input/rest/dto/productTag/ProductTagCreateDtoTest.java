@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTag;
 
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagCreateDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

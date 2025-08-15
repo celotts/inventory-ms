@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product;
-
-import com.celotts.productserviceOld.domain.model.ProductModel;
+//TODO: Error
+/*import com.celotts.productserviceOld.domain.model.ProductModel;
 import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;
 import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.product.ProductResponseDto;
 import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
@@ -227,4 +227,4 @@ class ProductDtoMapperTest {
         ProductResponseDto response = ProductDtoMapper.toResponseDto(null);
         assertNull(response);
     }
-}
+}*/

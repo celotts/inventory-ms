@@ -1,11 +1,10 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productserviceOld.domain.model.ProductCategoryModel;
-import com.celotts.productserviceOld.domain.port.product.port.usecase.ProductCategoryUseCase;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.controller.ProductCategoryController;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryCreateDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryResponseDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.mapper.productCategory.ProductCategoryDtoMapper;
+import com.celotts.productservice.domain.model.ProductCategoryModel;
+import com.celotts.productservice.domain.port.product.port.usecase.ProductCategoryUseCase;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productCategory.ProductCategoryDtoMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

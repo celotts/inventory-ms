@@ -66,11 +66,13 @@ public class ProductUnitController {
     @PutMapping("/{id}")
     public ResponseEntity<ProductUnitResponseDto> update(@PathVariable UUID id,
                                                          @Valid @RequestBody ProductUnitUpdateDto dto) {
-        // Estrategia típica: cargar, aplicar cambios con el mapper y guardar
         return productUnitUseCase.findById(id)
                 .map(existing -> {
-                    ProductUnitModel merged = productUnitDtoMapper.apply(existing, dto); // crea este método si no existe
-                    ProductUnitModel saved = productUnitUseCase.save(merged);
+                    // Aplica cambios EN SITIO (void)
+                    productUnitDtoMapper.apply(existing, dto);
+
+                    // Persiste y mapea la respuesta
+                    ProductUnitModel saved = productUnitUseCase.save(existing);
                     return ResponseEntity.ok(productUnitDtoMapper.toResponseDto(saved));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());

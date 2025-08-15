@@ -1,8 +1,8 @@
 package com.celotts.productservice.applications.usecase;
 
-import com.celotts.productserviceOld.applications.usecase.ProductTypeUseCaseImpl;
-import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
-import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.repository.product.ProductTypeRepository;
+import com.celotts.productservice.applications.usecase.ProductTypeUseCaseImpl;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductTypeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

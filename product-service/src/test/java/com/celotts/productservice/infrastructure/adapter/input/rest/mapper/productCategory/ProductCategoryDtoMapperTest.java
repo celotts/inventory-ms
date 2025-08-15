@@ -1,9 +1,8 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productCategory;
 
-import com.celotts.productserviceOld.domain.model.ProductCategoryModel;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryCreateDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryResponseDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.mapper.productCategory.ProductCategoryDtoMapper;
+import com.celotts.productservice.domain.model.ProductCategoryModel;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryResponseDto;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

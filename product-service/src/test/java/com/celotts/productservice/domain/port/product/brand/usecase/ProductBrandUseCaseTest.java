@@ -1,7 +1,7 @@
 package com.celotts.productservice.domain.port.product.brand.usecase;
 
-import com.celotts.productserviceOld.domain.model.ProductBrandModel;
-import com.celotts.productserviceOld.domain.port.product.brand.usecase.ProductBrandUseCase;
+import com.celotts.productservice.domain.model.ProductBrandModel;
+import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrandUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

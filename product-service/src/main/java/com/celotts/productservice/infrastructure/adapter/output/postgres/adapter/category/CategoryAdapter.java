@@ -6,9 +6,9 @@ import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.category.CategoryEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.category.CategoryJpaRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,14 +33,39 @@ public class CategoryAdapter implements CategoryRepositoryPort {
     }
 
     @Override
-    public Optional<CategoryModel> findByName(String name) {               // ← IMPLEMENTADO
-        return repository.findByNameIgnoreCase(name)                       // o findByName(name)
-                .map(mapper::toModel);
+    public Optional<CategoryModel> findByName(String name) {
+        return repository.findByNameIgnoreCase(name).map(mapper::toModel);
+    }
+
+    // ======== LIST (no paginado) ========
+
+    @Override
+    public List<CategoryModel> findAll() {
+        return repository.findAll().stream().map(mapper::toModel).toList();
     }
 
     @Override
-    public Page<CategoryModel> findAll(Pageable pageable) {                // ← IMPLEMENTADO
-        return repository.findAll(pageable).map(mapper::toModel);
+    public List<CategoryModel> findAllById(List<UUID> ids) {
+        return repository.findAllById(ids).stream().map(mapper::toModel).toList();
+    }
+
+    @Override
+    public List<CategoryModel> findByNameContaining(String name) {
+        return repository.findByNameContainingIgnoreCase(name).stream()
+                .map(mapper::toModel).toList();
+    }
+
+    @Override
+    public List<CategoryModel> findByNameOrDescription(String query, int limit) {
+        return repository.findByNameOrDescriptionContainingIgnoreCase(query, Pageable.ofSize(limit)).stream()
+                .map(mapper::toModel).toList();
+    }
+
+    // ======== DELETE / EXISTS ========
+
+    @Override
+    public void deleteById(UUID id) {
+        repository.deleteById(id);
     }
 
     @Override
@@ -49,14 +74,56 @@ public class CategoryAdapter implements CategoryRepositoryPort {
     }
 
     @Override
-    public void deleteById(UUID id) {
-        repository.deleteById(id);
+    public boolean existsByName(String name) {
+        return repository.existsByNameIgnoreCase(name);
+    }
+
+    // ======== PAGINADO ========
+
+    @Override
+    public Page<CategoryModel> findAll(Pageable pageable) {
+        return repository.findAll(pageable).map(mapper::toModel);
     }
 
     @Override
-    public Page<CategoryModel> searchByNameOrDescription(String term,
-                                                         Pageable pageable) { // ← si el puerto lo pide
-        return repository.searchByNameOrDescription(term, pageable)
+    public Page<CategoryModel> findByNameContaining(String name, Pageable pageable) {
+        return repository.findByNameContainingIgnoreCase(name, pageable)
                 .map(mapper::toModel);
+    }
+
+    @Override
+    public Page<CategoryModel> findByActive(Boolean active, Pageable pageable) {
+        return repository.findByActive(active, pageable).map(mapper::toModel);
+    }
+
+    @Override
+    public Page<CategoryModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable) {
+        return repository.findByNameContainingIgnoreCaseAndActive(name, active, pageable)
+                .map(mapper::toModel);
+    }
+
+    @Override
+    public Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable) {
+        // Estrategia simple: enrutar según filtros presentes
+        if (name != null && !name.isBlank() && active != null) {
+            return findByNameContainingAndActive(name, active, pageable);
+        } else if (name != null && !name.isBlank()) {
+            return findByNameContaining(name, pageable);
+        } else if (active != null) {
+            return findByActive(active, pageable);
+        }
+        return findAll(pageable);
+    }
+
+    // ======== STATS ========
+
+    @Override
+    public long count() {
+        return repository.count();
+    }
+
+    @Override
+    public long countByActive(boolean active) {
+        return repository.countByActive(active);
     }
 }

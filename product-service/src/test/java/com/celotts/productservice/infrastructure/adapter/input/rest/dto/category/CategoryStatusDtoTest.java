@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.category;
 
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

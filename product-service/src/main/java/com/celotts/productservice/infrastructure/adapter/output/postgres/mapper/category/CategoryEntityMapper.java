@@ -2,10 +2,12 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper
 
 import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.category.CategoryEntity;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Component
 public class CategoryEntityMapper {
 
     public CategoryEntity toEntity(CategoryModel model) {
@@ -15,7 +17,6 @@ public class CategoryEntityMapper {
         e.setName(model.getName());
         e.setDescription(model.getDescription());
         e.setActive(model.getActive());
-        e.setDeleted(model.getDeleted());
         e.setCreatedAt(model.getCreatedAt());
         e.setUpdatedAt(model.getUpdatedAt());
         e.setCreatedBy(model.getCreatedBy());

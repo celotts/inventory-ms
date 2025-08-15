@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.exception;
 
-import com.celotts.productserviceOld.domain.exception.InvalidBrandIdException;
+import com.celotts.productservice.domain.exception.InvalidBrandIdException;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;

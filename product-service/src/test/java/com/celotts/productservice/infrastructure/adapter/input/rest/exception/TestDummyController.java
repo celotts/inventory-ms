@@ -1,11 +1,11 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.exception;
 
 
-import com.celotts.productserviceOld.domain.exception.InvalidBrandIdException;
-import com.celotts.productserviceOld.domain.exception.InvalidProductTypeCodeException;
-import com.celotts.productserviceOld.domain.exception.InvalidUnitCodeException;
-import com.celotts.productserviceOld.domain.exception.ResourceNotFoundException;
-import com.celotts.productserviceOld.domain.exception.ResourceAlreadyExistsException;
+import com.celotts.productservice.domain.exception.InvalidBrandIdException;
+import com.celotts.productservice.domain.exception.InvalidProductTypeCodeException;
+import com.celotts.productservice.domain.exception.InvalidUnitCodeException;
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
+import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

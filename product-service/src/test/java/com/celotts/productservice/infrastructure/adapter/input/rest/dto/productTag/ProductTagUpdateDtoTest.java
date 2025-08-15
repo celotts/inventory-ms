@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTag;
 
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagUpdateDto; // <—
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagUpdateDto; // <—
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

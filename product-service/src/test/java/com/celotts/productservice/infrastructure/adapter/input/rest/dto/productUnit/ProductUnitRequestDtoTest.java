@@ -1,6 +1,5 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit;
 
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitRequestDto;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

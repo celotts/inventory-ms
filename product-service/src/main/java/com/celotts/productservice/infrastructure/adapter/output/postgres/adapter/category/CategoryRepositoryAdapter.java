@@ -24,76 +24,111 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
         this.mapper = mapper;
     }
 
-    @Override public CategoryModel save(CategoryModel category) {
+    @Override
+    public CategoryModel save(CategoryModel category) {
         CategoryEntity saved = jpa.save(mapper.toEntity(category));
         return mapper.toModel(saved);
     }
 
-    @Override public Optional<CategoryModel> findById(UUID id) {
+    @Override
+    public Optional<CategoryModel> findById(UUID id) {
         return jpa.findById(id).map(mapper::toModel);
     }
 
-    @Override public Optional<CategoryModel> findByName(String name) {
-        return jpa.findByName(name).map(mapper::toModel); // o findByNameIgnoreCase
+    @Override
+    public Optional<CategoryModel> findByName(String name) {
+        return jpa.findByNameIgnoreCase(name).map(mapper::toModel);
     }
 
-    @Override public List<CategoryModel> findAll() {
+    @Override
+    public List<CategoryModel> findAll() {
         return mapper.toModelList(jpa.findAll());
     }
 
-    @Override public List<CategoryModel> findAllById(List<UUID> ids) {
+    @Override
+    public List<CategoryModel> findAllById(List<UUID> ids) {
         return mapper.toModelList(jpa.findAllById(ids));
     }
 
-    @Override public List<CategoryModel> findByNameContaining(String name) {
-        return mapper.toModelList(jpa.findByNameContaining(name)); // o ...IgnoreCase
+    @Override
+    public List<CategoryModel> findByNameContaining(String name) {
+        return mapper.toModelList(jpa.findByNameContainingIgnoreCase(name));
     }
 
-    @Override public boolean existsByName(String name) { return jpa.existsByName(name); }
-
-    @Override public void deleteById(UUID id) { jpa.deleteById(id); }
-
-    @Override public boolean existsById(UUID id) { return jpa.existsById(id); }
-
-    // --------- añadidos paginados/activos ----------
-    @Override public List<CategoryModel> findByActive(Boolean active) {
-        return mapper.toModelList(jpa.findByActive(active));
+    @Override
+    public boolean existsByName(String name) {
+        // usa el que realmente tengas en el repo
+        return jpa.existsByName(name);               // o: jpa.existsByNameIgnoreCase(name)
     }
 
-    @Override public Page<CategoryModel> findAll(Pageable pageable) {
+    @Override
+    public void deleteById(UUID id) {
+        jpa.deleteById(id);
+    }
+
+    @Override
+    public boolean existsById(UUID id) {
+        return jpa.existsById(id);
+    }
+
+    @Override
+    public Page<CategoryModel> findAll(Pageable pageable) {
         return jpa.findAll(pageable).map(mapper::toModel);
     }
 
-    @Override public Page<CategoryModel> findByNameContaining(String name, Pageable pageable) {
-        return jpa.findByNameContaining(name, pageable).map(mapper::toModel);
+    @Override
+    public Page<CategoryModel> findByNameContaining(String name, Pageable pageable) {
+        return jpa.findByNameContainingIgnoreCase(name, pageable)
+                .map(mapper::toModel);
     }
 
-    @Override public Page<CategoryModel> findByActive(Boolean active, Pageable pageable) {
+    @Override
+    public Page<CategoryModel> findByActive(Boolean active, Pageable pageable) {
         return jpa.findByActive(active, pageable).map(mapper::toModel);
     }
 
-    @Override public Page<CategoryModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable) {
-        return jpa.findByNameContainingAndActive(name, active, pageable).map(mapper::toModel);
+    @Override
+    public Page<CategoryModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable) {
+        return jpa.findByNameContainingIgnoreCaseAndActive(name, active, pageable)
+                .map(mapper::toModel);
     }
 
-    @Override public Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable) {
-        if (name != null && !name.isBlank() && active != null) {
-            return findByNameContainingAndActive(name, active, pageable);
-        } else if (name != null && !name.isBlank()) {
-            return findByNameContaining(name, pageable);
-        } else if (active != null) {
+    @Override
+    public Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable) {
+        final String q = normalize(name); // null → null, "  " → null, "TeXt  " → "TeXt"
+
+        if (q != null && active != null) {
+            return findByNameContainingAndActive(q, active, pageable);
+        }
+        if (q != null) {
+            return findByNameContaining(q, pageable);
+        }
+        if (active != null) {
             return findByActive(active, pageable);
         }
         return findAll(pageable);
     }
 
-    @Override public long count() { return jpa.count(); }
+    private String normalize(String s) {
+        if (s == null) return null;
+        String t = s.trim();
+        return t.isEmpty() ? null : t;
+    }
 
-    @Override public long countByActive(boolean active) { return jpa.countByActive(active); }
+    @Override
+    public long count() {
+        return jpa.count();
+    }
 
-    @Override public List<CategoryModel> findByNameOrDescription(String term, int limit) {
-        // Si quieres mantener esta búsqueda “libre”, crea un método en el repositorio JPA
-        // o usa aquí un EntityManager inyectado y un mapper:
-        return mapper.toModelList(jpa.searchByNameOrDescription(term.toLowerCase(), limit));
+    @Override
+    public long countByActive(boolean active) {
+        return jpa.countByActive(active);
+    }
+
+    @Override
+    public List<CategoryModel> findByNameOrDescription(String term, int limit) {
+        return mapper.toModelList(
+                jpa.findByNameOrDescriptionContainingIgnoreCase(term.toLowerCase(), Pageable.ofSize(limit))
+        );
     }
 }

@@ -5,33 +5,41 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-// CategoryJpaRepository (limpio)
 public interface CategoryJpaRepository extends JpaRepository<CategoryEntity, UUID> {
 
-    Optional<CategoryEntity> findByNameIgnoreCase(String name); // opcionalmente case-insensitive
+    Optional<CategoryEntity> findByNameIgnoreCase(String name);
+
     boolean existsByNameIgnoreCase(String name);
 
-    // filtros no paginados (si de verdad los usas)
-    List<CategoryEntity> findByActive(Boolean active);
     List<CategoryEntity> findByNameContainingIgnoreCase(String name);
 
-    // filtros paginados
-    Page<CategoryEntity> findByActive(Boolean active, Pageable pageable);
+    // Variante limitada (usa @Query con LIMIT si tu JPA provider lo permite, o Pageable):
+    @Query("""
+    select c from CategoryEntity c
+    where lower(c.name) like lower(concat('%', :q, '%'))
+       or lower(c.description) like lower(concat('%', :q, '%'))
+    """)
+    List<CategoryEntity> findByNameOrDescriptionContainingIgnoreCase(@Param("q") String q,
+                                                                     Pageable limitPage);
+    // Si prefieres el int limit como en el adapter, puedes hacer:
+    // default List<CategoryEntity> findByNameOrDescriptionContainingIgnoreCase(String q, int limit) {
+    //     return findByNameOrDescriptionContainingIgnoreCase(q, PageRequest.of(0, limit));
+    // }
+
+    // Paginados
+    boolean existsByName(String name);
     Page<CategoryEntity> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
+    Page<CategoryEntity> findByActive(Boolean active, Pageable pageable);
+
     Page<CategoryEntity> findByNameContainingIgnoreCaseAndActive(String name, Boolean active, Pageable pageable);
 
     long countByActive(boolean active);
 
-    // Búsqueda libre (name/description)
-    @Query("""
-           select c from CategoryEntity c
-           where lower(c.name) like concat('%', lower(?1), '%')
-              or lower(c.description) like concat('%', lower(?1), '%')
-           """)
-    Page<CategoryEntity> searchByNameOrDescription(String term, Pageable pageable);
 }

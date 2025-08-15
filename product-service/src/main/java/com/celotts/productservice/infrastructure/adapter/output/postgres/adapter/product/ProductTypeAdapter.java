@@ -27,7 +27,7 @@ public class ProductTypeAdapter implements ProductTypeRepositoryPort {
 
     @Override
     public Optional<ProductTypeModel> findById(UUID id) {
-        return repository.findById(id).map(mapper::toModel);
+        return repository.findById(id.toString()).map(mapper::toModel);
     }
 
     @Override
@@ -44,7 +44,7 @@ public class ProductTypeAdapter implements ProductTypeRepositoryPort {
 
     @Override
     public boolean existsById(UUID id) {
-        return repository.existsById(id);
+        return repository.existsById(id.toString());
     }
 
     @Override
@@ -54,7 +54,7 @@ public class ProductTypeAdapter implements ProductTypeRepositoryPort {
 
     @Override
     public void deleteById(UUID id) {
-        repository.deleteById(id);
+        repository.deleteById(id.toString());
     }
 
     @Override

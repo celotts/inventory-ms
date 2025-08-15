@@ -1,6 +1,6 @@
 package com.celotts.productservice.domain.model;
 
-import com.celotts.productserviceOld.domain.model.ProductBrandModel;
+import com.celotts.productservice.domain.model.ProductBrandModel;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;

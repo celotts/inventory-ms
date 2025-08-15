@@ -1,15 +1,14 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.controller.CategoryController;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.CategoryResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryResponseDto;
 
 
-import com.celotts.productserviceOld.applications.service.CategoryService;
-import com.celotts.productserviceOld.domain.model.CategoryModel;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.CategoryCreateDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.CategoryDeleteDto;
-import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.category.CategoryUpdateDto;
+import com.celotts.productservice.applications.service.CategoryService;
+import com.celotts.productservice.domain.model.CategoryModel;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryDeleteDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryUpdateDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
