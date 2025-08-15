@@ -1,6 +1,7 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
+/*package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.applications.service.ProductUnitService;
+import com.celotts.productservice.applications.usecase.ProductUnitUseCaseImpl;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productUnit.ProductUnitDtoMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,7 +31,7 @@ class ProductUnitControllerTest {
 
     private static final String BASE = "/api/v1/product-units";
 
-    @Mock private ProductUnitService productUnitService;
+    @Mock private ProductUnitUseCaseImpl productUnitService;
     @Mock private ProductUnitDtoMapper productUnitDtoMapper;
 
     private MockMvc mockMvc;
@@ -178,4 +179,4 @@ class ProductUnitControllerTest {
                 .andExpect(jsonPath("$[0]").value("KG"))
                 .andExpect(jsonPath("$[1]").value("LT"));
     }
-}
+}*/

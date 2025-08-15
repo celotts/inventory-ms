@@ -1,6 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.applications.service.ProductUnitService;
+import com.celotts.productservice.domain.model.ProductUnitModel;
+import com.celotts.productservice.domain.port.product.unit.usecase.ProductUnitUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitUpdateDto;
@@ -27,7 +28,8 @@ import java.util.UUID;
 @RequestMapping("/api/v1/product-units")
 public class ProductUnitController {
 
-    private final ProductUnitService productUnitService;
+    // 👉 Depender del puerto (interfaz), no de la implementación
+    private final ProductUnitUseCase productUnitUseCase;
     private final ProductUnitDtoMapper productUnitDtoMapper;
 
     @Operation(summary = "Crea una nueva unidad de producto")
@@ -35,52 +37,61 @@ public class ProductUnitController {
             @ApiResponse(responseCode = "201", description = "Unidad creada exitosamente"),
             @ApiResponse(responseCode = "400", description = "Datos inválidos")
     })
-
     @PostConstruct
     public void init() {
-        log.info("✅ ProductUnitController fue instanciado correctamente por Spring.");
+        log.info("✅ ProductUnitController instanciado.");
     }
 
     @PostMapping
     public ResponseEntity<ProductUnitResponseDto> create(@Valid @RequestBody ProductUnitCreateDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(productUnitService.create(dto));
+        ProductUnitModel toSave = productUnitDtoMapper.toModel(dto);
+        ProductUnitModel saved = productUnitUseCase.save(toSave);
+        return ResponseEntity.status(HttpStatus.CREATED).body(productUnitDtoMapper.toResponseDto(saved));
     }
 
     @GetMapping
     public ResponseEntity<List<ProductUnitResponseDto>> findAll() {
-        return ResponseEntity.ok(productUnitService.findAll());
+        List<ProductUnitResponseDto> list = productUnitUseCase.findAll()
+                .stream()
+                .map(productUnitDtoMapper::toResponseDto)
+                .toList();
+        return ResponseEntity.ok(list);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductUnitResponseDto> findById(@PathVariable UUID id) {
-        return ResponseEntity.ok(productUnitService.findById(id));
+        ProductUnitModel model = productUnitUseCase.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("ProductUnit not found: " + id));
+        return ResponseEntity.ok(productUnitDtoMapper.toResponseDto(model));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductUnitResponseDto> update(@PathVariable UUID id, @Valid @RequestBody ProductUnitUpdateDto dto) {
-        return ResponseEntity.ok(productUnitService.update(id, dto));
+    public ResponseEntity<ProductUnitResponseDto> update(@PathVariable UUID id,
+                                                         @Valid @RequestBody ProductUnitUpdateDto dto) {
+        ProductUnitModel changes = productUnitDtoMapper.toModel(dto);
+        ProductUnitModel updated = productUnitUseCase.update(id, changes);
+        return ResponseEntity.ok(productUnitDtoMapper.toResponseDto(updated));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        productUnitService.delete(id);
+        productUnitUseCase.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/exists-by-code/{code}")
     public ResponseEntity<Map<String, Boolean>> existsByCode(@PathVariable String code) {
-        return ResponseEntity.ok(Map.of("exists", productUnitService.existsByCode(code)));
+        return ResponseEntity.ok(Map.of("exists", productUnitUseCase.existsByCode(code)));
     }
 
     @GetMapping("/name-by-code/{code}")
     public ResponseEntity<String> findByName(@PathVariable String code) {
-        Optional<String> name = productUnitService.findNameByCode(code);
+        Optional<String> name = productUnitUseCase.findNameByCode(code);
         return name.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/code")
     public ResponseEntity<List<String>> findAllByCode() {
-        return ResponseEntity.ok(productUnitService.findAllCodes());
+        return ResponseEntity.ok(productUnitUseCase.findAllCodes());
     }
-
 }

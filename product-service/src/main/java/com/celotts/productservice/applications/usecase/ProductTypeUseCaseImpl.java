@@ -1,5 +1,6 @@
 package com.celotts.productservice.applications.usecase;
 
+import com.celotts.productservice.domain.port.product.type.output.ProductTypeRepositoryPort;
 import com.celotts.productservice.domain.port.product.type.usecase.ProductTypeUseCase;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductTypeRepository;
@@ -17,30 +18,10 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProductTypeUseCaseImpl implements ProductTypeUseCase {
 
-    private final ProductTypeRepository productTypeRepository;
+    private final ProductTypeRepositoryPort repo;
 
-    @PostConstruct
-    public void log() {
-        System.out.println("⚠️ ProductTypeUseCaseImpl fue cargado.");
-    }
-
-    @Override
-    public boolean existsByCode(String code) {
-        return productTypeRepository.existsByCode(code);
-    }
-
-    @Override
-    public Optional<String> findNameByCode(String code) {
-        return productTypeRepository.findNameByCode(code);
-    }
-
-    @Override
-    public List<String> findAllCodes() {
-        return productTypeRepository.findAllCodes();
-    }
-
-    @Override
-    public Optional<ProductTypeEntity> findByCode(String code) {
-        return productTypeRepository.findByCode(code);
-    }
+    @Override public boolean existsByCode(String code) { return repo.existsByCode(code); }
+    @Override public Optional<String> findNameByCode(String code) { return repo.findNameByCode(code); }
+    @Override public List<String> findAllCodes() { return repo.findAllCodes(); }
+    @Override public Optional<ProductTypeEntity> findByCode(String code) { return repo.findByCode(code); }
 }

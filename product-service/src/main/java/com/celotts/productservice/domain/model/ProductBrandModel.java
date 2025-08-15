@@ -22,7 +22,10 @@ public class ProductBrandModel {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public ProductBrandModel(UUID brandId, String coolBrand, boolean b) {
+    public ProductBrandModel(UUID id, String name, boolean enabled) {
+        this.id = id;
+        this.name = name;
+        this.enabled = enabled;
     }
 
     // Métodos de negocio si los necesitas

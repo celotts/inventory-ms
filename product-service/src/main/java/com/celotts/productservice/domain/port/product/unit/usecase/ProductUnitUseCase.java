@@ -7,15 +7,15 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ProductUnitUseCase {
-
-    ProductUnitModel save(ProductUnitModel model);
-
+    ProductUnitModel create(ProductUnitModel model);
+    ProductUnitModel update(UUID id, ProductUnitModel model); // ✅ añadir
+    void delete(UUID id);
     Optional<ProductUnitModel> findById(UUID id);
-    List<ProductUnitModel>     findAll();
-
-    void deleteById(UUID id);
+    List<ProductUnitModel> findAll();
     boolean existsById(UUID id);
     boolean existsByCode(String code);
     Optional<String> findNameByCode(String code);
     List<String> findAllCodes();
+    ProductUnitModel save(ProductUnitModel model);
+    void deleteById(UUID id);
 }

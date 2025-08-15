@@ -1,4 +1,4 @@
-package com.celotts.productservice.applications.service;
+/*package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.model.ProductUnitModel;     // caso de uso
 import com.celotts.productservice.domain.port.product.unit.input.ProductUnitPort;
@@ -97,4 +97,4 @@ public class ProductUnitService implements ProductUnitPort {        // ← imple
     public List<String> findAllCodes() {
         return productUnitUseCase.findAllCodes();
     }
-}
+}*/

@@ -1,8 +1,9 @@
-package com.celotts.productservice.applications.service;
+/*package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
 import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
+import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrandUseCase;
 import com.celotts.productservice.domain.port.product.port.input.ProductPort;
 import com.celotts.productservice.domain.port.product.port.output.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
@@ -35,7 +36,7 @@ public class ProductService implements ProductPort {
     public ProductService(
             ProductRepositoryPort repository,
             ProductUnitRepositoryPort productUnitPort,
-            @Qualifier("productBrandService") ProductBrandPort productBrandPort,
+            ProductBrandUseCase productBrandUseCase,
             @Qualifier("categoryRepositoryAdapter") CategoryRepositoryPort categoryPort,
             ProductRequestMapper productRequestMapper) {
         this.repository = repository;
@@ -184,4 +185,4 @@ public class ProductService implements ProductPort {
         }
         return productUnitPort.findNameByCode(code);
     }
-}
+}*/

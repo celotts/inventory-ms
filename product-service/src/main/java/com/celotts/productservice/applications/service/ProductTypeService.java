@@ -1,4 +1,4 @@
-package com.celotts.productservice.applications.service;
+/*package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.port.product.type.input.ProductTypePort;
 import com.celotts.productservice.domain.port.product.type.usecase.ProductTypeUseCase;
@@ -42,4 +42,4 @@ public class ProductTypeService implements ProductTypePort {
 
 
 
-}
+}*/

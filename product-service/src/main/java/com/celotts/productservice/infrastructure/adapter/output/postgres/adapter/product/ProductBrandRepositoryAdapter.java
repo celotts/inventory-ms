@@ -7,13 +7,14 @@ import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductBrandRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import jakarta.persistence.EntityNotFoundException;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Component
+@Component("productBrandAdapter")
 @RequiredArgsConstructor
 public class ProductBrandRepositoryAdapter implements ProductBrandRepositoryPort {
 
@@ -70,5 +71,21 @@ public class ProductBrandRepositoryAdapter implements ProductBrandRepositoryPort
     @Override
     public List<UUID> findAllIds() {
         return productBrandRepository.findAllIds();
+    }
+
+    @Override
+    public ProductBrandModel enableBrand(UUID id) {
+        productBrandRepository.enableBrandById(id);
+        ProductBrandEntity entity = productBrandRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product brand not found: " + id));
+        return entityMapper.toModel(entity);
+    }
+
+    @Override
+    public ProductBrandModel disableBrand(UUID id) {
+        productBrandRepository.disableBrandById(id);
+        ProductBrandEntity entity = productBrandRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Product brand not found: " + id));
+        return entityMapper.toModel(entity);
     }
 }

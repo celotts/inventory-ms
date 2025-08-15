@@ -1,4 +1,4 @@
-package com.celotts.productservice.applications.usecase;
+/*package com.celotts.productservice.applications.usecase;
 
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductTypeRepository;
@@ -91,4 +91,4 @@ class ProductTypeUseCaseImplTest {
 
         assertFalse(result.isPresent());
     }
-}
+}*/

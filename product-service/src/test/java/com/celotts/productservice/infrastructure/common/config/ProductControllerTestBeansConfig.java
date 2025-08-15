@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.common.config;
+/*package com.celotts.productservice.infrastructure.common.config;
 
 import com.celotts.productservice.applications.service.ProductUnitService;
 import com.celotts.productservice.domain.port.product.port.usecase.ProductUseCase;
@@ -31,4 +31,4 @@ public class ProductControllerTestBeansConfig {
     public ObjectMapper objectMapper() {
         return new ObjectMapper().findAndRegisterModules();
     }
-}
+}*/

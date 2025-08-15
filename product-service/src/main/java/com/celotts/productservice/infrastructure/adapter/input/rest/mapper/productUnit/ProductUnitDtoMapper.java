@@ -3,6 +3,7 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.prod
 import com.celotts.productservice.domain.model.ProductUnitModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitUpdateDto;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -43,5 +44,23 @@ public class ProductUnitDtoMapper {
                 .build();
     }
 
+    public ProductUnitResponseDto toResponseDto(ProductUnitModel model) {
+        return toResponse(model);
+    }
 
+
+    public ProductUnitModel toModel(ProductUnitUpdateDto updateDto) {
+        if (updateDto == null) {
+            return null;
+        }
+
+        return ProductUnitModel.builder()
+                .name(updateDto.getName())
+                .description(updateDto.getDescription())
+                .symbol(updateDto.getSymbol())
+                .enabled(updateDto.getEnabled())
+                .updatedBy(updateDto.getUpdatedBy())
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
 }

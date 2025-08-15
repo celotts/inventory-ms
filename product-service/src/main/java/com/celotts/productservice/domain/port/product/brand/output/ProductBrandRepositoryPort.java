@@ -9,6 +9,8 @@ import java.util.UUID;
 public interface ProductBrandRepositoryPort {
 
     ProductBrandModel save(ProductBrandModel productBrand);
+    ProductBrandModel enableBrand(UUID id);
+    ProductBrandModel disableBrand(UUID id);
     Optional<ProductBrandModel> findById(UUID id);
     Optional<ProductBrandModel> findByName(String name);
 

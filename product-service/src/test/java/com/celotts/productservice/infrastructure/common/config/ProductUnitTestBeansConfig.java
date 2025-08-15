@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.common.config;
+/*package com.celotts.productservice.infrastructure.common.config;
 
 import com.celotts.productservice.applications.service.ProductUnitService;
 import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
@@ -45,4 +45,4 @@ public class ProductUnitTestBeansConfig {
     public ObjectMapper objectMapper() {
         return new ObjectMapper().findAndRegisterModules();
     }
-}
+}*/

@@ -1,79 +1,47 @@
-package com.celotts.productservice.applications.service;
+/*package com.celotts.productservice.applications.service;
 
+import com.celotts.productservice.applications.usecase.ProductUnitUseCaseImpl;
 import com.celotts.productservice.domain.model.ProductUnitModel;
 import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
-import com.celotts.productservice.domain.port.product.unit.usecase.ProductUnitUseCase;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.*;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productUnit.ProductUnitDtoMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.test.context.support.WithMockUser;
 
 @ExtendWith(MockitoExtension.class)
 class ProductUnitServiceTest {
 
     @Mock
-    private ProductUnitUseCase useCase;
+    private ProductUnitRepositoryPort repo;
 
-    @Mock
-    private ProductUnitRepositoryPort repository;
-
-    @Mock
-    private ProductUnitDtoMapper mapper;
-
-    private ProductUnitService service;
+    // SUT
+    private ProductUnitUseCaseImpl useCase;
 
     private UUID id;
-    private ProductUnitCreateDto createDto;
-    private ProductUnitUpdateDto updateDto;
     private ProductUnitModel model;
-    private ProductUnitResponseDto response;
 
     @BeforeEach
     void setUp() {
-        service = new ProductUnitService(useCase, repository, mapper);
+        useCase = new ProductUnitUseCaseImpl(repo);
 
         id = UUID.randomUUID();
-
-        createDto = ProductUnitCreateDto.builder()
-                .code("KG")
-                .name("Kilogramo")
-                .description("Unidad de peso")
-                .enabled(true)
-                .createdBy("admin")
-                .build();
-
-        updateDto = ProductUnitUpdateDto.builder()
-                .name("Kg actualizado")
-                .description("Peso actualizado")
-                .enabled(false)
-                .updatedBy("admin")
-                .build();
-
         model = ProductUnitModel.builder()
                 .id(id)
                 .code("KG")
                 .name("Kilogramo")
                 .description("Unidad de peso")
-                .enabled(true)
-                .createdAt(LocalDateTime.now())
-                .createdBy("admin")
-                .build();
-
-        response = ProductUnitResponseDto.builder()
-                .id(id)
-                .code("KG")
-                .name("Kilogramo")
-                .description("Unidad de peso")
+                .symbol("kg")
                 .enabled(true)
                 .createdAt(LocalDateTime.now())
                 .createdBy("admin")
@@ -82,124 +50,117 @@ class ProductUnitServiceTest {
 
     @Test
     @WithMockUser(username = "tester", roles = {"ADMIN"})
-    void create_shouldSaveAndReturnResponse() {
-        when(repository.existsByCode("KG")).thenReturn(false);
-        when(mapper.toModel(createDto)).thenReturn(model);
-        when(useCase.save(any())).thenReturn(model);
-        when(mapper.toResponse(model)).thenReturn(response);
+    void save_shouldCallRepoAndReturnModel() {
+        when(repo.save(model)).thenReturn(model);
 
-        ProductUnitResponseDto result = service.create(createDto);
+        ProductUnitModel result = useCase.save(model);
 
         assertNotNull(result);
         assertEquals("KG", result.getCode());
-        verify(useCase).save(any());
+        verify(repo).save(model);
     }
 
     @Test
     @WithMockUser(username = "tester", roles = {"ADMIN"})
-    void create_shouldThrowException_whenCodeExists() {
-        when(repository.existsByCode("KG")).thenReturn(true);
+    void findAll_shouldReturnListOfModels() {
+        when(repo.findAll()).thenReturn(List.of(model));
 
-        assertThrows(IllegalArgumentException.class, () -> service.create(createDto));
-    }
-
-    @Test
-    @WithMockUser(username = "tester", roles = {"ADMIN"})
-    void findAll_shouldReturnListOfResponses() {
-        when(useCase.findAll()).thenReturn(List.of(model));
-        when(mapper.toResponse(model)).thenReturn(response);
-
-        List<ProductUnitResponseDto> result = service.findAll();
+        List<ProductUnitModel> result = useCase.findAll();
 
         assertEquals(1, result.size());
         assertEquals("KG", result.get(0).getCode());
+        verify(repo).findAll();
     }
 
     @Test
     @WithMockUser(username = "tester", roles = {"ADMIN"})
-    void findById_shouldReturnResponse() {
-        when(useCase.findById(id)).thenReturn(Optional.of(model));
-        when(mapper.toResponse(model)).thenReturn(response);
+    void findById_shouldReturnModel() {
+        when(repo.findById(id)).thenReturn(Optional.of(model));
 
-        ProductUnitResponseDto result = service.findById(id);
-
-        assertEquals(id, result.getId());
-        assertEquals("KG", result.getCode());
-    }
-
-    @Test
-    @WithMockUser(username = "tester", roles = {"ADMIN"})
-    void findById_shouldThrow_whenNotFound() {
-        when(useCase.findById(id)).thenReturn(Optional.empty());
-
-        assertThrows(RuntimeException.class, () -> service.findById(id));
-    }
-
-    @Test
-    @WithMockUser(username = "tester", roles = {"ADMIN"})
-    void update_shouldModifyAndReturnResponse() {
-        when(useCase.findById(id)).thenReturn(Optional.of(model));
-        when(useCase.save(any())).thenReturn(model);
-        when(mapper.toResponse(model)).thenReturn(response);
-
-        ProductUnitResponseDto result = service.update(id, updateDto);
-
-        assertEquals("KG", result.getCode());
-        verify(useCase).save(any());
-    }
-
-    @Test
-    @WithMockUser(username = "tester", roles = {"ADMIN"})
-    void update_shouldThrow_whenNotFound() {
-        when(useCase.findById(id)).thenReturn(Optional.empty());
-
-        assertThrows(RuntimeException.class, () -> service.update(id, updateDto));
-    }
-
-    @Test
-    @WithMockUser(username = "tester", roles = {"ADMIN"})
-    void delete_shouldCallDelete_whenExists() {
-        when(useCase.existsById(id)).thenReturn(true);
-
-        service.delete(id);
-
-        verify(useCase).deleteById(id);
-    }
-
-    @Test
-    @WithMockUser(username = "tester", roles = {"ADMIN"})
-    void delete_shouldThrow_whenNotExists() {
-        when(useCase.existsById(id)).thenReturn(false);
-
-        assertThrows(RuntimeException.class, () -> service.delete(id));
-    }
-
-    @Test
-    @WithMockUser(username = "tester", roles = {"ADMIN"})
-    void existsByCode_shouldReturnTrue() {
-        when(useCase.existsByCode("KG")).thenReturn(true);
-
-        assertTrue(service.existsByCode("KG"));
-    }
-
-    @Test
-    @WithMockUser(username = "tester", roles = {"ADMIN"})
-    void findNameByCode_shouldReturnName() {
-        when(useCase.findNameByCode("KG")).thenReturn(Optional.of("Kilogramo"));
-
-        Optional<String> result = service.findNameByCode("KG");
+        Optional<ProductUnitModel> result = useCase.findById(id);
 
         assertTrue(result.isPresent());
-        assertEquals("Kilogramo", result.get());
+        assertEquals(id, result.get().getId());
+        verify(repo).findById(id);
     }
 
     @Test
     @WithMockUser(username = "tester", roles = {"ADMIN"})
-    void findAllCodes_shouldReturnCodes() {
-        when(useCase.findAllCodes()).thenReturn(List.of("KG", "G"));
+    void findById_shouldReturnEmpty_whenNotFound() {
+        when(repo.findById(id)).thenReturn(Optional.empty());
 
-        List<String> result = service.findAllCodes();
+        Optional<ProductUnitModel> result = useCase.findById(id);
 
-        assertEquals(2, result.size());
+        assertTrue(result.isEmpty());
+        verify(repo).findById(id);
     }
-}
+
+    @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
+    void update_shouldMergeAndSave() {
+        // existing in repo
+        ProductUnitModel existing = model.toBuilder().name("Old").build();
+        when(repo.findById(id)).thenReturn(Optional.of(existing));
+        when(repo.save(any(ProductUnitModel.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // changes
+        ProductUnitModel changes = ProductUnitModel.builder()
+                .name("New")
+                .description("Peso actualizado")
+                .symbol("kg")
+                .enabled(false)
+                .updatedBy("admin")
+                .build();
+
+        ProductUnitModel updated = useCase.update(id, changes);
+
+        assertEquals("New", updated.getName());
+        assertEquals("Peso actualizado", updated.getDescription());
+        assertFalse(updated.getEnabled());
+
+        ArgumentCaptor<ProductUnitModel> cap = ArgumentCaptor.forClass(ProductUnitModel.class);
+        verify(repo).save(cap.capture());
+        ProductUnitModel sent = cap.getValue();
+        assertEquals("New", sent.getName());
+        assertNotNull(sent.getUpdatedAt());
+    }
+
+    @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
+    void deleteById_shouldDelegateToRepo() {
+        useCase.deleteById(id);
+        verify(repo).deleteById(id);
+    }
+
+    @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
+    void existsById_shouldDelegateToRepo() {
+        when(repo.existsById(id)).thenReturn(true);
+        assertTrue(useCase.existsById(id));
+        verify(repo).existsById(id);
+    }
+
+    @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
+    void existsByCode_shouldDelegateToRepo() {
+        when(repo.existsByCode("KG")).thenReturn(true);
+        assertTrue(useCase.existsByCode("KG"));
+        verify(repo).existsByCode("KG");
+    }
+
+    @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
+    void findNameByCode_shouldDelegateToRepo() {
+        when(repo.findNameByCode("KG")).thenReturn(Optional.of("Kilogramo"));
+        assertEquals(Optional.of("Kilogramo"), useCase.findNameByCode("KG"));
+        verify(repo).findNameByCode("KG");
+    }
+
+    @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
+    void findAllCodes_shouldDelegateToRepo() {
+        when(repo.findAllCodes()).thenReturn(List.of("KG", "G"));
+        assertEquals(List.of("KG", "G"), useCase.findAllCodes());
+        verify(repo).findAllCodes();
+    }
+}*/

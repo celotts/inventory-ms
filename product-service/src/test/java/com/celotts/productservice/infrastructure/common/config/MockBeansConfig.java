@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.common.config;
 
-import com.celotts.productservice.applications.service.ProductBrandService;
+import com.celotts.productservice.applications.usecase.ProductBrandUseCaseImpl;
 import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrandUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,8 +28,8 @@ public class MockBeansConfig {
 
     @Bean
     @Primary
-    public ProductBrandService productBrandService() {
-        return mock(ProductBrandService.class);
+    public ProductBrandUseCaseImpl productBrandService() {
+        return mock(ProductBrandUseCaseImpl.class);
     }
 
     @Bean

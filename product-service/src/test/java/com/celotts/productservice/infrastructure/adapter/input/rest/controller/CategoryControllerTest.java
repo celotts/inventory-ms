@@ -6,7 +6,7 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category
 import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryStatusDto;
-import com.celotts.productservice.applications.service.CategoryService;
+
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,8 +40,6 @@ class CategoryControllerTest {
     @Mock
     private CategoryUseCase categoryUseCase;
 
-    @Mock
-    private CategoryService categoryService;
 
     private UUID categoryId;
     private CategoryModel categoryModel;
@@ -188,7 +186,7 @@ class CategoryControllerTest {
                 .description("Descripción")
                 .active(true)
                 .build();
-        lenient().when(categoryService.create(any(CategoryModel.class))).thenReturn(saved);
+        lenient().when(categoryUseCase.create(any(CategoryModel.class))).thenReturn(saved);
 
         ResponseEntity<?> response = categoryController.createCategory(createDto);
 
@@ -227,7 +225,7 @@ class CategoryControllerTest {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        lenient().when(categoryService.update(eq(id), any(CategoryModel.class))).thenReturn(updatedModel);
+        lenient().when(categoryUseCase.update(eq(id), any(CategoryModel.class))).thenReturn(updatedModel);
 
         ResponseEntity<?> response = categoryController.updateCategory(id, updateDto);
 

@@ -25,14 +25,22 @@ class CategoryUseCaseImplTest {
     }
 
     @Test
-    void save_ShouldSaveCategory() {
-        CategoryModel category = mock(CategoryModel.class);
-        when(repository.save(category)).thenReturn(category);
+    void save_ShouldDelegateToRepository() {
+        // Probar la rama de "create": id == null
+        CategoryModel newCategory = CategoryModel.builder()
+                .id(null)
+                .name("Tacos")
+                .description("Comida mexicana")
+                .active(true)
+                .build();
 
-        CategoryModel result = useCase.save(category);
+        when(repository.existsByName("Tacos")).thenReturn(false);
+        when(repository.save(any(CategoryModel.class))).thenReturn(newCategory);
+
+        CategoryModel result = useCase.save(newCategory);
 
         assertNotNull(result);
-        verify(repository).save(category);
+        verify(repository).save(any(CategoryModel.class));
     }
 
     @Test

@@ -1,6 +1,7 @@
 package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.model.ProductCategoryModel;
+import com.celotts.productservice.domain.port.product.port.usecase.ProductCategoryUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryCreateDto;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product.ProductCategoryAdapter;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +24,7 @@ class ProductCategoryServiceTest {
     @Mock
     private ProductCategoryAdapter adapter;
 
-    private ProductCategoryService service;
+    private ProductCategoryUseCase service;
 
     private UUID id;
     private UUID productId;
@@ -33,7 +34,41 @@ class ProductCategoryServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new ProductCategoryService(adapter);
+        service = new ProductCategoryUseCase() {
+            @Override
+            public ProductCategoryModel assignCategoryToProduct(ProductCategoryCreateDto req) {
+                // convierte el DTO en modelo (lo mínimo para este test)
+                ProductCategoryModel toSave = ProductCategoryModel.builder()
+                        .productId(req.getProductId())
+                        .categoryId(req.getCategoryId())
+                        .assignedAt(req.getAssignedAt())
+                        .enabled(req.getEnabled())
+                        .createdBy(req.getCreatedBy())
+                        .updatedBy(req.getUpdatedBy())
+                        .build();
+                return adapter.save(toSave);
+            }
+
+            @Override
+            public ProductCategoryModel getById(UUID id) {
+                return adapter.getById(id);
+            }
+
+            @Override
+            public List<ProductCategoryModel> getAll() {
+                return adapter.getAll();
+            }
+
+            @Override
+            public void deleteById(UUID id) {
+                adapter.deleteById(id);
+            }
+
+            @Override
+            public void disableById(UUID id) {
+                adapter.disableById(id);
+            }
+        };
 
         id = UUID.randomUUID();
         productId = UUID.randomUUID();

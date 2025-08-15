@@ -1,20 +1,22 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.applications.service.ProductBrandService;
-import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrandUseCase;
+
+import com.celotts.productservice.applications.usecase.ProductBrandUseCaseImpl;
+import com.celotts.productservice.domain.port.product.brand.output.ProductBrandRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import static org.mockito.Mockito.mock;
 
 @TestConfiguration
 public class ProductBrandControllerTestConfig {
 
-    @Bean
-    public ProductBrandUseCase productBrandUseCase() {
-        return mock(ProductBrandUseCase.class);
+    @Bean(name = "productBrandAdapter")
+    public ProductBrandRepositoryPort productBrandRepositoryPort() {
+        return mock(ProductBrandRepositoryPort.class);
     }
 
     @Bean
@@ -23,11 +25,8 @@ public class ProductBrandControllerTestConfig {
     }
 
     @Bean
-    public ProductBrandService productBrandService(
-            ProductBrandUseCase productBrandUseCase,
-            ProductBrandDtoMapper productBrandDtoMapper
-    ) {
-        return new ProductBrandService(productBrandUseCase, productBrandDtoMapper);
+    public ProductBrandUseCaseImpl productBrandService(@Qualifier("productBrandAdapter") ProductBrandRepositoryPort repository) {
+        return new ProductBrandUseCaseImpl(repository);
     }
 
     @Bean

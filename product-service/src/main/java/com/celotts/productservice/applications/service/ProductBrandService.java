@@ -1,4 +1,4 @@
-package com.celotts.productservice.applications.service;
+/*package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.model.ProductBrandModel;
 import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
@@ -124,4 +124,4 @@ public class ProductBrandService implements ProductBrandPort {
     }
 
 
-}
+}*/

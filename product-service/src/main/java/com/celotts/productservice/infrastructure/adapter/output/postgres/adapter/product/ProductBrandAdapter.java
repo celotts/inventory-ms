@@ -1,23 +1,22 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product;
 
 import com.celotts.productservice.domain.model.ProductBrandModel;
-import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
 import com.celotts.productservice.domain.port.product.brand.output.ProductBrandRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrandEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductBrandEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductBrandRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Component("productBrandAdapter")
+@Repository("productBrandAdapter")
 @RequiredArgsConstructor
-public class ProductBrandAdapter implements ProductBrandRepositoryPort, ProductBrandPort {
+public class ProductBrandAdapter implements ProductBrandRepositoryPort {
 
     private final ProductBrandRepository productBrandRepository;
     private final ProductBrandEntityMapper mapper;
@@ -52,7 +51,7 @@ public class ProductBrandAdapter implements ProductBrandRepositoryPort, ProductB
                 .map(mapper::toModel)
                 .toList();
     }
-    
+
     @Override
     public List<UUID> findAllIds() {
         return productBrandRepository.findAll().stream()
@@ -76,18 +75,18 @@ public class ProductBrandAdapter implements ProductBrandRepositoryPort, ProductB
     }
 
     @Override
-    public ProductBrandResponseDto enableBrand(UUID id) {
+    public ProductBrandModel enableBrand(UUID id) {
         productBrandRepository.enableBrandById(id);
         ProductBrandEntity entity = productBrandRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Product brand not found: " + id));
-        return mapper.toResponseDto(entity);
+        return mapper.toModel(entity);
     }
 
     @Override
-    public ProductBrandResponseDto disableBrand(UUID id) {
+    public ProductBrandModel disableBrand(UUID id) {
         productBrandRepository.disableBrandById(id);
         ProductBrandEntity entity = productBrandRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Product brand not found: " + id));
-        return mapper.toResponseDto(entity);
+        return mapper.toModel(entity);
     }
 }

@@ -1,6 +1,6 @@
 package com.celotts.productservice.applications.service;
 
-import com.celotts.productservice.domain.port.product.type.usecase.ProductTypeUseCase;
+import com.celotts.productservice.applications.usecase.ProductTypeUseCaseImpl;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,22 +14,22 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
-class ProductTypeServiceTest {
+class ProductTypeUseCaseTest {
 
+    // 👇 Mock correcto: el puerto de salida (ajusta el nombre del paquete/clase si difiere)
     @Mock
-    private ProductTypeUseCase productTypeUseCase;
+    private com.celotts.productservice.domain.port.product.type.output.ProductTypeRepositoryPort repo;
 
-    private ProductTypeService productTypeService;
+    // SUT
+    private ProductTypeUseCaseImpl useCase;
 
     private final String code = "FOOD";
-
     private ProductTypeEntity productTypeEntity;
 
     @BeforeEach
     void setUp() {
-        productTypeService = new ProductTypeService(productTypeUseCase);
+        useCase = new ProductTypeUseCaseImpl(repo);   // 👈 pasa el repo, no el use case
 
         productTypeEntity = ProductTypeEntity.builder()
                 .code("FOOD")
@@ -38,63 +38,62 @@ class ProductTypeServiceTest {
                 .build();
     }
 
-    @Test 
-@WithMockUser(username = "tester", roles = {"ADMIN"})
-    
+    @Test
+    @WithMockUser(username = "tester", roles = {"ADMIN"})
     void existsByCode_shouldReturnTrue_whenExists() {
-        when(productTypeUseCase.existsByCode(code)).thenReturn(true);
+        when(repo.existsByCode(code)).thenReturn(true);
 
-        boolean result = productTypeService.existsByCode(code);
+        boolean result = useCase.existsByCode(code);
 
         assertTrue(result);
-        verify(productTypeUseCase).existsByCode(code);
+        verify(repo).existsByCode(code);
     }
 
     @Test
     @WithMockUser(username = "tester", roles = {"ADMIN"})
     void findNameByCode_shouldReturnName_whenExists() {
-        when(productTypeUseCase.findNameByCode(code)).thenReturn(Optional.of("Food"));
+        when(repo.findNameByCode(code)).thenReturn(Optional.of("Food"));
 
-        Optional<String> result = productTypeService.findNameByCode(code);
+        Optional<String> result = useCase.findNameByCode(code);
 
         assertTrue(result.isPresent());
         assertEquals("Food", result.get());
-        verify(productTypeUseCase).findNameByCode(code);
+        verify(repo).findNameByCode(code);
     }
 
-    @Test 
+    @Test
     @WithMockUser(username = "tester", roles = {"ADMIN"})
     void findAllCodes_shouldReturnListOfCodes() {
         List<String> codes = List.of("FOOD", "DRINK");
-        when(productTypeUseCase.findAllCodes()).thenReturn(codes);
+        when(repo.findAllCodes()).thenReturn(codes);
 
-        List<String> result = productTypeService.findAllCodes();
+        List<String> result = useCase.findAllCodes();
 
         assertEquals(2, result.size());
         assertEquals("FOOD", result.get(0));
-        verify(productTypeUseCase).findAllCodes();
+        verify(repo).findAllCodes();
     }
 
-    @Test 
+    @Test
     @WithMockUser(username = "tester", roles = {"ADMIN"})
     void findByCode_shouldReturnEntity_whenExists() {
-        when(productTypeUseCase.findByCode(code)).thenReturn(Optional.of(productTypeEntity));
+        when(repo.findByCode(code)).thenReturn(Optional.of(productTypeEntity));
 
-        Optional<ProductTypeEntity> result = productTypeService.findByCode(code);
+        Optional<ProductTypeEntity> result = useCase.findByCode(code);
 
         assertTrue(result.isPresent());
         assertEquals("Food", result.get().getName());
-        verify(productTypeUseCase).findByCode(code);
+        verify(repo).findByCode(code);
     }
 
-    @Test 
+    @Test
     @WithMockUser(username = "tester", roles = {"ADMIN"})
     void findByCode_shouldReturnEmpty_whenNotExists() {
-        when(productTypeUseCase.findByCode(code)).thenReturn(Optional.empty());
+        when(repo.findByCode(code)).thenReturn(Optional.empty());
 
-        Optional<ProductTypeEntity> result = productTypeService.findByCode(code);
+        Optional<ProductTypeEntity> result = useCase.findByCode(code);
 
         assertTrue(result.isEmpty());
-        verify(productTypeUseCase).findByCode(code);
+        verify(repo).findByCode(code);
     }
 }

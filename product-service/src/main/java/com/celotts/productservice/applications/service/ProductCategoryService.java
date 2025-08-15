@@ -1,4 +1,4 @@
-package com.celotts.productservice.applications.service;
+/*package com.celotts.productservice.applications.service;
 
 import com.celotts.productservice.domain.model.ProductCategoryModel;
 import com.celotts.productservice.domain.port.product.port.usecase.ProductCategoryUseCase;
@@ -49,4 +49,4 @@ public class ProductCategoryService implements ProductCategoryUseCase {
     public void disableById(UUID id) {
         adapter.disableById(id);
     }
-}
+}*/

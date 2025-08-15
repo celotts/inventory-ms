@@ -25,12 +25,41 @@ public class ProductBrandUseCaseImpl implements ProductBrandUseCase {
         this.repository = repository;
     }
 
+
     @Override
-    public ProductBrandModel save(ProductBrandModel brand) {
+    public void delete(UUID id) {
+        if (!repository.existsById(id)) {
+            throw new BrandNotFoundException(id);
+        }
+        repository.deleteById(id);
+    }
+
+    @Override
+    public ProductBrandModel save(ProductBrandModel brand) { // ✅ Tipo correcto
         if (repository.existsByName(brand.getName())) {
             throw new IllegalArgumentException("Brand already exists");
         }
-        return repository.save(brand);
+        return repository.save(brand); // ✅ Ahora sí coincide el tipo
+    }
+
+    @Override
+    public ProductBrandModel create(ProductBrandModel brand) {
+        // Reutiliza la validación de save()
+        return save(brand);
+    }
+
+    @Override
+    public ProductBrandModel update(UUID id, ProductBrandModel brand) {
+        ProductBrandModel existing = repository.findById(id)
+                .orElseThrow(() -> new BrandNotFoundException(id));
+
+        if (brand.getName() != null)        existing.setName(brand.getName());
+        if (brand.getDescription() != null) existing.setDescription(brand.getDescription());
+        if (brand.getEnabled() != null)     existing.setEnabled(brand.getEnabled());
+        if (brand.getUpdatedBy() != null)   existing.setUpdatedBy(brand.getUpdatedBy());
+
+        existing.setUpdatedAt(LocalDateTime.now());
+        return repository.save(existing);
     }
 
     @Override
@@ -57,6 +86,7 @@ public class ProductBrandUseCaseImpl implements ProductBrandUseCase {
     public void deleteById(UUID id) {
         repository.deleteById(id);
     }
+
 
     @Override
     public boolean existsById(UUID id) {

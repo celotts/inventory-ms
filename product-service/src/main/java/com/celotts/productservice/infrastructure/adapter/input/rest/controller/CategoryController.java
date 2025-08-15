@@ -1,6 +1,5 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.applications.service.CategoryService;
 import com.celotts.productservice.domain.model.CategoryModel;
 
 import com.celotts.productservice.domain.port.category.usecase.CategoryUseCase;
