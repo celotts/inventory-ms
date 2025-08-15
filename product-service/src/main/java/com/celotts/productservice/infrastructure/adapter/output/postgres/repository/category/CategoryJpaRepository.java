@@ -10,20 +10,20 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+// CategoryJpaRepository (limpio)
 public interface CategoryJpaRepository extends JpaRepository<CategoryEntity, UUID> {
 
-    Optional<CategoryEntity> findByName(String name);
+    Optional<CategoryEntity> findByNameIgnoreCase(String name); // opcionalmente case-insensitive
+    boolean existsByNameIgnoreCase(String name);
 
-    boolean existsByName(String name);
-
-    // ----- filtros no paginados -----
+    // filtros no paginados (si de verdad los usas)
     List<CategoryEntity> findByActive(Boolean active);
-    List<CategoryEntity> findByNameContaining(String name);
+    List<CategoryEntity> findByNameContainingIgnoreCase(String name);
 
-    // ----- filtros paginados -----
+    // filtros paginados
     Page<CategoryEntity> findByActive(Boolean active, Pageable pageable);
-    Page<CategoryEntity> findByNameContaining(String name, Pageable pageable);
-    Page<CategoryEntity> findByNameContainingAndActive(String name, Boolean active, Pageable pageable);
+    Page<CategoryEntity> findByNameContainingIgnoreCase(String name, Pageable pageable);
+    Page<CategoryEntity> findByNameContainingIgnoreCaseAndActive(String name, Boolean active, Pageable pageable);
 
     long countByActive(boolean active);
 
@@ -34,12 +34,4 @@ public interface CategoryJpaRepository extends JpaRepository<CategoryEntity, UUI
               or lower(c.description) like concat('%', lower(?1), '%')
            """)
     Page<CategoryEntity> searchByNameOrDescription(String term, Pageable pageable);
-
-    // variante limitada (si quieres usar el método con limit en el adapter)
-    @Query("""
-           select c from CategoryEntity c
-           where lower(c.name) like concat('%', lower(?1), '%')
-              or lower(c.description) like concat('%', lower(?1), '%')
-           """)
-    List<CategoryEntity> searchByNameOrDescription(String term, Pageable pageable /* ignora pageSize si no lo usas */);
 }

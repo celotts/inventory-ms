@@ -5,33 +5,27 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository
 public interface ProductBrandJpaRepository extends JpaRepository<ProductBrandEntity, UUID> {
 
-    boolean existsByName(String name);
-    Optional<ProductBrandEntity> findByName(String name);
+    boolean existsByNameIgnoreCase(String name);
+    Optional<ProductBrandEntity> findByNameIgnoreCase(String name);
 
-    @Query("SELECT pb.name FROM ProductBrandEntity pb WHERE pb.id = :id")
+    @Query("select b.name from ProductBrandEntity b where b.id = :id")
     Optional<String> findNameById(@Param("id") UUID id);
 
-    @Query("SELECT pb.id FROM ProductBrandEntity pb")
+    @Query("select b.id from ProductBrandEntity b")
     List<UUID> findAllIds();
 
-    @Modifying
-    @Query("UPDATE ProductBrandEntity p SET p.enabled = false WHERE p.id = :id")
-    void disableBrandById(@Param("id") UUID id);
-
-    @Modifying
-    @Query("UPDATE ProductBrandEntity p SET p.enabled = true WHERE p.id = :id")
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update ProductBrandEntity b set b.enabled = true where b.id = :id")
     void enableBrandById(@Param("id") UUID id);
 
-    @Modifying
-    @Query("DELETE FROM ProductBrandEntity p WHERE p.id = :id")
-    void hardDeleteById(@Param("id") UUID id);
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("update ProductBrandEntity b set b.enabled = false where b.id = :id")
+    void disableBrandById(@Param("id") UUID id);
 }

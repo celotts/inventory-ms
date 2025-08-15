@@ -5,70 +5,87 @@ import com.celotts.productservice.domain.port.output.product.ProductBrandReposit
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrandEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductBrandEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductBrandJpaRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-@Component
+@Component("productBrandAdapter")
 @RequiredArgsConstructor
 public class ProductBrandRepositoryAdapter implements ProductBrandRepositoryPort {
 
-    private final ProductBrandRepository productBrandRepository;
-    private final ProductBrandEntityMapper entityMapper;
+    private final ProductBrandJpaRepository repository;
+    private final ProductBrandEntityMapper mapper;
 
     @Override
-    public ProductBrandModel save(ProductBrandModel productBrand) {
-        ProductBrandEntity entity = entityMapper.toEntity(productBrand);
-        ProductBrandEntity saved = productBrandRepository.save(entity);
-        return entityMapper.toModel(saved);
+    public ProductBrandModel save(ProductBrandModel model) {
+        ProductBrandEntity saved = repository.save(mapper.toEntity(model));
+        return mapper.toModel(saved);
     }
 
     @Override
     public Optional<ProductBrandModel> findById(UUID id) {
-        return productBrandRepository.findById(id)
-                .map(entityMapper::toModel);
+        return repository.findById(id).map(mapper::toModel);
     }
 
     @Override
     public Optional<ProductBrandModel> findByName(String name) {
-        return productBrandRepository.findByName(name)
-                .map(entityMapper::toModel);
+        return repository.findByNameIgnoreCase(name).map(mapper::toModel);
     }
 
     @Override
     public List<ProductBrandModel> findAll() {
-        return productBrandRepository.findAll()
-                .stream()
-                .map(entityMapper::toModel)
-                .collect(Collectors.toList());
+        return repository.findAll().stream().map(mapper::toModel).toList();
     }
 
     @Override
     public boolean existsByName(String name) {
-        return productBrandRepository.existsByName(name);
+        return repository.existsByNameIgnoreCase(name);
     }
 
     @Override
     public boolean existsById(UUID id) {
-        return productBrandRepository.existsById(id);
+        return repository.existsById(id);
     }
 
     @Override
     public void deleteById(UUID id) {
-        productBrandRepository.deleteById(id);
+        repository.deleteById(id);
     }
+
+    // ----- extras del puerto -----
 
     @Override
     public Optional<String> findNameById(UUID id) {
-        return productBrandRepository.findNameById(id);
+        return repository.findNameById(id);
     }
 
     @Override
     public List<UUID> findAllIds() {
-        return productBrandRepository.findAllIds();
+        return repository.findAllIds();
+    }
+
+    // ----- enable/disable -----
+
+    @Override
+    @Transactional
+    public ProductBrandModel enable(UUID id) {
+        repository.enableBrandById(id);
+        ProductBrandEntity entity = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("ProductBrand not found: " + id));
+        return mapper.toModel(entity);
+    }
+
+    @Override
+    @Transactional
+    public ProductBrandModel disable(UUID id) {
+        repository.disableBrandById(id);
+        ProductBrandEntity entity = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("ProductBrand not found: " + id));
+        return mapper.toModel(entity);
     }
 }

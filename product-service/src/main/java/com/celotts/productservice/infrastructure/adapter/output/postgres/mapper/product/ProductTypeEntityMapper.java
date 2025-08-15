@@ -1,7 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product;
 
 import com.celotts.productservice.domain.model.ProductTypeModel;
-
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
 import org.springframework.stereotype.Component;
 
@@ -15,12 +14,12 @@ public class ProductTypeEntityMapper {
                 .id(model.getId())
                 .code(model.getCode())
                 .name(model.getName())
-                .description(model.getDescpiption())
-                .enabled(model.getEnabled())
+                .description(model.getDescription())   // ← corregido
+                .enabled(model.getEnabled())           // si fuera boolean: model.isEnabled()
                 .createdAt(model.getCreatedAt())
                 .updatedAt(model.getUpdatedAt())
                 .createdBy(model.getCreatedBy())
-                .updatedBy(model.getUpdateBy())
+                .updatedBy(model.getUpdatedBy())       // ← corregido
                 .build();
     }
 
@@ -31,12 +30,12 @@ public class ProductTypeEntityMapper {
                 .id(entity.getId())
                 .code(entity.getCode())
                 .name(entity.getName())
-                .descpiption(entity.getDescription())
-                .enabled(entity.getEnabled())
+                .description(entity.getDescription())  // ← corregido
+                .enabled(entity.getEnabled())          // si fuera boolean: entity.isEnabled()
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .createdBy(entity.getCreatedBy())
-                .updateBy(entity.getUpdatedBy())
+                .updatedBy(entity.getUpdatedBy())      // ← corregido
                 .build();
     }
 }

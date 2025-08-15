@@ -1,25 +1,19 @@
 package com.celotts.productservice.applications.usecase.product;
 
-// si la sigues usando
-
+import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
 import com.celotts.productservice.domain.model.ProductModel;
 import com.celotts.productservice.domain.model.ProductReference;
-import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
-import com.celotts.productservice.domain.port.input.product.ProductBrandPort;
 import com.celotts.productservice.domain.port.input.product.ProductUseCase;
+import com.celotts.productservice.domain.port.output.category.CategoryRepositoryPort;
+import com.celotts.productservice.domain.port.output.product.ProductBrandRepositoryPort;
 import com.celotts.productservice.domain.port.output.product.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.output.product.ProductUnitRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.*;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreate;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
-
-import com.celotts.productservice.domain.exception.ResourceNotFoundException;
-import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
-
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,15 +30,14 @@ public class ProductUseCaseImpl implements ProductUseCase {
 
     private final ProductRepositoryPort productRepositoryPort;
     private final ProductUnitRepositoryPort productUnitPort;
-    private final ProductBrandPort productBrandPort;
+    private final ProductBrandRepositoryPort productBrandPort;   // ← puerto correcto
     private final CategoryRepositoryPort categoryRepositoryPort;
     private final ProductRequestMapper productRequestMapper;
 
-    @Autowired
     public ProductUseCaseImpl(
             ProductRepositoryPort productRepositoryPort,
             ProductUnitRepositoryPort productUnitPort,
-            @Qualifier("productBrandAdapter") ProductBrandPort productBrandPort,
+            @Qualifier("productBrandAdapter") ProductBrandRepositoryPort productBrandPort,
             @Qualifier("categoryAdapter") CategoryRepositoryPort categoryRepositoryPort,
             ProductRequestMapper productRequestMapper
     ) {
@@ -94,14 +87,19 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public ProductModel enableProduct(UUID id) {
         ProductModel product = getProductById(id);
-        return productRepositoryPort.save(product.withEnabled(true));
+        // Si tu modelo NO tiene toBuilder(), reemplaza por: product.setEnabled(true);
+        ProductModel updated = product.toBuilder().enabled(true).build();
+        return productRepositoryPort.save(updated);
     }
-
 
     @Override
     public ProductModel updateStock(UUID id, int stock) {
-        ProductModel product = getProductById(id);
-        return productRepositoryPort.save(product.withCurrentStock(stock));
+        // Si tu puerto tiene updateStock, úsalo:
+        return productRepositoryPort.updateStock(id, stock);
+        // Si NO lo tienes, descomenta esto y borra la línea de arriba:
+        // ProductModel current = getProductById(id);
+        // ProductModel updated = current.toBuilder().currentStock(stock).build();
+        // return productRepositoryPort.save(updated);
     }
 
     @Override
@@ -116,53 +114,51 @@ public class ProductUseCaseImpl implements ProductUseCase {
 
     @Override
     public Page<ProductModel> getActiveProducts(Pageable pageable) {
-        return productRepositoryPort.findByEnabled(true, pageable);
+        return productRepositoryPort.findActive(pageable);
     }
 
     @Override
     public List<ProductModel> getInactiveProducts() {
-        return productRepositoryPort.findByEnabled(false, Pageable.unpaged()).getContent();
+        return productRepositoryPort.findInactive(Pageable.unpaged()).getContent();
     }
 
     @Override
     public List<ProductModel> getProductsByCategory(UUID categoryId) {
-        return productRepositoryPort.findByCategoryId(categoryId);
+        return productRepositoryPort.findByCategory(categoryId, Pageable.unpaged()).getContent();
     }
 
     @Override
     public List<ProductModel> getLowStockByCategory(UUID categoryId) {
-        return productRepositoryPort.findByCategoryId(categoryId).stream()
+        return getProductsByCategory(categoryId).stream()
                 .filter(ProductModel::lowStock)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<ProductModel> getLowStockProducts() {
-        return productRepositoryPort.findAll().stream()
+        return productRepositoryPort.findAll(Pageable.unpaged()).getContent().stream()
                 .filter(ProductModel::lowStock)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<ProductModel> getProductsByBrand(UUID brandId) {
-        return productRepositoryPort.findByBrandId(brandId);
+        return productRepositoryPort.findByBrand(brandId, Pageable.unpaged()).getContent();
     }
 
     @Override
     public long countProducts() {
-        return productRepositoryPort.findAll().size();
+        return productRepositoryPort.countAll();
     }
 
     @Override
     public long countActiveProducts() {
-        return productRepositoryPort.findByEnabled(true, Pageable.unpaged()).getTotalElements();
+        return productRepositoryPort.countActive();
     }
 
     @Override
     public Optional<String> validateUnitCode(String code) {
-        if (!productUnitPort.existsByCode(code)) {
-            return Optional.empty();
-        }
+        if (!productUnitPort.existsByCode(code)) return Optional.empty();
         return productUnitPort.findNameByCode(code);
     }
 
@@ -180,28 +176,24 @@ public class ProductUseCaseImpl implements ProductUseCase {
 
     @Override
     public boolean existsById(UUID id) {
-        return productRepositoryPort.existsById(id); // ✅
+        return productRepositoryPort.existsById(id);
     }
 
     @Override
     public boolean existsByCode(String code) {
-        return productRepositoryPort.findByCode(code).isPresent(); // ✅
+        return productRepositoryPort.existsByCode(code);
     }
 
     @Override
     public List<ProductModel> getAll() {
-        return productRepositoryPort.findAll();
+        return productRepositoryPort.findAll(Pageable.unpaged()).getContent();
     }
 
     @Override
     public ProductModel disableProduct(UUID id) {
         ProductModel product = productRepositoryPort.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", "No se encontró el producto con ID: " + id));
-
-        ProductModel updatedProduct = product.withEnabled(false);
-
-        return productRepositoryPort.save(updatedProduct);
+        ProductModel updated = product.toBuilder().enabled(false).build();
+        return productRepositoryPort.save(updated);
     }
-
-
 }

@@ -1,8 +1,8 @@
 package com.celotts.productservice.applications.usecase.product;
 
 import com.celotts.productservice.domain.port.input.product.ProductTypeUseCase;
+import com.celotts.productservice.domain.port.output.product.ProductTypeRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductTypeJpaRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 
