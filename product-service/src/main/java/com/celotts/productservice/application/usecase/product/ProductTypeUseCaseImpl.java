@@ -4,19 +4,23 @@ import com.celotts.productservice.domain.model.ProductTypeModel;
 import com.celotts.productservice.domain.port.input.product.ProductTypeUseCase;
 import com.celotts.productservice.domain.port.output.product.ProductTypeRepositoryPort;
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Primary;
+import org.springframework.beans.factory.annotation.Qualifier;   // <-- import necesario
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
-@Primary
 @Service
-@RequiredArgsConstructor
 public class ProductTypeUseCaseImpl implements ProductTypeUseCase {
 
-    private final ProductTypeRepositoryPort productTypeRepository; // puerto de salida
+    private final ProductTypeRepositoryPort productTypeRepository;
+
+    public ProductTypeUseCaseImpl(
+            @Qualifier("productTypeRepositoryAdapter")  // <-- el bean que quieres
+            ProductTypeRepositoryPort productTypeRepository
+    ) {
+        this.productTypeRepository = productTypeRepository;
+    }
 
     @PostConstruct
     public void log() { System.out.println("⚠️ ProductTypeUseCaseImpl fue cargado."); }

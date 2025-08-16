@@ -9,8 +9,7 @@ import com.celotts.productservice.domain.port.output.category.CategoryRepository
 import com.celotts.productservice.domain.port.output.product.ProductBrandRepositoryPort;
 import com.celotts.productservice.domain.port.output.product.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.output.product.ProductUnitRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
+
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -47,24 +46,36 @@ public class ProductUseCaseImpl implements ProductUseCase {
         this.categoryRepositoryPort = categoryRepositoryPort;
         this.productRequestMapper = productRequestMapper;
     }
-
     @Override
-    public ProductModel createProduct(ProductCreateDto dto) {
-        if (productRepositoryPort.findByCode(dto.getCode()).isPresent()) {
-            throw new ResourceAlreadyExistsException("Product", dto.getCode());
+    public ProductModel createProduct(ProductReference cmd) {
+        if (productRepositoryPort.findByCode(cmd.getCode()).isPresent()) {
+            throw new ResourceAlreadyExistsException("Product", cmd.getCode());
         }
-        validateReferences(dto);
-        ProductModel model = productRequestMapper.toModel(dto);
-        return productRepositoryPort.save(model);
+        validateReferences(cmd);
+        ProductModel toSave = productRequestMapper.toModel(cmd);
+        return productRepositoryPort.save(toSave);
     }
 
     @Override
-    public ProductModel updateProduct(UUID id, ProductUpdateDto dto) {
+    public ProductModel updateProduct(UUID id, ProductReference cmd) {
         ProductModel existing = productRepositoryPort.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
-        validateReferences(dto);
-        productRequestMapper.updateModelFromDto(existing, dto);
-        return productRepositoryPort.save(existing);
+        validateReferences(cmd);
+        ProductModel incoming = productRequestMapper.toModel(cmd);
+        ProductModel updated = existing.toBuilder()
+                .code(incoming.getCode() != null ? incoming.getCode() : existing.getCode())
+                .name(incoming.getName() != null ? incoming.getName() : existing.getName())
+                .description(incoming.getDescription() != null ? incoming.getDescription() : existing.getDescription())
+                .categoryId(incoming.getCategoryId() != null ? incoming.getCategoryId() : existing.getCategoryId())
+                .unitCode(incoming.getUnitCode() != null ? incoming.getUnitCode() : existing.getUnitCode())
+                .brandId(incoming.getBrandId() != null ? incoming.getBrandId() : existing.getBrandId())
+                .minimumStock(incoming.getMinimumStock() != null ? incoming.getMinimumStock() : existing.getMinimumStock())
+                .currentStock(incoming.getCurrentStock() != null ? incoming.getCurrentStock() : existing.getCurrentStock())
+                .unitPrice(incoming.getUnitPrice() != null ? incoming.getUnitPrice() : existing.getUnitPrice())
+                .enabled(incoming.getEnabled() != null ? incoming.getEnabled() : existing.getEnabled())
+                .updatedBy(incoming.getUpdatedBy() != null ? incoming.getUpdatedBy() : existing.getUpdatedBy())
+                .build();
+        return productRepositoryPort.save(updated);
     }
 
     @Override
@@ -87,8 +98,12 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public ProductModel enableProduct(UUID id) {
         ProductModel product = getProductById(id);
-        // Si tu modelo NO tiene toBuilder(), reemplaza por: product.setEnabled(true);
-        ProductModel updated = product.toBuilder().enabled(true).build();
+        if (Boolean.TRUE.equals(product.getEnabled())) {
+            return product; // idempotente
+        }
+        ProductModel updated = product.toBuilder()
+                .enabled(true)
+                .build();
         return productRepositoryPort.save(updated);
     }
 
