@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository("categoryRepositoryAdapter")
+@Repository("categoryAdapter")
 public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
 
     private final CategoryJpaRepository jpa;

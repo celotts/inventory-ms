@@ -11,17 +11,19 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class CategoryUseCaseImpl implements CategoryUseCase {
 
     private final CategoryRepositoryPort repository;
 
     // La implementación depende del puerto, no del nombre del adapter
-    public CategoryUseCaseImpl(CategoryRepositoryPort repository) {
-        this.repository = repository;
-    }
+    //public CategoryUseCaseImpl(CategoryRepositoryPort repository) {
+        //this.repository = repository;
+    //}
 
     @Override
     public CategoryModel save(CategoryModel category) {
