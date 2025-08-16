@@ -1,4 +1,4 @@
-package com.celotts.productservice.applications.usecase.product;
+package com.celotts.productservice.application.usecase.product;
 
 import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
 import com.celotts.productservice.domain.exception.ResourceNotFoundException;

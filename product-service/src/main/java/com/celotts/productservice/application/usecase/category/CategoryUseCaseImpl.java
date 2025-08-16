@@ -1,4 +1,4 @@
-package com.celotts.productservice.applications.usecase.category;
+package com.celotts.productservice.application.usecase.category;
 
 import com.celotts.productservice.domain.model.CategoryModel;
 import com.celotts.productservice.domain.model.CategoryStats;

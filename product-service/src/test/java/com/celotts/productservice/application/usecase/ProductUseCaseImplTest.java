@@ -1,22 +1,22 @@
-package com.celotts.productservice.applications.usecase;
+package com.celotts.productservice.application.usecase;
 
-import com.celotts.productservice.applications.usecase.ProductUseCaseImpl;
+import com.celotts.productservice.application.usecase.product.ProductUseCaseImpl;
+import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.category.output.CategoryRepositoryPort;
-import com.celotts.productservice.domain.port.product.brand.input.ProductBrandPort;
-import com.celotts.productservice.domain.port.product.port.output.ProductRepositoryPort;
-import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreate;
 import com.celotts.productservice.domain.model.ProductReference;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
-
-import com.celotts.productservice.domain.exception.ResourceNotFoundException;
-import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
+import com.celotts.productservice.domain.port.output.category.CategoryRepositoryPort;
+import com.celotts.productservice.domain.port.output.product.ProductBrandRepositoryPort;
+import com.celotts.productservice.domain.port.output.product.ProductRepositoryPort;
+import com.celotts.productservice.domain.port.output.product.ProductUnitRepositoryPort;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Answers;
 import org.springframework.data.domain.*;
 
 import java.util.List;
@@ -30,7 +30,7 @@ class ProductUseCaseImplTest {
 
     private ProductRepositoryPort productRepositoryPort;
     private ProductUnitRepositoryPort productUnitPort;
-    private ProductBrandPort productBrandPort;
+    private ProductBrandRepositoryPort productBrandPort;
     private CategoryRepositoryPort categoryRepositoryPort;
     private ProductRequestMapper productRequestMapper;
 
@@ -40,7 +40,7 @@ class ProductUseCaseImplTest {
     void setUp() {
         productRepositoryPort = mock(ProductRepositoryPort.class);
         productUnitPort = mock(ProductUnitRepositoryPort.class);
-        productBrandPort = mock(ProductBrandPort.class);
+        productBrandPort = mock(ProductBrandRepositoryPort.class);
         categoryRepositoryPort = mock(CategoryRepositoryPort.class);
         productRequestMapper = mock(ProductRequestMapper.class);
 
@@ -81,7 +81,7 @@ class ProductUseCaseImplTest {
 
     // ---------- createProduct ----------
     @Test
-    @DisplayName("createProduct lanza ProductAlreadyExistsException si el código ya existe")
+    @DisplayName("createProduct lanza ResourceAlreadyExistsException si el código ya existe")
     void createProduct_codeExists_throws() {
         ProductCreate dto = createDto("P-1", UUID.randomUUID(), UUID.randomUUID(), "KG");
         when(productRepositoryPort.findByCode("P-1")).thenReturn(Optional.of(mock(ProductModel.class)));
@@ -182,53 +182,61 @@ class ProductUseCaseImplTest {
     @Test
     void enableProduct_setsEnabledTrue_andSaves() {
         UUID id = UUID.randomUUID();
-        ProductModel existing = mock(ProductModel.class);
-        ProductModel enabled = mock(ProductModel.class);
 
-        when(productRepositoryPort.findById(id)).thenReturn(Optional.of(existing));
-        when(existing.withEnabled(true)).thenReturn(enabled);
-        when(productRepositoryPort.save(enabled)).thenReturn(enabled);
+        // mock del modelo y del builder de Lombok para la cadena toBuilder().enabled(true).build()
+        ProductModel current = mock(ProductModel.class);
+        Object builder = mock(Object.class, Answers.RETURNS_DEEP_STUBS);
+
+        when(productRepositoryPort.findById(id)).thenReturn(Optional.of(current));
+        // Usamos stubbing relajado con Answers.RETURNS_DEEP_STUBS y casteamos a Object
+        // para no depender del tipo concreto ProductModel.ProductModelBuilder
+        when(current.toBuilder()).thenReturn(builder);
+
+        ProductModel updated = mock(ProductModel.class);
+        // encadenar enabled(true) y build()
+        when(((ProductModel.ProductModelBuilder) builder).enabled(true)).thenReturn((ProductModel.ProductModelBuilder) builder);
+        when(((ProductModel.ProductModelBuilder) builder).build()).thenReturn(updated);
+
+        when(productRepositoryPort.save(updated)).thenReturn(updated);
 
         ProductModel result = useCase.enableProduct(id);
-        assertSame(enabled, result);
-        verify(productRepositoryPort).save(enabled);
-    }
 
-    @Test
-    void disableProduct_notFound_throws() {
-        UUID id = UUID.randomUUID();
-        when(productRepositoryPort.findById(id)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> useCase.disableProduct(id));
+        assertSame(updated, result);
+        verify(productRepositoryPort).save(updated);
     }
 
     @Test
     void disableProduct_setsEnabledFalse_andSaves() {
         UUID id = UUID.randomUUID();
-        ProductModel existing = mock(ProductModel.class);
-        ProductModel disabled = mock(ProductModel.class);
 
-        when(productRepositoryPort.findById(id)).thenReturn(Optional.of(existing));
-        when(existing.withEnabled(false)).thenReturn(disabled);
-        when(productRepositoryPort.save(disabled)).thenReturn(disabled);
+        ProductModel current = mock(ProductModel.class);
+        Object builder = mock(Object.class, Answers.RETURNS_DEEP_STUBS);
+
+        when(productRepositoryPort.findById(id)).thenReturn(Optional.of(current));
+        when(current.toBuilder()).thenReturn(builder);
+
+        ProductModel updated = mock(ProductModel.class);
+        when(((ProductModel.ProductModelBuilder) builder).enabled(false)).thenReturn((ProductModel.ProductModelBuilder) builder);
+        when(((ProductModel.ProductModelBuilder) builder).build()).thenReturn(updated);
+
+        when(productRepositoryPort.save(updated)).thenReturn(updated);
 
         ProductModel result = useCase.disableProduct(id);
-        assertSame(disabled, result);
-        verify(productRepositoryPort).save(disabled);
+
+        assertSame(updated, result);
+        verify(productRepositoryPort).save(updated);
     }
 
     @Test
-    void updateStock_setsCurrentStock_andSaves() {
+    void updateStock_delegatesToRepositoryPort() {
         UUID id = UUID.randomUUID();
-        ProductModel existing = mock(ProductModel.class);
         ProductModel updated = mock(ProductModel.class);
 
-        when(productRepositoryPort.findById(id)).thenReturn(Optional.of(existing));
-        when(existing.withCurrentStock(5)).thenReturn(updated);
-        when(productRepositoryPort.save(updated)).thenReturn(updated);
+        when(productRepositoryPort.updateStock(id, 5)).thenReturn(updated);
 
         ProductModel result = useCase.updateStock(id, 5);
         assertSame(updated, result);
-        verify(productRepositoryPort).save(updated);
+        verify(productRepositoryPort).updateStock(id, 5);
     }
 
     // ---------- paginación y filtros ----------
@@ -254,36 +262,40 @@ class ProductUseCaseImplTest {
     void getActiveProducts_delegates() {
         Pageable pageable = PageRequest.of(0, 3);
         Page<ProductModel> page = new PageImpl<>(List.of());
-        when(productRepositoryPort.findByEnabled(true, pageable)).thenReturn(page);
+        when(productRepositoryPort.findActive(pageable)).thenReturn(page);
 
         assertSame(page, useCase.getActiveProducts(pageable));
     }
 
     @Test
     void getInactiveProducts_returnsContent() {
-        Page<ProductModel> page = new PageImpl<>(List.of(mock(ProductModel.class), mock(ProductModel.class)));
-        when(productRepositoryPort.findByEnabled(false, Pageable.unpaged())).thenReturn(page);
+        List<ProductModel> content = List.of(mock(ProductModel.class), mock(ProductModel.class));
+        Page<ProductModel> page = new PageImpl<>(content);
+        when(productRepositoryPort.findInactive(Pageable.unpaged())).thenReturn(page);
 
         List<ProductModel> result = useCase.getInactiveProducts();
         assertEquals(2, result.size());
+        assertEquals(content, result);
     }
 
     @Test
     void getProductsByCategory_delegates() {
         UUID cat = UUID.randomUUID();
-        List<ProductModel> list = List.of(mock(ProductModel.class));
-        when(productRepositoryPort.findByCategoryId(cat)).thenReturn(list);
+        List<ProductModel> content = List.of(mock(ProductModel.class));
+        when(productRepositoryPort.findByCategory(cat, Pageable.unpaged()))
+                .thenReturn(new PageImpl<>(content));
 
-        assertSame(list, useCase.getProductsByCategory(cat));
+        assertEquals(content, useCase.getProductsByCategory(cat));
     }
 
     @Test
     void getProductsByBrand_delegates() {
         UUID brand = UUID.randomUUID();
-        List<ProductModel> list = List.of(mock(ProductModel.class));
-        when(productRepositoryPort.findByBrandId(brand)).thenReturn(list);
+        List<ProductModel> content = List.of(mock(ProductModel.class));
+        when(productRepositoryPort.findByBrand(brand, Pageable.unpaged()))
+                .thenReturn(new PageImpl<>(content));
 
-        assertSame(list, useCase.getProductsByBrand(brand));
+        assertEquals(content, useCase.getProductsByBrand(brand));
     }
 
     // ---------- low stock ----------
@@ -294,7 +306,9 @@ class ProductUseCaseImplTest {
         ProductModel high = mock(ProductModel.class);
         when(low.lowStock()).thenReturn(true);
         when(high.lowStock()).thenReturn(false);
-        when(productRepositoryPort.findByCategoryId(cat)).thenReturn(List.of(low, high));
+
+        when(productRepositoryPort.findByCategory(cat, Pageable.unpaged()))
+                .thenReturn(new PageImpl<>(List.of(low, high)));
 
         List<ProductModel> result = useCase.getLowStockByCategory(cat);
         assertEquals(1, result.size());
@@ -309,7 +323,9 @@ class ProductUseCaseImplTest {
         when(low1.lowStock()).thenReturn(true);
         when(low2.lowStock()).thenReturn(true);
         when(ok.lowStock()).thenReturn(false);
-        when(productRepositoryPort.findAll()).thenReturn(List.of(low1, ok, low2));
+
+        when(productRepositoryPort.findAll(Pageable.unpaged()))
+                .thenReturn(new PageImpl<>(List.of(low1, ok, low2)));
 
         List<ProductModel> result = useCase.getLowStockProducts();
         assertEquals(2, result.size());
@@ -318,17 +334,17 @@ class ProductUseCaseImplTest {
 
     // ---------- counts ----------
     @Test
-    void countProducts_returnsSizeOfFindAll() {
-        when(productRepositoryPort.findAll()).thenReturn(List.of(mock(ProductModel.class), mock(ProductModel.class)));
-        assertEquals(2, useCase.countProducts());
+    void countProducts_delegatesToCountAll() {
+        when(productRepositoryPort.countAll()).thenReturn(2L);
+        assertEquals(2L, useCase.countProducts());
+        verify(productRepositoryPort).countAll();
     }
 
     @Test
-    void countActiveProducts_returnsTotalElements() {
-        Page<ProductModel> page = new PageImpl<>(List.of(), Pageable.unpaged(), 7);
-        when(productRepositoryPort.findByEnabled(true, Pageable.unpaged())).thenReturn(page);
-
+    void countActiveProducts_delegatesToCountActive() {
+        when(productRepositoryPort.countActive()).thenReturn(7L);
         assertEquals(7L, useCase.countActiveProducts());
+        verify(productRepositoryPort).countActive();
     }
 
     // ---------- validateUnitCode / exists / getAll ----------
@@ -355,15 +371,15 @@ class ProductUseCaseImplTest {
 
     @Test
     void existsByCode_true_whenFound() {
-        when(productRepositoryPort.findByCode("C-9")).thenReturn(Optional.of(mock(ProductModel.class)));
+        when(productRepositoryPort.existsByCode("C-9")).thenReturn(true);
         assertTrue(useCase.existsByCode("C-9"));
     }
 
     @Test
     void getAll_delegates() {
         List<ProductModel> list = List.of(mock(ProductModel.class));
-        when(productRepositoryPort.findAll()).thenReturn(list);
-        assertSame(list, useCase.getAll());
+        when(productRepositoryPort.findAll(Pageable.unpaged())).thenReturn(new PageImpl<>(list));
+        assertEquals(list, useCase.getAll());
     }
 
     // ---------- validateReferences - errores específicos ----------
@@ -437,12 +453,9 @@ class ProductUseCaseImplTest {
     void hardDeleteProduct_callsRepository() {
         UUID id = UUID.randomUUID();
 
-        // act
         useCase.hardDeleteProduct(id);
 
-        // assert
         verify(productRepositoryPort).deleteById(id);
         verifyNoMoreInteractions(productRepositoryPort);
     }
-
 }

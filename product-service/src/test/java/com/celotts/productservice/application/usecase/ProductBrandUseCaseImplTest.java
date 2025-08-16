@@ -1,15 +1,16 @@
-package com.celotts.productservice.applications.usecase;
+package com.celotts.productservice.application.usecase;
 
-import com.celotts.productservice.applications.usecase.ProductBrandUseCaseImpl;
-import com.celotts.productservice.domain.exception.BrandNotFoundException; // donde aplique
-
+import com.celotts.productservice.application.usecase.product.ProductBrandUseCaseImpl;
+import com.celotts.productservice.domain.exception.BrandNotFoundException;
 import com.celotts.productservice.domain.model.ProductBrandModel;
-import com.celotts.productservice.domain.port.product.brand.output.ProductBrandRepositoryPort;
+import com.celotts.productservice.domain.port.output.product.ProductBrandRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -27,45 +28,31 @@ class ProductBrandUseCaseImplTest {
 
     @Test
     void save_ShouldSaveWhenBrandDoesNotExist() {
-        ProductBrandModel brand = new ProductBrandModel(
-                UUID.randomUUID(),
-                "Nike",
-                "Marca deportiva",
-                true,
-                "admin",
-                null,
-                LocalDateTime.now(),
-                null
-        );
+        ProductBrandModel brand = mock(ProductBrandModel.class);
+        when(brand.getName()).thenReturn("Nike");
 
-        when(repository.existsByName(brand.getName())).thenReturn(false);
+        when(repository.existsByName("Nike")).thenReturn(false);
         when(repository.save(brand)).thenReturn(brand);
 
         ProductBrandModel result = useCase.save(brand);
 
         assertNotNull(result);
-        assertEquals(brand, result);
-        verify(repository).existsByName(brand.getName());
+        assertSame(brand, result);
+        verify(repository).existsByName("Nike");
         verify(repository).save(brand);
     }
 
     @Test
     void save_ShouldThrowExceptionWhenBrandExists() {
-        ProductBrandModel brand = new ProductBrandModel(
-                UUID.randomUUID(),
-                "Adidas",
-                "Marca alemana",
-                true,
-                "admin",
-                null,
-                LocalDateTime.now(),
-                null
-        );
-        when(repository.existsByName(brand.getName())).thenReturn(true);
+        ProductBrandModel brand = mock(ProductBrandModel.class);
+        when(brand.getName()).thenReturn("Adidas");
+
+        when(repository.existsByName("Adidas")).thenReturn(true);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> useCase.save(brand));
         assertEquals("Brand already exists", ex.getMessage());
-        verify(repository).existsByName(brand.getName());
+        verify(repository).existsByName("Adidas");
+        verify(repository, never()).save(any());
     }
 
     @Test
@@ -77,7 +64,8 @@ class ProductBrandUseCaseImplTest {
         Optional<ProductBrandModel> result = useCase.findById(id);
 
         assertTrue(result.isPresent());
-        assertEquals(brand, result.get());
+        assertSame(brand, result.get());
+        verify(repository).findById(id);
     }
 
     @Test
@@ -89,31 +77,31 @@ class ProductBrandUseCaseImplTest {
         Optional<ProductBrandModel> result = useCase.findByName(name);
 
         assertTrue(result.isPresent());
-        assertEquals(brand, result.get());
+        assertSame(brand, result.get());
+        verify(repository).findByName(name);
     }
 
     @Test
     void findAll_ShouldReturnAllBrands() {
-        List<ProductBrandModel> list = List.of(mock(ProductBrandModel.class));
+        List<ProductBrandModel> list = List.of(mock(ProductBrandModel.class), mock(ProductBrandModel.class));
         when(repository.findAll()).thenReturn(list);
 
         List<ProductBrandModel> result = useCase.findAll();
 
         assertEquals(list, result);
+        verify(repository).findAll();
     }
 
     @Test
     void existsByName_ShouldReturnTrueIfExists() {
-        String name = "Reebok";
-        when(repository.existsByName(name)).thenReturn(true);
-
-        assertTrue(useCase.existsByName(name));
+        when(repository.existsByName("Reebok")).thenReturn(true);
+        assertTrue(useCase.existsByName("Reebok"));
+        verify(repository).existsByName("Reebok");
     }
 
     @Test
     void deleteById_ShouldCallRepository() {
         UUID id = UUID.randomUUID();
-        doNothing().when(repository).deleteById(id);
 
         useCase.deleteById(id);
 
@@ -126,6 +114,7 @@ class ProductBrandUseCaseImplTest {
         when(repository.existsById(id)).thenReturn(true);
 
         assertTrue(useCase.existsById(id));
+        verify(repository).existsById(id);
     }
 
     @Test
@@ -137,8 +126,8 @@ class ProductBrandUseCaseImplTest {
 
         Optional<String> result = useCase.findNameById(id);
 
-        assertTrue(result.isPresent());
-        assertEquals("Under Armour", result.get());
+        assertEquals(Optional.of("Under Armour"), result);
+        verify(repository).findById(id);
     }
 
     @Test
@@ -151,58 +140,64 @@ class ProductBrandUseCaseImplTest {
 
         when(brand1.getId()).thenReturn(id1);
         when(brand2.getId()).thenReturn(id2);
-
         when(repository.findAll()).thenReturn(List.of(brand1, brand2));
 
         List<UUID> result = useCase.findAllIds();
 
         assertEquals(2, result.size());
         assertTrue(result.containsAll(List.of(id1, id2)));
+        verify(repository).findAll();
     }
 
     @Test
-    void enableBrand_ShouldActivateBrand() {
+    void enableBrand_ShouldActivateBrandAndUpdateTimestampAndSave() {
         UUID id = UUID.randomUUID();
         ProductBrandModel brand = mock(ProductBrandModel.class);
+
         when(repository.findById(id)).thenReturn(Optional.of(brand));
-        when(repository.save(any())).thenReturn(brand);
+        when(repository.save(brand)).thenReturn(brand);
 
         ProductBrandModel result = useCase.enableBrand(id);
 
-        assertNotNull(result);
+        assertSame(brand, result);
         verify(brand).activate();
         verify(brand).setUpdatedAt(any(LocalDateTime.class));
         verify(repository).save(brand);
     }
 
     @Test
-    void enableBrand_ShouldThrowExceptionWhenNotFound() {
+    void enableBrand_ShouldThrowBrandNotFound() {
         UUID id = UUID.randomUUID();
         when(repository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(BrandNotFoundException.class, () -> useCase.enableBrand(id));
+        verify(repository).findById(id);
+        verify(repository, never()).save(any());
     }
 
     @Test
-    void disableBrand_ShouldDeactivateBrand() {
+    void disableBrand_ShouldDeactivateBrandAndUpdateTimestampAndSave() {
         UUID id = UUID.randomUUID();
         ProductBrandModel brand = mock(ProductBrandModel.class);
+
         when(repository.findById(id)).thenReturn(Optional.of(brand));
-        when(repository.save(any())).thenReturn(brand);
+        when(repository.save(brand)).thenReturn(brand);
 
         ProductBrandModel result = useCase.disableBrand(id);
 
-        assertNotNull(result);
+        assertSame(brand, result);
         verify(brand).deactivate();
         verify(brand).setUpdatedAt(any(LocalDateTime.class));
         verify(repository).save(brand);
     }
 
     @Test
-    void disableBrand_ShouldThrowExceptionWhenNotFound() {
+    void disableBrand_ShouldThrowBrandNotFound() {
         UUID id = UUID.randomUUID();
         when(repository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(BrandNotFoundException.class, () -> useCase.disableBrand(id));
+        verify(repository).findById(id);
+        verify(repository, never()).save(any());
     }
 }

@@ -1,7 +1,7 @@
 package com.celotts.productservice.domain.exception;
 
-import com.celotts.productserviceOld.domain.exception.BrandNotFoundException;
-import com.celotts.productserviceOld.domain.exception.ResourceNotFoundException;
+import com.celotts.productservice.domain.exception.BrandNotFoundException;
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;

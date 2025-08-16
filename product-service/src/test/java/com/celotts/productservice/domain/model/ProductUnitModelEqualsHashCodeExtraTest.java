@@ -1,6 +1,6 @@
 package com.celotts.productservice.domain.model;
 
-import com.celotts.productserviceOld.domain.model.ProductUnitModel;
+import com.celotts.productservice.domain.model.ProductUnitModel;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

@@ -1,12 +1,14 @@
-package com.celotts.productservice.applications.usecase;
+package com.celotts.productservice.application.usecase;
 
-import com.celotts.productservice.applications.usecase.ProductUnitUseCaseImpl;
+import com.celotts.productservice.application.usecase.product.ProductUnitUseCaseImpl;
 import com.celotts.productservice.domain.model.ProductUnitModel;
-import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
+import com.celotts.productservice.domain.port.output.product.ProductUnitRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -22,20 +24,22 @@ class ProductUnitUseCaseImplTest {
         useCase = new ProductUnitUseCaseImpl(repository);
     }
 
+    // --- save ---
     @Test
-    void testSave() {
+    void save_returnsSavedModel() {
         ProductUnitModel model = mock(ProductUnitModel.class);
         when(repository.save(model)).thenReturn(model);
 
         ProductUnitModel result = useCase.save(model);
 
         assertNotNull(result);
-        assertEquals(model, result);
+        assertSame(model, result);
         verify(repository).save(model);
     }
 
+    // --- findById ---
     @Test
-    void testFindById_whenFound() {
+    void findById_found_returnsOptionalWithValue() {
         UUID id = UUID.randomUUID();
         ProductUnitModel model = mock(ProductUnitModel.class);
         when(repository.findById(id)).thenReturn(Optional.of(model));
@@ -43,34 +47,36 @@ class ProductUnitUseCaseImplTest {
         Optional<ProductUnitModel> result = useCase.findById(id);
 
         assertTrue(result.isPresent());
-        assertEquals(model, result.get());
+        assertSame(model, result.get());
         verify(repository).findById(id);
     }
 
     @Test
-    void testFindById_whenNotFound() {
+    void findById_notFound_returnsEmpty() {
         UUID id = UUID.randomUUID();
         when(repository.findById(id)).thenReturn(Optional.empty());
 
         Optional<ProductUnitModel> result = useCase.findById(id);
 
-        assertFalse(result.isPresent());
+        assertTrue(result.isEmpty());
         verify(repository).findById(id);
     }
 
+    // --- findAll ---
     @Test
-    void testFindAll() {
+    void findAll_delegatesToRepository() {
         List<ProductUnitModel> list = List.of(mock(ProductUnitModel.class));
         when(repository.findAll()).thenReturn(list);
 
         List<ProductUnitModel> result = useCase.findAll();
 
-        assertEquals(list.size(), result.size());
+        assertEquals(list, result);
         verify(repository).findAll();
     }
 
+    // --- deleteById ---
     @Test
-    void testDeleteById() {
+    void deleteById_delegatesToRepository() {
         UUID id = UUID.randomUUID();
         doNothing().when(repository).deleteById(id);
 
@@ -79,41 +85,41 @@ class ProductUnitUseCaseImplTest {
         verify(repository).deleteById(id);
     }
 
+    // --- existsById ---
     @Test
-    void testExistsById_whenExists() {
+    void existsById_true_whenFound() {
         UUID id = UUID.randomUUID();
         when(repository.findById(id)).thenReturn(Optional.of(mock(ProductUnitModel.class)));
 
         boolean exists = useCase.existsById(id);
 
         assertTrue(exists);
-        verify(repository).findById(id);
+        // no verifico método exacto para no acoplar al detalle de implementación
     }
 
     @Test
-    void testExistsById_whenNotExists() {
+    void existsById_false_whenNotFound() {
         UUID id = UUID.randomUUID();
         when(repository.findById(id)).thenReturn(Optional.empty());
 
         boolean exists = useCase.existsById(id);
 
         assertFalse(exists);
-        verify(repository).findById(id);
     }
 
+    // --- existsByCode ---
     @Test
-    void testExistsByCode() {
+    void existsByCode_true_whenRepoSaysTrue() {
         String code = "KG";
         when(repository.existsByCode(code)).thenReturn(true);
 
-        boolean result = useCase.existsByCode(code);
-
-        assertTrue(result);
+        assertTrue(useCase.existsByCode(code));
         verify(repository).existsByCode(code);
     }
 
+    // --- findNameByCode ---
     @Test
-    void testFindNameByCode() {
+    void findNameByCode_present_returnsValue() {
         String code = "LTS";
         when(repository.findNameByCode(code)).thenReturn(Optional.of("Litros"));
 
@@ -124,8 +130,9 @@ class ProductUnitUseCaseImplTest {
         verify(repository).findNameByCode(code);
     }
 
+    // --- findAllCodes ---
     @Test
-    void testFindAllCodes() {
+    void findAllCodes_delegatesToRepository() {
         List<String> codes = List.of("KG", "LTS");
         when(repository.findAllCodes()).thenReturn(codes);
 

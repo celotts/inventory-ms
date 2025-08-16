@@ -1,4 +1,4 @@
-package com.celotts.productservice.applications.usecase.product;
+package com.celotts.productservice.application.usecase.product;
 
 import com.celotts.productservice.domain.model.ProductUnitModel;
 import com.celotts.productservice.domain.port.input.product.ProductUnitUseCase;
@@ -25,6 +25,16 @@ public class ProductUnitUseCaseImpl implements ProductUnitUseCase {
     @Transactional(readOnly = true)
     public Optional<ProductUnitModel> findById(UUID id) { return repo.findById(id); }
 
+
+    @Override
+    public ProductUnitModel update(UUID id, ProductUnitModel model) {
+        // Asigna el ID recibido al modelo y persiste
+        model.setId(id);
+        return repo.save(model);
+    }
+
+    public boolean existsById(UUID id){ return repo.findById(id).isPresent(); }
+
     @Override
     @Transactional(readOnly = true)
     public List<ProductUnitModel> findAll() {     /* tu lógica */
@@ -33,7 +43,7 @@ public class ProductUnitUseCaseImpl implements ProductUnitUseCase {
     }
 
     @Override public void deleteById(UUID id){ repo.deleteById(id); }
-    @Override public boolean existsById(UUID id){ return repo.findById(id).isPresent(); }
+   // @Override public boolean existsById(UUID id){ return repo.findById(id).isPresent(); }
     @Override public boolean existsByCode(String c){ return repo.existsByCode(c); }
     @Override public Optional<String> findNameByCode(String c){ return repo.findNameByCode(c);}
     @Override public List<String> findAllCodes(){ return repo.findAllCodes(); }

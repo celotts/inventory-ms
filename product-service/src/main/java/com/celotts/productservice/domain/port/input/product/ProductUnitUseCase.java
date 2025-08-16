@@ -8,10 +8,10 @@ import java.util.UUID;
 
 public interface ProductUnitUseCase {
     ProductUnitModel save(ProductUnitModel model);
-    Optional<ProductUnitModel> findById(UUID id);
     List<ProductUnitModel> findAll();
+    Optional<ProductUnitModel> findById(UUID id);
+    ProductUnitModel update(UUID id, ProductUnitModel model);
     void deleteById(UUID id);
-    boolean existsById(UUID id);
     boolean existsByCode(String code);
     Optional<String> findNameByCode(String code);
     List<String> findAllCodes();

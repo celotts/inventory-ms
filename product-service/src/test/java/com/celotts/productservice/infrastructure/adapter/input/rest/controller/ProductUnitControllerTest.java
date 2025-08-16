@@ -1,12 +1,13 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.applications.service.ProductUnitService;
+import com.celotts.productservice.domain.model.ProductUnitModel;
+import com.celotts.productservice.domain.port.input.product.ProductUnitUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productUnit.ProductUnitDtoMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -19,8 +20,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -30,7 +32,7 @@ class ProductUnitControllerTest {
 
     private static final String BASE = "/api/v1/product-units";
 
-    @Mock private ProductUnitService productUnitService;
+    @Mock private ProductUnitUseCase productUnitUseCase;
     @Mock private ProductUnitDtoMapper productUnitDtoMapper;
 
     private MockMvc mockMvc;
@@ -38,7 +40,7 @@ class ProductUnitControllerTest {
 
     @BeforeEach
     void setup() {
-        ProductUnitController controller = new ProductUnitController(productUnitService, productUnitDtoMapper);
+        ProductUnitController controller = new ProductUnitController(productUnitUseCase, productUnitDtoMapper);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
         objectMapper = new ObjectMapper();
     }
@@ -46,11 +48,16 @@ class ProductUnitControllerTest {
     @Test
     @DisplayName("POST /product-units -> 201 Created con body")
     void create_returns201() throws Exception {
+        // lo que devuelve el caso de uso (dominio)
+        ProductUnitModel savedModel = mock(ProductUnitModel.class);
+
+        // lo que expone el controller (dto)
         ProductUnitResponseDto resp = ProductUnitResponseDto.builder()
                 .id(UUID.fromString("00000000-0000-0000-0000-000000000001"))
                 .code("KG").name("Kilogramo").symbol("kg").enabled(true).build();
 
-        when(productUnitService.create(any())).thenReturn(resp);
+        when(productUnitUseCase.save(any(ProductUnitModel.class))).thenReturn(savedModel);
+        when(productUnitDtoMapper.toResponseDto(savedModel)).thenReturn(resp);
 
         Map<String, Object> req = Map.of(
                 "code", "KG",
@@ -81,14 +88,20 @@ class ProductUnitControllerTest {
                         .content(objectMapper.writeValueAsBytes(invalid)))
                 .andExpect(status().isBadRequest());
 
-        verify(productUnitService, never()).create(any());
+        verify(productUnitUseCase, never()).save(any());
     }
 
     @Test
     void findAll_returnsList() throws Exception {
+        // dominio
+        var m1 = mock(ProductUnitModel.class);
+        var m2 = mock(ProductUnitModel.class);
+        when(productUnitUseCase.findAll()).thenReturn(List.of(m1, m2));
+
+        // dto
         var u1 = ProductUnitResponseDto.builder().id(UUID.randomUUID()).code("KG").name("Kilogramo").symbol("kg").enabled(true).build();
         var u2 = ProductUnitResponseDto.builder().id(UUID.randomUUID()).code("LT").name("Litro").symbol("l").enabled(true).build();
-        when(productUnitService.findAll()).thenReturn(List.of(u1, u2));
+        when(productUnitDtoMapper.toResponseDtoList(List.of(m1, m2))).thenReturn(List.of(u1, u2));
 
         mockMvc.perform(get(BASE))
                 .andExpect(status().isOk())
@@ -100,8 +113,14 @@ class ProductUnitControllerTest {
     @Test
     void findById_returnsDto() throws Exception {
         UUID id = UUID.fromString("00000000-0000-0000-0000-000000000010");
+
+        // dominio
+        var model = mock(ProductUnitModel.class);
+        when(productUnitUseCase.findById(id)).thenReturn(Optional.of(model));
+
+        // dto
         var u = ProductUnitResponseDto.builder().id(id).code("KG").name("Kilogramo").symbol("kg").enabled(true).build();
-        when(productUnitService.findById(id)).thenReturn(u);
+        when(productUnitDtoMapper.toResponseDto(model)).thenReturn(u);
 
         mockMvc.perform(get(BASE + "/{id}", id))
                 .andExpect(status().isOk())
@@ -112,8 +131,14 @@ class ProductUnitControllerTest {
     @Test
     void update_returnsDto() throws Exception {
         UUID id = UUID.fromString("00000000-0000-0000-0000-000000000020");
+
+        // dominio
+        var updated = mock(ProductUnitModel.class);
+        when(productUnitUseCase.update(eq(id), any(ProductUnitModel.class))).thenReturn(updated);
+
+        // dto
         var u = ProductUnitResponseDto.builder().id(id).code("KG").name("Kilogramo actualizado").symbol("kg").enabled(true).build();
-        when(productUnitService.update(eq(id), any())).thenReturn(u);
+        when(productUnitDtoMapper.toResponseDto(updated)).thenReturn(u);
 
         Map<String, Object> req = Map.of(
                 "name", "Kilogramo actualizado",
@@ -134,17 +159,17 @@ class ProductUnitControllerTest {
     @Test
     void delete_returns204() throws Exception {
         UUID id = UUID.fromString("00000000-0000-0000-0000-000000000030");
-        doNothing().when(productUnitService).delete(id);
+        doNothing().when(productUnitUseCase).deleteById(id);
 
         mockMvc.perform(delete(BASE + "/{id}", id))
                 .andExpect(status().isNoContent());
 
-        verify(productUnitService).delete(id);
+        verify(productUnitUseCase).deleteById(id);
     }
 
     @Test
     void existsByCode_returnsMap() throws Exception {
-        when(productUnitService.existsByCode("KG")).thenReturn(true);
+        when(productUnitUseCase.existsByCode("KG")).thenReturn(true);
 
         mockMvc.perform(get(BASE + "/exists-by-code/{code}", "KG"))
                 .andExpect(status().isOk())
@@ -153,7 +178,7 @@ class ProductUnitControllerTest {
 
     @Test
     void findByName_returns200_whenPresent() throws Exception {
-        when(productUnitService.findNameByCode("KG")).thenReturn(Optional.of("Kilogramo"));
+        when(productUnitUseCase.findNameByCode("KG")).thenReturn(Optional.of("Kilogramo"));
 
         mockMvc.perform(get(BASE + "/name-by-code/{code}", "KG"))
                 .andExpect(status().isOk())
@@ -162,7 +187,7 @@ class ProductUnitControllerTest {
 
     @Test
     void findByName_returns404_whenEmpty() throws Exception {
-        when(productUnitService.findNameByCode("XX")).thenReturn(Optional.empty());
+        when(productUnitUseCase.findNameByCode("XX")).thenReturn(Optional.empty());
 
         mockMvc.perform(get(BASE + "/name-by-code/{code}", "XX"))
                 .andExpect(status().isNotFound());
@@ -170,7 +195,7 @@ class ProductUnitControllerTest {
 
     @Test
     void findAllByCode_returnsList() throws Exception {
-        when(productUnitService.findAllCodes()).thenReturn(List.of("KG", "LT"));
+        when(productUnitUseCase.findAllCodes()).thenReturn(List.of("KG", "LT"));
 
         mockMvc.perform(get(BASE + "/code"))
                 .andExpect(status().isOk())
