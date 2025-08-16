@@ -1,7 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product;
 
 import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreate;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Component;
@@ -30,7 +30,7 @@ public class ProductRequestMapper {
         existingModel.setUpdatedAt(LocalDateTime.now());
     }
 
-    public ProductModel toModel(ProductCreate dto) {
+    public ProductModel toModel(ProductCreateDto dto) {
         if (dto == null) return null;
 
         return ProductModel.builder()

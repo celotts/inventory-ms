@@ -9,7 +9,7 @@ import com.celotts.productservice.domain.port.output.category.CategoryRepository
 import com.celotts.productservice.domain.port.output.product.ProductBrandRepositoryPort;
 import com.celotts.productservice.domain.port.output.product.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.output.product.ProductUnitRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreate;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
 import jakarta.validation.Valid;
@@ -49,7 +49,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
     }
 
     @Override
-    public ProductModel createProduct(ProductCreate dto) {
+    public ProductModel createProduct(ProductCreateDto dto) {
         if (productRepositoryPort.findByCode(dto.getCode()).isPresent()) {
             throw new ResourceAlreadyExistsException("Product", dto.getCode());
         }

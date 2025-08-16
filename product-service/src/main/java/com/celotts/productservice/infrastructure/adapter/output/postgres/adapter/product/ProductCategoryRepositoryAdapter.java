@@ -17,7 +17,7 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 @Transactional
-public class ProductCategoryAdapter implements ProductCategoryRepositoryPort {
+public class ProductCategoryRepositoryAdapter implements ProductCategoryRepositoryPort {
 
     private final ProductCategoryJpaRepository repository;
     private final ProductCategoryEntityMapper mapper;

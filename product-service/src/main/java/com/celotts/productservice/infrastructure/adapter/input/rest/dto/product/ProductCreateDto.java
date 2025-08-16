@@ -12,7 +12,7 @@ import java.util.UUID;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-public class ProductCreate implements ProductReference {
+public class ProductCreateDto implements ProductReference  {
     @NotBlank(message = "Product code is required")
     @Size(max = 50)
     private String code;
