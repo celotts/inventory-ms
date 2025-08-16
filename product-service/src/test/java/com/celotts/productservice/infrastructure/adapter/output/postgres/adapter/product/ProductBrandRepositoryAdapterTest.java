@@ -1,6 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product;
 
 import com.celotts.productservice.domain.model.ProductBrandModel;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product.ProductBrandRepositoryAdapter;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrandEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductBrandEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductBrandRepository;

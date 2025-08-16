@@ -5,6 +5,7 @@ import com.celotts.productservice.domain.port.product.port.usecase.ProductUseCas
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductResponseMapper;
+import com.celotts.productservice.infrastructure.config.PaginationProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,8 +32,6 @@ import java.util.UUID;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import org.springframework.boot.test.context.TestConfiguration;
-
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class ProductControllerTest {
@@ -53,7 +52,7 @@ class ProductControllerTest {
 
     // PaginationProperties is required for paginated endpoint; inject mock if needed
     @Mock
-    private com.celotts.productservice.infrastructure.config.PaginationProperties paginationProperties;
+    private PaginationProperties paginationProperties;
 
     @BeforeEach
     void setup() {
@@ -65,8 +64,8 @@ class ProductControllerTest {
     @Test
     void getInactiveProducts_shouldReturn200WhenProductsExist() throws Exception {
         ProductModel mockProduct = new ProductModel();
-        com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto mockDto =
-                com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto.builder()
+        ProductResponseDto mockDto =
+                ProductResponseDto.builder()
                         .id(UUID.randomUUID())
                         .code("P001")
                         .name("Mock Product")

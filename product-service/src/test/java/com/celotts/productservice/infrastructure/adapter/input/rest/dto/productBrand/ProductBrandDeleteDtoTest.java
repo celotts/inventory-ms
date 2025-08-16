@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand;
 
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandDeleteDto;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

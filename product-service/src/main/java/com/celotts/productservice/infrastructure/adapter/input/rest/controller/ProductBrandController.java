@@ -1,13 +1,11 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
-import com.celotts.productservice.applications.service.ProductBrandService;
 import com.celotts.productservice.domain.model.ProductBrandModel;
-import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrandUseCase;
+import com.celotts.productservice.domain.port.input.product.ProductBrandUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;
-
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,70 +24,72 @@ public class ProductBrandController {
 
     private final ProductBrandUseCase productBrandUseCase;
     private final ProductBrandDtoMapper productBrandDtoMapper;
-    private final ProductBrandService productBrandService;
 
     @PostMapping
     public ResponseEntity<ProductBrandResponseDto> create(@Valid @RequestBody ProductBrandCreateDto dto) {
-        System.out.println(">>> [DEBUG] Creating brand: " + dto);
-        ProductBrandResponseDto response = productBrandService.create(dto);
-        System.out.println(">>> [DEBUG] Created brand ID: " + response.getId());
+        // Si tu mapper tiene toModel(createDto)
+        ProductBrandModel model = productBrandDtoMapper.toModel(dto);
+        ProductBrandModel saved = productBrandUseCase.save(model);
+        ProductBrandResponseDto response = productBrandDtoMapper.toResponseDto(saved);
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .header("Location", "/api/v1/product-brands/" + response.getId())
                 .body(response);
     }
 
-    /*@GetMapping
-    public ResponseEntity<Map<String, Object>> getAllBrands() {
-        List<ProductBrandResponseDto> brands = productBrandService.findAll();
-        return ResponseEntity.ok(
-            Map.of(
-                "data", brands,
-                "total", brands != null ? brands.size() : 0
-            )
-        );
-    }*/
-
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllBrands() {
-        List<ProductBrandResponseDto> brands = productBrandService.findAll();
-        int total = (brands == null) ? 0 : brands.size();
-        List<ProductBrandResponseDto> safe = (brands == null) ? java.util.List.of() : brands;
+        List<ProductBrandResponseDto> list = productBrandUseCase.findAll()
+                .stream()
+                .map(productBrandDtoMapper::toResponseDto)
+                .toList();
 
         return ResponseEntity.ok(
-                java.util.Map.of(
-                        "data", safe,   // nunca null
-                        "total", total
+                Map.of(
+                        "data", list,
+                        "total", list.size()
                 )
         );
     }
 
-    @GetMapping("/{id}")
+    //TODO: HAY ERROR
+    /*@GetMapping("/{id}")
     public ResponseEntity<ProductBrandResponseDto> getBrandById(@PathVariable UUID id) {
-        return ResponseEntity.ok(productBrandService.findById(id));
+        ProductBrandModel model = productBrandUseCase.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Brand not found: " + id));
+        return ResponseEntity.ok(productBrandDtoMapper.toResponseDto(model));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ProductBrandResponseDto> update(
             @PathVariable UUID id,
-            @Valid @RequestBody ProductBrandUpdateDto dto) {
-        return ResponseEntity.ok(productBrandService.update(id, dto));
-    }
+            @Valid @RequestBody ProductBrandUpdateDto dto
+    ) {
+        ProductBrandModel current = productBrandUseCase.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Brand not found: " + id));
+
+        // Actualiza el modelo con el DTO (según tus métodos del mapper)
+        ProductBrandModel merged = productBrandDtoMapper.updateModelFromDto(current, dto);
+        ProductBrandModel saved = productBrandUseCase.save(merged);
+
+        return ResponseEntity.ok(productBrandDtoMapper.toResponseDto(saved));
+    }*/
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        productBrandService.delete(id);
+        productBrandUseCase.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/brands/ids")
+    @GetMapping("/ids")
     public List<UUID> getAllBrandIds() {
-        return productBrandService.findAllIds();
+        return productBrandUseCase.findAllIds();
     }
 
-    @GetMapping("/brands/{id}/name")
+    @GetMapping("/{id}/name")
     public ResponseEntity<String> getBrandNameById(@PathVariable UUID id) {
-        return productBrandService.findNameById(id)
+        return productBrandUseCase.findNameById(id)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Brand name not found"));
     }

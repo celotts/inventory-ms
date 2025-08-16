@@ -1,8 +1,8 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.productTag;
 
-import com.celotts.productservice.domain.model.ProductTagModel;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTagEntity;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductTagEntityMapper;
+import com.celotts.productserviceOld.domain.model.ProductTagModel;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.product.ProductTagEntity;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.mapper.product.ProductTagEntityMapper;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

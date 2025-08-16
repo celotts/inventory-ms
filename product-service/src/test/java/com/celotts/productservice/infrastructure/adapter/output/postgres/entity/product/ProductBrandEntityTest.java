@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.*;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.UUID;

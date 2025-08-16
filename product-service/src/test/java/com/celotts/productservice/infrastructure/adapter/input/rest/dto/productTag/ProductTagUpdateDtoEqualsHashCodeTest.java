@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTag;
 
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagUpdateDto;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;

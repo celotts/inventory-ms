@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.category;
 
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryCreateDto;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

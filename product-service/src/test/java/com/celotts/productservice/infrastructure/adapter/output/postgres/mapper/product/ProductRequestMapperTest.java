@@ -1,8 +1,9 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product;
 
-import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreate;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
+import com.celotts.productserviceOld.domain.model.ProductModel;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.product.ProductCreate;
+import com.celotts.productserviceOld.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.mapper.product.ProductRequestMapper;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;

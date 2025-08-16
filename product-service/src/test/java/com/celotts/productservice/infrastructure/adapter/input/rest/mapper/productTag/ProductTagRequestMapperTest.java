@@ -1,9 +1,9 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productTag;
 
 import com.celotts.productservice.domain.model.ProductTagModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTag.ProductTagCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTag.ProductTagResponseDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTag.ProductTagUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagUpdateDto;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

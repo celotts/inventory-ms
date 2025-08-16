@@ -23,7 +23,8 @@ class ProductBrandControllerNotFoundTest {
     @Mock ProductBrandDtoMapper productBrandDtoMapper;
     @Mock ProductBrandService productBrandService;
 
-    @InjectMocks ProductBrandController controller;
+    @InjectMocks
+    ProductBrandController controller;
 
     @Test
     void getBrandNameById_shouldThrow404_whenServiceReturnsEmpty() {

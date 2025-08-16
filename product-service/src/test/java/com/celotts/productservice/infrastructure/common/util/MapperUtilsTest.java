@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.common.util;
 
+import com.celotts.productserviceOld.infrastructure.common.util.MapperUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicReference;

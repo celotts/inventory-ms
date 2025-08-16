@@ -1,7 +1,7 @@
 package com.celotts.productservice;
 
+import com.celotts.productservice.ProductServiceApplication;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.HashMap;
 import java.util.Map;

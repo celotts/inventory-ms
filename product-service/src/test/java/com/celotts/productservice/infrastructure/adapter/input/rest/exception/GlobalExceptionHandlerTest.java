@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.exception;
 
+import com.celotts.productservice.infrastructure.adapter.input.rest.exception.GlobalExceptionHandler;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

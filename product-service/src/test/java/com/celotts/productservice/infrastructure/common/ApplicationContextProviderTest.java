@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.common;
 
+import com.celotts.productservice.infrastructure.common.ApplicationContextProvider;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationContext;
 

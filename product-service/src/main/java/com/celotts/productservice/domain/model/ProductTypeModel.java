@@ -15,11 +15,11 @@ public class ProductTypeModel {
     private UUID id;
     private String code;
     private String name;
-    private String descpiption;
+    private String description;
     private Boolean enabled;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String createdBy;
-    private String updateBy;
+    private String updatedBy;
 
 }

@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.product;
 
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.SerializationFeature;

@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand;
 
+
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;

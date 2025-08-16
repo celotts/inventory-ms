@@ -18,9 +18,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import com.celotts.productservice.domain.exception.ResourceNotFoundException;
 import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
-import com.celotts.productservice.domain.exception.InvalidBrandIdException;
-import com.celotts.productservice.domain.exception.InvalidProductTypeCodeException;
-import com.celotts.productservice.domain.exception.InvalidUnitCodeException;
 
 import java.util.HashMap;
 import java.util.Map;

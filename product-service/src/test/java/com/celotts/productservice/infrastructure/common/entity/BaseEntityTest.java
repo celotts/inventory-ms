@@ -1,10 +1,9 @@
 package com.celotts.productservice.infrastructure.common.entity;
 
+import com.celotts.productserviceOld.infrastructure.common.entity.BaseEntity;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class BaseEntityTest {
 

@@ -43,4 +43,21 @@ public class ProductTagEntityMapper {
         target.setUpdatedBy(source.getUpdatedBy());
         target.setUpdatedAt(source.getUpdatedAt());
     }
+
+
+
+    /* Entity -> Domain */
+    public ProductTagModel toModel(ProductTagEntity entity) {
+        if (entity == null) return null;
+        return ProductTagModel.builder()
+                .id(entity.getId())
+                .name(entity.getName())
+                .description(entity.getDescription())
+                .enabled(entity.getEnabled())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .createdBy(entity.getCreatedBy())
+                .updatedBy(entity.getUpdatedBy())
+                .build();
+    }
 }

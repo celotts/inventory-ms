@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.category;
 
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryDeleteDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

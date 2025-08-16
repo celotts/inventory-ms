@@ -1,7 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.domain.model.ProductCategoryModel;
-import com.celotts.productservice.domain.port.product.port.usecase.ProductCategoryUseCase;
+import com.celotts.productservice.domain.port.input.product.ProductCategoryUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productCategory.ProductCategoryDtoMapper;
@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ProductCategoryControllerTest {
 
     private MockMvc mockMvc;
-    private final ProductCategoryUseCase useCase = Mockito.mock(ProductCategoryUseCase.class);
+  //  private final ProductCategoryUseCase useCase = Mockito.mock(ProductCategoryUseCase.class);
     private final ProductCategoryDtoMapper mapper = Mockito.mock(ProductCategoryDtoMapper.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
 

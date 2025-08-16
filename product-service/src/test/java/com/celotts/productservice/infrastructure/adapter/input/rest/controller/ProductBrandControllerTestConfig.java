@@ -1,7 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.applications.service.ProductBrandService;
-import com.celotts.productservice.domain.port.product.brand.usecase.ProductBrandUseCase;
+import com.celotts.productservice.domain.port.input.product.ProductBrandUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandDtoMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.test.context.TestConfiguration;

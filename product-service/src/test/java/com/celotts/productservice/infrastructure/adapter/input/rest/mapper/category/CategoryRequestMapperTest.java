@@ -1,6 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category;
 
 import com.celotts.productservice.domain.model.CategoryModel;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category.CategoryRequestMapper;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

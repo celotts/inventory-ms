@@ -1,11 +1,11 @@
 package com.celotts.productservice.infrastructure.common.listener;
 
-import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.Auditable;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.repository.Auditable;
+import com.celotts.productserviceOld.infrastructure.common.listener.AuditListener;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;

@@ -1,10 +1,8 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.domain.model.ProductTagModel;
-import com.celotts.productservice.domain.port.product.tag.input.ProductTagUseCase;
-import com.celotts.productservice.infrastructure.adapter.input.rest.controller.productTag.ProductTagController;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTag.ProductTagCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTag.ProductTagUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productTag.ProductTagRequestMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,5 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product;
 
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.product.ProductEntity;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.product.ProductPriceHistoryEntity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

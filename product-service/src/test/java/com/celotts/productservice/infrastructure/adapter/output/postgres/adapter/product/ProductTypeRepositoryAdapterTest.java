@@ -1,56 +1,74 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product;
 
+import com.celotts.productservice.domain.model.ProductTypeModel;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductTypeRepository;
-import org.junit.jupiter.api.BeforeEach;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductTypeEntityMapper;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductTypeJpaRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class ProductTypeRepositoryAdapterTest {
 
-    private ProductTypeRepository repository;
+    @Mock private ProductTypeJpaRepository jpaRepo;
+    @Mock private ProductTypeEntityMapper mapper;
+
+    @InjectMocks
     private ProductTypeRepositoryAdapter adapter;
 
-    @BeforeEach
-    void setUp() {
-        repository = mock(ProductTypeRepository.class);
-        adapter = new ProductTypeRepositoryAdapter(repository);
+    @Test
+    void existsByCode_returnsTrueWhenRepoSaysSo() {
+        when(jpaRepo.existsByCode("TYPE001")).thenReturn(true);
+        assertThat(adapter.existsByCode("TYPE001")).isTrue();
     }
 
     @Test
-    void testExistsByCode() {
-        when(repository.existsByCode("TYPE001")).thenReturn(true);
-        boolean result = adapter.existsByCode("TYPE001");
-        assertThat(result).isTrue();
+    void findNameByCode_returnsName() {
+        when(jpaRepo.findNameByCode("TYPE001")).thenReturn(Optional.of("Electrónica"));
+        assertThat(adapter.findNameByCode("TYPE001")).contains("Electrónica");
     }
 
     @Test
-    void testFindNameByCode() {
-        when(repository.findNameByCode("TYPE001")).thenReturn(Optional.of("Electrónica"));
-        var result = adapter.findNameByCode("TYPE001");
-        assertThat(result).isPresent().contains("Electrónica");
+    void findAllCodes_returnsList() {
+        when(jpaRepo.findAllCodes()).thenReturn(List.of("TYPE001", "TYPE002"));
+        assertThat(adapter.findAllCodes()).containsExactly("TYPE001", "TYPE002");
     }
 
     @Test
-    void testFindAllCodes() {
-        List<String> codes = List.of("TYPE001", "TYPE002");
-        when(repository.findAllCodes()).thenReturn(codes);
-        var result = adapter.findAllCodes();
-        assertThat(result).containsExactly("TYPE001", "TYPE002");
-    }
-
-    @Test
-    void testFindByCode() {
-        ProductTypeEntity entity = new ProductTypeEntity();
+    void findByCode_mapsEntityToModel() {
+        var entity = new ProductTypeEntity();
         entity.setCode("TYPE001");
         entity.setName("Electrónica");
-        when(repository.findByCode("TYPE001")).thenReturn(Optional.of(entity));
-        var result = adapter.findByCode("TYPE001");
-        assertThat(result).isPresent().contains(entity);
+
+        var model = ProductTypeModel.builder().code("TYPE001").name("Electrónica").build();
+
+        when(jpaRepo.findByCode("TYPE001")).thenReturn(Optional.of(entity));
+        when(mapper.toModel(entity)).thenReturn(model);
+
+        assertThat(adapter.findByCode("TYPE001")).contains(model);
+    }
+
+    @Test
+    void findById_usesUuidToStringAndMaps() {
+        UUID id = UUID.randomUUID();
+        var entity = new ProductTypeEntity();
+        entity.setId(id);
+
+        var model = ProductTypeModel.builder().id(id).build();
+
+        when(jpaRepo.findById(id.toString())).thenReturn(Optional.of(entity));
+        when(mapper.toModel(entity)).thenReturn(model);
+
+        assertThat(adapter.findById(id)).contains(model);
     }
 }

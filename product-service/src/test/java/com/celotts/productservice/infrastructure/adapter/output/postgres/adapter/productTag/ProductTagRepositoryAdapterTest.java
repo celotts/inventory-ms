@@ -1,9 +1,10 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.productTag;
 
-import com.celotts.productservice.domain.model.ProductTagModel;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTagEntity;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductTagEntityMapper;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductTagRepository;
+import com.celotts.productserviceOld.domain.model.ProductTagModel;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.adapter.productTag.ProductTagRepositoryAdapter;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.entity.product.ProductTagEntity;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.mapper.product.ProductTagEntityMapper;
+import com.celotts.productserviceOld.infrastructure.adapter.output.postgres.repository.product.ProductTagRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
