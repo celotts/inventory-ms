@@ -35,22 +35,22 @@ up-local: ## 🧪 Levanta infra para trabajar desde IntelliJ
 	cd .. && ./gradlew :config-service:bootJar :discovery-service:bootJar :product-service:bootJar :api-gateway:bootJar
 
 	@echo "🧼 Apagando contenedores anteriores..."
-	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v --remove-orphans
 
 	@echo "🦭 Levantando contenedores con Podman..."
 	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up --build
 
 down-local: ## 🔻 Apaga infra local
-	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v --remove-orphans
 
 up-dev: ## 🧪 Levanta todo el stack en contenedores (modo dev)
 	cp $(ENV_FILE_DEV) .env.override
-	podman-compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) down -v
+	podman-compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) down -v --remove-orphans
 	podman-compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) up --build
 
 up-prod: ## 🚀 Levanta todo en entorno de producción
 	cp $(ENV_FILE_PROD) .env.override
-	podman-compose -f $(COMPOSE_FILE_PROD) --env-file $(ENV_FILE_PROD) down -v
+	podman-compose -f $(COMPOSE_FILE_PROD) --env-file $(ENV_FILE_PROD) down -v --remove-orphans
 	podman-compose -f $(COMPOSE_FILE_PROD) --env-file $(ENV_FILE_PROD) up --build
 
 up-db: ## 🔄 Levanta solo la base de datos para desarrollo local
@@ -767,5 +767,15 @@ help: ## 📖 Mostrar esta ayuda
 		head -20
 	@echo ""
 	@echo "💡 Ejecuta 'make help-[categoria]' para ayuda específica"
+
+fix-orphans: ## 🔧 Limpia contenedores huérfanos del proyecto
+	@echo "🧹 Eliminando contenedores huérfanos (compose project: $(COMPOSE_PROJECT_NAME))..."
+	podman-compose -f $(COMPOSE_FILE_LOCAL)  --env-file $(ENV_FILE_LOCAL)  down -v --remove-orphans || true
+	podman-compose -f $(COMPOSE_FILE_DEV)    --env-file $(ENV_FILE_DEV)    down -v --remove-orphans || true
+	podman-compose -f $(COMPOSE_FILE_PROD)   --env-file $(ENV_FILE_PROD)   down -v --remove-orphans || true
+	@echo "🗑️  Pruning de recursos no usados..."
+	podman rm -af || true
+	podman system prune -af --volumes || true
+	@echo "✅ Limpieza de huérfanos completada"
 
 .PHONY: help help-product help-workflows help-troubleshooting
