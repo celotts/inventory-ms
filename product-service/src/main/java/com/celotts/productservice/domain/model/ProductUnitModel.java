@@ -14,7 +14,7 @@ import java.util.UUID;
 public class ProductUnitModel {
 
     private UUID id;
-    private String code;          //  ← NUEVO
+    private String code;
     private String name;
     private String description;
     private String symbol;

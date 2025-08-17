@@ -18,7 +18,9 @@ import java.util.UUID;
 public class ProductBrandEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue
+    @org.hibernate.annotations.UuidGenerator
+    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
     private String name;

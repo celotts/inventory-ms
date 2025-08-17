@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+
 public interface ProductCategoryRepositoryPort {
 
     ProductCategoryModel save(ProductCategoryModel model);

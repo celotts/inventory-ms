@@ -16,7 +16,9 @@ import java.util.UUID;
 public class ProductImageEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)  // ✅ Agregar strategy
+    @GeneratedValue
+    @org.hibernate.annotations.UuidGenerator
+    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
     @ManyToOne
