@@ -1,6 +1,6 @@
 package com.celotts.productservice.domain.port.output.category;
 
-import com.celotts.productservice.domain.model.CategoryModel;
+import com.celotts.productservice.domain.model.category.CategoryModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

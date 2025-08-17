@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.product;
 
-import com.celotts.productservice.domain.model.ProductReference;
+import com.celotts.productservice.domain.model.product.ProductReference;
 import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Data;

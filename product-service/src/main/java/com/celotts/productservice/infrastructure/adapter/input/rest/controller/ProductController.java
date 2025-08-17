@@ -1,8 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.domain.model.ProductModel;
+import com.celotts.productservice.domain.model.product.ProductModel;
 import com.celotts.productservice.domain.port.input.product.ProductUseCase;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.*;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;

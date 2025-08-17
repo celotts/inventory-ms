@@ -1,6 +1,6 @@
 package com.celotts.productservice.application.usecase.product;
 
-import com.celotts.productservice.domain.model.ProductUnitModel;
+import com.celotts.productservice.domain.model.product.ProductUnitModel;
 import com.celotts.productservice.domain.port.input.product.ProductUnitUseCase;
 import com.celotts.productservice.domain.port.output.product.ProductUnitRepositoryPort;
 import lombok.RequiredArgsConstructor;

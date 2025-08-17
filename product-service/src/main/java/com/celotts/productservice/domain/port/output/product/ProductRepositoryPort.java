@@ -1,6 +1,6 @@
 package com.celotts.productservice.domain.port.output.product;
 
-import com.celotts.productservice.domain.model.ProductModel;
+import com.celotts.productservice.domain.model.product.ProductModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

@@ -1,8 +1,7 @@
 package com.celotts.productservice.domain.port.input.product;
 
-import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.model.ProductReference;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
+import com.celotts.productservice.domain.model.product.ProductModel;
+import com.celotts.productservice.domain.model.product.ProductReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

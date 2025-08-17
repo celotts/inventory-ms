@@ -1,6 +1,6 @@
 package com.celotts.productservice.domain.port.output.product;
 
-import com.celotts.productservice.domain.model.ProductTypeModel;
+import com.celotts.productservice.domain.model.product.ProductTypeModel;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productTag;
 
-import com.celotts.productservice.domain.model.ProductTagModel;
+import com.celotts.productservice.domain.model.product.ProductTagModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagUpdateDto;

@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productUnit;
 
-import com.celotts.productservice.domain.model.ProductUnitModel;
+import com.celotts.productservice.domain.model.product.ProductUnitModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitUpdateDto;

@@ -2,8 +2,8 @@ package com.celotts.productservice.application.usecase.product;
 
 import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
 import com.celotts.productservice.domain.exception.ResourceNotFoundException;
-import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.model.ProductReference;
+import com.celotts.productservice.domain.model.product.ProductModel;
+import com.celotts.productservice.domain.model.product.ProductReference;
 import com.celotts.productservice.domain.port.input.product.ProductUseCase;
 import com.celotts.productservice.domain.port.output.category.CategoryRepositoryPort;
 import com.celotts.productservice.domain.port.output.product.ProductBrandRepositoryPort;

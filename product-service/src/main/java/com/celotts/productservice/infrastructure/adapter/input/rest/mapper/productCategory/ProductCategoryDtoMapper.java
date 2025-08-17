@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productCategory;
 
-import com.celotts.productservice.domain.model.ProductCategoryModel;
+import com.celotts.productservice.domain.model.product.ProductCategoryModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryResponseDto;
 import org.springframework.stereotype.Component;
