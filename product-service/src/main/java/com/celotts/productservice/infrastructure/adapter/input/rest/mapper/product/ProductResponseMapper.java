@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product;
 
-import com.celotts.productservice.domain.model.ProductModel;
+import com.celotts.productservice.domain.model.product.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Component;

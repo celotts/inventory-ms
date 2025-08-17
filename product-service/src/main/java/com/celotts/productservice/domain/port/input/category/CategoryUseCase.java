@@ -1,7 +1,7 @@
 package com.celotts.productservice.domain.port.input.category;
 
-import com.celotts.productservice.domain.model.CategoryModel;
-import com.celotts.productservice.domain.model.CategoryStats;
+import com.celotts.productservice.domain.model.category.CategoryModel;
+import com.celotts.productservice.domain.model.category.CategoryStats;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

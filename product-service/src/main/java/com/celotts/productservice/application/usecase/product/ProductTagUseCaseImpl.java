@@ -1,6 +1,6 @@
 package com.celotts.productservice.application.usecase.product;
 
-import com.celotts.productservice.domain.model.ProductTagModel;
+import com.celotts.productservice.domain.model.product.ProductTagModel;
 import com.celotts.productservice.domain.port.input.product.ProductTagUseCase;
 import com.celotts.productservice.domain.port.output.product.ProductTagRepositoryPort;
 import lombok.RequiredArgsConstructor;

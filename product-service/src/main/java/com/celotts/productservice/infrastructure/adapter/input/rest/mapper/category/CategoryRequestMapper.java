@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.category;
 
-import com.celotts.productservice.domain.model.CategoryModel;
+import com.celotts.productservice.domain.model.category.CategoryModel;
 import org.springframework.stereotype.Component;
 
 @Component

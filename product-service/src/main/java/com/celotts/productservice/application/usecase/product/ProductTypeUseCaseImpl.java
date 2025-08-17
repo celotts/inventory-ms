@@ -1,6 +1,6 @@
 package com.celotts.productservice.application.usecase.product;
 
-import com.celotts.productservice.domain.model.ProductTypeModel;
+import com.celotts.productservice.domain.model.product.ProductTypeModel;
 import com.celotts.productservice.domain.port.input.product.ProductTypeUseCase;
 import com.celotts.productservice.domain.port.output.product.ProductTypeRepositoryPort;
 import jakarta.annotation.PostConstruct;

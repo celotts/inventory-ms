@@ -1,4 +1,4 @@
-package com.celotts.productservice.domain.model;
+package com.celotts.productservice.domain.model.category;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

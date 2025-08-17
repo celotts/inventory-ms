@@ -1,4 +1,4 @@
-package com.celotts.productservice.domain.model;
+package com.celotts.productservice.domain.model.product;
 
 import java.math.BigDecimal;
 import java.util.UUID;

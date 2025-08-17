@@ -1,7 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.domain.port.input.product.ProductUnitUseCase;
-import com.celotts.productservice.domain.model.ProductUnitModel; // <-- si tu modelo está en .domain.exception.model como mostró tu grep
+import com.celotts.productservice.domain.model.product.ProductUnitModel; // <-- si tu modelo está en .domain.exception.model como mostró tu grep
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitUpdateDto;

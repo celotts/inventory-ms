@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.domain.model.CategoryModel;
+import com.celotts.productservice.domain.model.category.CategoryModel;
 import com.celotts.productservice.domain.port.input.category.CategoryUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.category.CategoryResponseDto;

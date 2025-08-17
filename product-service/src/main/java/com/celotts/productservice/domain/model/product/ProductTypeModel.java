@@ -1,5 +1,4 @@
-package com.celotts.productservice.domain.model;
-
+package com.celotts.productservice.domain.model.product;
 
 import lombok.*;
 
@@ -7,17 +6,16 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @With
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductUnitModel {
+public class ProductTypeModel {
 
     private UUID id;
     private String code;
     private String name;
     private String description;
-    private String symbol;
     private Boolean enabled;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

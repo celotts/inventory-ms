@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product;
 
-import com.celotts.productservice.domain.model.ProductBrandModel;
+import com.celotts.productservice.domain.model.product.ProductBrandModel;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrandEntity;
 import org.springframework.stereotype.Component;
 
