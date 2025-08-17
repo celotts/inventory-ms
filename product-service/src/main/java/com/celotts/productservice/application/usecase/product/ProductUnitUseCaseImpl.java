@@ -33,6 +33,12 @@ public class ProductUnitUseCaseImpl implements ProductUnitUseCase {
         return repo.save(model);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<String> findDescriptionByCode(String code) {
+        return repo.findDescriptionByCode(code);
+    }
+
     public boolean existsById(UUID id){ return repo.findById(id).isPresent(); }
 
     @Override

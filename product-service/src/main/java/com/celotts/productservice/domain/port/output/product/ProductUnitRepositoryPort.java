@@ -16,6 +16,7 @@ public interface ProductUnitRepositoryPort {
     boolean existsById(UUID id);          // ← añade esto
     boolean existsByCode(String code);    // si ya lo agregaste, déjalo
     Optional<String> findNameByCode(String code);
+    Optional<String> findDescriptionByCode(String code);
     List<String> findAllCodes();
 
     // (Opcional) si luego cambias el use case para usar existsById directamente:

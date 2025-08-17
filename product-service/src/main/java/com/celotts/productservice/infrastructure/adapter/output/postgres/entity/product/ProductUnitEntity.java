@@ -6,7 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.LocalDateTime;   // ✅ Correcto
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import java.util.UUID;
 
 @Entity
@@ -17,22 +19,38 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ProductUnitEntity {
 
+    // BD: code es PRIMARY KEY
     @Id
-    @GeneratedValue
+    @Column(name = "code", length = 30, nullable = false)
+    private String code;
+
+    // BD: id existe, pero no es PK (columna normal con UUID autogenerado)
+    @Column(name = "id")
     private UUID id;
 
-    @Column(unique = true, nullable = false)
-    private String code;          //  ← NUEVO
-
+    @Column(name = "name", length = 100, nullable = false)
     private String name;
+
+    @Column(name = "symbol", length = 10, nullable = false)
+    private String symbol;
+
+    @Column(name = "description", length = 100, nullable = false)
     private String description;
 
-    @Column(nullable = false)
-    private String symbol; // ✅ AGREGADO
-
+    @Column(name = "enabled")
     private Boolean enabled;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+
+    @Column(name = "created_by")
     private String createdBy;
+
+    @Column(name = "updated_by")
     private String updatedBy;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 }

@@ -4,10 +4,10 @@ import com.celotts.productservice.domain.model.ProductUnitModel;
 import com.celotts.productservice.domain.port.output.product.ProductUnitRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductUnitEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductUnitEntityMapper;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductUnitJpaRepository; // ✅
+import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductUnitJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional; // ✅ Spring, no jakarta
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,54 +18,30 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class ProductUnitRepositoryAdapter implements ProductUnitRepositoryPort {
 
-    private final ProductUnitJpaRepository jpaRepo;   // ✅ tipo correcto
+    private final ProductUnitJpaRepository jpaRepo;
     private final ProductUnitEntityMapper mapper;
 
-    /* ---------- lecturas “light” ---------- */
+    @Override public boolean existsByCode(String code) { return jpaRepo.existsByCode(code); }
+    @Override public Optional<String> findNameByCode(String code) { return jpaRepo.findNameByCode(code); }
+    @Override public Optional<String> findDescriptionByCode(String code) { return jpaRepo.findDescriptionByCode(code); }
+    @Override public List<String> findAllCodes() { return jpaRepo.findAllCodes(); }
+    @Override public boolean existsById(UUID id) { return jpaRepo.existsById(id); }
 
-    @Override
-    public boolean existsByCode(String code) {
-        return jpaRepo.existsByCode(code);
-    }
-
-    @Override
-    public Optional<String> findNameByCode(String code) {
-        return jpaRepo.findNameByCode(code);
-    }
-
-    @Override
-    public List<String> findAllCodes() {
-        return jpaRepo.findAllCodes();
-    }
-
-    @Override
-    public boolean existsById(UUID id) {
-        return jpaRepo.existsById(id);
-    }
-
-    /* ---------- CRUD completo ---------- */
-
-    @Override
-    @Transactional
+    @Override @Transactional
     public ProductUnitModel save(ProductUnitModel model) {
         ProductUnitEntity entity = mapper.toEntity(model);
         ProductUnitEntity saved  = jpaRepo.save(entity);
         return mapper.toModel(saved);
     }
 
-    @Override
-    public Optional<ProductUnitModel> findById(UUID id) {
+    @Override public Optional<ProductUnitModel> findById(UUID id) {
         return jpaRepo.findById(id).map(mapper::toModel);
     }
 
-    @Override
-    @Transactional
-    public void deleteById(UUID id) {
-        jpaRepo.deleteById(id);
-    }
+    @Override @Transactional
+    public void deleteById(UUID id) { jpaRepo.deleteById(id); }
 
-    @Override
-    public List<ProductUnitModel> findAll() {
+    @Override public List<ProductUnitModel> findAll() {
         return jpaRepo.findAll().stream().map(mapper::toModel).toList();
     }
 }
