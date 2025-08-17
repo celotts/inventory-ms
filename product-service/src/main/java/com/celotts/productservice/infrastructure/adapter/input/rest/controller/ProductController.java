@@ -1,8 +1,10 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.product.port.usecase.ProductUseCase;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.*;
+import com.celotts.productservice.domain.model.product.ProductModel;
+import com.celotts.productservice.domain.port.input.product.ProductUseCase;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductResponseMapper;
 import com.celotts.productservice.infrastructure.config.PaginationProperties;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,7 +38,7 @@ public class ProductController {
 
     @PostMapping
     @Operation(summary = "Crear un nuevo producto", description = "Crea un producto en el sistema")
-    public ResponseEntity<ProductResponseDto> createProduct(@RequestBody @Valid ProductCreate createDto) {
+    public ResponseEntity<ProductResponseDto> create(@RequestBody @Valid ProductCreateDto createDto) {
         log.info("Creating new product with code: {}", createDto.getCode());
         ProductModel created = productUseCase.createProduct(createDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseMapper.toDto(created));

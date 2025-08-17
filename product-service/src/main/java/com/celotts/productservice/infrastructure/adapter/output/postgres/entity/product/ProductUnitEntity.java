@@ -1,12 +1,9 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product;
 
+import com.celotts.productservice.infrastructure.common.jpa.BaseEntity; // <-- este paquete
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -15,24 +12,33 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductUnitEntity {
+@EqualsAndHashCode(callSuper = true)
+public class ProductUnitEntity extends BaseEntity {
 
     @Id
     @GeneratedValue
-    private UUID id;
+    @org.hibernate.annotations.UuidGenerator
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id;                      // PK real
 
-    @Column(unique = true, nullable = false)
-    private String code;          //  ← NUEVO
 
+    @Column(name = "code", length = 30, nullable = false, unique = true)
+    private String code;                  // clave de negocio única
+
+    @Column(name = "name", length = 100, nullable = false)
     private String name;
+
+    @Column(name = "symbol", length = 10, nullable = false)
+    private String symbol;
+
+    @Column(name = "description", length = 100, nullable = false)
     private String description;
 
-    @Column(nullable = false)
-    private String symbol; // ✅ AGREGADO
-
+    @Column(name = "enabled")
     private Boolean enabled;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private String createdBy;
-    private String updatedBy;
+
+    @PrePersist
+    void ensureInternalId() {
+        if (this.id == null) this.id = UUID.randomUUID();
+    }
 }

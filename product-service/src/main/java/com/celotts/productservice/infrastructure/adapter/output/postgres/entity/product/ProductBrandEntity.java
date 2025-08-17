@@ -18,7 +18,9 @@ import java.util.UUID;
 public class ProductBrandEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue
+    @org.hibernate.annotations.UuidGenerator
+    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
     private String name;
@@ -36,4 +38,15 @@ public class ProductBrandEntity {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public ProductBrandEntity(UUID id, String name, String description, LocalDateTime createdAt) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.enabled = true;        // por defecto
+        this.createdAt = createdAt; // viene del test (FIXED_TIME)
+        this.updatedAt = null;
+        this.createdBy = null;
+        this.updatedBy = null;
+    }
 }

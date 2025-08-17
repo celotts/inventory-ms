@@ -30,6 +30,10 @@ public class CategoryEntity {
     @Column(name = "active")
     private Boolean active = Boolean.TRUE;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean deleted = false;
+
     @Column(name = "created_by")
     private String createdBy;
 

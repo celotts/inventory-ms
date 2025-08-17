@@ -1,65 +1,47 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product;
 
-import com.celotts.productservice.domain.model.ProductUnitModel;
-import com.celotts.productservice.domain.port.product.unit.output.ProductUnitRepositoryPort;
+import com.celotts.productservice.domain.model.product.ProductUnitModel;
+import com.celotts.productservice.domain.port.output.product.ProductUnitRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductUnitEntity;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductUnitEntityMapper;  // ← import corregido
-import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductUnitRepository;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductUnitEntityMapper;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductUnitJpaRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository
+@Component
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ProductUnitRepositoryAdapter implements ProductUnitRepositoryPort {
 
-    private final ProductUnitRepository   jpaRepo;
+    private final ProductUnitJpaRepository jpaRepo;
     private final ProductUnitEntityMapper mapper;
 
-    /* ---------- lecturas “light” ---------- */
+    @Override public boolean existsByCode(String code) { return jpaRepo.existsByCode(code); }
+    @Override public Optional<String> findNameByCode(String code) { return jpaRepo.findNameByCode(code); }
+    @Override public Optional<String> findDescriptionByCode(String code) { return jpaRepo.findDescriptionByCode(code); }
+    @Override public List<String> findAllCodes() { return jpaRepo.findAllCodes(); }
+    @Override public boolean existsById(UUID id) { return jpaRepo.existsById(id); }
 
-    @Override
-    public boolean existsByCode(String code) {
-        return jpaRepo.existsByCode(code);
-    }
-
-    @Override
-    public Optional<String> findNameByCode(String code) {
-        return jpaRepo.findNameByCode(code);
-    }
-
-    @Override
-    public List<String> findAllCodes() {
-        return jpaRepo.findAllCodes();
-    }
-
-    /* ---------- CRUD completo ---------- */
-
-    @Override
+    @Override @Transactional
     public ProductUnitModel save(ProductUnitModel model) {
         ProductUnitEntity entity = mapper.toEntity(model);
         ProductUnitEntity saved  = jpaRepo.save(entity);
         return mapper.toModel(saved);
     }
 
-    @Override
-    public Optional<ProductUnitModel> findById(UUID id) {
+    @Override public Optional<ProductUnitModel> findById(UUID id) {
         return jpaRepo.findById(id).map(mapper::toModel);
     }
 
-    @Override
-    public void deleteById(UUID id) {
-        jpaRepo.deleteById(id);
-    }
+    @Override @Transactional
+    public void deleteById(UUID id) { jpaRepo.deleteById(id); }
 
-    @Override
-    public List<ProductUnitModel> findAll() {
-        return jpaRepo.findAll()
-                .stream()
-                .map(mapper::toModel)
-                .toList();
+    @Override public List<ProductUnitModel> findAll() {
+        return jpaRepo.findAll().stream().map(mapper::toModel).toList();
     }
 }

@@ -17,6 +17,8 @@ import java.util.UUID;
 public class ProductPriceHistoryEntity {
     @Id
     @GeneratedValue
+    @org.hibernate.annotations.UuidGenerator
+    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
     @ManyToOne

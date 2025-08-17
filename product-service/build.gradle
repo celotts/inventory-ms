@@ -1,129 +1,131 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.4.5'
-	id 'io.spring.dependency-management' version '1.1.7'
-	id 'jacoco'
+    id 'java'
+    id 'org.springframework.boot' version '3.4.5'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
 }
 
 group = 'com.celotts'
 version = '0.0.1-SNAPSHOT'
 
 jacoco {
-	toolVersion = "0.8.10"
+    toolVersion = "0.8.10"
 }
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
 }
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 ext {
-	set('springCloudVersion', "2024.0.1")
+    set('springCloudVersion', "2024.0.1")
 }
 
 dependencies {
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.cloud:spring-cloud-starter-config'
-	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.cloud:spring-cloud-starter-config'
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 
-	// PostgreSQL para producción
-	runtimeOnly 'org.postgresql:postgresql'
+    // PostgreSQL para producción
+    runtimeOnly 'org.postgresql:postgresql'
 
-	// ✅ H2 para tests - AGREGAMOS AMBAS LÍNEAS
-	testImplementation 'com.h2database:h2'  // Para que el IDE pueda resolver
-	testRuntimeOnly 'com.h2database:h2'     // Para runtime de tests
+    // ✅ H2 para tests - AGREGAMOS AMBAS LÍNEAS
+    testImplementation 'com.h2database:h2'  // Para que el IDE pueda resolver
+    testRuntimeOnly 'com.h2database:h2'     // Para runtime de tests
 
-	// Validación
-	implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
-	implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
+    // Validación
+    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+    implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
 
     // Lombok
-    compileOnly 'org.projectlombok:lombok:1.18.30'
-    annotationProcessor 'org.projectlombok:lombok:1.18.30'
-    testCompileOnly 'org.projectlombok:lombok:1.18.30'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
+    compileOnly 'org.projectlombok:lombok:1.18.32'
+    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+    testCompileOnly 'org.projectlombok:lombok:1.18.32'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.32'
 
-	// Development
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    // Development
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
-	// Testing
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.testcontainers:junit-jupiter'
-	testImplementation 'org.testcontainers:postgresql'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    // Testing
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
-	// Asegúrate de tener estas también
-	testImplementation 'org.junit.jupiter:junit-jupiter'
-	testImplementation 'org.mockito:mockito-core'
-	testImplementation 'org.mockito:mockito-junit-jupiter'
-	testImplementation 'org.mockito:mockito-inline:5.2.0'
+    // Asegúrate de tener estas también
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.mockito:mockito-junit-jupiter'
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
     testImplementation 'org.springframework.security:spring-security-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-	implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
-	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
-	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-test'
 
 }
 
 dependencyManagement {
-	imports {
-		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-	}
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
 }
 
 test {
-	useJUnitPlatform()
-	finalizedBy jacocoTestReport
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
 }
 
 bootJar {
-	archiveFileName = 'product-service-0.0.1-SNAPSHOT.jar'
+    archiveFileName = 'product-service-0.0.1-SNAPSHOT.jar'
 }
 
 compileJava {
-	options.compilerArgs += [
-			'-Amapstruct.defaultComponentModel=spring',
-			'-Amapstruct.unmappedTargetPolicy=IGNORE'
-	]
+    options.compilerArgs += [
+            '-Amapstruct.defaultComponentModel=spring',
+            '-Amapstruct.unmappedTargetPolicy=IGNORE'
+    ]
 }
 jacocoTestReport {
-	dependsOn test
-	reports {
-		html.required = true
-		xml.required = true
-		csv.required = false
-		html.outputLocation = layout.buildDirectory.dir("reports/jacoco/test/html")
-		xml.outputLocation = layout.buildDirectory.file("reports/jacoco/test/jacocoTestReport.xml")
-	}
+    dependsOn test
+    reports {
+        html.required = true
+        xml.required = true
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir("reports/jacoco/test/html")
+        xml.outputLocation = layout.buildDirectory.file("reports/jacoco/test/jacocoTestReport.xml")
+    }
 }
 
 jacocoTestCoverageVerification {
-	violationRules {
-		rule {
-			limit {
-				minimum = 0.0 // Por ejemplo: exige 80% cobertura
-			}
-		}
-	}
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.0 // Por ejemplo: exige 80% cobertura
+            }
+        }
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -133,7 +135,8 @@ tasks.withType(JavaCompile).configureEach {
     ]
 }
 
-test {
-    useJUnitPlatform()
-    finalizedBy jacocoTestReport, jacocoTestCoverageVerification
-}
+// TEMP: deshabilitar tests y cobertura mientras refactorizas
+//tasks.named('test') { enabled = false }
+//tasks.named('jacocoTestReport') { enabled = false }
+//tasks.named('jacocoTestCoverageVerification') { enabled = false }
+

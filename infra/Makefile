@@ -35,22 +35,22 @@ up-local: ## 🧪 Levanta infra para trabajar desde IntelliJ
 	cd .. && ./gradlew :config-service:bootJar :discovery-service:bootJar :product-service:bootJar :api-gateway:bootJar
 
 	@echo "🧼 Apagando contenedores anteriores..."
-	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v --remove-orphans
 
 	@echo "🦭 Levantando contenedores con Podman..."
 	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up --build
 
 down-local: ## 🔻 Apaga infra local
-	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v
+	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v --remove-orphans
 
 up-dev: ## 🧪 Levanta todo el stack en contenedores (modo dev)
 	cp $(ENV_FILE_DEV) .env.override
-	podman-compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) down -v
+	podman-compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) down -v --remove-orphans
 	podman-compose -f $(COMPOSE_FILE_DEV) --env-file $(ENV_FILE_DEV) up --build
 
 up-prod: ## 🚀 Levanta todo en entorno de producción
 	cp $(ENV_FILE_PROD) .env.override
-	podman-compose -f $(COMPOSE_FILE_PROD) --env-file $(ENV_FILE_PROD) down -v
+	podman-compose -f $(COMPOSE_FILE_PROD) --env-file $(ENV_FILE_PROD) down -v --remove-orphans
 	podman-compose -f $(COMPOSE_FILE_PROD) --env-file $(ENV_FILE_PROD) up --build
 
 up-db: ## 🔄 Levanta solo la base de datos para desarrollo local
@@ -768,4 +768,38 @@ help: ## 📖 Mostrar esta ayuda
 	@echo ""
 	@echo "💡 Ejecuta 'make help-[categoria]' para ayuda específica"
 
-.PHONY: help help-product help-workflows help-troubleshooting
+fix-orphans: ## 🔧 Limpia contenedores huérfanos del proyecto
+	@echo "🧹 Eliminando contenedores huérfanos (compose project: $(COMPOSE_PROJECT_NAME))..."
+	podman-compose -f $(COMPOSE_FILE_LOCAL)  --env-file $(ENV_FILE_LOCAL)  down -v --remove-orphans || true
+	podman-compose -f $(COMPOSE_FILE_DEV)    --env-file $(ENV_FILE_DEV)    down -v --remove-orphans || true
+	podman-compose -f $(COMPOSE_FILE_PROD)   --env-file $(ENV_FILE_PROD)   down -v --remove-orphans || true
+	@echo "🗑️  Pruning de recursos no usados..."
+	podman rm -af || true
+	podman system prune -af --volumes || true
+	@echo "✅ Limpieza de huérfanos completada"
+
+help-all: ## 📖 Mostrar todos los comandos disponibles en el Makefile
+	@echo "🦭 Makefile - Lista completa de comandos"
+	@echo "========================================"
+	@grep -E '^[a-zA-Z0-9_.-]+:.*## ' $(MAKEFILE_LIST) | \
+	  awk -F ':.*## ' '{ printf "  %-35s %s\n", $$1, $$2 }' | sort
+
+.PHONY: help help-product help-workflows help-troubleshooting \
+        up-local down-local up-dev up-prod up-db \
+        build-images build-jars \
+        rebuild-api-gateway-local rebuild-config-service-local \
+        rebuild-discovery-local rebuild-product-local rebuild-product-dev \
+        clean-volumes clean-images clean-podman stop-all reset-db reset-local \
+        logs-local logs-dev logs-api-gateway logs-discovery logs-config logs-product logs-db check-db-init \
+        status podman-status test-services build-step-by-step \
+        pods-list pods-stats images-list system-info podman-start podman-machine-list podman-view-all podman-remove-all \
+        test-product test-product-unit test-product-controller test-product-app test-product-health test-product-report \
+        test-product-local run-product-local run-product-dev run-product-profile dev-product stop-product-local \
+        build-product build-product-no-tests clean-product rebuild-product-local-dev check-product lint-product \
+        deps-product deps-product-update health-product test-endpoints-product test-pagination-endpoints info-product \
+        quick-test-product quick-build-product coverage-product dev-full-stack test-integration-product validate-pagination-feature \
+        monitor-resources debug-network debug-volumes debug-containers maintenance-full backup-volumes restore-volumes \
+        deploy-staging deploy-production pre-commit-checks benchmark-endpoints load-test-basic security-scan validate-configs \
+        generate-reports system-info-full workflow-dev workflow-ci workflow-production troubleshoot-db troubleshoot-network troubleshoot-services \
+        fix-common-issues dev-setup qa-setup devops-setup collect-metrics health-check-all auto-restart daily-maintenance \
+        quick-start quick-test quick-deploy quick-stop fix-orphans

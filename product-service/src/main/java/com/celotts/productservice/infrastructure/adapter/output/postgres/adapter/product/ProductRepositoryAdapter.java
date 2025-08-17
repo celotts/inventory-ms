@@ -1,82 +1,49 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product;
 
-import com.celotts.productservice.domain.model.ProductModel;
-import com.celotts.productservice.domain.port.product.port.output.ProductRepositoryPort;
+import com.celotts.productservice.domain.model.product.ProductModel;
+import com.celotts.productservice.domain.port.output.product.ProductRepositoryPort;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductEntityMapper;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductRepository;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Component  // Cambié de @Repository a @Component
+@Component
 @RequiredArgsConstructor
-public class ProductRepositoryAdapter implements ProductRepositoryPort {  // Quité "abstract"
+@Transactional(readOnly = true)
+public class ProductRepositoryAdapter implements ProductRepositoryPort {
 
-    private final ProductRepository productRepository;
+    private final ProductJpaRepository productRepository;
     private final ProductEntityMapper productEntityMapper;
 
-    @Override
-    public boolean existsById(UUID id) {
-        return productRepository.existsById(id);
-    }
+    // ---------- EXISTS / COUNTS ----------
+    @Override public boolean existsById(UUID id) { return productRepository.existsById(id); }
+    @Override public boolean existsByCode(String code) { return productRepository.existsByCode(code); }
+    @Override public boolean existsByName(String name) { return productRepository.existsByName(name); }
+    @Override public long countAll() { return productRepository.count(); }
+    @Override public long countActive() { return productRepository.countByEnabled(true); }
 
+    // ---------- FINDS (single) ----------
     @Override
-    public boolean existsByCode(String code) {
-        return productRepository.existsByCode(code);
+    public Optional<ProductModel> findById(UUID id) {
+        return productRepository.findById(id).map(productEntityMapper::toModel);
     }
 
     @Override
     public Optional<ProductModel> findByCode(String code) {
-        return productRepository.findByCode(code)
-                .map(productEntityMapper::toModel);
+        return productRepository.findByCode(code).map(productEntityMapper::toModel);
     }
 
-    @Override
-    public List<ProductModel> findByCategoryId(UUID categoryId) {
-        return productRepository.findByCategoryId(categoryId)
-                .stream()
-                .map(productEntityMapper::toModel)
-                .toList();
-    }
-
-    @Override
-    public List<ProductModel> findByBrandId(UUID brandId) {
-        return productRepository.findByBrandId(brandId).stream()
-                .map(productEntityMapper::toModel)
-                .toList();
-    }
-
-    @Override
-    public Page<ProductModel> findByEnabled(Boolean enabled, Pageable pageable) {
-        return productRepository.findByEnabled(enabled, pageable)
-                .map(productEntityMapper::toModel);
-    }
-
-    @Override
-    public ProductModel save(ProductModel product) {
-        //TODO: revisar
-        return productEntityMapper.toModel(
-                productRepository.save(ProductEntityMapper.toEntity(product))
-        );
-    }
-
-    @Override
-    public List<ProductModel> findAll() {
-        return productRepository.findAll()
-                .stream()
-                .map(productEntityMapper::toModel)
-                .toList();
-    }
-
+    // ---------- LISTADOS / PAGINACIÓN ----------
     @Override
     public Page<ProductModel> findAll(Pageable pageable) {
-        return productRepository.findAll(pageable)
-                .map(productEntityMapper::toModel);
+        return productRepository.findAll(pageable).map(productEntityMapper::toModel);
     }
 
     @Override
@@ -86,16 +53,58 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {  // Qui
     }
 
     @Override
-    public Optional<ProductModel> findById(UUID id) {
-        return productRepository.findById(id)
+    public Page<ProductModel> findActive(Pageable pageable) {
+        return productRepository.findByEnabled(true, pageable).map(productEntityMapper::toModel);
+    }
+
+    @Override
+    public Page<ProductModel> findInactive(Pageable pageable) {
+        return productRepository.findByEnabled(false, pageable).map(productEntityMapper::toModel);
+    }
+
+    @Override
+    public Page<ProductModel> findByCategory(UUID categoryId, Pageable pageable) {
+        return productRepository.findByCategoryId(categoryId, pageable).map(productEntityMapper::toModel);
+    }
+
+    @Override
+    public Page<ProductModel> findByBrand(UUID brandId, Pageable pageable) {
+        return productRepository.findByBrandId(brandId, pageable).map(productEntityMapper::toModel);
+    }
+
+    @Override
+    public Page<ProductModel> findLowStock(Pageable pageable, int threshold) {
+        return productRepository.findByCurrentStockLessThanEqual(threshold, pageable)
                 .map(productEntityMapper::toModel);
     }
 
     @Override
+    public Page<ProductModel> findLowStockByCategory(UUID categoryId, Pageable pageable, int threshold) {
+        return productRepository.findByCategoryIdAndCurrentStockLessThanEqual(categoryId, threshold, pageable)
+                .map(productEntityMapper::toModel);
+    }
+
+    // ---------- MUTACIONES ----------
+    @Override
+    @Transactional
+    public ProductModel save(ProductModel product) {
+        ProductEntity entity = productEntityMapper.toEntity(product);
+        ProductEntity saved = productRepository.save(entity);
+        return productEntityMapper.toModel(saved);
+    }
+
+    @Override
+    @Transactional
+    public ProductModel updateStock(UUID id, int newStock) {
+        ProductEntity entity = productRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + id));
+        entity.setCurrentStock(newStock);
+        return productEntityMapper.toModel(productRepository.save(entity));
+    }
+
+    @Override
+    @Transactional
     public void deleteById(UUID id) {
         productRepository.deleteById(id);
     }
-
-
-
 }
