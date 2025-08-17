@@ -15,7 +15,8 @@ import java.util.UUID;
 public class ProductCategoryEntity {
 
     @Id
-    @org.hibernate.annotations.UuidGenerator // Hibernate 6
+    @GeneratedValue
+    @org.hibernate.annotations.UuidGenerator
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
