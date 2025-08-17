@@ -16,11 +16,14 @@ import java.util.UUID;
 public class ProductUnitEntity extends BaseEntity {
 
     @Id
-    @Column(name = "code", length = 30, nullable = false)
-    private String code;
+    @GeneratedValue
+    @org.hibernate.annotations.UuidGenerator
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id;                      // PK real
 
-    @Column(name = "id")
-    private UUID id;
+
+    @Column(name = "code", length = 30, nullable = false, unique = true)
+    private String code;                  // clave de negocio única
 
     @Column(name = "name", length = 100, nullable = false)
     private String name;
@@ -33,4 +36,9 @@ public class ProductUnitEntity extends BaseEntity {
 
     @Column(name = "enabled")
     private Boolean enabled;
+
+    @PrePersist
+    void ensureInternalId() {
+        if (this.id == null) this.id = UUID.randomUUID();
+    }
 }
