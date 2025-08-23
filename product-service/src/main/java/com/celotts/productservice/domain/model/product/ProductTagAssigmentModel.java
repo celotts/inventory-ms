@@ -1,13 +1,15 @@
 package com.celotts.productservice.domain.model.product;
 
-import lombok.Builder;
-import lombok.Value;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Value
+@Data
 @Builder(toBuilder = true)
+@With
+@AllArgsConstructor
+@NoArgsConstructor
 public class ProductTagAssigmentModel {
     private UUID id;
     private UUID product_id;

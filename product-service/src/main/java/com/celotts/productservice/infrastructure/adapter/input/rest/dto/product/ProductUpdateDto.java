@@ -1,6 +1,5 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.product;
 
-import com.celotts.productservice.domain.model.product.ProductReference;
 import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +13,7 @@ import java.util.UUID;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductUpdateDto implements ProductReference {
+public class ProductUpdateDto {
 
     private UUID id;
 
@@ -36,18 +35,4 @@ public class ProductUpdateDto implements ProductReference {
     private String createdBy;
     private Boolean enabled;
     private String updatedBy;
-
-    // 👇 solución directa
-    @Override
-    public String getUnitCode() {
-        return this.unitCode;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public UUID getId() {
-        return this.id;
-    }
 }
