@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.productTag;
+package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.producttag;
 
 import com.celotts.productservice.domain.model.product.ProductTagModel;
 import com.celotts.productservice.domain.port.output.product.ProductTagRepositoryPort;

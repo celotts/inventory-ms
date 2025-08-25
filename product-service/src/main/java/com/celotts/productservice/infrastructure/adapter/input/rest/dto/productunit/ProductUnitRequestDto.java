@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit;
+package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productunit;
 
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.Pattern;

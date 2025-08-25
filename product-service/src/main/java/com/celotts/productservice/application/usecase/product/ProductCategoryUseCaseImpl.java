@@ -3,7 +3,7 @@ package com.celotts.productservice.application.usecase.product;
 import com.celotts.productservice.domain.model.product.ProductCategoryModel;
 import com.celotts.productservice.domain.port.input.product.ProductCategoryUseCase;
 import com.celotts.productservice.domain.port.output.product.ProductCategoryRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productcategory.ProductCategoryCreateDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

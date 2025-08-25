@@ -1,7 +1,7 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productUnit;
+package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productunit;
 
 import com.celotts.productservice.domain.model.product.ProductUnitModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productunit.ProductUnitResponseDto;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;

@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory;
+package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productcategory;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

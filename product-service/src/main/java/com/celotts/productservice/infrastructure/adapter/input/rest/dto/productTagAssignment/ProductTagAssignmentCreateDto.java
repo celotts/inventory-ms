@@ -1,7 +1,6 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTagAssigment;
+package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTagAssignment;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -16,7 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProductTagAssigmentCreateDto {
+public class ProductTagAssignmentCreateDto {
 
     @NotNull(message = "productId is required")
     private UUID productId;

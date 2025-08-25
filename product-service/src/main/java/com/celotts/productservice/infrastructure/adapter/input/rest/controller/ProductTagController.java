@@ -3,9 +3,9 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 import com.celotts.productservice.domain.model.product.ProductTagModel;
 import com.celotts.productservice.domain.port.input.product.ProductTagUseCase;
 
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagResponseDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag.ProductTagUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttag.ProductTagCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttag.ProductTagUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttag.ProductTagResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productTag.ProductTagDtoMapper;
 
 import jakarta.validation.Valid;
