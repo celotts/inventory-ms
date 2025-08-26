@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit;
+package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productunit;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;

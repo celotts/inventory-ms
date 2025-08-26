@@ -1,6 +1,6 @@
 // Archivo: src/main/java/com/celotts/productservice/infrastructure/adapter/input/rest/mapper/productBrand/ProductBrandDtoMapper.java
 
-package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand;
+package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productbrand;
 
 import com.celotts.productservice.domain.model.product.ProductBrandModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;

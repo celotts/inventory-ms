@@ -37,8 +37,4 @@ public class ProductUnitEntity extends BaseEntity {
     @Column(name = "enabled")
     private Boolean enabled;
 
-    @PrePersist
-    void ensureInternalId() {
-        if (this.id == null) this.id = UUID.randomUUID();
-    }
 }

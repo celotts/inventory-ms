@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.dto.ProductTag;
+package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTag;
 
 import jakarta.validation.constraints.Size;
 import lombok.*;

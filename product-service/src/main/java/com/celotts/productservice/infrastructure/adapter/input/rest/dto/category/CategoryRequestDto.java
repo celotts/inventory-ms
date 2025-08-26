@@ -1,18 +1,24 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.category;
 
+import com.celotts.productservice.infrastructure.common.dto.PageableRequestDto;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class CategoryRequestDto {
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+@SuperBuilder
+public class CategoryRequestDto extends PageableRequestDto {
 
+    // --- Filtros ---
     @NotBlank(message = "Name is required")
     @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
     private String name;
@@ -23,4 +29,29 @@ public class CategoryRequestDto {
     private Boolean active;
     private String createdBy;
     private String updatedBy;
+
+    // --- Paginación ---
+    @Builder.Default
+    @PositiveOrZero(message = "page must be >= 0")
+    private Integer page = 0;
+
+    @Builder.Default
+    @Min(value = 1, message = "size must be >= 1")
+    private Integer size = 20;
+
+    // --- Ordenamiento ---
+    /**
+     * Campos permitidos para ordenar: name, createdAt, updatedAt, active
+     * (ajusta a los nombres reales en tu entidad)
+     */
+    @Builder.Default
+    @Pattern(
+            regexp = "name|createdAt|updatedAt|active",
+            message = "sortBy must be one of: name, createdAt, updatedAt, active"
+    )
+    private String sortBy = "name";
+
+    @Builder.Default
+    @Pattern(regexp = "ASC|DESC", message = "sortDir must be 'ASC' or 'DESC'")
+    private String sortDir = "ASC";
 }

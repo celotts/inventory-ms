@@ -2,36 +2,27 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper
 
 import com.celotts.productservice.domain.model.product.ProductBrandModel;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrandEntity;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.InheritInverseConfiguration;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.Mappings;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component("productBrandEntityMapper")
-public class ProductBrandEntityMapper {
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+public interface ProductBrandEntityMapper {
 
-    public ProductBrandEntity toEntity(ProductBrandModel model) {
-        if (model == null) return null;
-        return ProductBrandEntity.builder()
-                .id(model.getId())
-                .name(model.getName())
-                .description(model.getDescription())
-                .enabled(model.getEnabled())
-                .createdBy(model.getCreatedBy())
-                .updatedBy(model.getUpdatedBy())
-                .createdAt(model.getCreatedAt())
-                .updatedAt(model.getUpdatedAt())
-                .build();
-    }
+    ProductBrandEntity toEntity(ProductBrandModel model);
 
-    public ProductBrandModel toModel(ProductBrandEntity entity) {
-        if (entity == null) return null;
-        return ProductBrandModel.builder()
-                .id(entity.getId())
-                .name(entity.getName())
-                .description(entity.getDescription())
-                .enabled(entity.getEnabled())
-                .createdBy(entity.getCreatedBy())
-                .updatedBy(entity.getUpdatedBy())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .build();
-    }
+    @InheritInverseConfiguration(name = "toEntity")
+    ProductBrandModel toModel(ProductBrandEntity entity);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mappings({
+        @Mapping(target = "id", ignore = true),
+        @Mapping(target = "createdAt", ignore = true),
+        @Mapping(target = "createdBy", ignore = true)
+    })
+    void updateEntityFromModel(ProductBrandModel src, @MappingTarget ProductBrandEntity target);
 }
