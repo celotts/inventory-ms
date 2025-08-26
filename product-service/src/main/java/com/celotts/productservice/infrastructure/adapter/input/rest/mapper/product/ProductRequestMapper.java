@@ -1,7 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product;
 
 import com.celotts.productservice.domain.model.product.ProductModel;
-import com.celotts.productservice.domain.model.product.ProductReference;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import jakarta.validation.Valid;
@@ -47,6 +46,7 @@ public class ProductRequestMapper {
                 .unitPrice(scale(dto.getUnitPrice()))
                 .enabled(Boolean.TRUE.equals(dto.getEnabled()))
                 .createdBy(nonBlank(dto.getCreatedBy()) ? dto.getCreatedBy().trim() : null)
+                .createdAt(LocalDateTime.now())
                 .build();
     }
 
@@ -68,24 +68,6 @@ public class ProductRequestMapper {
                 .build();
     }
 
-    // Opcional: si tu UseCase usa ProductReference directamente
-    public ProductModel toModel(ProductReference ref) {
-        if (ref == null) return null;
-        return ProductModel.builder()
-                .code(nonBlank(ref.getCode()) ? ref.getCode().trim().toUpperCase() : null)
-                .name(nonBlank(ref.getName()) ? ref.getName().trim() : null)
-                .description(nonBlank(ref.getDescription()) ? ref.getDescription().trim() : null)
-                .categoryId(ref.getCategoryId())
-                .unitCode(nonBlank(ref.getUnitCode()) ? ref.getUnitCode().trim().toUpperCase() : null)
-                .brandId(ref.getBrandId())
-                .minimumStock(ref.getMinimumStock())
-                .currentStock(ref.getCurrentStock())
-                .unitPrice(scale(ref.getUnitPrice()))
-                .enabled(Boolean.TRUE.equals(ref.getEnabled()))
-                .createdBy(nonBlank(ref.getCreatedBy()) ? ref.getCreatedBy().trim() : null)
-                .updatedBy(nonBlank(ref.getUpdatedBy()) ? ref.getUpdatedBy().trim() : null)
-                .build();
-    }
 
     private static boolean nonBlank(String s) {
         return s != null && !s.trim().isEmpty();

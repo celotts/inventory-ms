@@ -3,7 +3,6 @@ package com.celotts.productservice.application.usecase.product;
 import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
 import com.celotts.productservice.domain.exception.ResourceNotFoundException;
 import com.celotts.productservice.domain.model.product.ProductModel;
-import com.celotts.productservice.domain.model.product.ProductReference;
 import com.celotts.productservice.domain.port.input.product.ProductUseCase;
 import com.celotts.productservice.domain.port.output.category.CategoryRepositoryPort;
 import com.celotts.productservice.domain.port.output.product.ProductBrandRepositoryPort;
@@ -29,39 +28,37 @@ public class ProductUseCaseImpl implements ProductUseCase {
 
     private final ProductRepositoryPort productRepositoryPort;
     private final ProductUnitRepositoryPort productUnitPort;
-    private final ProductBrandRepositoryPort productBrandPort;   // ← puerto correcto
+    private final ProductBrandRepositoryPort productBrandPort;
     private final CategoryRepositoryPort categoryRepositoryPort;
-    private final ProductRequestMapper productRequestMapper;
 
     public ProductUseCaseImpl(
             ProductRepositoryPort productRepositoryPort,
             ProductUnitRepositoryPort productUnitPort,
             @Qualifier("productBrandAdapter") ProductBrandRepositoryPort productBrandPort,
-            @Qualifier("categoryAdapter") CategoryRepositoryPort categoryRepositoryPort,
-            ProductRequestMapper productRequestMapper
+            @Qualifier("categoryAdapter") CategoryRepositoryPort categoryRepositoryPort
     ) {
         this.productRepositoryPort = productRepositoryPort;
         this.productUnitPort = productUnitPort;
         this.productBrandPort = productBrandPort;
         this.categoryRepositoryPort = categoryRepositoryPort;
-        this.productRequestMapper = productRequestMapper;
     }
+
     @Override
-    public ProductModel createProduct(ProductReference cmd) {
+    public ProductModel createProduct(ProductModel cmd) {
         if (productRepositoryPort.findByCode(cmd.getCode()).isPresent()) {
             throw new ResourceAlreadyExistsException("Product", cmd.getCode());
         }
         validateReferences(cmd);
-        ProductModel toSave = productRequestMapper.toModel(cmd);
-        return productRepositoryPort.save(toSave);
+        return productRepositoryPort.save(cmd);
     }
 
     @Override
-    public ProductModel updateProduct(UUID id, ProductReference cmd) {
+    public ProductModel updateProduct(UUID id, ProductModel cmd) {
         ProductModel existing = productRepositoryPort.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", id));
         validateReferences(cmd);
-        ProductModel incoming = productRequestMapper.toModel(cmd);
+
+        ProductModel incoming = cmd;
         ProductModel updated = existing.toBuilder()
                 .code(incoming.getCode() != null ? incoming.getCode() : existing.getCode())
                 .name(incoming.getName() != null ? incoming.getName() : existing.getName())
@@ -74,6 +71,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
                 .unitPrice(incoming.getUnitPrice() != null ? incoming.getUnitPrice() : existing.getUnitPrice())
                 .enabled(incoming.getEnabled() != null ? incoming.getEnabled() : existing.getEnabled())
                 .updatedBy(incoming.getUpdatedBy() != null ? incoming.getUpdatedBy() : existing.getUpdatedBy())
+                .updatedAt(java.time.LocalDateTime.now())
                 .build();
         return productRepositoryPort.save(updated);
     }
@@ -98,23 +96,14 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public ProductModel enableProduct(UUID id) {
         ProductModel product = getProductById(id);
-        if (Boolean.TRUE.equals(product.getEnabled())) {
-            return product; // idempotente
-        }
-        ProductModel updated = product.toBuilder()
-                .enabled(true)
-                .build();
+        if (Boolean.TRUE.equals(product.getEnabled())) return product;
+        ProductModel updated = product.toBuilder().enabled(true).build();
         return productRepositoryPort.save(updated);
     }
 
     @Override
     public ProductModel updateStock(UUID id, int stock) {
-        // Si tu puerto tiene updateStock, úsalo:
         return productRepositoryPort.updateStock(id, stock);
-        // Si NO lo tienes, descomenta esto y borra la línea de arriba:
-        // ProductModel current = getProductById(id);
-        // ProductModel updated = current.toBuilder().currentStock(stock).build();
-        // return productRepositoryPort.save(updated);
     }
 
     @Override
@@ -146,14 +135,14 @@ public class ProductUseCaseImpl implements ProductUseCase {
     public List<ProductModel> getLowStockByCategory(UUID categoryId) {
         return getProductsByCategory(categoryId).stream()
                 .filter(ProductModel::lowStock)
-                .collect(Collectors.toList());
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @Override
     public List<ProductModel> getLowStockProducts() {
         return productRepositoryPort.findAll(Pageable.unpaged()).getContent().stream()
                 .filter(ProductModel::lowStock)
-                .collect(Collectors.toList());
+                .collect(java.util.stream.Collectors.toList());
     }
 
     @Override
@@ -162,14 +151,10 @@ public class ProductUseCaseImpl implements ProductUseCase {
     }
 
     @Override
-    public long countProducts() {
-        return productRepositoryPort.countAll();
-    }
+    public long countProducts() { return productRepositoryPort.countAll(); }
 
     @Override
-    public long countActiveProducts() {
-        return productRepositoryPort.countActive();
-    }
+    public long countActiveProducts() { return productRepositoryPort.countActive(); }
 
     @Override
     public Optional<String> validateUnitCode(String code) {
@@ -177,7 +162,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
         return productUnitPort.findNameByCode(code);
     }
 
-    private void validateReferences(@Valid ProductReference dto) {
+    private void validateReferences(@jakarta.validation.Valid ProductModel dto) {
         if (!productUnitPort.existsByCode(dto.getUnitCode())) {
             throw new ResourceNotFoundException("Product", "Invalid unit code: " + dto.getUnitCode());
         }
@@ -190,14 +175,10 @@ public class ProductUseCaseImpl implements ProductUseCase {
     }
 
     @Override
-    public boolean existsById(UUID id) {
-        return productRepositoryPort.existsById(id);
-    }
+    public boolean existsById(UUID id) { return productRepositoryPort.existsById(id); }
 
     @Override
-    public boolean existsByCode(String code) {
-        return productRepositoryPort.existsByCode(code);
-    }
+    public boolean existsByCode(String code) { return productRepositoryPort.existsByCode(code); }
 
     @Override
     public List<ProductModel> getAll() {

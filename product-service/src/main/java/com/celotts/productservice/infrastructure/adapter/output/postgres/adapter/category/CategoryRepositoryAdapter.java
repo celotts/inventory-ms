@@ -5,24 +5,22 @@ import com.celotts.productservice.domain.port.output.category.CategoryRepository
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.category.CategoryEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.category.CategoryEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.category.CategoryJpaRepository;
+import lombok.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository("categoryAdapter")
-public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
-
+@RequiredArgsConstructor
+@Component("categoryAdapter")
+public class CategoryRepositoryAdapter implements CategoryRepositoryPort   {
     private final CategoryJpaRepository jpa;
     private final CategoryEntityMapper mapper;
-
-    public CategoryRepositoryAdapter(CategoryJpaRepository jpa, CategoryEntityMapper mapper) {
-        this.jpa = jpa;
-        this.mapper = mapper;
-    }
 
     @Override
     public CategoryModel save(CategoryModel category) {

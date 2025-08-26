@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productCategory;
+package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productcategory;
 
 import com.celotts.productservice.domain.model.product.ProductCategoryModel;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryCreateDto;

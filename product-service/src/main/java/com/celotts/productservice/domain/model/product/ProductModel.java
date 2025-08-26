@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
-@Builder(toBuilder = true) // <-- aquí está el cambio
+@Builder(toBuilder = true)
 @With
 @AllArgsConstructor
 @NoArgsConstructor

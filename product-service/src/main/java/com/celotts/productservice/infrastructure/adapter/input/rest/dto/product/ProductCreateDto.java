@@ -1,18 +1,17 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.product;
 
-import com.celotts.productservice.domain.model.product.ProductReference;
 import jakarta.validation.constraints.*;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
-@Builder
-@EqualsAndHashCode(callSuper = false)
-public class ProductCreateDto implements ProductReference  {
+@Builder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProductCreateDto {
+
     @NotBlank(message = "Product code is required")
     @Size(max = 50)
     private String code;

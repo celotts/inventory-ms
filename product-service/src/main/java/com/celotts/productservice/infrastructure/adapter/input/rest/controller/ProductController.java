@@ -1,5 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
+
 import com.celotts.productservice.domain.model.product.ProductModel;
 import com.celotts.productservice.domain.port.input.product.ProductUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
@@ -30,6 +32,9 @@ public class ProductController {
     private final ProductResponseMapper responseMapper;
     private final PaginationProperties paginationProperties;
 
+    private final ProductRequestMapper requestMapper;
+
+
     @GetMapping("/test")
     @Operation(summary = "Test API", description = "Endpoint de prueba para verificar que el servicio funciona.")
     public ResponseEntity<String> testEndpoint() {
@@ -40,7 +45,7 @@ public class ProductController {
     @Operation(summary = "Crear un nuevo producto", description = "Crea un producto en el sistema")
     public ResponseEntity<ProductResponseDto> create(@RequestBody @Valid ProductCreateDto createDto) {
         log.info("Creating new product with code: {}", createDto.getCode());
-        ProductModel created = productUseCase.createProduct(createDto);
+        ProductModel created = productUseCase.createProduct(requestMapper.toModel(createDto));
         return ResponseEntity.status(HttpStatus.CREATED).body(responseMapper.toDto(created));
     }
 
@@ -50,7 +55,7 @@ public class ProductController {
             @PathVariable UUID id,
             @RequestBody @Valid ProductUpdateDto updateDto) {
         log.info("Updating product with id: {}", id);
-        ProductModel updated = productUseCase.updateProduct(id, updateDto);
+        ProductModel updated = productUseCase.updateProduct(id, requestMapper.toModel(updateDto)); // 👈 mapear
         return ResponseEntity.ok(responseMapper.toDto(updated));
     }
 
@@ -209,10 +214,9 @@ public class ProductController {
         if (code == null || code.isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
-
         ProductModel product = productUseCase.getProductByCode(code);
         return (product == null)
                 ? ResponseEntity.status(HttpStatus.NOT_FOUND).build()
-                : ResponseEntity.ok(responseMapper.toResponseDto(product));
+                : ResponseEntity.ok(responseMapper.toDto(product));   // 👈 usar toDto
     }
 }
