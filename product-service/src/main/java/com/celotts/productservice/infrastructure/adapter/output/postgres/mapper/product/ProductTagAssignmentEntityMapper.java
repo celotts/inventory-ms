@@ -5,17 +5,13 @@ import com.celotts.productservice.domain.model.product.ProductTagAssignmentModel
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTagAssignmentEntity;
 import org.mapstruct.*;
 
-@Mapper(config = CentralMapperConfig.class)
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ProductTagAssignmentEntityMapper {
-
-    // Model -> Entity
     ProductTagAssignmentEntity toEntity(ProductTagAssignmentModel model);
 
-    // Entity -> Model
     @InheritInverseConfiguration(name = "toEntity")
     ProductTagAssignmentModel toModel(ProductTagAssignmentEntity entity);
 
-    // Update parcial (ignora nulos; no pisa auditoría/ID)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mappings({
             @Mapping(target = "id", ignore = true),

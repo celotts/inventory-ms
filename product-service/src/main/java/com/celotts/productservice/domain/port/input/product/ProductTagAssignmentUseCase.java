@@ -5,18 +5,28 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public interface ProductTagAssignmentUseCase {
+
     ProductTagAssignmentModel create(ProductTagAssignmentModel model);
-    ProductTagAssignmentModel findById(UUID id);
+
     ProductTagAssignmentModel update(UUID id, ProductTagAssignmentModel model);
+
     void delete(UUID id);
+
+    ProductTagAssignmentModel findById(UUID id);
+
+    /** Lista paginada (usa el repo Page<ProductTagAssignmentModel>) */
     Page<ProductTagAssignmentModel> findAll(Pageable pageable);
-    Optional<ProductTagAssignmentModel> findByName(String name); // si tu dominio lo requiere
-    List<ProductTagAssignmentModel> findAllEnabled();
-    ProductTagAssignmentModel enable(UUID id);
-    ProductTagAssignmentModel disable(UUID id);
+
+    /** Filtro por enabled (usa el repo List<ProductTagAssignmentModel>) */
+    List<ProductTagAssignmentModel> findByEnabled(boolean enabled);
+
+    /** Azúcar para el repo.countByEnabled(true) */
     long countEnabled();
+
+    ProductTagAssignmentModel enable(UUID id);
+
+    ProductTagAssignmentModel disable(UUID id);
 }

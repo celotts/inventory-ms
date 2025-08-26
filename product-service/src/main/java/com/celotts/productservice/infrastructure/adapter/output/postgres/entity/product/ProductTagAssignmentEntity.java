@@ -8,15 +8,16 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "product_tag_assignment")
-@Data
-@Builder
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class ProductTagAssignmentEntity {
 
     @Id
+    @GeneratedValue // Hibernate 6 soporta UUID nativo
     @Column(name = "id", columnDefinition = "uuid")
-    private UUID id; // Se genera en DB por gen_random_uuid(); no uses @GeneratedValue
+    private UUID id;
 
     @Column(name = "product_id", nullable = false, columnDefinition = "uuid")
     private UUID productId;
@@ -41,4 +42,17 @@ public class ProductTagAssignmentEntity {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    /* Defaults de app para que se comporte igual en Postgres y H2 */
+    @PrePersist
+    public void prePersist() {
+        if (assignedAt == null) assignedAt = LocalDateTime.now();
+        if (createdAt == null)  createdAt  = LocalDateTime.now();
+        if (enabled == null)    enabled    = Boolean.TRUE;
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

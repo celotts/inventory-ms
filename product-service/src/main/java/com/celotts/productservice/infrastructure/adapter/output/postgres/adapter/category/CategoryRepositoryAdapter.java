@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
-@Component
+@Component("categoryAdapter")
 public class CategoryRepositoryAdapter implements CategoryRepositoryPort   {
     private final CategoryJpaRepository jpa;
     private final CategoryEntityMapper mapper;

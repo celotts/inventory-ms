@@ -65,25 +65,33 @@ public class ProductTagAssignmentController {
     @GetMapping
     public ResponseEntity<Map<String, Object>> list(
             Pageable pageable,
-            @RequestParam(required = false) String name) {
+            @RequestParam(required = false) Boolean enabled) {
 
-        if (name == null || name.isBlank()) {
+        if (enabled == null) {
             var page = productTagAssignmentUseCase.findAll(pageable);
             List<ProductTagAssignmentResponseDto> data =
                     page.map(productTagAssignmentDtoMapper::toResponseDto).getContent();
-            return ResponseEntity.ok(Map.of("data", data, "total", page.getTotalElements()));
+            return ResponseEntity.ok(Map.of(
+                    "data", data,
+                    "total", page.getTotalElements()
+            ));
         } else {
-            return productTagAssignmentUseCase.findByName(name)
-                    .map(a -> ResponseEntity.ok(Map.of("data",
-                            List.of(productTagAssignmentDtoMapper.toResponseDto(a)), "total", 1)))
-                    .orElse(ResponseEntity.ok(Map.of("data", List.of(), "total", 0)));
+            // cuando filtras por enabled, el puerto retorna List
+            List<ProductTagAssignmentResponseDto> data =
+                    productTagAssignmentUseCase.findByEnabled(enabled).stream()
+                            .map(productTagAssignmentDtoMapper::toResponseDto)
+                            .toList();
+            return ResponseEntity.ok(Map.of(
+                    "data", data,
+                    "total", (long) data.size()
+            ));
         }
     }
 
     @GetMapping("/enabled")
     public ResponseEntity<Map<String, Object>> listEnabled() {
         List<ProductTagAssignmentResponseDto> data =
-                productTagAssignmentUseCase.findAllEnabled().stream()
+                productTagAssignmentUseCase.findByEnabled(true).stream()
                         .map(productTagAssignmentDtoMapper::toResponseDto)
                         .toList();
         return ResponseEntity.ok(Map.of("data", data, "total", data.size()));
