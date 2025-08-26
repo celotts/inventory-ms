@@ -13,19 +13,12 @@ public class ProductBrandCreateDto {
 
     @NotBlank(message = "Name is required")
     @Size(max = 100, message = "Name must not exceed 100 characters")
-    private String name;
+    String name;
 
-    @NotBlank(message = "Description is required")
     @Size(max = 500, message = "Description must not exceed 500 characters")
-    private String description;
+    String description; // opcional
 
-    @NotNull(message = "Enabled flag is required")   // ✅ solo @NotNull
-    private Boolean enabled;
+    // opcional; en el use case default = true si es null
+    Boolean enabled;
 
-    @NotBlank(message = "createdBy is required")
-    private String createdBy;
-
-    // Opcional al crear — sin @NotBlank
-    @NotBlank(message = "updatedBy is required")
-    private String updatedBy;
 }

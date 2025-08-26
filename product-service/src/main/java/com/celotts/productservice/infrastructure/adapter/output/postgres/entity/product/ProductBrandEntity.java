@@ -1,10 +1,13 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.UuidGenerator;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -12,41 +15,46 @@ import java.util.UUID;
 @Entity
 @Table(name = "product_brand")
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)  // <-- importante
 public class ProductBrandEntity {
 
     @Id
     @GeneratedValue
-    @org.hibernate.annotations.UuidGenerator
+    @UuidGenerator
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
+    @Column(nullable = false, length = 100)
     private String name;
-    private String description;
-    private Boolean enabled;
 
-    @Column(name = "created_by")
+    @Column(length = 500)
+    private String description;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean enabled = Boolean.TRUE;
+
+    @CreatedBy
+    @Column(name = "created_by", updatable = false)
     private String createdBy;
 
+    @LastModifiedBy
     @Column(name = "updated_by")
     private String updatedBy;
 
-    @Column(name = "created_at")
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public ProductBrandEntity(UUID id, String name, String description, LocalDateTime createdAt) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.enabled = true;        // por defecto
-        this.createdAt = createdAt; // viene del test (FIXED_TIME)
-        this.updatedAt = null;
-        this.createdBy = null;
-        this.updatedBy = null;
+    @PrePersist
+    public void prePersist() {
+        if (enabled == null) enabled = Boolean.TRUE;
     }
 }

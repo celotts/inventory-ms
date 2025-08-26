@@ -2,6 +2,12 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.entity
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UuidGenerator;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -11,12 +17,13 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder // <-- agrega (import lombok.Builder)
+@Builder(toBuilder = true)
+@EntityListeners(AuditingEntityListener.class)
 public class ProductTagEntity {
 
     @Id
     @GeneratedValue
-    @org.hibernate.annotations.UuidGenerator
+    @UuidGenerator
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
@@ -24,21 +31,22 @@ public class ProductTagEntity {
     private String name;
 
     private String description;
-    private Boolean enabled;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private String createdBy;
-    private String updatedBy;
 
-    // ✅ Constructor que esperan los tests
-    public ProductTagEntity(UUID id, String name, String description, LocalDateTime createdAt) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.enabled = true;        // por defecto
-        this.createdAt = createdAt; // viene del test (FIXED_TIME)
-        this.updatedAt = null;
-        this.createdBy = null;
-        this.updatedBy = null;
-    }
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean enabled = Boolean.TRUE;
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
+
+    @CreatedBy
+    @Column(updatable = false)
+    private String createdBy;
+
+    @LastModifiedBy
+    private String updatedBy;
 }
