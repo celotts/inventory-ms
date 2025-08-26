@@ -1,19 +1,19 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product;
 
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.CentralMapperConfig;
-import com.celotts.productservice.domain.model.product.ProductUnitModel;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductUnitEntity;
+import com.celotts.productservice.domain.model.product.ProductTagAssignmentModel;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTagAssignmentEntity;
 import org.mapstruct.*;
 
 @Mapper(config = CentralMapperConfig.class)
-public interface ProductUnitEntityMapper {
+public interface ProductTagAssignmentEntityMapper {
 
     // Model -> Entity
-    ProductUnitEntity toEntity(ProductUnitModel model);
+    ProductTagAssignmentEntity toEntity(ProductTagAssignmentModel model);
 
     // Entity -> Model
     @InheritInverseConfiguration(name = "toEntity")
-    ProductUnitModel toModel(ProductUnitEntity entity);
+    ProductTagAssignmentModel toModel(ProductTagAssignmentEntity entity);
 
     // Update parcial (ignora nulos; no pisa auditoría/ID)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
@@ -22,5 +22,5 @@ public interface ProductUnitEntityMapper {
             @Mapping(target = "createdAt", ignore = true),
             @Mapping(target = "createdBy", ignore = true)
     })
-    void updateEntityFromModel(ProductUnitModel src, @MappingTarget ProductUnitEntity target);
+    void updateEntityFromModel(ProductTagAssignmentModel src, @MappingTarget ProductTagAssignmentEntity target);
 }

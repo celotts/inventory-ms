@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface ProductTagAssigmentRepositoryPort {
+public interface ProductTagAssignmentRepositoryPort {
     ProductTagAssignmentModel save(ProductTagAssignmentModel model);
     Optional<ProductTagAssignmentModel> findById(UUID id);
     Optional<ProductTagAssignmentModel> findByName(String name);

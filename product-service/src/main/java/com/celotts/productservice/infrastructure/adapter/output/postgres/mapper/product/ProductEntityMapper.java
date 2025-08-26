@@ -2,58 +2,30 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper
 
 import com.celotts.productservice.domain.model.product.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductEntity;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.InheritInverseConfiguration;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.Mappings;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component
-public class ProductEntityMapper {
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+public interface ProductEntityMapper {
 
-    public static ProductEntity toEntity(ProductModel productModel) {
-        if (productModel == null) {
-            return null;
-        }
+    // Model -> Entity
+    ProductEntity toEntity(ProductModel model);
 
-        return ProductEntity.builder()
-                .id(productModel.getId())
-                .code(productModel.getCode())
-                .name(productModel.getName())
-                .description(productModel.getDescription())
-                .categoryId(productModel.getCategoryId())  // ✅ AGREGAR
-                .unitCode(productModel.getUnitCode())
-                .brandId(productModel.getBrandId())
-                .minimumStock(productModel.getMinimumStock())
-                .currentStock(productModel.getCurrentStock())
-                .unitPrice(productModel.getUnitPrice())
-                .enabled(productModel.getEnabled())
-                .createdAt(productModel.getCreatedAt())
-                .updatedAt(productModel.getUpdatedAt())
-                .createdBy(productModel.getCreatedBy())
-                .updatedBy(productModel.getUpdatedBy())
-                .build();
-    }
+    // Entity -> Model
+    @InheritInverseConfiguration(name = "toEntity")
+    ProductModel toModel(ProductEntity entity);
 
-    public ProductModel toModel(ProductEntity entity) {
-        if (entity == null) {
-            return null;
-        }
-
-        return ProductModel.builder()  // ✅ Usar builder pattern
-                .id(entity.getId())
-                .code(entity.getCode())
-                .name(entity.getName())
-                .description(entity.getDescription())
-                .categoryId(entity.getCategoryId())  // ✅ AGREGAR
-                .unitCode(entity.getUnitCode())
-                .brandId(entity.getBrandId())
-                .minimumStock(entity.getMinimumStock())
-                .currentStock(entity.getCurrentStock())
-                .unitPrice(entity.getUnitPrice())
-                .enabled(entity.getEnabled())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .createdBy(entity.getCreatedBy())
-                .updatedBy(entity.getUpdatedBy())
-                .build();
-    }
-
-
+    // Update parcial (ignora nulos; no pisa auditoría/ID)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mappings({
+        @Mapping(target = "id", ignore = true),
+        @Mapping(target = "createdAt", ignore = true),
+        @Mapping(target = "createdBy", ignore = true)
+    })
+    void updateEntityFromModel(ProductModel src, @MappingTarget ProductEntity target);
 }

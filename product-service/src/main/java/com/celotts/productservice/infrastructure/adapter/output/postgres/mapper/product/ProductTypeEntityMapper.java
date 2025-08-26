@@ -1,39 +1,32 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product;
 
+import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.CentralMapperConfig;
 import com.celotts.productservice.domain.model.product.ProductTypeModel;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTypeEntity;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.InheritInverseConfiguration;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.Mappings;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component
-public class ProductTypeEntityMapper {
+@Mapper(config = CentralMapperConfig.class)
+public interface ProductTypeEntityMapper {
 
-    public ProductTypeEntity toEntity(ProductTypeModel model) {
-        if (model == null) return null;
-        return ProductTypeEntity.builder()
-                .id(model.getId())
-                .code(model.getCode())
-                .name(model.getName())
-                .description(model.getDescription())
-                .enabled(model.getEnabled())
-                .createdAt(model.getCreatedAt())
-                .updatedAt(model.getUpdatedAt())
-                .createdBy(model.getCreatedBy())
-                .updatedBy(model.getUpdatedBy())
-                .build();
-    }
+    // Model -> Entity
+    ProductTypeEntity toEntity(ProductTypeModel model);
 
-    public ProductTypeModel toModel(ProductTypeEntity entity) {
-        if (entity == null) return null;
-        return ProductTypeModel.builder()
-                .id(entity.getId())
-                .code(entity.getCode())
-                .name(entity.getName())
-                .description(entity.getDescription())
-                .enabled(entity.getEnabled())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .createdBy(entity.getCreatedBy())
-                .updatedBy(entity.getUpdatedBy())
-                .build();
-    }
+    // Entity -> Model
+    @InheritInverseConfiguration(name = "toEntity")
+    ProductTypeModel toModel(ProductTypeEntity entity);
+
+    // Update parcial (ignora nulos; no pisa auditoría/ID)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mappings({
+        @Mapping(target = "id", ignore = true),
+        @Mapping(target = "createdAt", ignore = true),
+        @Mapping(target = "createdBy", ignore = true)
+    })
+    void updateEntityFromModel(ProductTypeModel src, @MappingTarget ProductTypeEntity target);
 }

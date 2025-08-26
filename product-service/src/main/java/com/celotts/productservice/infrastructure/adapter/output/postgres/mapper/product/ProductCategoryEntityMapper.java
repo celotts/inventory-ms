@@ -1,64 +1,35 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product;
 
 import com.celotts.productservice.domain.model.product.ProductCategoryModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productcategory.ProductCategoryResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryResponseDto;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductCategoryEntity;
-import org.springframework.stereotype.Component;
+import org.mapstruct.BeanMapping;
+import org.mapstruct.InheritInverseConfiguration;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.Mappings;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-@Component
-public class ProductCategoryEntityMapper {
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+public interface ProductCategoryEntityMapper {
 
-    public ProductCategoryEntity toEntity(ProductCategoryModel model) {
-        if (model == null) {
-            return null;
-        }
+    // Model -> Entity
+    ProductCategoryEntity toEntity(ProductCategoryModel model);
 
-        return ProductCategoryEntity.builder()
-                .id(model.getId())
-                .productId(model.getProductId())
-                .categoryId(model.getCategoryId())
-                .assignedAt(model.getAssignedAt())
-                .enabled(model.getEnabled())
-                .createdBy(model.getCreatedBy())
-                .updatedBy(model.getUpdatedBy())
-                .createdAt(model.getCreatedAt())
-                .updatedAt(model.getUpdatedAt())
-                .build();
-    }
+    // Entity -> Model
+    @InheritInverseConfiguration(name = "toEntity")
+    ProductCategoryModel toModel(ProductCategoryEntity entity);
 
-    public ProductCategoryModel toModel(ProductCategoryEntity entity) {
-        if (entity == null) {
-            return null;
-        }
+    // Entity -> Response DTO
+    ProductCategoryResponseDto toResponseDto(ProductCategoryEntity entity);
 
-        return ProductCategoryModel.builder()
-                .id(entity.getId())
-                .productId(entity.getProductId())
-                .categoryId(entity.getCategoryId())
-                .assignedAt(entity.getAssignedAt())
-                .enabled(entity.getEnabled())
-                .createdBy(entity.getCreatedBy())
-                .updatedBy(entity.getUpdatedBy())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .build();
-    }
-
-    public ProductCategoryResponseDto toResponseDto(ProductCategoryEntity entity) {
-        if (entity == null) {
-            return null;
-        }
-
-        return ProductCategoryResponseDto.builder()
-                .id(entity.getId())
-                .productId(entity.getProductId())
-                .categoryId(entity.getCategoryId())
-                .assignedAt(entity.getAssignedAt())
-                .enabled(entity.getEnabled())
-                .createdBy(entity.getCreatedBy())
-                .updatedBy(entity.getUpdatedBy())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .build();
-    }
+    // Update parcial (ignora nulos; no pisa auditoría/ID)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mappings({
+        @Mapping(target = "id", ignore = true),
+        @Mapping(target = "createdAt", ignore = true),
+        @Mapping(target = "createdBy", ignore = true)
+    })
+    void updateEntityFromModel(ProductCategoryModel src, @MappingTarget ProductCategoryEntity target);
 }

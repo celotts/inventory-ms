@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttag;
+package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTag;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;

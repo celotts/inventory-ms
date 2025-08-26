@@ -11,14 +11,14 @@ import java.util.UUID;
 @NoArgsConstructor
 public class ProductTagAssignmentModel {
     private UUID id;
-    private UUID productId;      // <- antes product_id
-    private UUID tagId;          // <- antes tag_id
-    private LocalDateTime assignedAt; // <- antes assigned_At
+    private UUID productId;
+    private UUID tagId;
+    private LocalDateTime assignedAt;
     private Boolean enabled;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;  // <- antes updateAt
+    private LocalDateTime updatedAt;
     private String createdBy;
-    private String updatedBy;    // <- antes updatedby
+    private String updatedBy;
 
     public ProductTagAssignmentModel withEnabled(boolean enabled) {
         return this.toBuilder().enabled(enabled).build();

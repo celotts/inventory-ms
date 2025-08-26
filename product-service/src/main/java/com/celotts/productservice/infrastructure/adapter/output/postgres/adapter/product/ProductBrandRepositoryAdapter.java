@@ -27,44 +27,44 @@ public class ProductBrandRepositoryAdapter implements ProductBrandRepositoryPort
         return mapper.toModel(saved);
     }
 
-    @Override
+    @Override @Transactional(readOnly = true)
     public Optional<ProductBrandModel> findById(UUID id) {
         return repository.findById(id).map(mapper::toModel);
     }
 
-    @Override
+    @Override @Transactional(readOnly = true)
     public Optional<ProductBrandModel> findByName(String name) {
         return repository.findByNameIgnoreCase(name).map(mapper::toModel);
     }
 
-    @Override
+    @Override @Transactional(readOnly = true)
     public List<ProductBrandModel> findAll() {
         return repository.findAll().stream().map(mapper::toModel).toList();
     }
 
-    @Override
+    @Override @Transactional(readOnly = true)
     public boolean existsByName(String name) {
         return repository.existsByNameIgnoreCase(name);
     }
 
-    @Override
+    @Override @Transactional(readOnly = true)
     public boolean existsById(UUID id) {
         return repository.existsById(id);
     }
 
-    @Override
+    @Override @Transactional(readOnly = true)
     public void deleteById(UUID id) {
         repository.deleteById(id);
     }
 
     // ----- extras del puerto -----
 
-    @Override
+    @Override @Transactional(readOnly = true)
     public Optional<String> findNameById(UUID id) {
         return repository.findNameById(id);
     }
 
-    @Override
+    @Override @Transactional(readOnly = true)
     public List<UUID> findAllIds() {
         return repository.findAllIds();
     }

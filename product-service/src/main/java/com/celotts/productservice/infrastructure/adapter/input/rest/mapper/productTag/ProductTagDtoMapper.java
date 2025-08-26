@@ -1,9 +1,9 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productTag;
 
 import com.celotts.productservice.domain.model.product.ProductTagModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttag.ProductTagCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttag.ProductTagUpdateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttag.ProductTagResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTag.ProductTagCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTag.ProductTagUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTag.ProductTagResponseDto;
 import org.springframework.stereotype.Component;
 @Component
 public class ProductTagDtoMapper {

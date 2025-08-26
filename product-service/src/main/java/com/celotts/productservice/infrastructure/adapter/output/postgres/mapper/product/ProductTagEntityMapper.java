@@ -1,63 +1,23 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product;
 
+import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.CentralMapperConfig;
 import com.celotts.productservice.domain.model.product.ProductTagModel;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTagEntity; // <- cambia esto
-import org.springframework.stereotype.Component;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTagEntity;
+import org.mapstruct.*;
 
-@Component
-public class ProductTagEntityMapper {
+@Mapper(config = CentralMapperConfig.class)
+public interface ProductTagEntityMapper {
 
-    public ProductTagModel toDomain(ProductTagEntity e) {
-        if (e == null) return null;
-        return ProductTagModel.builder()
-                .id(e.getId())
-                .name(e.getName())
-                .description(e.getDescription())
-                .enabled(e.getEnabled())
-                .createdAt(e.getCreatedAt())
-                .updatedAt(e.getUpdatedAt())
-                .createdBy(e.getCreatedBy())
-                .updatedBy(e.getUpdatedBy())
-                .build();
-    }
+    ProductTagEntity toEntity(ProductTagModel model);
 
-    public ProductTagEntity toEntity(ProductTagModel m) {
-        if (m == null) return null;
-        return ProductTagEntity.builder()
-                .id(m.getId())
-                .name(m.getName())
-                .description(m.getDescription())
-                .enabled(m.getEnabled())
-                .createdAt(m.getCreatedAt())
-                .updatedAt(m.getUpdatedAt())
-                .createdBy(m.getCreatedBy())
-                .updatedBy(m.getUpdatedBy())
-                .build();
-    }
+    @InheritInverseConfiguration(name = "toEntity")
+    ProductTagModel toModel(ProductTagEntity entity);
 
-    public void updateEntity(ProductTagEntity target, ProductTagModel source) {
-        if (target == null || source == null) return;
-        target.setName(source.getName());
-        target.setDescription(source.getDescription());
-        target.setEnabled(source.getEnabled());
-        target.setUpdatedBy(source.getUpdatedBy());
-        target.setUpdatedAt(source.getUpdatedAt());
-    }
-
-
-
-    /* Entity -> Domain */
-    public ProductTagModel toModel(ProductTagEntity entity) {
-        if (entity == null) return null;
-        return ProductTagModel.builder()
-                .id(entity.getId())
-                .name(entity.getName())
-                .description(entity.getDescription())
-                .enabled(entity.getEnabled())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .createdBy(entity.getCreatedBy())
-                .updatedBy(entity.getUpdatedBy())
-                .build();
-    }
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mappings({
+            @Mapping(target = "id", ignore = true),
+            @Mapping(target = "createdAt", ignore = true),
+            @Mapping(target = "createdBy", ignore = true)
+    })
+    void updateEntityFromModel(ProductTagModel src, @MappingTarget ProductTagEntity target);
 }
