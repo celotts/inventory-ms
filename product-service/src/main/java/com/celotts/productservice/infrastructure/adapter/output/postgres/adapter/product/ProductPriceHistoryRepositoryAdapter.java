@@ -4,7 +4,7 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.adapte
 import com.celotts.productservice.domain.model.product.ProductPriceHistoryModel;
 import com.celotts.productservice.domain.port.output.product.ProductPriceHistoryRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductPriceHistoryEntity;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductPriceHistoryEntityMapper;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductPriceHistoryEntityMapper; // <- interface @Mapper
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductPriceHistoryJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

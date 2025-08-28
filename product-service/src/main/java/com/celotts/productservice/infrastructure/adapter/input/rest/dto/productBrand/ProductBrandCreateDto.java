@@ -1,7 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -12,13 +11,17 @@ import lombok.*;
 public class ProductBrandCreateDto {
 
     @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name must not exceed 100 characters")
-    String name;
+    @Size(max = 120, message = "Name must not exceed 120 characters")
+    private String name;
 
-    @Size(max = 500, message = "Description must not exceed 500 characters")
-    String description; // opcional
+    @Size(max = 1000, message = "Description must not exceed 1000 characters")
+    private String description; // opcional
 
     // opcional; en el use case default = true si es null
-    Boolean enabled;
+    private Boolean enabled;
 
+    @NotBlank(message = "createdBy is required")
+    private String createdBy;
+
+    private String updatedBy;
 }
