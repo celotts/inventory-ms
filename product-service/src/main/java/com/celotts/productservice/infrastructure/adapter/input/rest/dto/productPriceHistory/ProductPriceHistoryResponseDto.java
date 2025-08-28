@@ -1,13 +1,14 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productPriceHistory;
 
-import lombok.Builder;
-import lombok.Value;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Value
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class ProductPriceHistoryResponseDto {
     UUID id;
