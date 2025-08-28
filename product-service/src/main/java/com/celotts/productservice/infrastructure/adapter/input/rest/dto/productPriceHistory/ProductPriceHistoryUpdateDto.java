@@ -13,12 +13,11 @@ import java.util.UUID;
 
 @Value
 @Builder
-public class ProductPriceHistoryCreateDto {
+public class ProductPriceHistoryUpdateDto {
 
-    @NotNull(message = "Product ID is required")
-    UUID productId;
+    @NotNull(message = "ID is required")
+    UUID id;
 
-    @NotNull(message = "Price is required")
     @DecimalMin(value = "0.00", inclusive = false, message = "Price must be greater than 0")
     @Digits(integer = 12, fraction = 2, message = "Price must have max 2 decimals")
     BigDecimal price;

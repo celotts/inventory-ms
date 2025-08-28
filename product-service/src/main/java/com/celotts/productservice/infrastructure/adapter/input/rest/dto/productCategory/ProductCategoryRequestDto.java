@@ -1,7 +1,12 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory;
 
 import com.celotts.productservice.infrastructure.common.dto.PageableRequestDto;
-import lombok.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -11,7 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-@lombok.experimental.SuperBuilder
+@SuperBuilder
 public class ProductCategoryRequestDto extends PageableRequestDto {
 
     private UUID productId;
