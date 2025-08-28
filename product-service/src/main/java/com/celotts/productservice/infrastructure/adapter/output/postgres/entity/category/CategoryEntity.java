@@ -1,10 +1,13 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity.category;
 
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -15,6 +18,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @Table(name = "category")
+@EntityListeners(AuditingEntityListener.class)
 public class CategoryEntity {
 
     @Id
@@ -51,13 +55,9 @@ public class CategoryEntity {
         if (this.createdAt == null) {
             this.createdAt = LocalDateTime.now();
         }
-        if (this.active == null) {
-            this.active = Boolean.TRUE;
-        }
+        if (this.active == null) this.active = Boolean.TRUE;
+
+        if (this.deleted == null) this.deleted = Boolean.FALSE;
     }
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 }

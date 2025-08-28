@@ -18,13 +18,13 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/v1/product-brands")
+@RequestMapping(value = "/api/v1/product-brands", produces = "application/json")
 public class ProductBrandController {
 
     private final ProductBrandUseCase productBrandUseCase;
     private final ProductBrandDtoMapper productBrandDtoMapper;
 
-    @PostMapping
+    @PostMapping(consumes = "application/json")
     public ResponseEntity<ProductBrandResponseDto> create(@Valid @RequestBody ProductBrandCreateDto dto) {
         // Si tu mapper tiene toModel(createDto)
         ProductBrandModel model = productBrandDtoMapper.toModel(dto);

@@ -83,4 +83,10 @@ public class ProductCategoryRepositoryAdapter implements ProductCategoryReposito
         entity.setUpdatedAt(LocalDateTime.now());
         repository.save(entity);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByProductIdAndCategoryIdAndEnabledTrue(UUID productId, UUID categoryId) {
+        return repository.existsByProductIdAndCategoryIdAndEnabledTrue(productId, categoryId);
+    }
 }

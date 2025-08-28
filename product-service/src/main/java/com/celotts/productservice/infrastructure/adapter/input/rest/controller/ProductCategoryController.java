@@ -4,7 +4,7 @@ import com.celotts.productservice.domain.model.product.ProductCategoryModel;
 import com.celotts.productservice.domain.port.input.product.ProductCategoryUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryResponseDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productcategory.ProductCategoryDtoMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productCategory.ProductCategoryDtoMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,9 +28,11 @@ public class ProductCategoryController {
 
     @PostMapping
     @Operation(summary = "Asignar categoría a producto")
-    public ResponseEntity<ProductCategoryResponseDto> create(@RequestBody @Valid ProductCategoryCreateDto dto) {
-        ProductCategoryModel created = productCategoryUseCase.assignCategoryToProduct(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(productCategoryDtoMapper.toDto(created));
+    public ResponseEntity<ProductCategoryResponseDto> create(@Valid @RequestBody ProductCategoryCreateDto dto) {
+        var modelIn = productCategoryDtoMapper.toModel(dto);
+        var saved = productCategoryUseCase.assignCategoryToProduct(modelIn);
+        var out = productCategoryDtoMapper.toDto(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(out);
     }
 
     @GetMapping("/{id}")
