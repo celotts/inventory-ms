@@ -9,8 +9,6 @@ import lombok.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
@@ -55,8 +53,7 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort   {
 
     @Override
     public boolean existsByName(String name) {
-        // usa el que realmente tengas en el repo
-        return jpa.existsByName(name);               // o: jpa.existsByNameIgnoreCase(name)
+        return jpa.existsByNameIgnoreCase(name);
     }
 
     @Override
@@ -126,7 +123,7 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort   {
     @Override
     public List<CategoryModel> findByNameOrDescription(String term, int limit) {
         return mapper.toModelList(
-                jpa.findByNameOrDescriptionContainingIgnoreCase(term.toLowerCase(), Pageable.ofSize(limit))
+                jpa.findByNameOrDescriptionContainingIgnoreCase(term, Pageable.ofSize(limit))
         );
     }
 }

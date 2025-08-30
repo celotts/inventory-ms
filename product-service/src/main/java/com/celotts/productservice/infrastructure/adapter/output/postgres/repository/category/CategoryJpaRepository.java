@@ -13,27 +13,27 @@ import java.util.UUID;
 
 public interface CategoryJpaRepository extends JpaRepository<CategoryEntity, UUID> {
 
+    // Búsqueda exacta (case-insensitive)
     Optional<CategoryEntity> findByNameIgnoreCase(String name);
 
+    // Existencia (case-insensitive, consistente con el adapter)
     boolean existsByNameIgnoreCase(String name);
 
+    // Búsqueda parcial por nombre (case-insensitive)
     List<CategoryEntity> findByNameContainingIgnoreCase(String name);
 
-    // Variante limitada (usa @Query con LIMIT si tu JPA provider lo permite, o Pageable):
+    // Búsqueda parcial en nombre o descripción con límite (Pageable controla LIMIT/OFFSET)
     @Query("""
-    select c from CategoryEntity c
-    where lower(c.name) like lower(concat('%', :q, '%'))
-       or lower(c.description) like lower(concat('%', :q, '%'))
+        select c from CategoryEntity c
+        where lower(c.name) like lower(concat('%', :q, '%'))
+           or lower(c.description) like lower(concat('%', :q, '%'))
+        order by c.name asc
     """)
     List<CategoryEntity> findByNameOrDescriptionContainingIgnoreCase(@Param("q") String q,
                                                                      Pageable limitPage);
-    // Si prefieres el int limit como en el adapter, puedes hacer:
-    // default List<CategoryEntity> findByNameOrDescriptionContainingIgnoreCase(String q, int limit) {
-    //     return findByNameOrDescriptionContainingIgnoreCase(q, PageRequest.of(0, limit));
-    // }
 
-    // Paginados
-    boolean existsByName(String name);
+    // ------------------ Métodos paginados ------------------ //
+
     Page<CategoryEntity> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
     Page<CategoryEntity> findByActive(Boolean active, Pageable pageable);
@@ -41,5 +41,4 @@ public interface CategoryJpaRepository extends JpaRepository<CategoryEntity, UUI
     Page<CategoryEntity> findByNameContainingIgnoreCaseAndActive(String name, Boolean active, Pageable pageable);
 
     long countByActive(boolean active);
-
 }

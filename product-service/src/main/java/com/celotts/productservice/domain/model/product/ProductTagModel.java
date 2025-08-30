@@ -21,6 +21,14 @@ public class ProductTagModel {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    public void activate() {
+        this.enabled = true;
+    }
+
+    public void deactivate() {
+        this.enabled = false;
+    }
+
     public ProductTagModel withEnabled(boolean enabled){
         return this.toBuilder().enabled(enabled).build();
     }

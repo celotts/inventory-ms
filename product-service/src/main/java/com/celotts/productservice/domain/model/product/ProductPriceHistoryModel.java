@@ -13,14 +13,22 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProductPriceHistoryModel {
-    UUID id;
-    UUID productId;
-    BigDecimal price;
-    Boolean enabled;
-    LocalDateTime changedAt;
-    LocalDateTime createdAt;
-    LocalDateTime updatedAt;
-    String createdBy;
-    String updatedBy;
+    private UUID id;
+    private UUID productId;
+    private BigDecimal price;
+    private Boolean enabled;
+    private LocalDateTime changedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private String createdBy;
+    private String updatedBy;
+
+    public void activate() {
+        this.enabled = true;
+    }
+
+    public void deactivate() {
+        this.enabled = false;
+    }
 
 }

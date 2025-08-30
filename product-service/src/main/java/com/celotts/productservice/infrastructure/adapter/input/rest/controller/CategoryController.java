@@ -49,8 +49,6 @@ public class CategoryController {
                                                       @Valid @RequestBody CategoryUpdateDto dto) {
         return categoryUseCase.findById(id)
                 .map(existing -> {
-                    // Si tu use case espera el modelo mergeado, hazlo ahí;
-                    // aquí ejemplo simple: copiar campos del dto sobre existing
                     CategoryModel patch = CategoryDtoMapper.toModelFromUpdate(dto);
                     if (patch.getName() != null)        existing.setName(patch.getName());
                     if (patch.getDescription() != null) existing.setDescription(patch.getDescription());

@@ -2,44 +2,25 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper
 
 import com.celotts.productservice.domain.model.category.CategoryModel;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.category.CategoryEntity;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Component
-public class CategoryEntityMapper {
+@Mapper(
+        componentModel = "spring",
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+)
+public interface CategoryEntityMapper {
 
-    public CategoryEntity toEntity(CategoryModel model) {
-        if (model == null) return null;
-        CategoryEntity e = new CategoryEntity();
-        e.setId(model.getId());
-        e.setName(model.getName());
-        e.setDescription(model.getDescription());
-        e.setActive(model.getActive());
-        e.setCreatedAt(model.getCreatedAt());
-        e.setUpdatedAt(model.getUpdatedAt());
-        e.setCreatedBy(model.getCreatedBy());
-        e.setUpdatedBy(model.getUpdatedBy());
-        return e;
-    }
+    // Model -> Entity
+    CategoryEntity toEntity(CategoryModel model);
 
-    public CategoryModel toModel(CategoryEntity e) {
-        if (e == null) return null;
-        CategoryModel m = new CategoryModel();
-        m.setId(e.getId());
-        m.setName(e.getName());
-        m.setDescription(e.getDescription());
-        m.setActive(e.getActive());
-        m.setDeleted(e.getDeleted());
-        m.setCreatedAt(e.getCreatedAt());
-        m.setUpdatedAt(e.getUpdatedAt());
-        m.setCreatedBy(e.getCreatedBy());
-        m.setUpdatedBy(e.getUpdatedBy());
-        return m;
-    }
+    // Entity -> Model
+    @Mapping(source = "deleted", target = "deleted") // explícito si 'deleted' existe en ambos lados
+    CategoryModel toModel(CategoryEntity entity);
 
-    public List<CategoryModel> toModelList(List<CategoryEntity> entities) {
-        return entities.stream().map(this::toModel).collect(Collectors.toList());
-    }
+    // List<Entity> -> List<Model>
+    List<CategoryModel> toModelList(List<CategoryEntity> entities);
 }

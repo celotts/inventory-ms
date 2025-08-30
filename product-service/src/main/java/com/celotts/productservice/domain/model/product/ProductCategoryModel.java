@@ -11,16 +11,28 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProductCategoryModel {
-    UUID id;
-    UUID productId;
-    UUID categoryId;
-    LocalDateTime assignedAt;
-    Boolean enabled;
-    LocalDateTime createdAt;
-    String createdBy;
-    Boolean active;
-    String updatedBy;
-    LocalDateTime updatedAt;
+    private UUID id;
+    private UUID productId;
+    private UUID categoryId;
+    private LocalDateTime assignedAt;
+    private Boolean enabled;
+    private LocalDateTime createdAt;
+    private String createdBy;
+    private Boolean active;
+    private String updatedBy;
+    private LocalDateTime updatedAt;
 
 
+    public boolean isActive() {
+        return enabled != null && enabled;
+    }
+
+
+    public void activate() {
+        this.enabled = true;
+    }
+
+    public void deactivate() {
+        this.enabled = false;
+    }
 }

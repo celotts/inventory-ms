@@ -1,8 +1,10 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
+
 import com.celotts.productservice.domain.model.product.ProductBrandModel;
 import com.celotts.productservice.domain.port.input.product.ProductBrandUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandDeleteDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productbrand.ProductBrandDtoMapper;
 import jakarta.validation.Valid;
@@ -52,32 +54,13 @@ public class ProductBrandController {
         );
     }
 
-    //TODO: HAY ERROR
-    /*@GetMapping("/{id}")
-    public ResponseEntity<ProductBrandResponseDto> getBrandById(@PathVariable UUID id) {
-        ProductBrandModel model = productBrandUseCase.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Brand not found: " + id));
-        return ResponseEntity.ok(productBrandDtoMapper.toResponseDto(model));
-    }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ProductBrandResponseDto> update(
-            @PathVariable UUID id,
-            @Valid @RequestBody ProductBrandUpdateDto dto
-    ) {
-        ProductBrandModel current = productBrandUseCase.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Brand not found: " + id));
-
-        // Actualiza el modelo con el DTO (según tus métodos del mapper)
-        ProductBrandModel merged = productBrandDtoMapper.updateModelFromDto(current, dto);
-        ProductBrandModel saved = productBrandUseCase.save(merged);
-
-        return ResponseEntity.ok(productBrandDtoMapper.toResponseDto(saved));
-    }*/
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        productBrandUseCase.deleteById(id);
+    public ResponseEntity<Void> deleteBrand(
+            @PathVariable UUID id,
+            @Valid @RequestBody ProductBrandDeleteDto dto) {
+        productBrandUseCase.deleteById(id, dto.getUpdatedBy(), dto.getUpdatedAt());
         return ResponseEntity.noContent().build();
     }
 
