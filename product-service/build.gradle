@@ -9,12 +9,12 @@ group = 'com.celotts'
 version = '0.0.1-SNAPSHOT'
 
 jacoco {
-    toolVersion = "0.8.10"
+    toolVersion = "0.8.11"
 }
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -39,7 +39,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
-    // Validación (suficiente, trae api + impl)
+    // Validación
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
     // Spring Cloud
@@ -51,7 +51,7 @@ dependencies {
 
     // DB
     runtimeOnly 'org.postgresql:postgresql'
-    testImplementation 'com.h2database:h2'      // suficiente para tests
+    testImplementation 'com.h2database:h2'
 
     // Lombok
     compileOnly 'org.projectlombok:lombok:1.18.32'
@@ -62,9 +62,7 @@ dependencies {
     // MapStruct
     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
-    // recomendado si tus tests usan mappers en compilación:
     testAnnotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
-    // binding con Lombok
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
     // Dev
@@ -72,13 +70,17 @@ dependencies {
 
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // ✅ Testcontainers 1.20.x vía BOM
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.20.2')
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
+
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.mockito:mockito-junit-jupiter'
     testImplementation 'org.mockito:mockito-inline:5.2.0'
     testImplementation 'org.springframework.security:spring-security-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
 }
 
 dependencyManagement {
