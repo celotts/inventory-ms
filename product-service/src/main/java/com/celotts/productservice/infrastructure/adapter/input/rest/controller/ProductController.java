@@ -89,7 +89,7 @@ public class ProductController {
                 ? productUseCase.getAllProductsWithFilters(pageable, code, name, description)
                 : productUseCase.getAllProducts(pageable);
 
-        // Si tu ProductMapper tiene helper toResponsePage(page):
+        // Si ProductMapper tiene helper toResponsePage(page):
         // Page<ProductResponseDto> dtoPage = productMapper.toResponsePage(products);
         // Si no, mapea así:
         Page<ProductResponseDto> dtoPage = products.map(productMapper::toResponse);
