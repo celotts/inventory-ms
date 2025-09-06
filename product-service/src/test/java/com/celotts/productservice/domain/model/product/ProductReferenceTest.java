@@ -1,5 +1,6 @@
 package com.celotts.productservice.domain.model.product;
 
+import com.celotts.productservice.domain.contract.product.ProductReference;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;

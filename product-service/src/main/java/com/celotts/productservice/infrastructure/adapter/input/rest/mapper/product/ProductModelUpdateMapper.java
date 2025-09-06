@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 
 public class ProductModelUpdateMapper {
     private ProductModelUpdateMapper() {
-        throw new UnsupportedOperationException("Utility class - instantiation not allowed");
+        throw new UnsupportedOperationException("Utility class ProductModelUpdateMapper - instantiation not allowed");
     }
 
 
