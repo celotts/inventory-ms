@@ -2,19 +2,17 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.domain.model.product.ProductTagAssignmentModel;
 import com.celotts.productservice.domain.port.input.product.ProductTagAssignmentUseCase;
-
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTagAssignment.ProductTagAssignmentCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTagAssignment.ProductTagAssignmentUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTagAssignment.ProductTagAssignmentResponseDto;
-
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productTagAssignment.ProductTagAssignmentDtoMapper;
-
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productTagAssignment.ProductTagAssignmentMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 import java.util.Map;
@@ -23,27 +21,29 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/product-tag-assignment")
+@CrossOrigin(origins = "${app.cors.allowed-origin:*}")
 public class ProductTagAssignmentController {
 
-    private final ProductTagAssignmentUseCase productTagAssignmentUseCase;
-    private final ProductTagAssignmentDtoMapper productTagAssignmentDtoMapper;
+    private final ProductTagAssignmentUseCase useCase;
+    private final ProductTagAssignmentMapper mapper;
+
 
     @PostMapping
     public ResponseEntity<ProductTagAssignmentResponseDto> create(
             @Valid @RequestBody ProductTagAssignmentCreateDto dto) {
 
-        ProductTagAssignmentModel toCreate = productTagAssignmentDtoMapper.toModel(dto);
-        ProductTagAssignmentModel created  = productTagAssignmentUseCase.create(toCreate);
+        ProductTagAssignmentModel toCreate = mapper.toModel(dto);
+        ProductTagAssignmentModel created  = useCase.create(toCreate);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .header("Location", "/api/v1/product-tag-assignment/" + created.getId())
-                .body(productTagAssignmentDtoMapper.toResponseDto(created));
+                .body(mapper.toResponse(created));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductTagAssignmentResponseDto> getById(@PathVariable UUID id) {
-        ProductTagAssignmentModel model = productTagAssignmentUseCase.findById(id);
-        return ResponseEntity.ok(productTagAssignmentDtoMapper.toResponseDto(model));
+        ProductTagAssignmentModel model = useCase.findById(id);
+        return ResponseEntity.ok(mapper.toResponse(model));
     }
 
     @PutMapping("/{id}")
@@ -51,14 +51,16 @@ public class ProductTagAssignmentController {
             @PathVariable UUID id,
             @Valid @RequestBody ProductTagAssignmentUpdateDto dto) {
 
-        ProductTagAssignmentModel update = productTagAssignmentDtoMapper.toModel(dto);
-        ProductTagAssignmentModel saved  = productTagAssignmentUseCase.update(id, update);
-        return ResponseEntity.ok(productTagAssignmentDtoMapper.toResponseDto(saved));
+        // Trae existente y aplica patch ignorando nulls
+        ProductTagAssignmentModel existing = useCase.findById(id);
+        mapper.updateModelFromDto(existing, dto);
+        ProductTagAssignmentModel saved = useCase.update(id, existing);
+        return ResponseEntity.ok(mapper.toResponse(saved));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        productTagAssignmentUseCase.delete(id);
+        useCase.delete(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -68,18 +70,17 @@ public class ProductTagAssignmentController {
             @RequestParam(required = false) Boolean enabled) {
 
         if (enabled == null) {
-            var page = productTagAssignmentUseCase.findAll(pageable);
+            var page = useCase.findAll(pageable);
             List<ProductTagAssignmentResponseDto> data =
-                    page.map(productTagAssignmentDtoMapper::toResponseDto).getContent();
+                    page.map(mapper::toResponse).getContent();
             return ResponseEntity.ok(Map.of(
                     "data", data,
                     "total", page.getTotalElements()
             ));
         } else {
-            // cuando filtras por enabled, el puerto retorna List
             List<ProductTagAssignmentResponseDto> data =
-                    productTagAssignmentUseCase.findByEnabled(enabled).stream()
-                            .map(productTagAssignmentDtoMapper::toResponseDto)
+                    useCase.findByEnabled(enabled).stream()
+                            .map(mapper::toResponse)
                             .toList();
             return ResponseEntity.ok(Map.of(
                     "data", data,
@@ -91,26 +92,27 @@ public class ProductTagAssignmentController {
     @GetMapping("/enabled")
     public ResponseEntity<Map<String, Object>> listEnabled() {
         List<ProductTagAssignmentResponseDto> data =
-                productTagAssignmentUseCase.findByEnabled(true).stream()
-                        .map(productTagAssignmentDtoMapper::toResponseDto)
+                useCase.findByEnabled(true).stream()
+                        .map(mapper::toResponse)
                         .toList();
         return ResponseEntity.ok(Map.of("data", data, "total", data.size()));
     }
 
+
     @PatchMapping("/{id}/enable")
     public ResponseEntity<ProductTagAssignmentResponseDto> enable(@PathVariable UUID id) {
-        ProductTagAssignmentModel enabled = productTagAssignmentUseCase.enable(id);
-        return ResponseEntity.ok(productTagAssignmentDtoMapper.toResponseDto(enabled));
+        ProductTagAssignmentModel enabled = useCase.enable(id);
+        return ResponseEntity.ok(mapper.toResponse(enabled));
     }
 
     @PatchMapping("/{id}/disable")
     public ResponseEntity<ProductTagAssignmentResponseDto> disable(@PathVariable UUID id) {
-        ProductTagAssignmentModel disabled = productTagAssignmentUseCase.disable(id);
-        return ResponseEntity.ok(productTagAssignmentDtoMapper.toResponseDto(disabled));
+        ProductTagAssignmentModel disabled = useCase.disable(id);
+        return ResponseEntity.ok(mapper.toResponse(disabled));
     }
 
     @GetMapping("/enabled/count")
     public Map<String, Long> countEnabled() {
-        return Map.of("count", productTagAssignmentUseCase.countEnabled());
+        return Map.of("count", useCase.countEnabled());
     }
 }
