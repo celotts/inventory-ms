@@ -1,19 +1,17 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand;
+package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productTagAssignment;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Value;
-import lombok.extern.jackson.Jacksonized;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Value
 @Builder
-@Jacksonized
-public class ProductBrandDeleteDto {
+public class ProductTagAssignmentDeleteDto {
 
     @NotNull(message = "ID is required")
     UUID id;

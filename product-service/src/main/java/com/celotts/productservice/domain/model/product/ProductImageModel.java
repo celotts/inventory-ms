@@ -1,6 +1,5 @@
 package com.celotts.productservice.domain.model.product;
 
-
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -11,18 +10,17 @@ import java.util.UUID;
 @With
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductUnitModel {
-
+public class ProductImageModel {
     private UUID id;
-    private String code;
-    private String name;
-    private String description;
-    private String symbol;
+    private UUID productId;
+    private String url;
+    private LocalDateTime uploadedAt;
     private Boolean enabled;
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
     private String createdBy;
     private String updatedBy;
+    private Boolean active;
+    private LocalDateTime updateAt;
 
     public void activate() {
         this.enabled = true;

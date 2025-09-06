@@ -4,6 +4,8 @@ import com.celotts.productservice.domain.port.output.product.ProductBrandReposit
 import com.celotts.productservice.domain.exception.BrandNotFoundException;
 import com.celotts.productservice.domain.model.product.ProductBrandModel;
 import com.celotts.productservice.domain.port.input.product.ProductBrandUseCase;
+
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -53,8 +55,16 @@ public class ProductBrandUseCaseImpl implements ProductBrandUseCase {
     }
 
     @Override
-    public void deleteById(UUID id) {
-        repository.deleteById(id);
+    @Transactional
+    public void deleteById(UUID id, String updatedBy, LocalDateTime updatedAt) {
+        ProductBrandModel brand = repository.findById(id)
+                .orElseThrow(() -> new BrandNotFoundException(id));
+
+        brand.deactivate();
+        brand.setUpdatedAt(updatedAt != null ? updatedAt : LocalDateTime.now());
+        brand.setUpdatedBy(updatedBy);
+
+        repository.save(brand);
     }
 
     @Override

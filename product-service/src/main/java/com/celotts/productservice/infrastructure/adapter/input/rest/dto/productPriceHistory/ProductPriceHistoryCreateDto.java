@@ -4,6 +4,8 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 import lombok.Builder;
 import lombok.Value;
 
@@ -27,4 +29,7 @@ public class ProductPriceHistoryCreateDto {
 
     @PastOrPresent(message = "changedAt must be in the past or present")
     LocalDateTime changedAt;
+
+    @Size(max = 100, message = "createdBy max length is 100")
+    String createdBy;
 }

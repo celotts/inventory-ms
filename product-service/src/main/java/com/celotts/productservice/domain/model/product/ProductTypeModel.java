@@ -22,4 +22,12 @@ public class ProductTypeModel {
     private String createdBy;
     private String updatedBy;
 
+    public void activate() {
+        this.enabled = true;
+    }
+
+    public void deactivate() {
+        this.enabled = false;
+    }
+
 }

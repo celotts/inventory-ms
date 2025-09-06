@@ -11,6 +11,16 @@ spring:
     username: ${DB_USERNAME:product}
     password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
+  hikari:
+    pool-name: HikariPool-ProductService
+    maximum-pool-size: 10                         # -> "Maximum pool size"
+    minimum-idle: 2                               # Hikari no tiene "min pool size" como tal; usa minimumIdle
+    auto-commit: false                            # -> "Autocommit mode"
+    transaction-isolation: TRANSACTION_READ_COMMITTED  # -> "Isolation level"
+    # Opcionales útiles:
+    connection-timeout: 30000
+    idle-timeout: 600000
+    max-lifetime: 1800000
 
   jpa:
     hibernate:
