@@ -1,52 +1,52 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.domain.model.product.ProductCategoryModel;
-import com.celotts.productservice.domain.port.input.product.ProductCategoryUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryResponseDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productCategory.ProductCategoryDtoMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productCategory.ProductCategoryMapper;
+import com.celotts.productservice.domain.model.product.ProductCategoryModel;
+import com.celotts.productservice.domain.port.input.product.ProductCategoryUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/product-category")
+@RequestMapping("/api/v1/product-categories")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "${app.cors.allowed-origin:*}")
-@Tag(name = "Product Category API", description = "API para gestionar la relación entre productos y categorías")
+@Slf4j
+@Tag(name = "Product Category API", description = "API para gestionar categorías de producto")
 public class ProductCategoryController {
 
     private final ProductCategoryUseCase productCategoryUseCase;
-    private final ProductCategoryDtoMapper productCategoryDtoMapper;
+    private final ProductCategoryMapper productCategoryMapper;
 
     @PostMapping
     @Operation(summary = "Asignar categoría a producto")
     public ResponseEntity<ProductCategoryResponseDto> create(@Valid @RequestBody ProductCategoryCreateDto dto) {
-        var modelIn = productCategoryDtoMapper.toModel(dto);
-        var saved = productCategoryUseCase.assignCategoryToProduct(modelIn);
-        var out = productCategoryDtoMapper.toDto(saved);
+        ProductCategoryModel modelIn = productCategoryMapper.toModel(dto);                // ✅ MapStruct
+        ProductCategoryModel saved   = productCategoryUseCase.assignCategoryToProduct(modelIn);
+        ProductCategoryResponseDto out = productCategoryMapper.toResponse(saved);         // ✅ MapStruct
         return ResponseEntity.status(HttpStatus.CREATED).body(out);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Obtener asignación por ID")
     public ResponseEntity<ProductCategoryResponseDto> getById(@PathVariable UUID id) {
-        return ResponseEntity.ok(productCategoryDtoMapper.toDto(productCategoryUseCase.getById(id)));
+        ProductCategoryModel model = productCategoryUseCase.getById(id);
+        return ResponseEntity.ok(productCategoryMapper.toResponse(model));                // ✅ MapStruct
     }
 
     @GetMapping
     @Operation(summary = "Listar todas las asignaciones")
     public ResponseEntity<List<ProductCategoryResponseDto>> getAll() {
-        List<ProductCategoryResponseDto> response = productCategoryUseCase.getAll()
-                .stream().map(productCategoryDtoMapper::toDto).collect(Collectors.toList());
-        return ResponseEntity.ok(response);
+        List<ProductCategoryModel> all = productCategoryUseCase.getAll();
+        return ResponseEntity.ok(productCategoryMapper.toResponseList(all));              // ✅ sin Collectors
     }
 
     @DeleteMapping("/{id}")

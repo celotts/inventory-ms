@@ -1,12 +1,11 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-
 import com.celotts.productservice.domain.model.product.ProductBrandModel;
 import com.celotts.productservice.domain.port.input.product.ProductBrandUseCase;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandDeleteDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productbrand.ProductBrandDtoMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;   // camelCase
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandDeleteDto;   // camelCase
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto; // camelCase
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandMapper;   // 👈 mapper nuevo (camelCase)
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,14 +23,13 @@ import java.util.UUID;
 public class ProductBrandController {
 
     private final ProductBrandUseCase productBrandUseCase;
-    private final ProductBrandDtoMapper productBrandDtoMapper;
+    private final ProductBrandMapper productBrandMapper; // 👈 reemplaza ProductBrandDtoMapper
 
     @PostMapping(consumes = "application/json")
     public ResponseEntity<ProductBrandResponseDto> create(@Valid @RequestBody ProductBrandCreateDto dto) {
-        // Si tu mapper tiene toModel(createDto)
-        ProductBrandModel model = productBrandDtoMapper.toModel(dto);
+        ProductBrandModel model = productBrandMapper.toModel(dto);
         ProductBrandModel saved = productBrandUseCase.save(model);
-        ProductBrandResponseDto response = productBrandDtoMapper.toResponseDto(saved);
+        ProductBrandResponseDto response = productBrandMapper.toResponse(saved);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -43,23 +41,15 @@ public class ProductBrandController {
     public ResponseEntity<Map<String, Object>> getAllBrands() {
         List<ProductBrandResponseDto> list = productBrandUseCase.findAll()
                 .stream()
-                .map(productBrandDtoMapper::toResponseDto)
+                .map(productBrandMapper::toResponse)
                 .toList();
 
-        return ResponseEntity.ok(
-                Map.of(
-                        "data", list,
-                        "total", list.size()
-                )
-        );
+        return ResponseEntity.ok(Map.of("data", list, "total", list.size()));
     }
 
-
-
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBrand(
-            @PathVariable UUID id,
-            @Valid @RequestBody ProductBrandDeleteDto dto) {
+    public ResponseEntity<Void> deleteBrand(@PathVariable UUID id,
+                                            @Valid @RequestBody ProductBrandDeleteDto dto) {
         productBrandUseCase.deleteById(id, dto.getUpdatedBy(), dto.getUpdatedAt());
         return ResponseEntity.noContent().build();
     }
@@ -79,12 +69,12 @@ public class ProductBrandController {
     @PatchMapping("/{id}/enable")
     public ResponseEntity<ProductBrandResponseDto> enableBrand(@PathVariable UUID id) {
         ProductBrandModel brand = productBrandUseCase.enableBrand(id);
-        return ResponseEntity.ok(productBrandDtoMapper.toResponseDto(brand));
+        return ResponseEntity.ok(productBrandMapper.toResponse(brand));
     }
 
     @PatchMapping("/{id}/disable")
     public ResponseEntity<ProductBrandResponseDto> disableBrand(@PathVariable UUID id) {
         ProductBrandModel brand = productBrandUseCase.disableBrand(id);
-        return ResponseEntity.ok(productBrandDtoMapper.toResponseDto(brand));
+        return ResponseEntity.ok(productBrandMapper.toResponse(brand));
     }
 }
