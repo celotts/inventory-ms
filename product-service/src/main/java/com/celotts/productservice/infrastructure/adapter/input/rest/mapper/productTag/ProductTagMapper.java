@@ -19,7 +19,7 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface ProductTagMapper {
 
-    //CREATE DTO
+    // CREATE DTO -> MODEL
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
