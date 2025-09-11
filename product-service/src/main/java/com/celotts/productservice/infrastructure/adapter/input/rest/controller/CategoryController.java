@@ -9,7 +9,7 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.categ
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;          // 👈 importa Page/Pageable
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +24,7 @@ import java.util.UUID;
 @Slf4j
 public class CategoryController {
 
-    private final CategoryUseCase categoryUseCase;   // o el puerto que uses
+    private final CategoryUseCase categoryUseCase;
     private final CategoryMapper categoryMapper;     // 👈 inyecta el MapStruct mapper
 
     @PostMapping
