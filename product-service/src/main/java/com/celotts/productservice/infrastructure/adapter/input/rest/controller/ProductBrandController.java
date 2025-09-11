@@ -2,10 +2,10 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.domain.model.product.ProductBrandModel;
 import com.celotts.productservice.domain.port.input.product.ProductBrandUseCase;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;   // camelCase
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandDeleteDto;   // camelCase
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto; // camelCase
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandMapper;   // 👈 mapper nuevo (camelCase)
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandDeleteDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,7 +23,7 @@ import java.util.UUID;
 public class ProductBrandController {
 
     private final ProductBrandUseCase productBrandUseCase;
-    private final ProductBrandMapper productBrandMapper; // 👈 reemplaza ProductBrandDtoMapper
+    private final ProductBrandMapper productBrandMapper;
 
     @PostMapping(consumes = "application/json")
     public ResponseEntity<ProductBrandResponseDto> create(@Valid @RequestBody ProductBrandCreateDto dto) {
