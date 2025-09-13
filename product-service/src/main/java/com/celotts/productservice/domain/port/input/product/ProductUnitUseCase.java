@@ -1,5 +1,6 @@
 package com.celotts.productservice.domain.port.input.product;
 
+import com.celotts.productservice.domain.model.product.ProductBrandModel;
 import com.celotts.productservice.domain.model.product.ProductUnitModel;
 
 import java.util.List;
@@ -16,4 +17,9 @@ public interface ProductUnitUseCase {
     boolean existsByCode(String code);
     Optional<String> findNameByCode(String code);
     List<String> findAllCodes();
+
+
+    default ProductUnitModel create(ProductUnitModel productUnit) {
+        return save(productUnit);
+    }
 }

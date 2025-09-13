@@ -4,11 +4,12 @@ import com.celotts.productservice.domain.model.product.ProductPriceHistoryModel;
 import com.celotts.productservice.domain.port.input.product.ProductPriceHistoryUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productPriceHistory.ProductPriceHistoryCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productPriceHistory.ProductPriceHistoryResponseDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productPriceHistory.ProductPriceHistoryDtoMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productPriceHistory.ProductPriceHistoryMapper; // 👈 paquete correcto
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -17,14 +18,15 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/products/{productId}/prices")
+@RequestMapping("/api/v1/products/{productId}/price-history") // 👈 incluye productId en la base
 @RequiredArgsConstructor
-@Validated
+@CrossOrigin(origins = "${app.cors.allowed-origin:*}")
+@Slf4j
+@Tag(name = "Product Price History API", description = "Histórico de precios de productos")
 public class ProductPriceHistoryController {
 
     private final ProductPriceHistoryUseCase useCase;
-    private final ProductPriceHistoryDtoMapper mapper;
-
+    private final ProductPriceHistoryMapper mapper;
     /**
      * Crea un nuevo registro de histórico de precio para el producto.
      * - El productId del path es el autoritativo (se ignora el que venga en el body, si viene).

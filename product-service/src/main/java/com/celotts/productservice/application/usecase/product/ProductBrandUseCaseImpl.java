@@ -35,6 +35,30 @@ public class ProductBrandUseCaseImpl implements ProductBrandUseCase {
     }
 
     @Override
+    @Transactional
+    public ProductBrandModel update(UUID id, ProductBrandModel patch) {
+        ProductBrandModel existing = repository.findById(id)
+                .orElseThrow(() -> new BrandNotFoundException(id));
+
+        // Si cambian el nombre, valida unicidad (excluyéndote a ti mismo)
+        if (patch.getName() != null) {
+            String newName = patch.getName().trim();
+            if (!newName.equalsIgnoreCase(existing.getName())
+                    && repository.existsByName(newName)) { // idealmente usa existsByNameExcludingId(id, newName)
+                throw new IllegalArgumentException("Brand already exists");
+            }
+            existing.setName(newName);
+        }
+
+        if (patch.getDescription() != null) existing.setDescription(patch.getDescription());
+        if (patch.getEnabled() != null)     existing.setEnabled(patch.getEnabled());
+        if (patch.getUpdatedBy() != null)   existing.setUpdatedBy(patch.getUpdatedBy());
+
+        existing.setUpdatedAt(LocalDateTime.now());
+        return repository.save(existing);
+    }
+
+    @Override
     public Optional<ProductBrandModel> findById(UUID id) {
         return repository.findById(id);
     }
@@ -103,4 +127,5 @@ public class ProductBrandUseCaseImpl implements ProductBrandUseCase {
         brand.setUpdatedAt(LocalDateTime.now());
         return repository.save(brand);
     }
+
 }

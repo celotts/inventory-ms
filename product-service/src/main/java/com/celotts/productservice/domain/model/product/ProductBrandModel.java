@@ -1,15 +1,17 @@
 package com.celotts.productservice.domain.model.product;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 @Builder(toBuilder = true)
-@With
-@AllArgsConstructor
-@NoArgsConstructor
 public class ProductBrandModel {
     private UUID id;
     private String name;
@@ -23,19 +25,10 @@ public class ProductBrandModel {
     public ProductBrandModel(UUID brandId, String coolBrand, boolean b) {
     }
 
-    // Métodos de negocio si los necesitas
-    public boolean isActive() {
-        return enabled != null && enabled;
-    }
-
-
-    public void activate() {
-        this.enabled = true;
-    }
-
-    public void deactivate() {
-        this.enabled = false;
-    }
+    // Reglas de negocio
+    public boolean isActive() { return Boolean.TRUE.equals(enabled); }
+    public void activate()     { this.enabled = true; }
+    public void deactivate()   { this.enabled = false; }
 
 
 }

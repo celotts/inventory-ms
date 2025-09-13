@@ -20,7 +20,7 @@ public class ProductImageModel {
     private String createdBy;
     private String updatedBy;
     private Boolean active;
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
 
     public void activate() {
         this.enabled = true;
