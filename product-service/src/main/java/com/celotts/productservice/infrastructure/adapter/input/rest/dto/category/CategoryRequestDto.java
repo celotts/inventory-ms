@@ -1,21 +1,30 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.category;
 
 import com.celotts.productservice.infrastructure.common.dto.PageableRequestDto;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.PositiveOrZero;
-import lombok.*;
+import jakarta.validation.constraints.Size;
+
+import jakarta.validation.constraints.NotBlank;
+
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.experimental.SuperBuilder;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @SuperBuilder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CategoryRequestDto extends PageableRequestDto {
 
     // --- Filtros ---
