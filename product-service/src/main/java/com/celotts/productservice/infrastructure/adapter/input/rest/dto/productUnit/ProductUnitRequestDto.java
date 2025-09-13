@@ -1,9 +1,7 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productunit;
+package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit;
 
 import com.celotts.productservice.infrastructure.common.dto.PageableRequestDto;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
