@@ -4,7 +4,7 @@ import com.celotts.productservice.domain.model.product.ProductPriceHistoryModel;
 import com.celotts.productservice.domain.port.input.product.ProductPriceHistoryUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productPriceHistory.ProductPriceHistoryCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productPriceHistory.ProductPriceHistoryResponseDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productPriceHistory.ProductPriceHistoryMapper; // 👈 paquete correcto
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productPriceHistory.ProductPriceHistoryMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
