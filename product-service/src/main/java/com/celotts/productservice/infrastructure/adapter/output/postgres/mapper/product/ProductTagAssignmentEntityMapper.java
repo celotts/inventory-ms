@@ -5,7 +5,7 @@ import com.celotts.productservice.domain.model.product.ProductTagAssignmentModel
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTagAssignmentEntity;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(config = CentralMapperConfig.class)
 public interface ProductTagAssignmentEntityMapper {
     ProductTagAssignmentEntity toEntity(ProductTagAssignmentModel model);
 

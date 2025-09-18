@@ -1,13 +1,13 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product;
 
+import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.CentralMapperConfig;
+
 import com.celotts.productservice.domain.model.product.ProductPriceHistoryModel;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductPriceHistoryEntity;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
+import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(config = CentralMapperConfig.class)
 public interface ProductPriceHistoryEntityMapper {
 
     // Entity → Model

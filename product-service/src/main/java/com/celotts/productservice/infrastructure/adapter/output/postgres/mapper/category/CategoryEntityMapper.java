@@ -1,17 +1,15 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.category;
 
+import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.CentralMapperConfig;
+
 import com.celotts.productservice.domain.model.category.CategoryModel;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.category.CategoryEntity;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
 import java.util.List;
 
-@Mapper(
-        componentModel = "spring",
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
-)
+
+@Mapper(config = CentralMapperConfig.class)
 public interface CategoryEntityMapper {
 
     // Model -> Entity

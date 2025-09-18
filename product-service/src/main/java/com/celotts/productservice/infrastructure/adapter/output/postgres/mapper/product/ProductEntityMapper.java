@@ -1,16 +1,12 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product;
 
+import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.CentralMapperConfig;
+
 import com.celotts.productservice.domain.model.product.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductEntity;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.InheritInverseConfiguration;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.Mappings;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(config = CentralMapperConfig.class)
 public interface ProductEntityMapper {
 
     // Model -> Entity
