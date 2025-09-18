@@ -53,6 +53,10 @@ public class ProductBrandEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    private LocalDateTime deletedAt;
+    private String deletedBy;
+    private String deletedReason;
+
     @PrePersist
     public void prePersist() {
         if (enabled == null) enabled = Boolean.TRUE;

@@ -8,6 +8,7 @@ import java.util.UUID;
 
 public interface ProductBrandRepositoryPort {
     ProductBrandModel save(ProductBrandModel model);
+
     Optional<ProductBrandModel> findById(UUID id);
     Optional<ProductBrandModel> findByName(String name);
     List<ProductBrandModel> findAll();
@@ -15,6 +16,9 @@ public interface ProductBrandRepositoryPort {
     boolean existsByName(String name);
     boolean existsById(UUID id);
     void deleteById(UUID id);
+
+    int softDelete(UUID id, String deletedBy, String reason);
+
 
     // Si tu UseCase los usa:
     Optional<String> findNameById(UUID id);

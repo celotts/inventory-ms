@@ -19,6 +19,6 @@ public interface ProductUnitRepositoryPort {
     Optional<String> findDescriptionByCode(String code);
     List<String> findAllCodes();
 
-    // (Opcional) si luego cambias el use case para usar existsById directamente:
+    // (Opcional) si se cambia el use case para usar existsById directamente:
     // boolean existsById(UUID id);
 }

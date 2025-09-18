@@ -72,9 +72,11 @@ public class ProductBrandController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBrand(@PathVariable UUID id,
-                                            @Valid @RequestBody ProductBrandDeleteDto dto) {
-        productBrandUseCase.deleteById(id, dto.getUpdatedBy(), dto.getUpdatedAt());
+    public ResponseEntity<Void> deleteBrand(
+            @PathVariable UUID id,
+            @Valid @RequestBody ProductBrandDeleteDto dto) {
+
+        productBrandUseCase.deleteById(id, dto.getDeletedBy(), dto.getReason());
         return ResponseEntity.noContent().build();
     }
 
