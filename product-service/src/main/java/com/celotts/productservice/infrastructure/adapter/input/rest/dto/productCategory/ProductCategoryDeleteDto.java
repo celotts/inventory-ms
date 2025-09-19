@@ -21,4 +21,9 @@ public class ProductCategoryDeleteDto {
 
     @PastOrPresent(message = "updatedAt must be in the past or present")
     LocalDateTime updatedAt;
+
+    String deletedBy;
+
+    @Size(max = 255, message = "Reason must not exceed 255 characters")
+    String reason;
 }

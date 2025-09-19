@@ -1,29 +1,30 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product;
 
-import com.celotts.productservice.infrastructure.common.jpa.BaseEntity; // <-- este paquete
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.shared.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.util.UUID;
 
 @Entity
 @Table(name = "product_unit")
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ProductUnitEntity extends BaseEntity {
+public class ProductUnitEntity extends AuditableEntity {
 
     @Id
     @GeneratedValue
-    @org.hibernate.annotations.UuidGenerator
+    @UuidGenerator
     @Column(name = "id", updatable = false, nullable = false)
-    private UUID id;                      // PK real
+    private UUID id;
 
-
-    @Column(name = "code", length = 30, nullable = false, unique = true)
-    private String code;                  // clave de negocio única
+    // unicidad la maneja el índice parcial del SQL (WHERE deleted_at IS NULL)
+    @Column(name = "code", length = 30, nullable = false)
+    private String code;
 
     @Column(name = "name", length = 100, nullable = false)
     private String name;
@@ -31,10 +32,6 @@ public class ProductUnitEntity extends BaseEntity {
     @Column(name = "symbol", length = 10, nullable = false)
     private String symbol;
 
-    @Column(name = "description", length = 100, nullable = false)
+    @Column(name = "description", length = 255)
     private String description;
-
-    @Column(name = "enabled")
-    private Boolean enabled;
-
 }

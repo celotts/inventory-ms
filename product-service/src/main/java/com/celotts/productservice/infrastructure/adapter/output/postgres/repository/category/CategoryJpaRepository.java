@@ -6,39 +6,66 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
 import java.util.List;
+
 import java.util.Optional;
 import java.util.UUID;
 
 public interface CategoryJpaRepository extends JpaRepository<CategoryEntity, UUID> {
 
-    // Búsqueda exacta (case-insensitive)
+    // --------- Exactos / existencia ---------
     Optional<CategoryEntity> findByNameIgnoreCase(String name);
-
-    // Existencia (case-insensitive, consistente con el adapter)
     boolean existsByNameIgnoreCase(String name);
 
-    // Búsqueda parcial por nombre (case-insensitive)
-    List<CategoryEntity> findByNameContainingIgnoreCase(String name);
-
-    // Búsqueda parcial en nombre o descripción con límite (Pageable controla LIMIT/OFFSET)
-    @Query("""
-        select c from CategoryEntity c
-        where lower(c.name) like lower(concat('%', :q, '%'))
-           or lower(c.description) like lower(concat('%', :q, '%'))
-        order by c.name asc
-    """)
-    List<CategoryEntity> findByNameOrDescriptionContainingIgnoreCase(@Param("q") String q,
-                                                                     Pageable limitPage);
-
-    // ------------------ Métodos paginados ------------------ //
-
+    // --------- Búsquedas simples ---------
     Page<CategoryEntity> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
-    Page<CategoryEntity> findByActive(Boolean active, Pageable pageable);
+    // Usa la propiedad REAL de la entidad: enabled
+    Page<CategoryEntity> findByEnabled(Boolean enabled, Pageable pageable);
+    Page<CategoryEntity> findByNameContainingIgnoreCaseAndEnabled(String name, Boolean enabled, Pageable pageable);
+    long countByEnabled(boolean enabled);
 
-    Page<CategoryEntity> findByNameContainingIgnoreCaseAndActive(String name, Boolean active, Pageable pageable);
+    // “Activos lógicos” = no borrados y habilitados
+    Page<CategoryEntity> findByDeletedAtIsNullAndEnabledTrue(Pageable pageable);
+    Page<CategoryEntity> findByNameContainingIgnoreCaseAndDeletedAtIsNullAndEnabledTrue(String name, Pageable pageable);
 
-    long countByActive(boolean active);
+    // --------- Búsqueda por nombre o descripción (PAGINADA) ---------
+    @Query(
+            value = """
+            SELECT c
+            FROM CategoryEntity c
+            WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :q, '%'))
+               OR LOWER(c.description) LIKE LOWER(CONCAT('%', :q, '%'))
+            """,
+            countQuery = """
+            SELECT COUNT(c)
+            FROM CategoryEntity c
+            WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :q, '%'))
+               OR LOWER(c.description) LIKE LOWER(CONCAT('%', :q, '%'))
+            """
+    )
+    Page<CategoryEntity> searchByNameOrDescription(@Param("q") String q, Pageable pageable);
+
+    // Variante solo activos lógicos (útil para catálogos en UI)
+    @Query(
+            value = """
+            SELECT c
+            FROM CategoryEntity c
+            WHERE c.deletedAt IS NULL AND c.enabled = TRUE
+              AND (
+                   LOWER(c.name) LIKE LOWER(CONCAT('%', :q, '%'))
+                OR LOWER(c.description) LIKE LOWER(CONCAT('%', :q, '%'))
+              )
+            """,
+            countQuery = """
+            SELECT COUNT(c)
+            FROM CategoryEntity c
+            WHERE c.deletedAt IS NULL AND c.enabled = TRUE
+              AND (
+                   LOWER(c.name) LIKE LOWER(CONCAT('%', :q, '%'))
+                OR LOWER(c.description) LIKE LOWER(CONCAT('%', :q, '%'))
+              )
+            """
+    )
+    Page<CategoryEntity> searchActiveByNameOrDescription(@Param("q") String q, Pageable pageable);
 }

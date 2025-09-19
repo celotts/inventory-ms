@@ -1,15 +1,10 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product;
 
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.shared.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -18,8 +13,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder(toBuilder = true)
-@EntityListeners(AuditingEntityListener.class)
-public class ProductTagEntity {
+@EqualsAndHashCode(callSuper = true)
+public class ProductTagEntity extends AuditableEntity {
 
     @Id
     @GeneratedValue
@@ -27,26 +22,14 @@ public class ProductTagEntity {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, length = 50)
     private String name;
 
+    @Column(name = "description", length = 255)
     private String description;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean enabled = Boolean.TRUE;
-
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
-
-    @CreatedBy
-    @Column(updatable = false)
-    private String createdBy;
-
-    @LastModifiedBy
-    private String updatedBy;
+    @PrePersist
+    public void prePersist() {
+        super.prePersist(); // inicializa auditoría (createdAt, enabled, etc.)
+    }
 }

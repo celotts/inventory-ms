@@ -10,7 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
+import jakarta.validation.constraints.Pattern;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 @Builder
@@ -23,4 +23,11 @@ public class CategoryCreateDto {
     @NotBlank(message = "Description is required")
     @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
+
+    @Size(max = 100, message = "createdBy max length is 100")
+    @NotBlank(message = "createdBy is required")
+    @Pattern(regexp = "^[\\p{L}0-9._\\-\\s@]+$", message = "createdBy has invalid characters")
+    private String createdBy;
+
+    private String updatedBy;
 }

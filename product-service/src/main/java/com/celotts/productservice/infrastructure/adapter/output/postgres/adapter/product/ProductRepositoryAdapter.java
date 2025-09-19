@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -64,6 +65,7 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
 
     @Override
     public Page<ProductModel> findByCategory(UUID categoryId, Pageable pageable) {
+        // requiere en el repo: findByCategoryId(UUID, Pageable) con JOIN a ProductCategoryEntity
         return productRepository.findByCategoryId(categoryId, pageable).map(productEntityMapper::toModel);
     }
 
@@ -74,13 +76,17 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
 
     @Override
     public Page<ProductModel> findLowStock(Pageable pageable, int threshold) {
-        return productRepository.findByCurrentStockLessThanEqual(threshold, pageable)
+        // requiere en el repo: Page<ProductEntity> findByCurrentStockLessThanEqual(BigDecimal, Pageable)
+        return productRepository
+                .findByCurrentStockLessThanEqual(BigDecimal.valueOf(threshold), pageable)
                 .map(productEntityMapper::toModel);
     }
 
     @Override
     public Page<ProductModel> findLowStockByCategory(UUID categoryId, Pageable pageable, int threshold) {
-        return productRepository.findByCategoryIdAndCurrentStockLessThanEqual(categoryId, threshold, pageable)
+        // requiere en el repo: findByCategoryAndMaxStock(UUID, BigDecimal, Pageable) con JOIN + <=
+        return productRepository
+                .findByCategoryAndMaxStock(categoryId, BigDecimal.valueOf(threshold), pageable)
                 .map(productEntityMapper::toModel);
     }
 
@@ -98,7 +104,7 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
     public ProductModel updateStock(UUID id, int newStock) {
         ProductEntity entity = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found: " + id));
-        entity.setCurrentStock(newStock);
+        entity.setCurrentStock(BigDecimal.valueOf(newStock));
         return productEntityMapper.toModel(productRepository.save(entity));
     }
 

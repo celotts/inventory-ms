@@ -14,6 +14,5 @@ public interface ProductTagJpaRepository extends JpaRepository<ProductTagEntity,
     Optional<ProductTagEntity> findByName(String name);
     boolean existsByName(String name);
     List<ProductTagEntity> findByEnabled(boolean enabled);
-    Page<ProductTagEntity> findAll(Pageable pageable); // (opcional: ya lo hereda, puedes quitarlo)
     long countByEnabled(boolean enabled);
 }

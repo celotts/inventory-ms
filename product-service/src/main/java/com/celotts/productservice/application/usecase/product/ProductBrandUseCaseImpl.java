@@ -80,13 +80,21 @@ public class ProductBrandUseCaseImpl implements ProductBrandUseCase {
 
     @Override
     @Transactional
-    public void deleteById(UUID id, String updatedBy, LocalDateTime updatedAt) {
+    public void deleteById(UUID id, String deletedBy, String reason) {
         ProductBrandModel brand = repository.findById(id)
                 .orElseThrow(() -> new BrandNotFoundException(id));
 
-        brand.deactivate();
-        brand.setUpdatedAt(updatedAt != null ? updatedAt : LocalDateTime.now());
-        brand.setUpdatedBy(updatedBy);
+        // Idempotente: si ya fue borrada, no hagas nada (o lanza excepción si prefieres)
+        if (brand.getDeletedAt() != null) {
+            return; // o throw new BrandNotFoundException(id);
+        }
+
+        // Opcional: además desactivar
+        brand.deactivate(); // si quieres forzar enabled=false
+
+        brand.setDeletedBy(deletedBy);
+        brand.setDeletedReason(reason);
+        brand.setDeletedAt(LocalDateTime.now());
 
         repository.save(brand);
     }

@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit;
+package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productImage;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotNull;
@@ -14,9 +14,9 @@ import java.util.UUID;
 @Builder
 @Jacksonized
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ProductUnitDeleteDto {
+public class ProductImageDeleteDto {
 
-    @NotNull(message = "ProductUnit ID must not be null")
+    @NotNull(message = "Product image ID must not be null")
     UUID id;
 
     @Size(max = 100, message = "deletedBy max length is 100")

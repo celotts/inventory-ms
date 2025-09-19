@@ -1,15 +1,10 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product;
 
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.shared.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -18,8 +13,8 @@ import java.util.UUID;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@EntityListeners(AuditingEntityListener.class)
-public class ProductTypeEntity {
+@EqualsAndHashCode(callSuper = true)
+public class ProductTypeEntity extends AuditableEntity {
 
     @Id
     @GeneratedValue
@@ -27,32 +22,18 @@ public class ProductTypeEntity {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "code", length = 50)
+    // En la BD es PK "code", puedes ajustarlo si quieres reflejarlo igual
+    @Column(name = "code", length = 50, nullable = false)
     private String code;
 
     @Column(name = "name", length = 100, nullable = false)
     private String name;
 
-    @Column(name = "description", columnDefinition = "TEXT")
+    @Column(name = "description", length = 255)
     private String description;
 
-    @Builder.Default
-    @Column(name = "enabled", nullable = false)
-    private Boolean enabled = Boolean.TRUE;
-
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @CreatedBy
-    @Column(name = "created_by", length = 100, updatable = false)
-    private String createdBy;
-
-    @LastModifiedBy
-    @Column(name = "updated_by", length = 100)
-    private String updatedBy;
+    @PrePersist
+    public void prePersist() {
+        super.prePersist(); // inicializa auditoría (createdAt, enabled, etc.)
+    }
 }

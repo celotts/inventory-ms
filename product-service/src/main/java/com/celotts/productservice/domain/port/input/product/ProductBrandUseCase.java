@@ -14,7 +14,7 @@ public interface ProductBrandUseCase {
     List<ProductBrandModel> findAll();
     boolean existsByName(String name);
 
-    void deleteById(UUID id, String updatedBy, LocalDateTime updatedAt);
+    void deleteById(UUID id, String deletedBy, String reason);
 
     boolean existsById(UUID id);
     Optional<String> findNameById(UUID id);
