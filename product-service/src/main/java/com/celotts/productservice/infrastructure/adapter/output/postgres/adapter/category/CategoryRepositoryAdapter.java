@@ -5,7 +5,7 @@ import com.celotts.productservice.domain.port.output.category.CategoryRepository
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.category.CategoryEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.category.CategoryEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.category.CategoryJpaRepository;
-import lombok.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 @Component("categoryAdapter")
-public class CategoryRepositoryAdapter implements CategoryRepositoryPort   {
+public class CategoryRepositoryAdapter implements CategoryRepositoryPort {
     private final CategoryJpaRepository jpa;
     private final CategoryEntityMapper mapper;
 
@@ -48,7 +48,10 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort   {
 
     @Override
     public List<CategoryModel> findByNameContaining(String name) {
-        return mapper.toModelList(jpa.findByNameContainingIgnoreCase(name));
+        // El repo ahora devuelve Page, así que usamos unpaged() y getContent()
+        return mapper.toModelList(
+                jpa.findByNameContainingIgnoreCase(name, Pageable.unpaged()).getContent()
+        );
     }
 
     @Override
@@ -73,24 +76,25 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort   {
 
     @Override
     public Page<CategoryModel> findByNameContaining(String name, Pageable pageable) {
-        return jpa.findByNameContainingIgnoreCase(name, pageable)
-                .map(mapper::toModel);
+        return jpa.findByNameContainingIgnoreCase(name, pageable).map(mapper::toModel);
     }
 
     @Override
     public Page<CategoryModel> findByActive(Boolean active, Pageable pageable) {
-        return jpa.findByActive(active, pageable).map(mapper::toModel);
+        // Active → Enabled
+        return jpa.findByEnabled(active, pageable).map(mapper::toModel);
     }
 
     @Override
     public Page<CategoryModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable) {
-        return jpa.findByNameContainingIgnoreCaseAndActive(name, active, pageable)
+        // Active → Enabled
+        return jpa.findByNameContainingIgnoreCaseAndEnabled(name, active, pageable)
                 .map(mapper::toModel);
     }
 
     @Override
     public Page<CategoryModel> findAllPaginated(String name, Boolean active, Pageable pageable) {
-        final String q = normalize(name); // null → null, "  " → null, "TeXt  " → "TeXt"
+        final String q = normalize(name);
 
         if (q != null && active != null) {
             return findByNameContainingAndActive(q, active, pageable);
@@ -117,13 +121,15 @@ public class CategoryRepositoryAdapter implements CategoryRepositoryPort   {
 
     @Override
     public long countByActive(boolean active) {
-        return jpa.countByActive(active);
+        // Active → Enabled
+        return jpa.countByEnabled(active);
     }
 
     @Override
     public List<CategoryModel> findByNameOrDescription(String term, int limit) {
+        // Usa el nuevo query paginado del repo
         return mapper.toModelList(
-                jpa.findByNameOrDescriptionContainingIgnoreCase(term, Pageable.ofSize(limit))
+                jpa.searchByNameOrDescription(term, Pageable.ofSize(limit)).getContent()
         );
     }
 }
