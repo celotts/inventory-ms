@@ -2,6 +2,11 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.dto.product
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+
+import com.celotts.productservice.infrastructure.validation.BrandIdExists;
+import com.celotts.productservice.infrastructure.validation.CategoryIdExists;
+import com.celotts.productservice.infrastructure.validation.UnitCodeExists;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.NotNull;
@@ -35,12 +40,15 @@ public class ProductCreateDto {
     private String description;
 
     @NotNull
+    @CategoryIdExists
     private UUID categoryId;
 
     @NotBlank
+    @UnitCodeExists
     private String unitCode;
 
     @NotNull
+    @BrandIdExists
     private UUID brandId;
 
     @NotNull
