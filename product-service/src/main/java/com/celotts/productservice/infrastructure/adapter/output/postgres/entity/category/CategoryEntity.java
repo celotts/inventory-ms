@@ -1,21 +1,19 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity.category;
 
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.shared.AuditableEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Builder
+@Entity
+@Table(name = "category")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "category")
-public class CategoryEntity {
+@Builder
+@EqualsAndHashCode(callSuper = true) // importante para herencia
+public class CategoryEntity extends AuditableEntity {
 
     @Id
     @GeneratedValue
@@ -24,40 +22,6 @@ public class CategoryEntity {
     @Column(nullable = false, length = 100)
     private String name;
 
+    @Column(name = "description", length = 255)
     private String description;
-
-    @Builder.Default
-    @Column(name = "active")
-    private Boolean active = Boolean.TRUE;
-
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean deleted = false;
-
-    @Column(name = "created_by")
-    private String createdBy;
-
-    @Column(name = "updated_by")
-    private String updatedBy;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    public void prePersist() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
-        if (this.active == null) {
-            this.active = Boolean.TRUE;
-        }
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 }

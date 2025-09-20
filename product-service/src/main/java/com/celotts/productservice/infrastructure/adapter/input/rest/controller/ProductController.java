@@ -1,13 +1,11 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
-
 import com.celotts.productservice.domain.model.product.ProductModel;
 import com.celotts.productservice.domain.port.input.product.ProductUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductResponseMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductMapper;
 import com.celotts.productservice.infrastructure.config.PaginationProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,11 +27,8 @@ import java.util.*;
 public class ProductController {
 
     private final ProductUseCase productUseCase;
-    private final ProductResponseMapper responseMapper;
+    private final ProductMapper productMapper;
     private final PaginationProperties paginationProperties;
-
-    private final ProductRequestMapper requestMapper;
-
 
     @GetMapping("/test")
     @Operation(summary = "Test API", description = "Endpoint de prueba para verificar que el servicio funciona.")
@@ -45,8 +40,8 @@ public class ProductController {
     @Operation(summary = "Crear un nuevo producto", description = "Crea un producto en el sistema")
     public ResponseEntity<ProductResponseDto> create(@RequestBody @Valid ProductCreateDto createDto) {
         log.info("Creating new product with code: {}", createDto.getCode());
-        ProductModel created = productUseCase.createProduct(requestMapper.toModel(createDto));
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseMapper.toDto(created));
+        ProductModel created = productUseCase.createProduct(productMapper.toModel(createDto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(productMapper.toResponse(created));
     }
 
     @PutMapping("/{id}")
@@ -55,14 +50,14 @@ public class ProductController {
             @PathVariable UUID id,
             @RequestBody @Valid ProductUpdateDto updateDto) {
         log.info("Updating product with id: {}", id);
-        ProductModel updated = productUseCase.updateProduct(id, requestMapper.toModel(updateDto)); // 👈 mapear
-        return ResponseEntity.ok(responseMapper.toDto(updated));
+        ProductModel updated = productUseCase.updateProduct(id, productMapper.toModel(updateDto));
+        return ResponseEntity.ok(productMapper.toResponse(updated));
     }
 
     @GetMapping
     @Operation(summary = "Obtener productos activos", description = "Lista todos los productos activos")
     public ResponseEntity<List<ProductResponseDto>> getAllProducts() {
-        List<ProductResponseDto> response = responseMapper.toResponseDtoList(
+        List<ProductResponseDto> response = productMapper.toResponseList(
                 productUseCase.getActiveProducts(Pageable.unpaged()).getContent()
         );
         return ResponseEntity.ok(response);
@@ -94,8 +89,10 @@ public class ProductController {
                 ? productUseCase.getAllProductsWithFilters(pageable, code, name, description)
                 : productUseCase.getAllProducts(pageable);
 
-        Page<ProductModel> result = products;
-        Page<ProductResponseDto> dtoPage = result.map(responseMapper::toDto);
+        // Si ProductMapper tiene helper toResponsePage(page):
+        // Page<ProductResponseDto> dtoPage = productMapper.toResponsePage(products);
+        // Si no, mapea así:
+        Page<ProductResponseDto> dtoPage = products.map(productMapper::toResponse);
         return ResponseEntity.ok(dtoPage);
     }
 
@@ -103,7 +100,7 @@ public class ProductController {
     @Operation(summary = "Obtener producto por ID", description = "Consulta un producto por su identificador")
     public ResponseEntity<ProductResponseDto> getProductById(@PathVariable UUID id) {
         ProductModel product = productUseCase.getProductById(id);
-        return ResponseEntity.ok(responseMapper.toDto(product));
+        return ResponseEntity.ok(productMapper.toResponse(product));
     }
 
     @DeleteMapping("/{id}")
@@ -124,57 +121,49 @@ public class ProductController {
     @Operation(summary = "Habilitar producto", description = "Habilita un producto por su ID")
     public ResponseEntity<ProductResponseDto> enableProduct(@PathVariable UUID id) {
         ProductModel enabledProduct = productUseCase.enableProduct(id);
-        return ResponseEntity.ok(responseMapper.toDto(enabledProduct));
+        return ResponseEntity.ok(productMapper.toResponse(enabledProduct));
     }
 
     @GetMapping("/inactive")
     @Operation(summary = "Obtener productos inactivos", description = "Lista los productos deshabilitados")
     public ResponseEntity<List<ProductResponseDto>> getInactiveProducts() {
-        try {
-            List<ProductResponseDto> response = responseMapper.toResponseDtoList(
-                    productUseCase.getInactiveProducts()
-            );
+        List<ProductResponseDto> response =
+                productMapper.toResponseList(productUseCase.getInactiveProducts());
 
-            if (response.isEmpty()) {
-                return ResponseEntity.noContent().build(); // 204 No Content
-            }
-
-            return ResponseEntity.ok(response); // 200 OK
-        } catch (Exception e) {
-            log.error("Error al obtener productos inactivos", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500
-        }
+        if (response.isEmpty()) return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/category/{categoryId}")
     @Operation(summary = "Obtener productos por categoría", description = "Lista productos de una categoría")
     public ResponseEntity<List<ProductResponseDto>> getProductsByCategory(@PathVariable UUID categoryId) {
         List<ProductResponseDto> response =
-                responseMapper.toResponseDtoList(productUseCase.getProductsByCategory(categoryId));
+                productMapper.toResponseList(productUseCase.getProductsByCategory(categoryId));
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/category/{categoryId}/low-stock")
     @Operation(summary = "Productos con stock bajo por categoría", description = "Lista productos con bajo stock en la categoría")
     public ResponseEntity<List<ProductResponseDto>> getLowStockByCategory(@PathVariable UUID categoryId) {
-        List<ProductResponseDto> response = responseMapper.toResponseDtoList(productUseCase.getLowStockByCategory(categoryId));
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                productMapper.toResponseList(productUseCase.getLowStockByCategory(categoryId))
+        );
     }
 
     @GetMapping("/low-stock")
     @Operation(summary = "Productos con bajo stock", description = "Lista todos los productos con stock bajo")
     public ResponseEntity<List<ProductResponseDto>> getLowStockProducts() {
-        List<ProductResponseDto> response =
-                responseMapper.toResponseDtoList(productUseCase.getLowStockProducts());
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                productMapper.toResponseList(productUseCase.getLowStockProducts())
+        );
     }
 
     @GetMapping("/brand/{brandId}")
     @Operation(summary = "Productos por marca", description = "Lista productos de una marca")
     public ResponseEntity<List<ProductResponseDto>> getProductsByBrand(@PathVariable UUID brandId) {
-        List<ProductResponseDto> response =
-                responseMapper.toResponseDtoList(productUseCase.getProductsByBrand(brandId));
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                productMapper.toResponseList(productUseCase.getProductsByBrand(brandId))
+        );
     }
 
     @GetMapping("/count")
@@ -202,10 +191,8 @@ public class ProductController {
     @PatchMapping("/{id}/stock")
     @Operation(summary = "Actualizar stock", description = "Actualiza el stock de un producto")
     public ResponseEntity<ProductResponseDto> updateStock(@PathVariable UUID id, @RequestBody int stock) {
-        ProductResponseDto response = responseMapper.toDto(
-                productUseCase.updateStock(id, stock)
-        );
-        return ResponseEntity.ok(response);
+        ProductModel updated = productUseCase.updateStock(id, stock);
+        return ResponseEntity.ok(productMapper.toResponse(updated));
     }
 
     @GetMapping("/code/{code}")
@@ -217,6 +204,6 @@ public class ProductController {
         ProductModel product = productUseCase.getProductByCode(code);
         return (product == null)
                 ? ResponseEntity.status(HttpStatus.NOT_FOUND).build()
-                : ResponseEntity.ok(responseMapper.toDto(product));   // 👈 usar toDto
+                : ResponseEntity.ok(productMapper.toResponse(product));
     }
 }

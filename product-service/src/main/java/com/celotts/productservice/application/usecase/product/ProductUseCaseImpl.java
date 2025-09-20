@@ -9,8 +9,6 @@ import com.celotts.productservice.domain.port.output.product.ProductBrandReposit
 import com.celotts.productservice.domain.port.output.product.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.output.product.ProductUnitRepositoryPort;
 
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductRequestMapper;
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
@@ -20,7 +18,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j

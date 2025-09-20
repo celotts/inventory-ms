@@ -225,5 +225,3 @@ build-images:
 docker build -t inventory/discovery-service ../discovery-service
 docker build -t inventory/config-service ../config-service
 docker build -t inventory/product-service ../product-service
-
-

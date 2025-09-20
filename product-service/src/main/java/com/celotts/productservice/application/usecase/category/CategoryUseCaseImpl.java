@@ -20,11 +20,6 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
 
     private final CategoryRepositoryPort repository;
 
-    // La implementación depende del puerto, no del nombre del adapter
-    //public CategoryUseCaseImpl(CategoryRepositoryPort repository) {
-        //this.repository = repository;
-    //}
-
     @Override
     public CategoryModel save(CategoryModel category) {
         return repository.save(category);

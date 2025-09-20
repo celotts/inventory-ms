@@ -1,52 +1,30 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product;
 
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.shared.AuditableEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.UuidGenerator;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "product_brand")
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductBrandEntity {
+@EqualsAndHashCode(callSuper = true)
+public class ProductBrandEntity extends AuditableEntity {
 
     @Id
     @GeneratedValue
-    @org.hibernate.annotations.UuidGenerator
+    @UuidGenerator
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
+    @Column(nullable = false, length = 100)
     private String name;
+
+    @Column(name = "description", length = 255)
     private String description;
-    private Boolean enabled;
-
-    @Column(name = "created_by")
-    private String createdBy;
-
-    @Column(name = "updated_by")
-    private String updatedBy;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    public ProductBrandEntity(UUID id, String name, String description, LocalDateTime createdAt) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.enabled = true;        // por defecto
-        this.createdAt = createdAt; // viene del test (FIXED_TIME)
-        this.updatedAt = null;
-        this.createdBy = null;
-        this.updatedBy = null;
-    }
 }

@@ -1,35 +1,51 @@
 package com.celotts.productservice.infrastructure.common.jpa;
 
-import com.celotts.productservice.infrastructure.common.listener.AuditListener; // <- ESTE import
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+
 import java.time.LocalDateTime;
 
+/**
+ * Base de auditoría + soft-delete, alineada con product-init.sql
+ * (todas las tablas tienen enabled y deleted_*).
+ */
 @MappedSuperclass
-@EntityListeners(AuditListener.class) // usa el listener del paquete .listener
-@Getter
-@Setter
-public abstract class BaseEntity implements Auditable {
+@Getter @Setter
+public abstract class BaseEntity {
+
+    @CreatedDate
     @Column(name = "created_at", updatable = false)
-    protected LocalDateTime createdAt;
+    private LocalDateTime createdAt;
 
+    @LastModifiedDate
     @Column(name = "updated_at")
-    protected LocalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
-    @Column(name = "created_by", length = 100)
-    protected String createdBy;
+    @CreatedBy
+    @Column(name = "created_by", updatable = false, length = 100)
+    private String createdBy;
 
+    @LastModifiedBy
     @Column(name = "updated_by", length = 100)
-    protected String updatedBy;
+    private String updatedBy;
 
-    @Override public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    @Override public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
-    @Override public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
-    @Override public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
+    // Soft delete (todas las tablas menos "category" del script lo tienen)
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
-    @Override public LocalDateTime getCreatedAt() { return createdAt; }
-    @Override public LocalDateTime getUpdatedAt() { return updatedAt; }
-    @Override public String getCreatedBy() { return createdBy; }
-    @Override public String getUpdatedBy() { return updatedBy; }
+    @Column(name = "deleted_by", length = 100)
+    private String deletedBy;
+
+    @Column(name = "deleted_reason")
+    private String deletedReason;
+
+    // Flag común
+    @Column(name = "enabled")
+    private Boolean enabled;
 }

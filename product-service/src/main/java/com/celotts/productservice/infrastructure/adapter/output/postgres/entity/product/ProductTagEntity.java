@@ -1,9 +1,10 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product;
 
+import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.shared.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UuidGenerator;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -11,34 +12,24 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder // <-- agrega (import lombok.Builder)
-public class ProductTagEntity {
+@Builder(toBuilder = true)
+@EqualsAndHashCode(callSuper = true)
+public class ProductTagEntity extends AuditableEntity {
 
     @Id
     @GeneratedValue
-    @org.hibernate.annotations.UuidGenerator
+    @UuidGenerator
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false, length = 50)
     private String name;
 
+    @Column(name = "description", length = 255)
     private String description;
-    private Boolean enabled;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private String createdBy;
-    private String updatedBy;
 
-    // ✅ Constructor que esperan los tests
-    public ProductTagEntity(UUID id, String name, String description, LocalDateTime createdAt) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.enabled = true;        // por defecto
-        this.createdAt = createdAt; // viene del test (FIXED_TIME)
-        this.updatedAt = null;
-        this.createdBy = null;
-        this.updatedBy = null;
+    @PrePersist
+    public void prePersist() {
+        super.prePersist(); // inicializa auditoría (createdAt, enabled, etc.)
     }
 }

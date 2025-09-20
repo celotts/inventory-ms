@@ -1,15 +1,14 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.domain.port.input.product.ProductUnitUseCase;
-import com.celotts.productservice.domain.model.product.ProductUnitModel; // <-- si tu modelo está en .domain.exception.model como mostró tu grep
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productunit.ProductUnitCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productunit.ProductUnitResponseDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productunit.ProductUnitUpdateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productunit.ProductUnitDtoMapper;
+import com.celotts.productservice.domain.model.product.ProductUnitModel;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productunit.ProductUnitMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,19 +19,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
-@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1/product-units")
+@CrossOrigin(origins = "${app.cors.allowed-origin:*}")
+@Slf4j
 public class ProductUnitController {
 
-    private final ProductUnitUseCase productUnitUseCase;     // <-- inyectado
-    private final ProductUnitDtoMapper productUnitDtoMapper; // <-- inyectado
-
-    @PostConstruct
-    public void init() {
-        log.info("✅ ProductUnitController fue instanciado correctamente por Spring.");
-    }
+    private final ProductUnitUseCase productUnitUseCase;
+    private final ProductUnitMapper mapper;
 
     @Operation(summary = "Crea una nueva unidad de producto")
     @ApiResponses({
@@ -41,47 +36,44 @@ public class ProductUnitController {
     })
     @PostMapping
     public ResponseEntity<ProductUnitResponseDto> create(@Valid @RequestBody ProductUnitCreateDto dto) {
-        ProductUnitModel model = productUnitDtoMapper.toModel(dto);            // DTO -> Model
-        ProductUnitModel saved = productUnitUseCase.save(model);               // usar el CAMPO, no la clase
-        ProductUnitResponseDto resp = productUnitDtoMapper.toResponseDto(saved); // Model -> DTO
-        return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+        ProductUnitModel toCreate = mapper.toModel(dto);
+        ProductUnitModel created = productUnitUseCase.create(toCreate);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .header("Location", "/api/v1/product-units/" + created.getId())
+                .body(mapper.toResponse(created));
     }
 
     @GetMapping
     public ResponseEntity<List<ProductUnitResponseDto>> findAll() {
-        List<ProductUnitResponseDto> list = productUnitDtoMapper
-                .toResponseDtoList(productUnitUseCase.findAll());
-        return ResponseEntity.ok(list);
+        var models = productUnitUseCase.findAll();
+        return ResponseEntity.ok(mapper.toResponseList(models));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductUnitResponseDto> findById(@PathVariable UUID id) {
         return productUnitUseCase.findById(id)
-                .map(productUnitDtoMapper::toResponseDto)
+                .map(mapper::toResponse)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Si NO tienes update en el UseCase, puedes reutilizar save() tras mergear con el mapper
     @PutMapping("/{id}")
     public ResponseEntity<ProductUnitResponseDto> update(@PathVariable UUID id,
                                                          @Valid @RequestBody ProductUnitUpdateDto dto) {
+        // Patch parcial con MapStruct (ignora nulls)
         return productUnitUseCase.findById(id)
                 .map(existing -> {
-                    // Aplica cambios EN SITIO (void)
-                    productUnitDtoMapper.apply(existing, dto);
-
-                    // Persiste y mapea la respuesta
-                    ProductUnitModel saved = productUnitUseCase.save(existing);
-                    return ResponseEntity.ok(productUnitDtoMapper.toResponseDto(saved));
+                    mapper.updateModelFromDto(existing, dto);
+                    ProductUnitModel saved = productUnitUseCase.update(id, existing);
+                    return ResponseEntity.ok(mapper.toResponse(saved));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        // agrega productUnitUseCase.delete(id) si existe en el puerto
-        // productUnitUseCase.delete(id);
+        productUnitUseCase.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 }

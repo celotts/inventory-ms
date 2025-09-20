@@ -1,17 +1,14 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.category;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Value;
+import lombok.extern.jackson.Jacksonized;
 
-/**
- * DTO para estadísticas de categorías
- */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Value
 @Builder
+@Jacksonized
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CategoryStatusDto {
 
     private long totalCategories;

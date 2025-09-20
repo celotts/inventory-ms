@@ -1,7 +1,9 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product;
 
+import com.celotts.productservice.infrastructure.common.jpa.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -9,14 +11,15 @@ import java.util.UUID;
 @Entity
 @Table(name = "product_category")
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductCategoryEntity {
+@EqualsAndHashCode(callSuper = true)
+public class ProductCategoryEntity extends BaseEntity {
 
     @Id
     @GeneratedValue
-    @org.hibernate.annotations.UuidGenerator
+    @UuidGenerator
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
@@ -27,20 +30,6 @@ public class ProductCategoryEntity {
     private UUID categoryId;
 
     @Column(name = "assigned_at", nullable = false)
-    private LocalDateTime assignedAt;
-
-    @Column(nullable = false)
-    private Boolean enabled;
-
-    @Column(name = "created_by")
-    private String createdBy;
-
-    @Column(name = "updated_by")
-    private String updatedBy;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Builder.Default
+    private LocalDateTime assignedAt = LocalDateTime.now();
 }

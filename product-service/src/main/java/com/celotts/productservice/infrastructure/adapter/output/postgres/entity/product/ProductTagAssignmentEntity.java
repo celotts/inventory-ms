@@ -1,22 +1,27 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product;
 
+import com.celotts.productservice.infrastructure.common.jpa.BaseEntity; // ✅ Import correcto
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "product_tag_assignment")
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProductTagAssignmentEntity {
+@EqualsAndHashCode(callSuper = true)
+public class ProductTagAssignmentEntity extends BaseEntity {
 
     @Id
-    @GeneratedValue // Hibernate 6 soporta UUID nativo
-    @Column(name = "id", columnDefinition = "uuid")
+    @GeneratedValue
+    @UuidGenerator
+    @Column(name = "id", columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
 
     @Column(name = "product_id", nullable = false, columnDefinition = "uuid")
@@ -25,34 +30,11 @@ public class ProductTagAssignmentEntity {
     @Column(name = "tag_id", nullable = false, columnDefinition = "uuid")
     private UUID tagId;
 
-    @Column(name = "assigned_at")
+    @Column(name = "assigned_at", nullable = false)
     private LocalDateTime assignedAt;
 
-    @Column(name = "enabled")
-    private Boolean enabled;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "created_by", length = 100)
-    private String createdBy;
-
-    @Column(name = "updated_by", length = 100)
-    private String updatedBy;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    /* Defaults de app para que se comporte igual en Postgres y H2 */
     @PrePersist
     public void prePersist() {
         if (assignedAt == null) assignedAt = LocalDateTime.now();
-        if (createdAt == null)  createdAt  = LocalDateTime.now();
-        if (enabled == null)    enabled    = Boolean.TRUE;
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        updatedAt = LocalDateTime.now();
     }
 }

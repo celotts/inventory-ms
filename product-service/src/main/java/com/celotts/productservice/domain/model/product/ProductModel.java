@@ -12,23 +12,32 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProductModel {
-    UUID id;
-    String code;
-    String name;
-    String description;
+    private UUID id;
+    private String code;
+    private String name;
+    private String description;
 
-    UUID categoryId;
+    private UUID categoryId;
 
-    String unitCode;
-    UUID brandId;
-    Integer minimumStock;
-    Integer currentStock;
-    BigDecimal unitPrice;
-    Boolean enabled;
-    LocalDateTime createdAt;
-    LocalDateTime updatedAt;
-    String createdBy;
-    String updatedBy;
+    private String unitCode;
+    private UUID brandId;
+    private Integer minimumStock;
+    private Integer currentStock;
+    private BigDecimal unitPrice;
+    private Boolean enabled;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private Boolean active;
+    private String createdBy;
+    private String updatedBy;
+
+    public void activate() {
+        this.enabled = true;
+    }
+
+    public void deactivate() {
+        this.enabled = false;
+    }
 
     public boolean lowStock() {
         return currentStock != null && minimumStock != null && currentStock < minimumStock;

@@ -12,6 +12,7 @@ import java.util.UUID;
 public interface ProductUnitJpaRepository extends JpaRepository<ProductUnitEntity, UUID> {
 
     boolean existsByCode(String code);
+    boolean existsByCodeIgnoreCase(String code);
     Optional<ProductUnitEntity> findById(UUID id);
     Optional<ProductUnitEntity> findByCode(String code);
 
@@ -23,4 +24,5 @@ public interface ProductUnitJpaRepository extends JpaRepository<ProductUnitEntit
 
     @Query("select pu.code from ProductUnitEntity pu")
     List<String> findAllCodes();
+
 }

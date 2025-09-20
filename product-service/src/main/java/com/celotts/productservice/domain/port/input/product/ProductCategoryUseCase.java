@@ -7,10 +7,9 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ProductCategoryUseCase {
-
-    ProductCategoryModel assignCategoryToProduct(ProductCategoryCreateDto dto);
+    ProductCategoryModel assignCategoryToProduct(ProductCategoryModel model);
     ProductCategoryModel getById(UUID id);
     List<ProductCategoryModel> getAll();
-    void deleteById(UUID id); // físico
-    void disableById(UUID id); // lógico
+    void disableById(UUID id);
+    void deleteById(UUID id);
 }

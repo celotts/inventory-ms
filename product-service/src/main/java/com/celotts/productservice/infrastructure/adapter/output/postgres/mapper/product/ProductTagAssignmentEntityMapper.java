@@ -5,7 +5,7 @@ import com.celotts.productservice.domain.model.product.ProductTagAssignmentModel
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTagAssignmentEntity;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(config = CentralMapperConfig.class)
 public interface ProductTagAssignmentEntityMapper {
     ProductTagAssignmentEntity toEntity(ProductTagAssignmentModel model);
 
@@ -16,7 +16,12 @@ public interface ProductTagAssignmentEntityMapper {
     @Mappings({
             @Mapping(target = "id", ignore = true),
             @Mapping(target = "createdAt", ignore = true),
-            @Mapping(target = "createdBy", ignore = true)
+            @Mapping(target = "createdBy", ignore = true),
+            @Mapping(target = "updatedAt", ignore = true),
+            @Mapping(target = "updatedBy", ignore = true),
+            @Mapping(target = "deletedAt", ignore = true),
+            @Mapping(target = "deletedBy", ignore = true),
+            @Mapping(target = "deletedReason", ignore = true)
     })
     void updateEntityFromModel(ProductTagAssignmentModel src, @MappingTarget ProductTagAssignmentEntity target);
 }

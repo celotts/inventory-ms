@@ -20,6 +20,14 @@ public class ProductTagAssignmentModel {
     private String createdBy;
     private String updatedBy;
 
+    public void activate() {
+        this.enabled = true;
+    }
+
+    public void deactivate() {
+        this.enabled = false;
+    }
+
     public ProductTagAssignmentModel withEnabled(boolean enabled) {
         return this.toBuilder().enabled(enabled).build();
     }

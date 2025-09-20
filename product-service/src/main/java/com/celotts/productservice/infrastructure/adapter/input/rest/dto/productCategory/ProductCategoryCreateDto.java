@@ -1,30 +1,26 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
+@Value
 @Builder
 public class ProductCategoryCreateDto {
 
     @NotNull(message = "Product ID is required")
-    private UUID productId;
+    UUID productId;
 
     @NotNull(message = "Category ID is required")
-    private UUID categoryId;
+    UUID categoryId;
 
-    private LocalDateTime assignedAt;
+    // Si no envían, puedes asumir true en el use case o dejar default aquí:
+    @Builder.Default
+    Boolean enabled = Boolean.TRUE;
 
-    @NotNull(message = "Enabled flag is required")
-    private Boolean enabled;
-
-    @NotBlank(message = "createdBy is required")
-    private String createdBy;
-
-    private String updatedBy;
+    @Size(max = 100, message = "createdBy max length is 100")
+    String createdBy;
 }

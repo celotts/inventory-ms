@@ -3,11 +3,12 @@ package com.celotts.productservice.application.usecase.product;
 import com.celotts.productservice.domain.model.product.ProductCategoryModel;
 import com.celotts.productservice.domain.port.input.product.ProductCategoryUseCase;
 import com.celotts.productservice.domain.port.output.product.ProductCategoryRepositoryPort;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryCreateDto; // <-- IMPORTA EL DTO
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,21 +19,33 @@ public class ProductCategoryUseCaseImpl implements ProductCategoryUseCase {
 
     private final ProductCategoryRepositoryPort repo;
 
-    @Override
+    // === Nuevo: satisface la firma de la interfaz que recibe DTO ===
     public ProductCategoryModel assignCategoryToProduct(ProductCategoryCreateDto dto) {
-        // Duplication guard
-        if (repo.existsByProductIdAndCategoryId(dto.getProductId(), dto.getCategoryId())) {
-            throw new IllegalArgumentException("La asignación productId-categoryId ya existe");
-        }
-        // Si ya tienes un mapper de aplicación, úsalo aquí.
-        var model = ProductCategoryModel.builder()
+        // map DTO -> Model (sin depender del mapper REST)
+        var modelIn = ProductCategoryModel.builder()
                 .productId(dto.getProductId())
                 .categoryId(dto.getCategoryId())
-                .assignedAt(dto.getAssignedAt())
-                .enabled(Boolean.TRUE.equals(dto.getEnabled()))
-                .createdBy(dto.getCreatedBy())
-                .updatedBy(dto.getUpdatedBy())
+                .enabled(dto.getEnabled()) // puede ser null; abajo ponemos default
                 .build();
+
+        return assignCategoryToProduct(modelIn); // delega al método de dominio
+    }
+
+    // === Tu método de dominio (lo mantenemos) ===
+    public ProductCategoryModel assignCategoryToProduct(ProductCategoryModel dtoModel) {
+        // Evitar duplicado activo (ajusta si tu repo no tiene este método)
+        if (repo.existsByProductIdAndCategoryIdAndEnabledTrue(dtoModel.getProductId(), dtoModel.getCategoryId())) {
+            throw new IllegalArgumentException("La asignación productId-categoryId ya existe y está activa");
+        }
+
+        var now = LocalDateTime.now();
+        var model = dtoModel.toBuilder()
+                .id(dtoModel.getId() != null ? dtoModel.getId() : UUID.randomUUID())
+                .enabled(dtoModel.getEnabled() != null ? dtoModel.getEnabled() : Boolean.TRUE)
+                .assignedAt(dtoModel.getAssignedAt() != null ? dtoModel.getAssignedAt() : now)
+                // Auditoría y createdAt/updatedAt -> JPA Auditing o @PrePersist en la entidad
+                .build();
+
         return repo.save(model);
     }
 
@@ -46,14 +59,15 @@ public class ProductCategoryUseCaseImpl implements ProductCategoryUseCase {
     @Override
     @Transactional(readOnly = true)
     public List<ProductCategoryModel> getAll() {
-        // TODO: replace with repo.findAll() once the port & adapter expose it
-        return java.util.List.of();
+        return List.of();
     }
 
     @Override
     public void disableById(UUID id) {
         var current = getById(id);
-        var disabled = current.toBuilder().enabled(false).build();
+        var disabled = current.toBuilder()
+                .enabled(false)
+                .build();
         repo.save(disabled);
     }
 

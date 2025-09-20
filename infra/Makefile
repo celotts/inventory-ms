@@ -27,15 +27,12 @@ clean-gradle: ## 🧹 Limpia caché y compilación de Gradle
 #------------------------------------------------------------------------
 
 ## 🔽 Infraestructura por entorno
-up-local: ## 🧪 Levanta infra para trabajar desde IntelliJ
+up-local: fix-container-orphans ## 🧪 Levanta infra para trabajar desde IntelliJ
 	@echo "🧹 Copiando variables de entorno..."
 	cp $(ENV_FILE_LOCAL) .env.override
 
 	@echo "🔨 Construyendo servicios..."
 	cd .. && ./gradlew :config-service:bootJar :discovery-service:bootJar :product-service:bootJar :api-gateway:bootJar
-
-	@echo "🧼 Apagando contenedores anteriores..."
-	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) down -v --remove-orphans
 
 	@echo "🦭 Levantando contenedores con Podman..."
 	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) up --build
@@ -768,11 +765,11 @@ help: ## 📖 Mostrar esta ayuda
 	@echo ""
 	@echo "💡 Ejecuta 'make help-[categoria]' para ayuda específica"
 
-fix-orphans: ## 🔧 Limpia contenedores huérfanos del proyecto
+fix-container-orphans: ## 🛠️ Limpia contenedores huérfanos del proyecto
 	@echo "🧹 Eliminando contenedores huérfanos (compose project: $(COMPOSE_PROJECT_NAME))..."
-	podman-compose -f $(COMPOSE_FILE_LOCAL)  --env-file $(ENV_FILE_LOCAL)  down -v --remove-orphans || true
-	podman-compose -f $(COMPOSE_FILE_DEV)    --env-file $(ENV_FILE_DEV)    down -v --remove-orphans || true
-	podman-compose -f $(COMPOSE_FILE_PROD)   --env-file $(ENV_FILE_PROD)   down -v --remove-orphans || true
+	podman-compose -f $(COMPOSE_FILE_LOCAL)  --env-file $(ENV_FILE_LOCAL)  down -v --remove-orphans 2>/dev/null || true
+	podman-compose -f $(COMPOSE_FILE_DEV)    --env-file $(ENV_FILE_DEV)    down -v --remove-orphans 2>/dev/null || true
+	podman-compose -f $(COMPOSE_FILE_PROD)   --env-file $(ENV_FILE_PROD)   down -v --remove-orphans 2>/dev/null || true
 	@echo "🗑️  Pruning de recursos no usados..."
 	podman rm -af || true
 	podman system prune -af --volumes || true
@@ -802,4 +799,4 @@ help-all: ## 📖 Mostrar todos los comandos disponibles en el Makefile
         deploy-staging deploy-production pre-commit-checks benchmark-endpoints load-test-basic security-scan validate-configs \
         generate-reports system-info-full workflow-dev workflow-ci workflow-production troubleshoot-db troubleshoot-network troubleshoot-services \
         fix-common-issues dev-setup qa-setup devops-setup collect-metrics health-check-all auto-restart daily-maintenance \
-        quick-start quick-test quick-deploy quick-stop fix-orphans
+        quick-start quick-test quick-deploy quick-stop fix-orphans fix-container-orphans

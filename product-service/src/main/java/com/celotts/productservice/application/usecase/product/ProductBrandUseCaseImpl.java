@@ -4,6 +4,8 @@ import com.celotts.productservice.domain.port.output.product.ProductBrandReposit
 import com.celotts.productservice.domain.exception.BrandNotFoundException;
 import com.celotts.productservice.domain.model.product.ProductBrandModel;
 import com.celotts.productservice.domain.port.input.product.ProductBrandUseCase;
+
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +35,30 @@ public class ProductBrandUseCaseImpl implements ProductBrandUseCase {
     }
 
     @Override
+    @Transactional
+    public ProductBrandModel update(UUID id, ProductBrandModel patch) {
+        ProductBrandModel existing = repository.findById(id)
+                .orElseThrow(() -> new BrandNotFoundException(id));
+
+        // Si cambian el nombre, valida unicidad (excluyéndote a ti mismo)
+        if (patch.getName() != null) {
+            String newName = patch.getName().trim();
+            if (!newName.equalsIgnoreCase(existing.getName())
+                    && repository.existsByName(newName)) { // idealmente usa existsByNameExcludingId(id, newName)
+                throw new IllegalArgumentException("Brand already exists");
+            }
+            existing.setName(newName);
+        }
+
+        if (patch.getDescription() != null) existing.setDescription(patch.getDescription());
+        if (patch.getEnabled() != null)     existing.setEnabled(patch.getEnabled());
+        if (patch.getUpdatedBy() != null)   existing.setUpdatedBy(patch.getUpdatedBy());
+
+        existing.setUpdatedAt(LocalDateTime.now());
+        return repository.save(existing);
+    }
+
+    @Override
     public Optional<ProductBrandModel> findById(UUID id) {
         return repository.findById(id);
     }
@@ -53,8 +79,24 @@ public class ProductBrandUseCaseImpl implements ProductBrandUseCase {
     }
 
     @Override
-    public void deleteById(UUID id) {
-        repository.deleteById(id);
+    @Transactional
+    public void deleteById(UUID id, String deletedBy, String reason) {
+        ProductBrandModel brand = repository.findById(id)
+                .orElseThrow(() -> new BrandNotFoundException(id));
+
+        // Idempotente: si ya fue borrada, no hagas nada (o lanza excepción si prefieres)
+        if (brand.getDeletedAt() != null) {
+            return; // o throw new BrandNotFoundException(id);
+        }
+
+        // Opcional: además desactivar
+        brand.deactivate(); // si quieres forzar enabled=false
+
+        brand.setDeletedBy(deletedBy);
+        brand.setDeletedReason(reason);
+        brand.setDeletedAt(LocalDateTime.now());
+
+        repository.save(brand);
     }
 
     @Override
@@ -93,4 +135,5 @@ public class ProductBrandUseCaseImpl implements ProductBrandUseCase {
         brand.setUpdatedAt(LocalDateTime.now());
         return repository.save(brand);
     }
+
 }

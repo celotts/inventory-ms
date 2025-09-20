@@ -27,55 +27,71 @@ public class ProductBrandRepositoryAdapter implements ProductBrandRepositoryPort
         return mapper.toModel(saved);
     }
 
-    @Override @Transactional(readOnly = true)
+    // ===== Lecturas SOLO ACTIVOS =====
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<ProductBrandModel> findById(UUID id) {
-        return repository.findById(id).map(mapper::toModel);
+        return repository.findActiveById(id).map(mapper::toModel);
     }
 
-    @Override @Transactional(readOnly = true)
+    @Override
+    @Transactional(readOnly = true)
     public Optional<ProductBrandModel> findByName(String name) {
-        return repository.findByNameIgnoreCase(name).map(mapper::toModel);
+        return repository.findActiveByNameIgnoreCase(name).map(mapper::toModel);
     }
 
-    @Override @Transactional(readOnly = true)
+    @Override
+    @Transactional(readOnly = true)
     public List<ProductBrandModel> findAll() {
-        return repository.findAll().stream().map(mapper::toModel).toList();
+        return repository.findAllActive().stream().map(mapper::toModel).toList();
     }
 
-    @Override @Transactional(readOnly = true)
+    @Override
+    @Transactional(readOnly = true)
     public boolean existsByName(String name) {
-        return repository.existsByNameIgnoreCase(name);
+        return repository.existsActiveByNameIgnoreCase(name);
     }
 
-    @Override @Transactional(readOnly = true)
+    @Override
+    @Transactional(readOnly = true)
     public boolean existsById(UUID id) {
-        return repository.existsById(id);
+        // si quieres estricto por activos:
+        return repository.findActiveById(id).isPresent();
+        // o bien: return repository.existsById(id); (incluye borrados)
     }
 
-    @Override @Transactional(readOnly = true)
-    public void deleteById(UUID id) {
-        repository.deleteById(id);
+    // ===== Soft delete =====
+
+    @Override
+    @Transactional
+    public int softDelete(UUID id, String deletedBy, String reason) {
+        return repository.softDelete(id, deletedBy, reason);
     }
 
-    // ----- extras del puerto -----
+    // ===== Extras SOLO ACTIVOS =====
 
-    @Override @Transactional(readOnly = true)
+    @Override
+    @Transactional(readOnly = true)
     public Optional<String> findNameById(UUID id) {
-        return repository.findNameById(id);
+        return repository.findActiveNameById(id);
     }
 
-    @Override @Transactional(readOnly = true)
+    @Override
+    @Transactional(readOnly = true)
     public List<UUID> findAllIds() {
-        return repository.findAllIds();
+        return repository.findAllActiveIds();
     }
 
-    // ----- enable/disable -----
+    // ===== enable/disable restringidos a activos =====
 
     @Override
     @Transactional
     public ProductBrandModel enable(UUID id) {
-        repository.enableBrandById(id);
-        ProductBrandEntity entity = repository.findById(id)
+        int updated = repository.enableBrandById(id);
+        if (updated == 0) throw new EntityNotFoundException("ProductBrand not found or deleted: " + id);
+
+        ProductBrandEntity entity = repository.findActiveById(id)
                 .orElseThrow(() -> new EntityNotFoundException("ProductBrand not found: " + id));
         return mapper.toModel(entity);
     }
@@ -83,9 +99,18 @@ public class ProductBrandRepositoryAdapter implements ProductBrandRepositoryPort
     @Override
     @Transactional
     public ProductBrandModel disable(UUID id) {
-        repository.disableBrandById(id);
-        ProductBrandEntity entity = repository.findById(id)
+        int updated = repository.disableBrandById(id);
+        if (updated == 0) throw new EntityNotFoundException("ProductBrand not found or deleted: " + id);
+
+        ProductBrandEntity entity = repository.findActiveById(id)
                 .orElseThrow(() -> new EntityNotFoundException("ProductBrand not found: " + id));
         return mapper.toModel(entity);
+    }
+
+    @Override
+    @Transactional
+    public void deleteById(UUID id){
+       repository.softDelete(id, null, null);
+
     }
 }

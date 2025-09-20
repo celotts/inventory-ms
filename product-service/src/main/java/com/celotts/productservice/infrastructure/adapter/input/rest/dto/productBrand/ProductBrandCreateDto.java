@@ -1,31 +1,34 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProductBrandCreateDto {
 
     @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name must not exceed 100 characters")
+    @Size(max = 120, message = "Name must not exceed 120 characters")
     private String name;
 
-    @NotBlank(message = "Description is required")
-    @Size(max = 500, message = "Description must not exceed 500 characters")
-    private String description;
+    @Size(max = 1000, message = "Description must not exceed 1000 characters")
+    private String description; // opcional
 
-    @NotNull(message = "Enabled flag is required")   // ✅ solo @NotNull
+    // opcional; en el use case default = true si es null
     private Boolean enabled;
 
     @NotBlank(message = "createdBy is required")
     private String createdBy;
 
-    // Opcional al crear — sin @NotBlank
-    @NotBlank(message = "updatedBy is required")
     private String updatedBy;
 }
