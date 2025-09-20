@@ -1,10 +1,10 @@
-package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.InventoryMovement;
+package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.movement;
 
 import com.celotts.productservice.domain.model.movement.InventoryMovementModel;
-import com.celotts.productservice.domain.ports.output.InventoryMovementRepositoryPort;
+import com.celotts.productservice.domain.port.output.inventory.InventoryMovementRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.movement.InventoryMovementEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.movement.InventoryMovementEntityMapper;
-import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.InventoryMovementJpaRepository;
+import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.inventory.InventoryMovementJpaRepository;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;

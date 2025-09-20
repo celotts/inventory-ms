@@ -1,4 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.lot;
 
-public class LotDisposeRequest {
-}
+public record LotDisposeRequest(
+        String reference,
+        String reason,
+        String user
+) {}

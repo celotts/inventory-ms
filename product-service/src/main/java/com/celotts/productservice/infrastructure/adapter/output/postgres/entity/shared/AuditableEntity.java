@@ -26,7 +26,7 @@ public abstract class AuditableEntity {
     private LocalDateTime createdAt;
 
     @CreatedBy
-    @Column(name = "created_by", updatable = false, length = 100)
+    @Column(name = "created_by", updatable = false, length = 255)
     private String createdBy;
 
     @LastModifiedDate
@@ -34,13 +34,13 @@ public abstract class AuditableEntity {
     private LocalDateTime updatedAt;
 
     @LastModifiedBy
-    @Column(name = "updated_by", length = 100)
+    @Column(name = "updated_by", length = 255)
     private String updatedBy;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @Column(name = "deleted_by", length = 100)
+    @Column(name = "deleted_by", length = 255)
     private String deletedBy;
 
     @Column(name = "deleted_reason", length = 255)
