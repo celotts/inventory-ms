@@ -3,11 +3,11 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 import com.celotts.productservice.domain.model.product.ProductBrandModel;
 import com.celotts.productservice.domain.port.input.product.ProductBrandUseCase;
 
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandUpdateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandDeleteDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productBrand.ProductBrandResponseDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productBrand.ProductBrandMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productbrand.ProductBrandCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productbrand.ProductBrandUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productbrand.ProductBrandDeleteDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productbrand.ProductBrandResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productbrand.ProductBrandMapper;
 import com.celotts.productservice.domain.exception.ResourceNotFoundException;
 
 import lombok.extern.slf4j.Slf4j;
