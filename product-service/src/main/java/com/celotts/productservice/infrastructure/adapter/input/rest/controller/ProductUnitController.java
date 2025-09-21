@@ -2,9 +2,9 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.domain.port.input.product.ProductUnitUseCase;
 import com.celotts.productservice.domain.model.product.ProductUnitModel;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitResponseDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productUnit.ProductUnitUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productunit.ProductUnitCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productunit.ProductUnitResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productunit.ProductUnitUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productunit.ProductUnitMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

@@ -1,8 +1,8 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productCategory.ProductCategoryResponseDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productCategory.ProductCategoryMapper;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productcategory.ProductCategoryCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productcategory.ProductCategoryResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productcategory.ProductCategoryMapper;
 import com.celotts.productservice.domain.model.product.ProductCategoryModel;
 import com.celotts.productservice.domain.port.input.product.ProductCategoryUseCase;
 import io.swagger.v3.oas.annotations.Operation;
