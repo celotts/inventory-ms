@@ -19,8 +19,8 @@ public class ProductDeleteDto {
     @NotNull(message = "ID is required")
     UUID id;
 
-    @Size(max = 100, message = "deletedBy max length is 100")
-    @Pattern(regexp = "^[\\p{L}0-9._\\-\\s@]+$", message = "deletedBy has invalid characters")
+    @Size(max = 100, message = "DeletedBy max length is 100")
+    @Pattern(regexp = "^[\\p{L}0-9._\\-\\s@]+$", message = "DeletedBy has invalid characters")
     String deletedBy;
 
     @Size(max = 255, message = "Reason must not exceed 255 characters")

@@ -185,7 +185,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public ProductModel disableProduct(UUID id) {
         ProductModel product = productRepositoryPort.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "No se encontró el producto con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", "Product with ID not found: " + id));
         ProductModel updated = product.toBuilder().enabled(false).build();
         return productRepositoryPort.save(updated);
     }
