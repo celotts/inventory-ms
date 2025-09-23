@@ -18,17 +18,17 @@ import java.util.UUID;
 @SuperBuilder
 public class ProductImageRequestDto extends PageableRequestDto {
 
-    @NotNull(message = "productId is required")
+    @NotNull(message = "ProductId is required")
     private UUID productId;
 
     private Boolean enabled;
 
-    @PastOrPresent(message = "uploadedFrom must be in the past or present")
+    @PastOrPresent(message = "UploadedFrom must be in the past or present")
     private LocalDateTime uploadedFrom;
 
-    @PastOrPresent(message = "uploadedTo must be in the past or present")
+    @PastOrPresent(message = "UploadedTo must be in the past or present")
     private LocalDateTime uploadedTo;
 
-    @Size(max = 100, message = "createdByLike max length is 100")
+    @Size(max = 100, message = "CreatedByLike max length is 100")
     private String createdByLike;
 }

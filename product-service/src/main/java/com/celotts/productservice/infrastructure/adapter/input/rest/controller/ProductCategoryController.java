@@ -20,14 +20,14 @@ import java.util.UUID;
 @RequestMapping("/api/v1/product-categories")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Product Category API", description = "API para gestionar categorías de producto")
+@Tag(name = "Product Category API", description = "API for managing product categories")
 public class ProductCategoryController {
 
     private final ProductCategoryUseCase productCategoryUseCase;
     private final ProductCategoryMapper productCategoryMapper;
 
     @PostMapping
-    @Operation(summary = "Asignar categoría a producto")
+    @Operation(summary = "Assign category to product")
     public ResponseEntity<ProductCategoryResponseDto> create(@Valid @RequestBody ProductCategoryCreateDto dto) {
         ProductCategoryModel modelIn = productCategoryMapper.toModel(dto);                // ✅ MapStruct
         ProductCategoryModel saved   = productCategoryUseCase.assignCategoryToProduct(modelIn);
@@ -36,28 +36,28 @@ public class ProductCategoryController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Obtener asignación por ID")
+    @Operation(summary = "Get assignment by ID")
     public ResponseEntity<ProductCategoryResponseDto> getById(@PathVariable UUID id) {
         ProductCategoryModel model = productCategoryUseCase.getById(id);
         return ResponseEntity.ok(productCategoryMapper.toResponse(model));                // ✅ MapStruct
     }
 
     @GetMapping
-    @Operation(summary = "Listar todas las asignaciones")
+    @Operation(summary = "List all assignments")
     public ResponseEntity<List<ProductCategoryResponseDto>> getAll() {
         List<ProductCategoryModel> all = productCategoryUseCase.getAll();
         return ResponseEntity.ok(productCategoryMapper.toResponseList(all));              // ✅ sin Collectors
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Desactivar asignación (lógico)")
+    @Operation(summary = "Disable assignment (logical)")
     public ResponseEntity<Void> disable(@PathVariable UUID id) {
         productCategoryUseCase.disableById(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}/hard")
-    @Operation(summary = "Eliminar asignación (físico)")
+    @Operation(summary = "Delete assignment (physical)")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         productCategoryUseCase.deleteById(id);
         return ResponseEntity.noContent().build();

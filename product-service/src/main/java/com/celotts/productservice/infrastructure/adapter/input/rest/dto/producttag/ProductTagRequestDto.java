@@ -19,10 +19,10 @@ import java.time.LocalDateTime;
 public class ProductTagRequestDto extends PageableRequestDto {
 
     // --- Filtros (opcionales) ---
-    @Size(min = 2, max = 50, message = "name must be 2-50 chars")
+    @Size(min = 2, max = 50, message = "Name must be 2-50 chars")
     private String name;           // puedes tratarlo como 'contains' en el servicio
 
-    @Size(max = 1000, message = "description max length is 1000")
+    @Size(max = 1000, message = "Description max length is 1000")
     private String description;
 
     private Boolean enabled;
@@ -38,11 +38,11 @@ public class ProductTagRequestDto extends PageableRequestDto {
 
     // --- Paginación ---
     @Builder.Default
-    @PositiveOrZero(message = "page must be >= 0")
+    @PositiveOrZero(message = "Page must be >= 0")
     private Integer page = 0;
 
     @Builder.Default
-    @Min(value = 1, message = "size must be >= 1")
+    @Min(value = 1, message = "Dize must be >= 1")
     private Integer size = 20;
 
     // --- Ordenamiento ---
@@ -53,11 +53,11 @@ public class ProductTagRequestDto extends PageableRequestDto {
     @Builder.Default
     @Pattern(
             regexp = "name|enabled|createdAt|updatedAt",
-            message = "sortBy must be one of: name, enabled, createdAt, updatedAt"
+            message = "SortBy must be one of: name, enabled, createdAt, updatedAt"
     )
     private String sortBy = "name";
 
     @Builder.Default
-    @Pattern(regexp = "ASC|DESC", message = "sortDir must be 'ASC' or 'DESC'")
+    @Pattern(regexp = "ASC|DESC", message = "SortDir must be 'ASC' or 'DESC'")
     private String sortDir = "ASC";
 }

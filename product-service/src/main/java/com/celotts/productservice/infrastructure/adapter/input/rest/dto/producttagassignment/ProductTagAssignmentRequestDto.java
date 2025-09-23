@@ -37,11 +37,11 @@ public class ProductTagAssignmentRequestDto extends PageableRequestDto {
 
     // --- Paginación ---
     @Builder.Default
-    @PositiveOrZero(message = "page must be >= 0")
+    @PositiveOrZero(message = "Page must be >= 0")
     private Integer page = 0;
 
     @Builder.Default
-    @Min(value = 1, message = "size must be >= 1")
+    @Min(value = 1, message = "Size must be >= 1")
     private Integer size = 20;
 
     // --- Ordenamiento ---
@@ -52,11 +52,11 @@ public class ProductTagAssignmentRequestDto extends PageableRequestDto {
     @Builder.Default
     @Pattern(
             regexp = "productId|tagId|assignedAt|createdAt|updatedAt|enabled",
-            message = "sortBy must be one of: productId, tagId, assignedAt, createdAt, updatedAt, enabled"
+            message = "SortBy must be one of: productId, tagId, assignedAt, createdAt, updatedAt, enabled"
     )
     private String sortBy = "assignedAt";
 
     @Builder.Default
-    @Pattern(regexp = "ASC|DESC", message = "sortDir must be 'ASC' or 'DESC'")
+    @Pattern(regexp = "ASC|DESC", message = "SortDir must be 'ASC' or 'DESC'")
     private String sortDir = "DESC";
 }

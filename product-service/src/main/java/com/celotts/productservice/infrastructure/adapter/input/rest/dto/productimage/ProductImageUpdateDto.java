@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class ProductImageUpdateDto {
 
     @NotBlank(message = "Url is required")
-    @Size(max = 2048, message = "url max length is 2048")
+    @Size(max = 2048, message = "Url max length is 2048")
     String url;
 
     Boolean enabled;
@@ -22,6 +22,6 @@ public class ProductImageUpdateDto {
     @PastOrPresent(message = "UploadedAt must be in the past or present")
     LocalDateTime uploadedAt;
 
-    @Size(max = 100, message = "updatedBy max length is 100")
+    @Size(max = 100, message = "UpdatedBy max length is 100")
     String updatedBy;
 }

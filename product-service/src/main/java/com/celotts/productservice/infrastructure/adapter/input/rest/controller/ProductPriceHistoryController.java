@@ -22,7 +22,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "${app.cors.allowed-origin:*}")
 @Slf4j
-@Tag(name = "Product Price History API", description = "Histórico de precios de productos")
+@Tag(name = "Product Price History API", description = "Product price history")
 public class ProductPriceHistoryController {
 
     private final ProductPriceHistoryUseCase useCase;

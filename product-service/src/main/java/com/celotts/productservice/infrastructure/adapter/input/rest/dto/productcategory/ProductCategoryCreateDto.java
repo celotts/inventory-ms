@@ -21,6 +21,6 @@ public class ProductCategoryCreateDto {
     @Builder.Default
     Boolean enabled = Boolean.TRUE;
 
-    @Size(max = 100, message = "createdBy max length is 100")
+    @Size(max = 100, message = "CreatedBy max length is 100")
     String createdBy;
 }

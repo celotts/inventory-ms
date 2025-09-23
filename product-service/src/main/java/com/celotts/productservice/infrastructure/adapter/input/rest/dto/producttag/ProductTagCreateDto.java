@@ -11,16 +11,16 @@ import lombok.*;
 @Builder
 public class ProductTagCreateDto {
     @NotBlank
-    @Size(min = 2, max = 50, message = "name must be 2-50 chars")
+    @Size(min = 2, max = 50, message = "Name must be 2-50 chars")
     @Pattern(regexp = "^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s\\-_]{2,50}$")
     String name;
 
-    @Size(max = 1000, message = "description max length is 1000")
+    @Size(max = 1000, message = "Description max length is 1000")
     String description;
 
     @Builder.Default
     Boolean enabled = Boolean.TRUE;
 
-    @Size(max = 100, message = "createdBy max length is 100")
+    @Size(max = 100, message = "CreatedBy max length is 100")
     @NotBlank String createdBy;
 }

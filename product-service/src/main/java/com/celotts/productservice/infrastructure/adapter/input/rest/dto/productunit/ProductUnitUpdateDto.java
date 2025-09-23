@@ -28,6 +28,6 @@ public class ProductUnitUpdateDto {
     @NotNull(message = "Enabled flag is required")
     private Boolean enabled;
 
-    @NotBlank(message = "updatedBy is required")
+    @NotBlank(message = "UpdatedBy is required")
     private String updatedBy;
 }

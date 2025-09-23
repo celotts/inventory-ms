@@ -38,9 +38,9 @@ public class ProductUnitCreateDto {
     @NotBlank(message = "Symbol is required")
     private String symbol;
 
-    @Size(max = 100, message = "createdBy max length is 100")
-    @NotBlank(message = "createdBy is required")
-    @Pattern(regexp = "^[\\p{L}0-9._\\-\\s@]+$", message = "createdBy has invalid characters")
+    @Size(max = 100, message = "CreatedBy max length is 100")
+    @NotBlank(message = "CreatedBy is required")
+    @Pattern(regexp = "^[\\p{L}0-9._\\-\\s@]+$", message = "CreatedBy has invalid characters")
     private String createdBy;
 
     private String updatedBy;

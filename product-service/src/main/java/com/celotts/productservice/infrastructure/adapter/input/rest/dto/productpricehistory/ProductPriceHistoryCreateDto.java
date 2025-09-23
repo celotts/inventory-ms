@@ -27,9 +27,9 @@ public class ProductPriceHistoryCreateDto {
 
     Boolean enabled;
 
-    @PastOrPresent(message = "changedAt must be in the past or present")
+    @PastOrPresent(message = "ChangedAt must be in the past or present")
     LocalDateTime changedAt;
 
-    @Size(max = 100, message = "createdBy max length is 100")
+    @Size(max = 100, message = "CreatedBy max length is 100")
     String createdBy;
 }

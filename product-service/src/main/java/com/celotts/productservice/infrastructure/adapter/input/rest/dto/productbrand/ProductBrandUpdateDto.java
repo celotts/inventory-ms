@@ -25,6 +25,6 @@ public class ProductBrandUpdateDto {
     private Boolean enabled;
 
     /** Usuario que realiza la actualización */
-    @NotBlank(message = "updatedBy is required")
+    @NotBlank(message = "UpdatedBy is required")
     private String updatedBy;
 }

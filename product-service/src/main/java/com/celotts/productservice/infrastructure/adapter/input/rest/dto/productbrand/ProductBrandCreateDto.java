@@ -27,7 +27,7 @@ public class ProductBrandCreateDto {
     // opcional; en el use case default = true si es null
     private Boolean enabled;
 
-    @NotBlank(message = "createdBy is required")
+    @NotBlank(message = "CreatedBy is required")
     private String createdBy;
 
     private String updatedBy;
