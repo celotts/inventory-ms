@@ -36,7 +36,7 @@ public class ProductBrandRequestDto extends PageableRequestDto {
     // Valida sortBy permitido SIN duplicar el campo (anotando el getter)
     @Pattern(
             regexp = "name|createdAt|updatedAt|enabled",
-            message = "sortBy must be one of: name, createdAt, updatedAt, enabled"
+            message = "SortBy must be one of: name, createdAt, updatedAt, enabled"
     )
     @Override
     public String getSortBy() {

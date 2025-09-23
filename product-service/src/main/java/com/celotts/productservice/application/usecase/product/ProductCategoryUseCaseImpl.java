@@ -35,7 +35,7 @@ public class ProductCategoryUseCaseImpl implements ProductCategoryUseCase {
     public ProductCategoryModel assignCategoryToProduct(ProductCategoryModel dtoModel) {
         // Evitar duplicado activo (ajusta si tu repo no tiene este método)
         if (repo.existsByProductIdAndCategoryIdAndEnabledTrue(dtoModel.getProductId(), dtoModel.getCategoryId())) {
-            throw new IllegalArgumentException("La asignación productId-categoryId ya existe y está activa");
+            throw new IllegalArgumentException("Change text from Spanish to English");
         }
 
         var now = LocalDateTime.now();

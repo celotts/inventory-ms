@@ -51,7 +51,7 @@ public class ProductRequestDto extends PageableRequestDto {
     @Override
     @Pattern(
             regexp = "code|name|unitPrice|currentStock|minimumStock|categoryId|brandId|unitCode|enabled|createdAt|updatedAt",
-            message = "sortBy must be one of: code, name, unitPrice, currentStock, minimumStock, categoryId, brandId, unitCode, enabled, createdAt, updatedAt"
+            message = "SortBy must be one of: code, name, unitPrice, currentStock, minimumStock, categoryId, brandId, unitCode, enabled, createdAt, updatedAt"
     )
     public String getSortBy() {
         return super.getSortBy();

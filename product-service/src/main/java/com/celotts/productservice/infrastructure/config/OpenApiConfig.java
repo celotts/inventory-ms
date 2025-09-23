@@ -16,7 +16,7 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Product Service API")
-                        .description("Documentación de la API para gestión de productos, marcas y categorías")
+                        .description("API documentation for product, brand, and category management")
                         .version("v1.0.0")
                         .contact(new Contact()
                                 .name("Equipo de Desarrollo")

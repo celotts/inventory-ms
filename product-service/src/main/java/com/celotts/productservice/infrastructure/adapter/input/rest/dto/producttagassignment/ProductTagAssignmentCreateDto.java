@@ -17,17 +17,17 @@ import java.util.UUID;
 @Builder
 public class ProductTagAssignmentCreateDto {
 
-    @NotNull(message = "productId is required")
+    @NotNull(message = "ProductId is required")
     private UUID productId;
 
-    @NotNull(message = "tagId is required")
+    @NotNull(message = "TagId is required")
     private UUID tagId;
 
     // Opcional: si no viene, en el servicio puedes asumir TRUE
     @Builder.Default
     private Boolean enabled = Boolean.TRUE;
 
-    @Size(max = 100, message = "createdBy max length is 100")
-    @Pattern(regexp = "^[\\p{L}0-9._\\-\\s@]+$", message = "createdBy has invalid characters")
+    @Size(max = 100, message = "CreatedBy max length is 100")
+    @Pattern(regexp = "^[\\p{L}0-9._\\-\\s@]+$", message = "CreatedBy has invalid characters")
     private String createdBy;
 }

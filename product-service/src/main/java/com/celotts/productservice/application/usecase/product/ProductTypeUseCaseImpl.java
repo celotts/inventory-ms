@@ -23,7 +23,8 @@ public class ProductTypeUseCaseImpl implements ProductTypeUseCase {
     }
 
     @PostConstruct
-    public void log() { System.out.println("⚠️ ProductTypeUseCaseImpl fue cargado."); }
+    public void log() { System.out.println("\n" +
+            "ProductTypeUseCaseImpl was loaded."); }
 
     @Override public boolean existsByCode(String code) { return productTypeRepository.existsByCode(code); }
     @Override public Optional<String> findNameByCode(String code) { return productTypeRepository.findNameByCode(code); }

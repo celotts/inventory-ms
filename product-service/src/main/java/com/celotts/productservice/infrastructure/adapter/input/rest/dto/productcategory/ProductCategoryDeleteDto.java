@@ -16,10 +16,10 @@ public class ProductCategoryDeleteDto {
     @NotNull(message = "ID is required")
     UUID id;
 
-    @Size(max = 100, message = "updatedBy max length is 100")
+    @Size(max = 100, message = "UpdatedBy max length is 100")
     String updatedBy;
 
-    @PastOrPresent(message = "updatedAt must be in the past or present")
+    @PastOrPresent(message = "UpdatedAt must be in the past or present")
     LocalDateTime updatedAt;
 
     String deletedBy;

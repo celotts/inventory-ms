@@ -24,6 +24,6 @@ public class ProductPriceHistoryUpdateDto {
 
     Boolean enabled;
 
-    @PastOrPresent(message = "changedAt must be in the past or present")
+    @PastOrPresent(message = "ChangedAt must be in the past or present")
     LocalDateTime changedAt;
 }

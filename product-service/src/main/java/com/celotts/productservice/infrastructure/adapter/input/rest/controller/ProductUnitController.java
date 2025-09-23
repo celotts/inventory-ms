@@ -29,10 +29,10 @@ public class ProductUnitController {
     private final ProductUnitUseCase productUnitUseCase;
     private final ProductUnitMapper mapper;
 
-    @Operation(summary = "Crea una nueva unidad de producto")
+    @Operation(summary = "Create a new product unit")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Unidad creada exitosamente"),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos")
+            @ApiResponse(responseCode = "201", description = "Drive created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid data")
     })
     @PostMapping
     public ResponseEntity<ProductUnitResponseDto> create(@Valid @RequestBody ProductUnitCreateDto dto) {

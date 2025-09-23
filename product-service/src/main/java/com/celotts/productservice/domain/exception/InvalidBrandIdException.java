@@ -4,6 +4,6 @@ import java.util.UUID;
 
 public class InvalidBrandIdException extends RuntimeException {
     public InvalidBrandIdException(UUID id) {
-        super("El ID de marca no es válido: " + id);
+        super("The brand ID is not valid: " + id);
     }
 }

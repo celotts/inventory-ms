@@ -36,6 +36,6 @@ public class ProductPriceHistoryRequestDto extends PageableRequestDto {
 
     private Boolean enabled;
 
-    @PastOrPresent(message = "changedAt must be in the past or present")
+    @PastOrPresent(message = "ChangedAt must be in the past or present")
     private LocalDateTime changedAt;
 }

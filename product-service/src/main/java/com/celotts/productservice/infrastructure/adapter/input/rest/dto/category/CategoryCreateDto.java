@@ -24,7 +24,7 @@ public class CategoryCreateDto {
     @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
 
-    @Size(max = 100, message = "createdBy max length is 100")
+    @Size(max = 100, message = "CreatedBy max length is 100")
     @NotBlank(message = "createdBy is required")
     @Pattern(regexp = "^[\\p{L}0-9._\\-\\s@]+$", message = "createdBy has invalid characters")
     private String createdBy;
