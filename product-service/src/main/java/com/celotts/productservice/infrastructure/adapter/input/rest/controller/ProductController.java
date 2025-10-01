@@ -3,6 +3,7 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 import com.celotts.productservice.domain.model.product.ProductModel;
 import com.celotts.productservice.domain.port.input.product.ProductUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductMapper;
@@ -12,8 +13,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.*;
-import org.springframework.http.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -64,36 +69,43 @@ public class ProductController {
     }
 
     @GetMapping("/paginated")
-    @Operation(summary = "Get paginated products", description = "Product list with optional pagination and filters")
+    @Operation(summary = "Get paginated products",
+            description = "Product list with optional pagination and filters")
     public ResponseEntity<Page<ProductResponseDto>> getAllProductsPaginated(
-            @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String code,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String description
+            @Valid @ModelAttribute ProductRequestDto requestDto
     ) {
-        int pageNumber = page != null ? Math.max(0, page) : paginationProperties.getDefaultPage();
-        int pageSize = size != null ? Math.min(Math.max(1, size), paginationProperties.getMaxSize()) : paginationProperties.getDefaultSize();
-        String sortField = (sortBy != null && !sortBy.isBlank()) ? sortBy : paginationProperties.getDefaultSort();
-        String sortDirection = (sortDir != null && !sortDir.isBlank()) ? sortDir : paginationProperties.getDefaultDirection();
+        // Fallback properties si el cliente no envía valores
+        int page = Optional.ofNullable(requestDto.getPage())
+                .filter(p -> p >= 0)
+                .orElse(paginationProperties.getDefaultPage());
 
-        Sort sort = sortDirection.equalsIgnoreCase("desc")
-                ? Sort.by(sortField).descending()
-                : Sort.by(sortField).ascending();
+        int size = Optional.ofNullable(requestDto.getSize())
+                .map(s -> Math.max(1, Math.min(s, paginationProperties.getMaxSize())))
+                .orElse(paginationProperties.getDefaultSize());
 
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+        String sortBy = Optional.ofNullable(requestDto.getSortBy())
+                .filter(s -> !s.isBlank())
+                .orElse(paginationProperties.getDefaultSort());
+
+        String sortDir = Optional.ofNullable(requestDto.getSortDir())
+                .filter(s -> !s.isBlank())
+                .orElse(paginationProperties.getDefaultDirection());
+
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        String code = requestDto.getCode();
+        String name = requestDto.getName();
+        String description = requestDto.getDescription();
 
         Page<ProductModel> products = (code != null || name != null || description != null)
                 ? productUseCase.getAllProductsWithFilters(pageable, code, name, description)
                 : productUseCase.getAllProducts(pageable);
 
-        // Si ProductMapper tiene helper toResponsePage(page):
-        // Page<ProductResponseDto> dtoPage = productMapper.toResponsePage(products);
-        // Si no, mapea así:
-        Page<ProductResponseDto> dtoPage = products.map(productMapper::toResponse);
-        return ResponseEntity.ok(dtoPage);
+        return ResponseEntity.ok(products.map(productMapper::toResponse));
     }
 
     @GetMapping("/{id}")

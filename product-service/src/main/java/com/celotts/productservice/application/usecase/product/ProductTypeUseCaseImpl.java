@@ -76,7 +76,7 @@ public class ProductTypeUseCaseImpl implements ProductTypeUseCase {
 
     @Override
     @Transactional
-    public void delete(UUID id) {
+    public void deleteById(UUID id) {
         repo.deleteById(id);
     }
 

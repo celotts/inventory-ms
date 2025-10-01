@@ -17,7 +17,7 @@ public interface ProductTypeUseCase {
 
     ProductTypeModel update(UUID id, ProductTypeModel changes);
     ProductTypeModel patch(UUID id, ProductTypeModel partial);
-    void delete(UUID id);
+    void deleteById(UUID id);
 
     // Helpers (opcionales)
     boolean existsByCode(String code);
