@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.product;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 
@@ -36,7 +37,7 @@ public class ProductCreateDto {
     @Size(min = 2, max = 100)
     private String name;
 
-    @Size(max = 500)
+    @Size(max = 255)
     private String description;
 
     @NotNull
@@ -66,8 +67,16 @@ public class ProductCreateDto {
     @Builder.Default
     private Boolean enabled = true;
 
+    @Size(max = 255, message = "CreatedBy max length is 255")
     @NotBlank
     private String createdBy;
 
+    @Size(max = 255)
     private String updatedBy;
+
+    @JsonFormat(shape =  JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    String updatedAt;
+
+    @JsonFormat(shape =  JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    String createdAt;
 }

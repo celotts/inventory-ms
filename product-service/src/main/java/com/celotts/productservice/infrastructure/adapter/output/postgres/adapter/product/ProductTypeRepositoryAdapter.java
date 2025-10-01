@@ -6,6 +6,8 @@ import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductTypeEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductTypeJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,18 +23,16 @@ public class ProductTypeRepositoryAdapter implements ProductTypeRepositoryPort {
     private final ProductTypeJpaRepository jpaRepo;
     private final ProductTypeEntityMapper mapper;
 
-    // ---------- CRUD ----------
     @Override
     @Transactional
     public ProductTypeModel save(ProductTypeModel model) {
         ProductTypeEntity entity = mapper.toEntity(model);
-        ProductTypeEntity saved  = jpaRepo.save(entity);
-        return mapper.toModel(saved);
+        return mapper.toModel(jpaRepo.save(entity));
     }
 
     @Override
     public Optional<ProductTypeModel> findById(UUID id) {
-        return jpaRepo.findById(id.toString()).map(mapper::toModel);
+        return jpaRepo.findById(id).map(mapper::toModel); // ← sin toString()
     }
 
     @Override
@@ -41,19 +41,19 @@ public class ProductTypeRepositoryAdapter implements ProductTypeRepositoryPort {
     }
 
     @Override
+    public Page<ProductTypeModel> findAll(Pageable pageable) {
+        return jpaRepo.findAll(pageable).map(mapper::toModel); // ← IMPLEMENTADO
+    }
+
+    @Override
     public List<ProductTypeModel> findAll() {
         return jpaRepo.findAll().stream().map(mapper::toModel).toList();
     }
 
     @Override
+    @Transactional
     public void deleteById(UUID id) {
-        jpaRepo.deleteById(id.toString());
-    }
-
-    // ---------- Validaciones ----------
-    @Override
-    public boolean existsById(UUID id) {
-        return jpaRepo.existsById(id.toString());
+        jpaRepo.deleteById(id); // ← sin toString()
     }
 
     @Override
@@ -61,7 +61,6 @@ public class ProductTypeRepositoryAdapter implements ProductTypeRepositoryPort {
         return jpaRepo.existsByCode(code);
     }
 
-    // ---------- Opcionales ----------
     @Override
     public Optional<String> findNameByCode(String code) {
         return jpaRepo.findNameByCode(code);

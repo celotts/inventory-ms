@@ -1,0 +1,40 @@
+@startuml
+title Flujo Create ProductType
+
+actor Client
+participant "ProductTypeController" as C
+participant "ProductTypeUseCase" as U
+participant "ProductTypeRepositoryPort" as P
+participant "ProductTypeRepositoryAdapter" as A
+participant "ProductTypeJpaRepository" as J
+database "PostgreSQL" as DB
+
+Client -> C : POST /api/v1/product-type\nProductTypeCreateDto
+C -> U : create(model)
+
+alt Validación duplicado
+  U -> P : existsByCode(code)
+  P -> A : existsByCode(code)
+  A -> J : existsByCodeIgnoreCase(code)
+  J --> A : boolean
+  A --> P : boolean
+  P --> U : boolean
+  alt code duplicado
+    U --> C : throw Conflict(409)
+    C --> Client : 409 Conflict
+    return
+  end
+end
+
+U -> P : save(model)
+P -> A : save(model)
+A -> J : save(entity)
+J -> DB : INSERT product_type
+DB --> J : entity persisted
+J --> A : entity
+A --> P : model
+P --> U : model
+
+U --> C : ProductTypeModel(created)
+C --> Client : 201 Created\nLocation + body
+@enduml

@@ -5,8 +5,8 @@ import com.celotts.productservice.domain.exception.BrandNotFoundException;
 import com.celotts.productservice.domain.model.product.ProductBrandModel;
 import com.celotts.productservice.domain.port.input.product.ProductBrandUseCase;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 
@@ -16,15 +16,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class ProductBrandUseCaseImpl implements ProductBrandUseCase {
 
     private final ProductBrandRepositoryPort repository;
-
-    public ProductBrandUseCaseImpl(
-            @Qualifier("productBrandAdapter") ProductBrandRepositoryPort repository
-    ) {
-        this.repository = repository;
-    }
 
     @Override
     public ProductBrandModel save(ProductBrandModel brand) {

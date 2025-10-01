@@ -1,7 +1,6 @@
 package com.celotts.productservice.domain.model.product;
 
-import lombok.Getter;
-import lombok.Setter;
+
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,7 +23,6 @@ public class ProductBrandModel {
     private String createdBy;
     private String updatedBy;
 
-    // 👇 AÑADIR ESTOS
     private LocalDateTime deletedAt;
     private String deletedBy;
     private String deletedReason;
