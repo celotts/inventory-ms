@@ -8,9 +8,7 @@ import com.celotts.productservice.domain.port.output.category.CategoryRepository
 import com.celotts.productservice.domain.port.output.product.ProductBrandRepositoryPort;
 import com.celotts.productservice.domain.port.output.product.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.output.product.ProductUnitRepositoryPort;
-
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,8 +17,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+
 @Service
-@Slf4j
+@RequiredArgsConstructor
 public class ProductUseCaseImpl implements ProductUseCase {
 
     private final ProductRepositoryPort productRepositoryPort;
@@ -28,17 +27,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
     private final ProductBrandRepositoryPort productBrandPort;
     private final CategoryRepositoryPort categoryRepositoryPort;
 
-    public ProductUseCaseImpl(
-            ProductRepositoryPort productRepositoryPort,
-            ProductUnitRepositoryPort productUnitPort,
-            @Qualifier("productBrandAdapter") ProductBrandRepositoryPort productBrandPort,
-            @Qualifier("categoryAdapter") CategoryRepositoryPort categoryRepositoryPort
-    ) {
-        this.productRepositoryPort = productRepositoryPort;
-        this.productUnitPort = productUnitPort;
-        this.productBrandPort = productBrandPort;
-        this.categoryRepositoryPort = categoryRepositoryPort;
-    }
+
 
     @Override
     public ProductModel createProduct(ProductModel cmd) {

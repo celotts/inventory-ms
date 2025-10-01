@@ -6,11 +6,11 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface ProductTypeJpaRepository extends JpaRepository<ProductTypeEntity, String> {
-    boolean existsByCode(String code);
-
+public interface ProductTypeJpaRepository extends JpaRepository<ProductTypeEntity, UUID> {
     Optional<ProductTypeEntity> findByCode(String code);
+    boolean existsByCode(String code);
 
     @Query("select pt.name from ProductTypeEntity pt where pt.code = :code")
     Optional<String> findNameByCode(String code);

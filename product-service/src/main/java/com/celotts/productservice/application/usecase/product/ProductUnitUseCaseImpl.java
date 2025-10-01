@@ -11,8 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@Service                        // 👉 ahora Spring lo descubre como bean
-@Transactional
+@Service
 @RequiredArgsConstructor
 public class ProductUnitUseCaseImpl implements ProductUnitUseCase {
 

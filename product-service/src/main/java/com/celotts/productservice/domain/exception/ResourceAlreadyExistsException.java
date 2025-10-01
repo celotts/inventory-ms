@@ -1,7 +1,9 @@
 package com.celotts.productservice.domain.exception;
 
-public class ResourceAlreadyExistsException extends RuntimeException {
+import com.celotts.productservice.infrastructure.common.error.ErrorCode;
+
+public class ResourceAlreadyExistsException extends DomainException {
     public ResourceAlreadyExistsException(String resource, Object idOrKey) {
-        super(resource + " already exists: " + idOrKey);
+        super(ErrorCode.ALREADY_EXISTS, 409, resource + " already exists: " + idOrKey);
     }
 }

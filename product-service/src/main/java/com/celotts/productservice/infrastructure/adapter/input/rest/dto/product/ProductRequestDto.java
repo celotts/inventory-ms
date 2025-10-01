@@ -25,6 +25,7 @@ public class ProductRequestDto extends PageableRequestDto {
     private String unitCode;
     private Boolean enabled;
 
+    private String description;
     // --- Rango de precios ---
     private BigDecimal unitPriceMin;
     private BigDecimal unitPriceMax;
