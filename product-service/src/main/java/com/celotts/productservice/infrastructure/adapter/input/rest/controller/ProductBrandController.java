@@ -1,24 +1,19 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
 import com.celotts.productservice.domain.model.product.ProductBrandModel;
 import com.celotts.productservice.domain.port.input.product.ProductBrandUseCase;
-
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productbrand.ProductBrandCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productbrand.ProductBrandUpdateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productbrand.ProductBrandDeleteDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productbrand.ProductBrandResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productbrand.ProductBrandUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productbrand.ProductBrandMapper;
-import com.celotts.productservice.domain.exception.ResourceNotFoundException;
-
-import lombok.extern.slf4j.Slf4j;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
 
 import java.util.List;
 import java.util.Map;
@@ -72,11 +67,10 @@ public class ProductBrandController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBrand(
-            @PathVariable UUID id,
-            @Valid @RequestBody ProductBrandDeleteDto dto) {
-
-        productBrandUseCase.deleteById(id, dto.getDeletedBy(), dto.getReason());
+    public ResponseEntity<Void> deleteBrand(@PathVariable UUID id,
+                                            @RequestParam String deletedBy,
+                                            @RequestParam String reason) {
+        productBrandUseCase.deleteById(id, deletedBy, reason);
         return ResponseEntity.noContent().build();
     }
 

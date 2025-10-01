@@ -13,5 +13,9 @@ public enum ErrorCode {
     // Servidor (5xx)
     INTERNAL_ERROR,
     DATABASE_ERROR,
-    INTEGRATION_ERROR
+    INTEGRATION_ERROR,
+
+    NOT_FOUND,
+    ALREADY_EXISTS,
+    INVALID_ARGUMENT
 }
