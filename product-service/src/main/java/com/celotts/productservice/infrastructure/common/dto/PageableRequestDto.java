@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.data.domain.Sort;
 
 @Data
 @SuperBuilder
@@ -26,4 +27,23 @@ public class PageableRequestDto {
 
     @Builder.Default
     private String sortBy = "createdAt";
+
+    // --- Helpers ---
+    public int getPageOrDefault() {
+        return page != null && page >= 0 ? page : 0;
+    }
+
+    public int getSizeOrDefault() {
+        if (size == null) return 20;
+        return Math.max(1, size); // nunca < 1
+    }
+
+    public Sort toSort() {
+        String direction = sortDir != null ? sortDir : "DESC";
+        String field = sortBy != null ? sortBy : "createdAt";
+
+        return direction.equalsIgnoreCase("desc")
+                ? Sort.by(field).descending()
+                : Sort.by(field).ascending();
+    }
 }
