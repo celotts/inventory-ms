@@ -1,18 +1,24 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.domain.model.lot.LotModel;
-import com.celotts.productservice.domain.model.views.*;
+import com.celotts.productservice.domain.model.views.LotAvailableView;
+import com.celotts.productservice.domain.model.views.LotExpiredView;
 import com.celotts.productservice.domain.port.input.inventory.LotUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.lot.LotCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.lot.LotDisposeRequest;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.lot.LotDeleteResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.lot.LotDisposeRequestDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.lot.LotResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.lot.LotDtoMapper;
 import jakarta.validation.Valid;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Instant;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/lots")
@@ -24,21 +30,32 @@ public class LotController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public LotModel create(@Valid @RequestBody LotCreateDto dto) {
-        return lotUseCase.create(mapper.toModel(dto));
+    public LotResponseDto create(@Valid @RequestBody LotCreateDto dto) {
+        LotModel created = lotUseCase.create(mapper.toModel(dto));
+        return mapper.toResponse(created);
     }
 
     @GetMapping
-    public Page<LotModel> listByProduct(@RequestParam UUID productId,
-                                        @RequestParam(defaultValue = "0") int page,
-                                        @RequestParam(defaultValue = "20") int size) {
-        return lotUseCase.listByProduct(productId, PageRequest.of(page, size));
+    public Page<LotResponseDto> listByProduct(@RequestParam UUID productId,
+                                              @RequestParam(defaultValue = "0") int page,
+                                              @RequestParam(defaultValue = "20") int size) {
+        return lotUseCase
+                .listByProduct(productId, PageRequest.of(page, size))
+                .map(mapper::toResponse);
     }
 
     @PostMapping("/{id}/dispose")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void dispose(@PathVariable UUID id, @RequestBody LotDisposeRequest req) {
-        lotUseCase.dispose(id, req.reference(), req.reason(), req.user());
+    public ResponseEntity<LotDeleteResponseDto> dispose(@PathVariable UUID id,
+                                                        @RequestBody LotDisposeRequestDto req) {
+        Instant deletedAt = lotUseCase.dispose(id, req.reference(), req.reason(), req.user());
+
+        return ResponseEntity.ok(new LotDeleteResponseDto(
+                id,
+                req.reference(),
+                req.reason(),
+                req.user(),
+                deletedAt
+        ));
     }
 
     @GetMapping("/available")
@@ -56,7 +73,10 @@ public class LotController {
     }
 
     @PostMapping("/mark-expired-and-list")
-    public Object markExpiredAndList(@RequestParam(defaultValue = "7") int days) {
-        return lotUseCase.markExpiredAndList(days).toList();
+    public Page<LotResponseDto> markExpiredAndList(@RequestParam(defaultValue = "7") int days,
+                                                   @RequestParam(defaultValue = "0") int page,
+                                                   @RequestParam(defaultValue = "20") int size) {
+        return lotUseCase.markExpiredAndList(days, PageRequest.of(page, size))
+                .map(mapper::toResponse);
     }
 }
