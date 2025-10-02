@@ -5,6 +5,7 @@ import com.celotts.productservice.domain.port.input.product.ProductTypeUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttype.ProductTypeCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttype.ProductTypeRequestDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttype.ProductTypeResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.PageResponse;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.producttype.ProductTypeMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -55,17 +56,15 @@ public class ProductTypeController {
     }
 
     @GetMapping("/paginated")
-    public ResponseEntity<Page<ProductTypeResponseDto>> getAllPaginated(ProductTypeRequestDto requestDto) {
+    public ResponseEntity<PageResponse<ProductTypeResponseDto>> getAllPaginated(ProductTypeRequestDto requestDto) {
         Pageable pageable = PageRequest.of(
                 requestDto.getPageOrDefault(),
                 requestDto.getSizeOrDefault(),
                 requestDto.toSort()
         );
 
-        Page<ProductTypeModel> models = productTypeUseCase.getAll(pageable /* + filtros extra */);
-
-        Page<ProductTypeResponseDto> dtoPage = models.map(mapper::toResponse);
-        return ResponseEntity.ok(dtoPage);
+        Page<ProductTypeModel> models = productTypeUseCase.getAll(pageable);
+        return ResponseEntity.ok(PageResponse.from(models, mapper::toResponse));
     }
 
     @PutMapping("/{id}")

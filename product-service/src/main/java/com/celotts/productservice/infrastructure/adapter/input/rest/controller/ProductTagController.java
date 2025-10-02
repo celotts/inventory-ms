@@ -3,18 +3,21 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 import com.celotts.productservice.domain.model.product.ProductTagModel;
 import com.celotts.productservice.domain.port.input.product.ProductTagUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttag.ProductTagCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttag.ProductTagUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttag.ProductTagResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttag.ProductTagUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.ListResponse;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.PageResponse;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.producttag.ProductTagMapper;
-
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -53,25 +56,25 @@ public class ProductTagController {
     }
 
     @GetMapping
-    public ResponseEntity<Map<String, Object>> list(Pageable pageable, @RequestParam(required = false) String name) {
+    public ResponseEntity<?> list(Pageable pageable, @RequestParam(required = false) String name) {
         if (name == null || name.isBlank()) {
             var page = productTagUseCase.findAll(pageable);
-            var data = page.map(mapper::toResponse).getContent();
-            return ResponseEntity.ok(Map.of("data", data, "total", page.getTotalElements()));
+            return ResponseEntity.ok(PageResponse.from(page, mapper::toResponse));
         } else {
             return productTagUseCase.findByName(name)
-                    .map(tag -> ResponseEntity.ok(Map.<String,Object>of("data", List.of(mapper.toResponse(tag)), "total", 1L)))
-                    .orElseGet(() -> ResponseEntity.ok(Map.<String,Object>of("data", List.of(), "total", 0L)));
+                    .map(tag -> ResponseEntity.ok(ListResponse.of(List.of(mapper.toResponse(tag)))))
+                    .orElseGet(() -> ResponseEntity.ok(ListResponse.of(List.of())));
         }
     }
 
+
     @GetMapping("/enabled")
-    public ResponseEntity<Map<String, Object>> listEnabled() {
+    public ResponseEntity<ListResponse<ProductTagResponseDto>> listEnabled() {
         List<ProductTagResponseDto> data = productTagUseCase.findAllEnabled()
                 .stream()
-                .map(mapper::toResponse)                                  // <- toResponse
+                .map(mapper::toResponse)
                 .toList();
-        return ResponseEntity.ok(Map.of("data", data, "total", data.size()));
+        return ResponseEntity.ok(ListResponse.of(data));
     }
 
     @PatchMapping("/{id}/enable")
