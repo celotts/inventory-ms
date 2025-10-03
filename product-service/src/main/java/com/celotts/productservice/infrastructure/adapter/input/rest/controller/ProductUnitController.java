@@ -1,10 +1,11 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.domain.port.input.product.ProductUnitUseCase;
 import com.celotts.productservice.domain.model.product.ProductUnitModel;
+import com.celotts.productservice.domain.port.input.product.ProductUnitUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productunit.ProductUnitCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productunit.ProductUnitResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productunit.ProductUnitUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.ListResponse;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productunit.ProductUnitMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -16,7 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -45,9 +45,9 @@ public class ProductUnitController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductUnitResponseDto>> findAll() {
+    public ResponseEntity<ListResponse<ProductUnitResponseDto>> findAll() {
         var models = productUnitUseCase.findAll();
-        return ResponseEntity.ok(mapper.toResponseList(models));
+        return ResponseEntity.ok(ListResponse.of(mapper.toResponseList(models)));
     }
 
     @GetMapping("/{id}")

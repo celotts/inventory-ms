@@ -5,13 +5,15 @@ import com.celotts.productservice.domain.port.output.lot.LotRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.lot.LotEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.lot.LotEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.lot.LotJpaRepository;
-import java.time.Instant;
-import java.util.Optional;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -46,5 +48,11 @@ public class LotRepositoryAdapter implements LotRepositoryPort {
             e.setDeletedReason(reason);
             jpa.save(e);
         });
+    }
+
+    @Override
+    public Page<LotModel> findExpiredOrExpiring(LocalDate now, LocalDate until, Pageable pageable) {
+        return jpa.findExpiredOrExpiring(now, until, pageable)
+                .map(mapper::toModel);
     }
 }

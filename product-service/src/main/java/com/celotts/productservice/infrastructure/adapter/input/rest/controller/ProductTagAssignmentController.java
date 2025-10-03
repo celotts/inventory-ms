@@ -3,8 +3,10 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 import com.celotts.productservice.domain.model.product.ProductTagAssignmentModel;
 import com.celotts.productservice.domain.port.input.product.ProductTagAssignmentUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttagassignment.ProductTagAssignmentCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttagassignment.ProductTagAssignmentUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttagassignment.ProductTagAssignmentResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.producttagassignment.ProductTagAssignmentUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.ListResponse;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.PageResponse;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.producttagassignment.ProductTagAssignmentMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +14,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 
 import java.util.List;
 import java.util.Map;
@@ -64,31 +65,6 @@ public class ProductTagAssignmentController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
-    public ResponseEntity<Map<String, Object>> list(
-            Pageable pageable,
-            @RequestParam(required = false) Boolean enabled) {
-
-        if (enabled == null) {
-            var page = useCase.findAll(pageable);
-            List<ProductTagAssignmentResponseDto> data =
-                    page.map(mapper::toResponse).getContent();
-            return ResponseEntity.ok(Map.of(
-                    "data", data,
-                    "total", page.getTotalElements()
-            ));
-        } else {
-            List<ProductTagAssignmentResponseDto> data =
-                    useCase.findByEnabled(enabled).stream()
-                            .map(mapper::toResponse)
-                            .toList();
-            return ResponseEntity.ok(Map.of(
-                    "data", data,
-                    "total", (long) data.size()
-            ));
-        }
-    }
-
     @GetMapping("/enabled")
     public ResponseEntity<Map<String, Object>> listEnabled() {
         List<ProductTagAssignmentResponseDto> data =
@@ -114,5 +90,27 @@ public class ProductTagAssignmentController {
     @GetMapping("/enabled/count")
     public Map<String, Long> countEnabled() {
         return Map.of("count", useCase.countEnabled());
+    }
+
+    @GetMapping
+    public ResponseEntity<?> list(
+            Pageable pageable,
+            @RequestParam(required = false) Boolean enabled) {
+
+        if (enabled == null) {
+            var page = useCase.findAll(pageable); // Page<ProductTagAssignmentModel>
+            // Devolver paginado uniforme
+            return ResponseEntity.ok(
+                    PageResponse.from(page, mapper::toResponse)
+            );
+        } else {
+            var data = useCase.findByEnabled(enabled).stream()
+                    .map(mapper::toResponse)
+                    .toList();
+            // Devolver lista uniforme (no paginada)
+            return ResponseEntity.ok(
+                    ListResponse.of(data)
+            );
+        }
     }
 }

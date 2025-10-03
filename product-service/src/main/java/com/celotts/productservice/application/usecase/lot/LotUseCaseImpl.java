@@ -1,18 +1,19 @@
 package com.celotts.productservice.application.usecase.lot;
 
 import com.celotts.productservice.domain.model.lot.LotModel;
-import com.celotts.productservice.domain.model.views.*;
+import com.celotts.productservice.domain.model.views.LotAvailableView;
+import com.celotts.productservice.domain.model.views.LotExpiredView;
 import com.celotts.productservice.domain.port.input.inventory.LotUseCase;
 import com.celotts.productservice.domain.port.output.lot.LotRepositoryPort;
 import com.celotts.productservice.domain.port.output.read.perishable.PerishableReadPort;
-import java.util.UUID;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -32,18 +33,24 @@ public class LotUseCaseImpl implements LotUseCase {
         return lotRepo.findByProductId(productId, pageable);
     }
 
+    // com.celotts.productservice.application.usecase.lot.LotUseCaseImpl
+
     @Override
-    public void dispose(UUID lotId, String reference, String reason, String user) {
+    public Instant dispose(UUID lotId, String reference, String reason, String user) {
+        Instant deletedAt = Instant.now();
         jdbc.update("SELECT sp_dispose_lot(?, ?, ?, ?)", lotId, reference, reason, user);
+        return deletedAt;
     }
 
     @Override
-    public Stream<LotsExpiringSoonView> markExpiredAndList(int horizonDays) {
-        jdbc.queryForObject("SELECT sp_mark_expired_lots(?)", Integer.class, "system");
-        return readPort
-                .listLotsExpiringSoon(PageRequest.of(0, 200))
-                .getContent()
-                .stream();
+    public Page<LotModel> markExpiredAndList(int horizonDays, Pageable pageable) {
+        // Marca vencida con horizonte
+        jdbc.queryForObject("SELECT sp_mark_expired_lots(?)", Integer.class, horizonDays);
+
+        var now   = java.time.LocalDate.now();
+        var until = now.plusDays(horizonDays);
+
+        return lotRepo.findExpiredOrExpiring(now, until, pageable);
     }
 
     @Override
