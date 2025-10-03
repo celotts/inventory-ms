@@ -1,7 +1,10 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.dto.response;
 
+import lombok.Getter;
+
 import java.util.List;
 
+@Getter
 public class ListResponse<T> {
     private final List<T> data;
     private final long total;
@@ -15,11 +18,5 @@ public class ListResponse<T> {
         return new ListResponse<>(data);
     }
 
-    public List<T> getData() {
-        return data;
-    }
-
-    public long getTotal() {
-        return total;
-    }
 }
+
