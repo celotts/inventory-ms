@@ -10,7 +10,7 @@ public record LotCreateDto(
         @NotBlank String lotCode,
         @Positive BigDecimal quantity,
         @PositiveOrZero BigDecimal unitCost,
-        LocalDate mfgDate,
-        LocalDate expirationDate,
+        LocalDate mfgDate, // Fecha de fabricación
+        LocalDate expirationDate, // Fecha de expiración
         String notes
 ) {}

@@ -105,7 +105,7 @@ public class ProductBrandController {
     @PutMapping(value = "/{id}", consumes = "application/json")
     public ResponseEntity<ProductBrandResponseDto> replace(@PathVariable UUID id,
                                                            @Valid @RequestBody ProductBrandUpdateDto dto) {
-        // Si quieres exigir todos los campos en PUT, valida aquí.
+
         ProductBrandModel patch = ProductBrandModel.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
