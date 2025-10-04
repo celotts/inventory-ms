@@ -46,9 +46,6 @@ public class ProductRequestDto extends PageableRequestDto {
     private LocalDateTime updatedFrom;
     private LocalDateTime updatedTo;
 
-    // ✅ NO declares page/size/sortDir/sortBy aquí: ya están en PageableRequestDto
-
-    // ✅ Whitelist para sortBy SIN duplicar el campo (anota el getter)
     @Override
     @Pattern(
             regexp = "code|name|unitPrice|currentStock|minimumStock|categoryId|brandId|unitCode|enabled|createdAt|updatedAt",

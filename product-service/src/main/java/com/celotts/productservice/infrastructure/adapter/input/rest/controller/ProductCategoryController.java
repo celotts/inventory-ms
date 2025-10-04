@@ -1,16 +1,18 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productcategory.ProductCategoryCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productcategory.ProductCategoryResponseDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productcategory.ProductCategoryMapper;
 import com.celotts.productservice.domain.model.product.ProductCategoryModel;
 import com.celotts.productservice.domain.port.input.product.ProductCategoryUseCase;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productcategory.ProductCategoryCreateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productcategory.ProductCategoryResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.ListResponse;
+import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productcategory.ProductCategoryMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,9 +46,9 @@ public class ProductCategoryController {
 
     @GetMapping
     @Operation(summary = "List all assignments")
-    public ResponseEntity<List<ProductCategoryResponseDto>> getAll() {
+    public ResponseEntity<ListResponse<ProductCategoryResponseDto>> getAll() {
         List<ProductCategoryModel> all = productCategoryUseCase.getAll();
-        return ResponseEntity.ok(productCategoryMapper.toResponseList(all));              // ✅ sin Collectors
+        return ResponseEntity.ok(ListResponse.of(productCategoryMapper.toResponseList(all)));
     }
 
     @DeleteMapping("/{id}")

@@ -6,6 +6,7 @@ import com.celotts.productservice.domain.port.input.product.ProductBrandUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productbrand.ProductBrandCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productbrand.ProductBrandResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productbrand.ProductBrandUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.ApiResponse;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productbrand.ProductBrandMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -57,13 +57,13 @@ public class ProductBrandController {
     }
 
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getAllBrands() {
+    public ResponseEntity<ApiResponse<List<ProductBrandResponseDto>>> getAllBrands() {
         List<ProductBrandResponseDto> list = productBrandUseCase.findAll()
                 .stream()
                 .map(productBrandMapper::toResponse)
                 .toList();
 
-        return ResponseEntity.ok(Map.of("data", list, "total", list.size()));
+        return ResponseEntity.ok(ApiResponse.okList(list));
     }
 
     @DeleteMapping("/{id}")
@@ -105,7 +105,7 @@ public class ProductBrandController {
     @PutMapping(value = "/{id}", consumes = "application/json")
     public ResponseEntity<ProductBrandResponseDto> replace(@PathVariable UUID id,
                                                            @Valid @RequestBody ProductBrandUpdateDto dto) {
-        // Si quieres exigir todos los campos en PUT, valida aquí.
+
         ProductBrandModel patch = ProductBrandModel.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())

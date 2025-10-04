@@ -4,6 +4,7 @@ import com.celotts.productservice.domain.model.product.ProductPriceHistoryModel;
 import com.celotts.productservice.domain.port.input.product.ProductPriceHistoryUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productpricehistory.ProductPriceHistoryCreateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productpricehistory.ProductPriceHistoryResponseDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.ListResponse;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productpricehistory.ProductPriceHistoryMapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -55,12 +56,12 @@ public class ProductPriceHistoryController {
      * Lista el histórico completo (ordenado desc por changedAt).
      */
     @GetMapping
-    public ResponseEntity<List<ProductPriceHistoryResponseDto>> list(@PathVariable UUID productId) {
+    public ResponseEntity<ListResponse<ProductPriceHistoryResponseDto>> list(@PathVariable UUID productId) {
         List<ProductPriceHistoryResponseDto> out = useCase.getByProduct(productId)
                 .stream()
                 .map(mapper::toResponse)
                 .toList();
-        return ResponseEntity.ok(out);
+        return ResponseEntity.ok(ListResponse.of(out));
     }
 
     /**

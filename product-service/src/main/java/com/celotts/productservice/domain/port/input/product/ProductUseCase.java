@@ -18,7 +18,7 @@ public interface ProductUseCase {
     void hardDeleteProduct(UUID id);
 
     ProductModel enableProduct(UUID id);
-    ProductModel disableProduct(UUID id);
+    void disableProduct(UUID id);
     ProductModel updateStock(UUID id, int stock);
 
     Page<ProductModel> getAllProducts(Pageable pageable);

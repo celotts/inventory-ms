@@ -61,7 +61,11 @@ public class ProductBrandUseCaseImpl implements ProductBrandUseCase {
         return repository.save(existing);
     }
 
-    @Override public Optional<ProductBrandModel> findById(UUID id) { return repository.findById(id); }
+    @Override
+    public Optional<ProductBrandModel> findById(UUID id) {
+        return Optional.ofNullable(repository.findById(id)
+                .orElseThrow(() -> new BrandNotFoundException(id)));
+    }
     @Override public Optional<ProductBrandModel> findByName(String name) { return repository.findByName(name); }
     @Override public List<ProductBrandModel> findAll() { return repository.findAll(); }
     @Override public boolean existsByName(String name) { return repository.existsByName(name); }

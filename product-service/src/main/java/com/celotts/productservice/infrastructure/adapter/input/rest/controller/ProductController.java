@@ -6,6 +6,8 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.ListResponse;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.PageResponse;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductMapper;
 import com.celotts.productservice.infrastructure.config.PaginationProperties;
 import io.swagger.v3.oas.annotations.Operation;
@@ -61,20 +63,20 @@ public class ProductController {
 
     @GetMapping
     @Operation(summary = "List all active products", description = "List all active products")
-    public ResponseEntity<List<ProductResponseDto>> getAllProducts() {
+    public ResponseEntity<ListResponse<ProductResponseDto>> getAllProducts() {
         List<ProductResponseDto> response = productMapper.toResponseList(
                 productUseCase.getActiveProducts(Pageable.unpaged()).getContent()
         );
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ListResponse.of(response));
     }
 
     @GetMapping("/paginated")
     @Operation(summary = "Get paginated products",
             description = "Product list with optional pagination and filters")
-    public ResponseEntity<Page<ProductResponseDto>> getAllProductsPaginated(
+    public ResponseEntity<PageResponse<ProductResponseDto>> getAllProductsPaginated(
             @Valid @ModelAttribute ProductRequestDto requestDto
     ) {
-        // Fallback properties si el cliente no envía valores
+        // Fallbacks si el cliente no envía valores
         int page = Optional.ofNullable(requestDto.getPage())
                 .filter(p -> p >= 0)
                 .orElse(paginationProperties.getDefaultPage());
@@ -105,7 +107,8 @@ public class ProductController {
                 ? productUseCase.getAllProductsWithFilters(pageable, code, name, description)
                 : productUseCase.getAllProducts(pageable);
 
-        return ResponseEntity.ok(products.map(productMapper::toResponse));
+        // Envolver en PageResponse usando el mapper a DTO
+        return ResponseEntity.ok(PageResponse.from(products, productMapper::toResponse));
     }
 
     @GetMapping("/{id}")
@@ -137,45 +140,38 @@ public class ProductController {
     }
 
     @GetMapping("/inactive")
-    @Operation(summary = "Get inactive products", description = "Get inactive products")
-    public ResponseEntity<List<ProductResponseDto>> getInactiveProducts() {
+    public ResponseEntity<ListResponse<ProductResponseDto>> getInactiveProducts() {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getInactiveProducts());
-
-        if (response.isEmpty()) return ResponseEntity.noContent().build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ListResponse.of(response));
     }
 
     @GetMapping("/category/{categoryId}")
-    @Operation(summary = "Get products by category", description = "Get products by category")
-    public ResponseEntity<List<ProductResponseDto>> getProductsByCategory(@PathVariable UUID categoryId) {
+    public ResponseEntity<ListResponse<ProductResponseDto>> getProductsByCategory(@PathVariable UUID categoryId) {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getProductsByCategory(categoryId));
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ListResponse.of(response));
     }
 
     @GetMapping("/category/{categoryId}/low-stock")
-    @Operation(summary = "Low stock products by category", description = "Low stock products by category")
-    public ResponseEntity<List<ProductResponseDto>> getLowStockByCategory(@PathVariable UUID categoryId) {
-        return ResponseEntity.ok(
-                productMapper.toResponseList(productUseCase.getLowStockByCategory(categoryId))
-        );
+    public ResponseEntity<ListResponse<ProductResponseDto>> getLowStockByCategory(@PathVariable UUID categoryId) {
+        List<ProductResponseDto> response =
+                productMapper.toResponseList(productUseCase.getLowStockByCategory(categoryId));
+        return ResponseEntity.ok(ListResponse.of(response));
     }
 
     @GetMapping("/low-stock")
-    @Operation(summary = "Products with low stock", description = "List all products with low stock")
-    public ResponseEntity<List<ProductResponseDto>> getLowStockProducts() {
-        return ResponseEntity.ok(
-                productMapper.toResponseList(productUseCase.getLowStockProducts())
-        );
+    public ResponseEntity<ListResponse<ProductResponseDto>> getLowStockProducts() {
+        List<ProductResponseDto> response =
+                productMapper.toResponseList(productUseCase.getLowStockProducts());
+        return ResponseEntity.ok(ListResponse.of(response));
     }
 
     @GetMapping("/brand/{brandId}")
-    @Operation(summary = "Products by brand", description = "List products of a brand")
-    public ResponseEntity<List<ProductResponseDto>> getProductsByBrand(@PathVariable UUID brandId) {
-        return ResponseEntity.ok(
-                productMapper.toResponseList(productUseCase.getProductsByBrand(brandId))
-        );
+    public ResponseEntity<ListResponse<ProductResponseDto>> getProductsByBrand(@PathVariable UUID brandId) {
+        List<ProductResponseDto> response =
+                productMapper.toResponseList(productUseCase.getProductsByBrand(brandId));
+        return ResponseEntity.ok(ListResponse.of(response));
     }
 
     @GetMapping("/count")
