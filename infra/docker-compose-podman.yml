@@ -150,78 +150,66 @@ services:
       POSTGRES_DB: ${SUPPLIER_DB_NAME:-supplier}
       POSTGRES_USER: ${SUPPLIER_DB_USERNAME:-supplier}
       POSTGRES_PASSWORD: ${SUPPLIER_DB_PASSWORD:-supplier123}
-    # Exponer puerto solo si quieres conectarte desde el host
     ports:
-      - "${SUPPLIER_DB_PORT:-5434}:5432"     # evita colisión con product-db (5432)
+      - "${SUPPLIER_DB_PORT:-5434}:5432"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${SUPPLIER_DB_USERNAME:-supplier} -d ${SUPPLIER_DB_NAME:-supplier}" ]
+      test: [ "CMD-SHELL","pg_isready -U ${SUPPLIER_DB_USERNAME:-supplier} -d ${SUPPLIER_DB_NAME:-supplier}" ]
       interval: ${INTERVAL10s:-10s}
       timeout: ${TIMEOUT5s:-5s}
       retries: ${RETRIES5:-5}
       start_period: 30s
     volumes:
       - supplier-data:/var/lib/postgresql/data
-      # si tienes scripts de init:
-      - ./init-scripts/supplier/01-supplier-init.sql:/docker-entrypoint-initdb.d/02-supplier-init.sql:ro
+      - ./init-scripts/supplier/02-supplier-init.sql:/docker-entrypoint-initdb.d/02-supplier-init.sql:ro
     networks:
       - inventory-network
 
   supplier-service:
-    profiles: [ "supplier" ]
-    build:
-      context: ../supplier-service
-      dockerfile: Dockerfile
-    image: localhost/infra_supplier-service:latest
-    container_name: supplier-service
-    ports:
-      - "${PORT9091:-9091}:9091"
-    environment:
-      # básicos
-      - SPRING_APPLICATION_NAME=supplier-service
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - JAVA_OPTS=${JAVA_OPTS}
+      profiles: [ "supplier" ]
+      build:
+        context: ../supplier-service
+        dockerfile: Dockerfile
+      image: localhost/infra_supplier-service:latest
+      container_name: supplier-service
+      ports:
+        - "${PORT9091:-9091}:9091"
+      environment:
+        - SPRING_APPLICATION_NAME=supplier-service
+        - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+        - JAVA_OPTS=${JAVA_OPTS}
+        - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
+        - SPRING_DATASOURCE_URL=jdbc:postgresql://supplier-db:5432/${SUPPLIER_DB_NAME:-supplier}
+        - SPRING_DATASOURCE_USERNAME=${SUPPLIER_DB_USERNAME:-supplier}
+        - SPRING_DATASOURCE_PASSWORD=${SUPPLIER_DB_PASSWORD:-supplier123}
+        - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+        - SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=2
+        - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=10
+        - SPRING_DATASOURCE_HIKARI_AUTO_COMMIT=false
+        - SPRING_DATASOURCE_HIKARI_TRANSACTION_ISOLATION=TRANSACTION_READ_COMMITTED
+        - SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=60000
+        - SPRING_DATASOURCE_HIKARI_VALIDATION_TIMEOUT=30000
+        - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+        - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=30
+        - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=30
+        - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info
+        - SERVER_PORT=9091
+      depends_on:
+        discovery-service:
+          condition: service_started
+        config-service:
+          condition: service_started
+        supplier-db:
+          condition: service_healthy
+      healthcheck:
+        test: [ "CMD-SHELL","curl -f http://localhost:9091/actuator/health || exit 1" ]
+        interval: 20s
+        timeout: 15s
+        retries: 10
+        start_period: 90s
+      restart: unless-stopped
+      networks:
+        - inventory-network
 
-      # Config Server (opcional/tolerante)
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
-
-      # Datasource hacia supplier-db
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://supplier-db:5432/${SUPPLIER_DB_NAME:-supplier}
-      - SPRING_DATASOURCE_USERNAME=${SUPPLIER_DB_USERNAME:-supplier}
-      - SPRING_DATASOURCE_PASSWORD=${SUPPLIER_DB_PASSWORD:-supplier123}
-      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
-
-      # Hikari
-      - SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=2
-      - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=10
-      - SPRING_DATASOURCE_HIKARI_AUTO_COMMIT=false
-      - SPRING_DATASOURCE_HIKARI_TRANSACTION_ISOLATION=TRANSACTION_READ_COMMITTED
-      - SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=60000
-      - SPRING_DATASOURCE_HIKARI_VALIDATION_TIMEOUT=30000
-
-      # Eureka
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=30
-      - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=30
-
-      # Actuator
-      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info
-      - SERVER_PORT=9091
-    depends_on:
-      discovery-service:
-        condition: service_started
-      config-service:
-        condition: service_started
-      supplier-db:
-        condition: service_healthy
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:9091/actuator/health || exit 1" ]
-      interval: 20s
-      timeout: 15s
-      retries: 10
-      start_period: 90s
-    restart: unless-stopped
-    networks:
-      - inventory-network
 
   purchase-db:
     profiles: [ "purchase" ]
