@@ -1,7 +1,7 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.exception;
 
-import com.celotts.productservice.domain.exception.BrandNotFoundException;
-import com.celotts.productservice.domain.exception.ProductNotFoundException;
+import com.celotts.productservice.domain.exception.brand.BrandNotFoundException;
+import com.celotts.productservice.domain.exception.product.ProductNotFoundException;
 import com.celotts.productservice.domain.exception.ResourceNotFoundException;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;

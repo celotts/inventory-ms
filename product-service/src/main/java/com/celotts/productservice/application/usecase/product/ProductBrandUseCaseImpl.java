@@ -1,6 +1,6 @@
 package com.celotts.productservice.application.usecase.product;
 
-import com.celotts.productservice.domain.exception.BrandNotFoundException;
+import com.celotts.productservice.domain.exception.brand.BrandNotFoundException;
 import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
 import com.celotts.productservice.domain.model.product.ProductBrandModel;
 import com.celotts.productservice.domain.port.input.product.ProductBrandUseCase;
