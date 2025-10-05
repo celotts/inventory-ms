@@ -1,4 +1,4 @@
-package com.celotts.productservice.domain.exception;
+package com.celotts.productservice.domain.exception.unitCode;
 
 public class InvalidUnitCodeException extends RuntimeException {
     public InvalidUnitCodeException(String code) {

@@ -1,0 +1,63 @@
+# application.yml (común)
+spring:
+  application:
+    name: supplier-service
+
+  cloud:
+    config:
+      enabled: false  # sin config-server en local/dev
+
+eureka:
+  client:
+    enabled: false    # sin Eureka en local/dev
+
+server:
+  port: ${SERVER_PORT:9091}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# ---------- Perfil: local (app arrancando EN TU MAC) ----------
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  datasource:
+    # Conexión al contenedor Postgres mapeado a tu host en 5434
+    url: jdbc:postgresql://${SUPPLIER_DB_HOST:localhost}:${SUPPLIER_DB_PORT:5434}/${SUPPLIER_DB_NAME:supplier}
+    username: ${SUPPLIER_DB_USERNAME:supplier}
+    password: ${SUPPLIER_DB_PASSWORD:supplier123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:2}
+      maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:10}
+      auto-commit: ${SPRING_DATASOURCE_HIKARI_AUTO_COMMIT:false}
+      validation-timeout: ${SPRING_DATASOURCE_HIKARI_VALIDATION_TIMEOUT:30000}
+      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:60000}
+      transaction-isolation: ${SPRING_DATASOURCE_HIKARI_TRANSACTION_ISOLATION:TRANSACTION_READ_COMMITTED}
+
+# ---------- Perfil: dev (app DENTRO DEL CONTENEDOR) ----------
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    # Conexión por nombre de servicio a supplier-db dentro de la red de compose
+    url: jdbc:postgresql://${SUPPLIER_DB_HOST:supplier-db}:${SUPPLIER_DB_PORT:5432}/${SUPPLIER_DB_NAME:supplier}
+    username: ${SUPPLIER_DB_USERNAME:supplier}
+    password: ${SUPPLIER_DB_PASSWORD:supplier123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:2}
+      maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:10}
+      auto-commit: ${SPRING_DATASOURCE_HIKARI_AUTO_COMMIT:false}
+      validation-timeout: ${SPRING_DATASOURCE_HIKARI_VALIDATION_TIMEOUT:30000}
+      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:60000}
+      transaction-isolation: ${SPRING_DATASOURCE_HIKARI_TRANSACTION_ISOLATION:TRANSACTION_READ_COMMITTED}
