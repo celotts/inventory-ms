@@ -9,11 +9,12 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @EnableDiscoveryClient
 @EnableJpaRepositories(basePackages = {
-        "com.celotts.supplierservice.infrastructure.adapter.output.postgres.repository"
+        "com.celotts.productservice.infrastructure.adapter.output.postgres.repository",
+        "com.celotts.productservice.infrastructure.adapter.output.postgres.read.repository"
 })
-@EntityScan(basePackages = "com.celotts.supplierservice.infrastructure.adapter.output.postgres.entity")
+@EntityScan(basePackages = "com.celotts.productservice.infrastructure.adapter.output.postgres.entity")
 @EnableConfigurationProperties
-@SpringBootApplication(scanBasePackages = "com.celotts.supplierservice")
+@SpringBootApplication
 public class SupplierServiceApplication {
 
     public static void main(String[] args) {

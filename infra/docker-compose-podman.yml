@@ -12,8 +12,8 @@ services:
       - JAVA_OPTS=${JAVA_OPTS}
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
-      interval: ${INTERVAL10s:-10s}
-      timeout: ${TIMEOUT5s:-5s}
+      interval: ${INTERVAL10S:-10s}
+      timeout: ${TIMEOUT5S:-5s}
       retries: ${RETRIES3:-3}
       start_period: 30s
     networks:
@@ -59,8 +59,8 @@ services:
       POSTGRES_PASSWORD: ${PRODUCT_DB_PASSWORD:-product123}
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${PRODUCT_DB_USERNAME:-product}" ]
-      interval: ${INTERVAL10s:-10s}
-      timeout: ${TIMEOUT5s:-5s}
+      interval: ${INTERVAL10S:-10s}
+      timeout: ${TIMEOUT5S:-5s}
       retries: ${RETRIES5:-5}
       start_period: 30s
     networks:
@@ -154,8 +154,8 @@ services:
       - "${SUPPLIER_DB_PORT:-5434}:5432"
     healthcheck:
       test: [ "CMD-SHELL","pg_isready -U ${SUPPLIER_DB_USERNAME:-supplier} -d ${SUPPLIER_DB_NAME:-supplier}" ]
-      interval: ${INTERVAL10s:-10s}
-      timeout: ${TIMEOUT5s:-5s}
+      interval: ${INTERVAL10S:-10s}
+      timeout: ${TIMEOUT5S:-5s}
       retries: ${RETRIES5:-5}
       start_period: 30s
     volumes:

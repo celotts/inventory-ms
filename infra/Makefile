@@ -15,7 +15,7 @@ COMPOSE_LOCAL := podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_L
 COMPOSE_DEV   := podman-compose -f $(COMPOSE_FILE_DEV)   --env-file $(ENV_FILE_DEV)
 COMPOSE_PROD  := podman-compose -f $(COMPOSE_FILE_PROD)  --env-file $(ENV_FILE_PROD)
 
-# 🔖 Perfiles disponibles (deben existir en docker-compose.yml)
+# 🔖 Perfiles disponibles (deben existir en docker-compose-no-usar.yml)
 PROFILES_ALL := infra gateway product supplier purchase
 
 # ====== Vars seguras (rutas absolutas) ======
@@ -25,7 +25,7 @@ ENV_FILE_LOCAL     ?= $(CURDIR)/.env.local
 # Usa UNO o VARIOS compose files (separados por espacio)
 # Ejemplos:
 #   make up-local-supplier_fix COMPOSE_FILES="$(CURDIR)/docker-compose-podman.yml"
-#   make up-local-supplier_fix COMPOSE_FILES="$(CURDIR)/docker-compose.yml $(CURDIR)/docker-compose.supplier.yml"
+#   make up-local-supplier_fix COMPOSE_FILES="$(CURDIR)/docker-compose-no-usar.yml $(CURDIR)/docker-compose.supplier.yml"
 COMPOSE_FILES ?= $(CURDIR)/docker-compose.yml
 
 # Helper para expandir -f por cada archivo
@@ -76,28 +76,9 @@ up-local: fix-container-orphans ## 🧪 Infra + product + gateway para trabajar 
 	@echo "🦭 Levantando contenedores con Podman (perfiles: infra, product, gateway)..."
 	$(COMPOSE_LOCAL) --profile infra --profile product --profile gateway up -d --build
 
-## 🔽 Infraestructura por entorno (con MS extra)
-up-local-all: fix-container-orphans ## 🧪 Levanta infra + gateway + product + supplier + purchase
-	@echo "🧹 Copiando variables de entorno..."
-	cp $(ENV_FILE_LOCAL) .env.override
-
-	@echo "🔨 Construyendo servicios (incluye nuevos MS)..."
-	cd .. && ./gradlew \
-		:config-service:bootJar \
-		:discovery-service:bootJar \
-		:api-gateway:bootJar \
-		:product-service:bootJar \
-		:supplier-service:bootJar #\
-		#:purchase-service:bootJar
-
-	@echo "🦭 Levantando contenedores con Podman (perfiles: infra, product, gateway, supplier, purchase)..."
-	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) \
-		--profile infra --profile gateway --profile product \
-		--profile supplier --profile purchase \
-		up -d --build
 
 ## 🔽 Levantar solo supplier (más la base)
-up-local-supplier_fix_2: fix-container-orphans
+up-local-product-supplier: fix-container-orphans
 	@echo "🧹 Copiando variables de entorno..."
 	cp "$(ENV_FILE_LOCAL)" "$(CURDIR)/.env.override"
 
@@ -975,7 +956,7 @@ up-ms: fix-container-orphans ## 🚀 Infra + supplier + purchase (sin product)
 	$(COMPOSE_LOCAL) --profile infra --profile supplier --profile purchase up -d --build
 
 # --- target con check corregido ---
-up-local-supplier_fix: fix-container-orphans
+up-local-supplier: fix-container-orphans
 	@echo "🧹 Copiando variables de entorno..."
 	cp "$(ENV_FILE_LOCAL)" "$(CURDIR)/.env.override"
 

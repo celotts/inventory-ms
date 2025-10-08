@@ -1,5 +1,8 @@
 # application.yml (común)
 spring:
+  profiles:
+    active: local
+
   application:
     name: supplier-service
 

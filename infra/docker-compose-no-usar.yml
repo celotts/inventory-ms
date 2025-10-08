@@ -11,8 +11,8 @@ services:
       - JAVA_OPTS=${JAVA_OPTS}
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
-      interval: ${INTERVAL10s:-10s}
-      timeout: ${TIMEOUT5s:-5s}
+      interval: ${INTERVAL10S:-10s}
+      timeout: ${TIMEOUT5S:-5s}
       retries: ${RETRIES3:-3}
     networks:
       - inventory-network
@@ -63,8 +63,8 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8090/actuator/health || exit 1"]
-      interval: ${INTERVAL30s:-30s}
-      timeout: ${TIMEOUT10s:-10s}
+      interval: ${INTERVAL30S:-30s}
+      timeout: ${TIMEOUT10S:-10s}
       retries: ${RETRIES5:-5}
     networks:
       - inventory-network
@@ -80,8 +80,8 @@ services:
       POSTGRES_PASSWORD: ${PRODUCT_DB_PASSWORD:-product123}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${PRODUCT_DB_USERNAME:-product}"]
-      interval: ${INTERVAL10s:-10s}
-      timeout: ${TIMEOUT5s:-5s}
+      interval: ${INTERVAL10S:-10s}
+      timeout: ${TIMEOUT5S:-5s}
       retries: ${RETRIES5:-5}
     networks:
       - inventory-network
@@ -123,8 +123,8 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1"]
-      interval: ${INTERVAL30s:-30s}
-      timeout: ${TIMEOUT10s:-10s}
+      interval: ${INTERVAL30S:-30s}
+      timeout: ${TIMEOUT10S:-10s}
       retries: ${RETRIES5:-5}
     networks:
       - inventory-network
