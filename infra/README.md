@@ -340,4 +340,18 @@ make troubleshoot-network
 ```
 
 ### Solución de problemas comunes
-```bash
+
+### 🧩 Solución de problemas comunes
+
+#### 🔑 Credenciales BD
+
+```markdown
+
+#### 🔑 Credenciales BD supplier
+
+| Campo     | Valor       |
+|-----------|--------------|
+| Port      | `5434`       |
+| Database  | `supplier`   |
+| User      | `supplier`   |
+| Password  | `supplier123` |
