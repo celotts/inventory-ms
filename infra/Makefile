@@ -1,10 +1,18 @@
 #------------------------------------------------------------------------
 # 📦 Variables de entorno
 #------------------------------------------------------------------------
-ENV_FILE_LOCAL ?= .env.local
-ENV_FILE_LOCAL_SUPPLIER ?= .env.local-supplier
-ENV_FILE_DEV   ?= .env.dev
-ENV_FILE_PROD  ?= .env.prod
+# Rutas absolutas seguras
+CURDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+
+# Archivos .env (con rutas absolutas)
+ENV_FILE_LOCAL            ?= $(CURDIR)/.env.local
+ENV_FILE_LOCAL_SUPPLIER   ?= $(CURDIR)/.env.local-supplier
+ENV_FILE_DEV              ?= $(CURDIR)/.env.dev
+ENV_FILE_PROD             ?= $(CURDIR)/.env.prod
+
+# Fallback: si no existe .env.local-supplier, usar .env.local
+ENV_SUPPLIER_FALLBACK     ?= $(ENV_FILE_LOCAL)
+ENV_FILE_LOCAL_SUPPLIER_RESOLVED := $(if $(wildcard $(ENV_FILE_LOCAL_SUPPLIER)),$(ENV_FILE_LOCAL_SUPPLIER),$(ENV_SUPPLIER_FALLBACK))
 
 # 🆕 Archivo de compose unificado
 COMPOSE_FILE_LOCAL ?= docker-compose-podman.yml
@@ -13,24 +21,15 @@ COMPOSE_FILE_PROD  ?= docker-compose-podman.yml
 
 # 🧰 Helpers DRY para Podman Compose por entorno
 COMPOSE_LOCAL := podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL)
-COMPOSE_LOCAL_SUPPLIER := podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL_SUPPLIER)
+COMPOSE_LOCAL_SUPPLIER := podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)
 COMPOSE_DEV   := podman-compose -f $(COMPOSE_FILE_DEV)   --env-file $(ENV_FILE_DEV)
 COMPOSE_PROD  := podman-compose -f $(COMPOSE_FILE_PROD)  --env-file $(ENV_FILE_PROD)
 
-# 🔖 Perfiles disponibles (deben existir en docker-compose-no-usar.yml)
+# 🔖 Perfiles disponibles
 PROFILES_ALL := infra gateway product supplier purchase
 
-# ====== Vars seguras (rutas absolutas) ======
-CURDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
-ENV_FILE_LOCAL     ?= $(CURDIR)/.env.local
-
 # Usa UNO o VARIOS compose files (separados por espacio)
-# Ejemplos:
-#   make up-local-supplier_fix COMPOSE_FILES="$(CURDIR)/docker-compose-podman.yml"
-#   make up-local-supplier_fix COMPOSE_FILES="$(CURDIR)/docker-compose-no-usar.yml $(CURDIR)/docker-compose.supplier.yml"
 COMPOSE_FILES ?= $(CURDIR)/docker-compose.yml
-
-# Helper para expandir -f por cada archivo
 COMPOSE_F := $(foreach f,$(COMPOSE_FILES),-f $(f))
 
 #------------------------------------------------------------------------
@@ -78,11 +77,34 @@ up-local: fix-container-orphans ## 🧪 Infra + product + gateway para trabajar 
 	@echo "🦭 Levantando contenedores con Podman (perfiles: infra, product, gateway)..."
 	$(COMPOSE_LOCAL) --profile infra --profile product --profile gateway up -d --build
 
+up-local-supplier: fix-container-orphans
+	@echo "🧹 Copiando variables de entorno (supplier)..."
+	@echo "[INFO] Archivo supplier detectado: $(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)"
+	cp "$(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)" "$(CURDIR)/.env.override"
+
+	@echo "🔎 Verificando que supplier-db y supplier-service existan (perfiles: infra,supplier)..."
+	@SERVICES="$$(COMPOSE_PROFILES=infra,supplier \
+	  podman-compose -f "$(COMPOSE_FILE_LOCAL)" --env-file "$(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)" \
+	    --profile infra --profile supplier config --services 2>/dev/null || true)"; \
+	echo "$$SERVICES" | grep -qx "supplier-db"      || { echo "❌ Falta supplier-db"; exit 1; }; \
+	echo "$$SERVICES" | grep -qx "supplier-service" || { echo "❌ Falta supplier-service"; exit 1; }; \
+	echo "✅ Servicios detectados: supplier-db y supplier-service";
+
+	@echo "🔨 Construyendo JARs necesarios..."
+	cd "$(CURDIR)/.." && ./gradlew :config-service:bootJar :discovery-service:bootJar :supplier-service:bootJar
+
+	@echo "🦭 Levantando discovery, config, supplier-db y supplier-service..."
+	COMPOSE_PROFILES=infra,supplier \
+	$(COMPOSE_LOCAL_SUPPLIER) \
+	  --profile infra --profile supplier \
+	  up -d --build discovery-service config-service supplier-db supplier-service
+
 
 ## 🔽 Levantar solo supplier (más la base)
 up-local-product-supplier: fix-container-orphans
 	@echo "🧹 Copiando variables de entorno..."
-	cp "$(ENV_FILE_LOCAL_SUPPLIER)" "$(CURDIR)/.env.override"
+	@echo "ℹ️  Archivo supplier detectado: $(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)"
+	cp "$(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)" "$(CURDIR)/.env.override"
 
 	@COMPOSE_FILE="$(CURDIR)/docker-compose-podman.yml"; \
 	echo "🔎 Verificando que existan supplier-db/supplier-service y product-db/product-service en $$COMPOSE_FILE..."; \
@@ -110,26 +132,13 @@ up-local-product-supplier: fix-container-orphans
 	  product-db product-service \
 	  supplier-db supplier-service
 
-up-local-supplier: fix-container-orphans
-	@echo "🧹 Copiando variables de entorno (supplier)..."
-	cp "$(ENV_FILE_LOCAL_SUPPLIER)" "$(CURDIR)/.env.override"
 
-	@echo "🔎 Verificando que supplier-db y supplier-service existan (perfiles: infra,supplier)..."
-	@SERVICES="$$(COMPOSE_PROFILES=infra,supplier \
-	  podman-compose -f "$(COMPOSE_FILE_LOCAL)" --env-file "$(ENV_FILE_LOCAL_SUPPLIER)" \
-	    --profile infra --profile supplier config --services 2>/dev/null || true)"; \
-	echo "$$SERVICES" | grep -qx "supplier-db"      || { echo "❌ Falta supplier-db"; exit 1; }; \
-	echo "$$SERVICES" | grep -qx "supplier-service" || { echo "❌ Falta supplier-service"; exit 1; }; \
-	echo "✅ Servicios detectados: supplier-db y supplier-service"; \
-
-	@echo "🔨 Construyendo JARs necesarios..."
-	cd "$(CURDIR)/.." && ./gradlew :config-service:bootJar :discovery-service:bootJar :supplier-service:bootJar
-
-	@echo "🦭 Levantando discovery, config, supplier-db y supplier-service..."
-	COMPOSE_PROFILES=infra,supplier \
-	$(COMPOSE_LOCAL_SUPPLIER) \
-	  --profile infra --profile supplier \
-	  up -d --build discovery-service config-service supplier-db supplier-service
+print-envs: ## 🔎 Mostrar qué .env usará cada target
+	@echo "CURDIR:                         $(CURDIR)"
+	@echo "ENV_FILE_LOCAL:                 $(ENV_FILE_LOCAL)"
+	@echo "ENV_FILE_LOCAL_SUPPLIER:        $(ENV_FILE_LOCAL_SUPPLIER)"
+	@echo "ENV_SUPPLIER_FALLBACK:          $(ENV_SUPPLIER_FALLBACK)"
+	@echo "ENV_FILE_LOCAL_SUPPLIER_RESOLVED: $(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)"
 
 up-local-purchase: fix-container-orphans ## 🧪 Base + purchase
 	@echo "🧹 Copiando variables de entorno..."
