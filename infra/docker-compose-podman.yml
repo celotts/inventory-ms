@@ -150,6 +150,9 @@ services:
       POSTGRES_DB: ${SUPPLIER_DB_NAME:-supplier}
       POSTGRES_USER: ${SUPPLIER_DB_USERNAME:-supplier}
       POSTGRES_PASSWORD: ${SUPPLIER_DB_PASSWORD:-supplier123}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"  # 👈 fuerza UTF-8"
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
     ports:
       - "${SUPPLIER_DB_PORT:-5434}:5432"
     healthcheck:

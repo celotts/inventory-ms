@@ -132,14 +132,6 @@ up-local-product-supplier: fix-container-orphans
 	  product-db product-service \
 	  supplier-db supplier-service
 
-
-print-envs: ## 🔎 Mostrar qué .env usará cada target
-	@echo "CURDIR:                         $(CURDIR)"
-	@echo "ENV_FILE_LOCAL:                 $(ENV_FILE_LOCAL)"
-	@echo "ENV_FILE_LOCAL_SUPPLIER:        $(ENV_FILE_LOCAL_SUPPLIER)"
-	@echo "ENV_SUPPLIER_FALLBACK:          $(ENV_SUPPLIER_FALLBACK)"
-	@echo "ENV_FILE_LOCAL_SUPPLIER_RESOLVED: $(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)"
-
 up-local-purchase: fix-container-orphans ## 🧪 Base + purchase
 	@echo "🧹 Copiando variables de entorno..."
 	cp $(ENV_FILE_LOCAL) .env.override
@@ -157,6 +149,28 @@ up-local-purchase: fix-container-orphans ## 🧪 Base + purchase
 		--profile infra --profile gateway --profile product \
 		--profile purchase \
 		up -d --build
+
+up-dev: ## 🧪 Levanta todo el stack en contenedores (modo dev)
+	cp $(ENV_FILE_DEV) .env.override
+	$(COMPOSE_DEV) $(foreach p,$(PROFILES_ALL),--profile $(p)) down -v --remove-orphans
+	$(COMPOSE_DEV) $(foreach p,$(PROFILES_ALL),--profile $(p)) up -d --build
+
+up-prod: ## 🚀 Levanta todo en entorno de producción
+	cp $(ENV_FILE_PROD) .env.override
+	$(COMPOSE_PROD) $(foreach p,$(PROFILES_ALL),--profile $(p)) down -v --remove-orphans
+	$(COMPOSE_PROD) $(foreach p,$(PROFILES_ALL),--profile $(p)) up -d --build
+
+up-db: ## 🔄 Levanta solo la base de datos para desarrollo local (product-db)
+	$(COMPOSE_LOCAL) --profile product up -d product-db
+
+print-envs: ## 🔎 Mostrar qué .env usará cada target
+	@echo "CURDIR:                         $(CURDIR)"
+	@echo "ENV_FILE_LOCAL:                 $(ENV_FILE_LOCAL)"
+	@echo "ENV_FILE_LOCAL_SUPPLIER:        $(ENV_FILE_LOCAL_SUPPLIER)"
+	@echo "ENV_SUPPLIER_FALLBACK:          $(ENV_SUPPLIER_FALLBACK)"
+	@echo "ENV_FILE_LOCAL_SUPPLIER_RESOLVED: $(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)"
+
+
 
 # ---------------------------------------------------------------------
 # 🧪 Supplier Service
@@ -212,19 +226,6 @@ health-purchase: ## 💚 Health de purchase-service
 
 down-local: ## 🔻 Apaga infra local (perfiles: infra, product, gateway)
 	$(COMPOSE_LOCAL) --profile infra --profile product --profile gateway down -v --remove-orphans
-
-up-dev: ## 🧪 Levanta todo el stack en contenedores (modo dev)
-	cp $(ENV_FILE_DEV) .env.override
-	$(COMPOSE_DEV) $(foreach p,$(PROFILES_ALL),--profile $(p)) down -v --remove-orphans
-	$(COMPOSE_DEV) $(foreach p,$(PROFILES_ALL),--profile $(p)) up -d --build
-
-up-prod: ## 🚀 Levanta todo en entorno de producción
-	cp $(ENV_FILE_PROD) .env.override
-	$(COMPOSE_PROD) $(foreach p,$(PROFILES_ALL),--profile $(p)) down -v --remove-orphans
-	$(COMPOSE_PROD) $(foreach p,$(PROFILES_ALL),--profile $(p)) up -d --build
-
-up-db: ## 🔄 Levanta solo la base de datos para desarrollo local (product-db)
-	$(COMPOSE_LOCAL) --profile product up -d product-db
 
 ## 🔁 Build y Rebuild
 build-images: ## 🏗️ Build manual de imágenes
