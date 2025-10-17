@@ -2,6 +2,7 @@ package com.celotts.supplierservice.infrastructure.adapter.input.rest.dto.suppli
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -29,7 +30,8 @@ public class SupplierCreateDto{
     private String name;
 
     @Size(max = 30, message = "Tax ID must not exceed 30 characters")
-    private String tax_id;
+    @JsonProperty("tax_id")
+    private String taxId;
 
     @Email(message = "Invalid email format")
     @Size(max = 120, message = "Email must not exceed 120 characters")

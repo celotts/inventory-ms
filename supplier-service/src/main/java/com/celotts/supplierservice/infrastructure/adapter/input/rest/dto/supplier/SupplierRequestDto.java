@@ -29,7 +29,7 @@ public class SupplierRequestDto {
     private String taxId;
 
     @Email(message = "Invalid email format")
-    @Size(max = 120, message = "Email must not exceed 12o characters")
+    @Size(max = 120, message = "Email must not exceed 120 characters")
     private String email;
 
     @Size(max = 40, message = "Phone must not exceed 40 characters")
