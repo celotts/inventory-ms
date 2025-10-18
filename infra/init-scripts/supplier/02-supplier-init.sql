@@ -321,3 +321,36 @@ ON CONFLICT DO NOTHING;
 INSERT INTO supplier(id, code, name, enabled) VALUES
   (gen_random_uuid(), 'SUP-DEFAULT', 'Proveedor Genérico', TRUE)
 ON CONFLICT DO NOTHING;
+
+-- 12) Búsquedas rápidas por "contiene" (trigramas) y opcionalmente sin acentos
+-- Nota: CREATE EXTENSION requiere superusuario o permisos adecuados.
+-- Si tu app no tiene permisos, ejecuta esto en el init del contenedor Postgres.
+
+-- Extensiones
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+-- (Opcional) Para búsquedas que ignoran acentos:
+CREATE EXTENSION IF NOT EXISTS unaccent;
+
+-- Índices trigram sin acentos (recomendado si usarás búsquedas flexibles)
+-- Si NO quieres unaccent, cambia `unaccent(lower(campo))` por `lower(campo)`.
+
+-- Proveedor
+CREATE INDEX IF NOT EXISTS idx_supplier_name_trgm
+  ON supplier USING gin (unaccent(lower(name)) gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS idx_supplier_code_trgm
+  ON supplier USING gin (unaccent(lower(code)) gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS idx_supplier_email_trgm
+  ON supplier USING gin (unaccent(lower(email)) gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS idx_supplier_address_trgm
+  ON supplier USING gin (unaccent(lower(address)) gin_trgm_ops);
+
+-- (Opcional) Si filtras mucho por enabled y ordenas por name
+CREATE INDEX IF NOT EXISTS idx_supplier_enabled_name
+  ON supplier (enabled, name);
+
+-- Compras: si buscas mucho por order_number “contiene”
+CREATE INDEX IF NOT EXISTS idx_purchase_order_number_trgm
+  ON purchase_order USING gin (unaccent(lower(order_number)) gin_trgm_ops);
