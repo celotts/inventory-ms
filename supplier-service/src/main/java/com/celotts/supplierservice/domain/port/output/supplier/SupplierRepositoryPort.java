@@ -11,23 +11,20 @@ public interface SupplierRepositoryPort {
     SupplierModel save(SupplierModel supplier);
 
     Optional<SupplierModel> findById(UUID id);
-    Optional<SupplierModel> findByName(String name);
 
-    // ⬇️ NUEVOS (por code)
-    Optional<SupplierModel> findByCode(String code);
+    // Unicidad / existencia
+    boolean existsById(UUID id);
+    boolean existsByName(String name);
     boolean existsByCode(String code);
-
-    List<SupplierModel> findAll();
-    List<SupplierModel> findAllById(List<UUID> ids);
-    List<SupplierModel> findByNameContaining(String name);
-    List<SupplierModel> findByNameDescription(String query, int limit);
 
     void deleteById(UUID id);
 
-    boolean existsById(UUID id);
-    boolean existsByName(String name);
-
+    // Consultas con paginación
     Page<SupplierModel> findAll(Pageable pageable);
     Page<SupplierModel> findByNameContaining(String name, Pageable pageable);
     Page<SupplierModel> findByActive(Boolean active);
+
+    Optional<SupplierModel> findByCode(String code);
+    // Sugerencias / búsqueda flexible con límite
+    List<SupplierModel> findByNameDescription(String query, int limit);
 }

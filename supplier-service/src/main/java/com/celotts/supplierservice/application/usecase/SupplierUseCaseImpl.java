@@ -1,9 +1,11 @@
 package com.celotts.supplierservice.application.usecase;
 
+import com.celotts.supplierservice.domain.port.input.supplier.SupplierUseCase; // <-- ESTE
+import com.celotts.supplierservice.domain.port.output.supplier.SupplierRepositoryPort;
+
 import com.celotts.supplierservice.domain.exception.SupplierAlreadyExistsException;
 import com.celotts.supplierservice.domain.exception.SupplierNotFoundException;
 import com.celotts.supplierservice.domain.model.supplier.SupplierModel;
-import com.celotts.supplierservice.domain.port.output.supplier.SupplierRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +36,7 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
         }
         return repo.save(supplier);
     }
+
 
     @Override
     public SupplierModel update(UUID id, SupplierModel partial) {
@@ -112,6 +115,7 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
     @Override
     @Transactional(readOnly = true)
     public List<SupplierModel> searchByNameDescription(String q, int limit) {
+        // El repositorio/puerto de salida puede seguir llamándose “find…”
         return repo.findByNameDescription(q, limit);
     }
 
@@ -121,12 +125,18 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
         return repo.existsByName(name);
     }
 
-    // (Opcional) normalizador simple
-    // private void normalize(SupplierModel m) {
-    //     if (m.getCode() != null)    m.setCode(m.getCode().trim().toUpperCase());
-    //     if (m.getEmail() != null)   m.setEmail(m.getEmail().trim().toLowerCase());
-    //     if (m.getName() != null)    m.setName(m.getName().trim().replaceAll("\\s+"," "));
-    //     if (m.getPhone() != null)   m.setPhone(m.getPhone().trim().replaceAll("\\s+"," "));
-    //     if (m.getAddress() != null) m.setAddress(m.getAddress().trim().replaceAll("\\s+"," "));
-    // }
+    @Override
+    @Transactional(readOnly = true)
+    public SupplierModel getByCode(String code) {
+        return repo.findByCode(code)
+                .orElseThrow(() -> new SupplierNotFoundException("code", code));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByCode(String code) {
+        return repo.existsByCode(code);
+    }
+
+
 }

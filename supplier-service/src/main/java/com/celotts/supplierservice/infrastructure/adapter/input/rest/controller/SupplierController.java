@@ -1,6 +1,7 @@
-package com.celotts.supplierservice.infrastructure.adapter.input.rest.controller.supplier;
+package com.celotts.supplierservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.supplierservice.application.usecase.SupplierUseCase;
+import com.celotts.supplierservice.domain.port.input.supplier.SupplierUseCase;
+
 import com.celotts.supplierservice.domain.model.supplier.SupplierModel;
 import com.celotts.supplierservice.infrastructure.adapter.input.rest.dto.response.ApiErrorResponse;
 import com.celotts.supplierservice.infrastructure.adapter.input.rest.dto.supplier.SupplierCreateDto;
@@ -77,7 +78,7 @@ public class SupplierController {
             @RequestParam(name = "q") @NotBlank(message = "{validation.field-error}") String q,
             @RequestParam(name = "limit", required = false, defaultValue = "10") @Positive @Min(1) int limit
     ) {
-        // Delegamos a un caso de uso que busque por nombre/descripcion/campos "loose"
+
         List<SupplierModel> list = useCase.searchByNameDescription(q, Math.min(limit, 1000));
         return ResponseEntity.ok(mapper.toResponseList(list));
     }
@@ -152,5 +153,23 @@ public class SupplierController {
                 "/api/v1/suppliers/_force-400"
         );
         return ResponseEntity.badRequest().body(error);
+    }
+
+    // GET /api/v1/suppliers/code/{code}
+    @GetMapping("/code/{code}")
+    public ResponseEntity<SupplierResponseDto> getByCode(
+            @PathVariable /*@CodeFormat*/ String code // si quieres, valida con tu anotación custom
+    ) {
+        SupplierModel model = useCase.getByCode(code); // lanza SupplierNotFoundException si no existe
+        return ResponseEntity.ok(mapper.toResponse(model));
+    }
+
+    // GET /api/v1/suppliers/_exists-code?code=ABC-123
+    @GetMapping("/_exists-code")
+    public ResponseEntity<Map<String, Object>> existsByCode(
+            @RequestParam("code") /*@CodeFormat*/ String code
+    ) {
+        boolean exists = useCase.existsByCode(code);
+        return ResponseEntity.ok(Map.of("exists", exists, "code", code));
     }
 }
