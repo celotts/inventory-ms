@@ -73,12 +73,18 @@ public class SupplierRepositoryAdapter implements SupplierRepositoryPort {
     @Override
     @Transactional(readOnly = true)
     public List<SupplierModel> findByNameDescription(String query, int limit) {
-        int size = Math.max(1, Math.min(limit, 1000)); // límite de seguridad
-        Page<SupplierEntity> page = jpa.searchByLooseQuery(query, PageRequest.of(0, size));
-        return page.getContent()
-                .stream()
+        int size = Math.max(1, Math.min(limit, 1000)); // guarda superior para no reventar la memoria
+
+        // Si query es null o vacío, NO llames a searchByLooseQuery (evitas full-scan forzado por '%%')
+        if (query == null || query.isBlank()) {
+            return jpa.findAll(PageRequest.of(0, size))
+                    .map(mapper::toModel)
+                    .getContent();
+        }
+
+        return jpa.searchByLooseQuery(query, PageRequest.of(0, size))
                 .map(mapper::toModel)
-                .collect(Collectors.toList());
+                .getContent();
     }
 
     // ---------- Delete ----------
@@ -127,5 +133,17 @@ public class SupplierRepositoryAdapter implements SupplierRepositoryPort {
                 .map(mapper::toModel)
                 .collect(Collectors.toList());
         return new PageImpl<>(list, PageRequest.of(0, list.size()), list.size());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<SupplierModel> findByCode(String code) {
+        return jpa.findByCodeIgnoreCase(code).map(mapper::toModel);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existsByCode(String code) {
+        return jpa.existsByCodeIgnoreCase(code);
     }
 }

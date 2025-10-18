@@ -12,28 +12,45 @@ import java.util.*;
 @Repository
 public interface SupplierJpaRepository extends JpaRepository<SupplierEntity, UUID> {
 
+    // ---- Lookups por name
     Optional<SupplierEntity> findByNameIgnoreCase(String name);
-
     boolean existsByNameIgnoreCase(String name);
-
-    // Listados simples
     List<SupplierEntity> findByNameContainingIgnoreCase(String name);
-
-    // Paginado
     Page<SupplierEntity> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
-    // Activo/Enabled
-    List<SupplierEntity> findByEnabled(Boolean enabled);
+    // ---- Lookups por code (recomendado como único)
+    Optional<SupplierEntity> findByCodeIgnoreCase(String code);
+    boolean existsByCodeIgnoreCase(String code);
 
-    // Búsqueda “amplia” en name/code/email/address
-    @Query("""
-           select s
-           from SupplierEntity s
-           where lower(s.name) like lower(concat('%', :q, '%'))
-              or lower(s.code) like lower(concat('%', :q, '%'))
-              or lower(coalesce(s.email, '')) like lower(concat('%', :q, '%'))
-              or lower(coalesce(s.address, '')) like lower(concat('%', :q, '%'))
-           order by s.name asc
-           """)
-    Page<SupplierEntity> searchByLooseQuery(@Param("q") String query, Pageable pageable);
+    // ---- Enabled / Active
+    List<SupplierEntity> findByEnabled(Boolean enabled);
+    Page<SupplierEntity> findByEnabled(Boolean enabled, Pageable pageable);
+
+    // ---- Búsqueda amplia (name, code, email, address) sin acentos
+    // Requiere extensiones: unaccent (y opcionalmente pg_trgm para performance)
+    @Query(value = """
+        select *
+        from supplier s
+        where (:q is not null and trim(:q) <> '')
+          and (
+            unaccent(lower(s.name))    like unaccent(lower(concat('%', :q, '%')))
+         or unaccent(lower(s.code))    like unaccent(lower(concat('%', :q, '%')))
+         or unaccent(lower(coalesce(s.email, '')))   like unaccent(lower(concat('%', :q, '%')))
+         or unaccent(lower(coalesce(s.address, ''))) like unaccent(lower(concat('%', :q, '%')))
+          )
+        order by s.name asc
+        """,
+            countQuery = """
+        select count(*)
+        from supplier s
+        where (:q is not null and trim(:q) <> '')
+          and (
+            unaccent(lower(s.name))    like unaccent(lower(concat('%', :q, '%')))
+         or unaccent(lower(s.code))    like unaccent(lower(concat('%', :q, '%')))
+         or unaccent(lower(coalesce(s.email, '')))   like unaccent(lower(concat('%', :q, '%')))
+         or unaccent(lower(coalesce(s.address, ''))) like unaccent(lower(concat('%', :q, '%')))
+          )
+        """,
+            nativeQuery = true)
+    Page<SupplierEntity> searchByLooseQuery(@Param("q") String q, Pageable pageable);
 }

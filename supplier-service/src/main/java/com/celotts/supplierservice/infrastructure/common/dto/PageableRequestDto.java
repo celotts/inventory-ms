@@ -14,15 +14,15 @@ import org.springframework.data.domain.Sort;
 public class PageableRequestDto {
 
     @Builder.Default
-    @PositiveOrZero(message = "page must be >= 0")
+    @PositiveOrZero(message = "{pageable.page.min}")
     private Integer page = 0;
 
     @Builder.Default
-    @Min(value = 1, message = "size must be >= 1")
+    @Min(value = 1, message = "{pageable.size.min}")
     private Integer size = 20;
 
     @Builder.Default
-    @Pattern(regexp = "(?i)ASC|DESC", message = "sortDir must be 'ASC' or 'DESC'")
+    @Pattern(regexp = "(?i)ASC|DESC", message = "{pageable.sortDir.invalid}")
     private String sortDir = "DESC";
 
     @Builder.Default
