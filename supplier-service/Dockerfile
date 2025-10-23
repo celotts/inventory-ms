@@ -1,6 +1,9 @@
 # supplier-service/Dockerfile
 FROM eclipse-temurin:21-jdk-jammy
 
+ARG DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 RUN set -eux; \
     sed -i -e 's|http://|https://|g' /etc/apt/sources.list; \
     apt-get -o Acquire::Retries=5 -o Acquire::http::Timeout=30 update; \
