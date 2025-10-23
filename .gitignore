@@ -19,3 +19,24 @@ Thumbs.db
 # Environment files
 .env
 .env.*
+# === build/ y binarios (todos los módulos) ===
+**/build/
+**/out/
+**/target/
+
+# === IDE / OS ===
+**/.idea/
+**/.DS_Store
+
+# === build/ y binarios (todos los módulos) ===
+**/build/
+**/out/
+**/target/
+
+# === IDE / OS ===
+**/.idea/
+**/.DS_Store
+
+# === Archivos de entorno (locales y secretos) ===
+infra/.env
+infra/.env.*

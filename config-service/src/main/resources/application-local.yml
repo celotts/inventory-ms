@@ -18,12 +18,14 @@ spring:
       fail-fast: true
 
     gateway:
-      - id: product-service
-        uti: lb://product-service
-        predicates:
-          - Path=/product/**
-        filters:
-          - RewritePath=/api/products/(?<path>.*), /$\{pat}
+      routes:
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/product/**
+          filters:
+            - RewritePath=/api/products/(?<path>.*), /$\{path}
+
 eureka:
   client:
     enabled: ${EUREKA_CLIENT_ENABLED:true}
@@ -31,7 +33,6 @@ eureka:
     fetch-registry: false
     service-url:
       defaultZone: http://discovery-service:8761/eureka/
-
 
   instance:
     prefer-ip-address: true

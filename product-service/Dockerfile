@@ -1,5 +1,7 @@
 FROM eclipse-temurin:21-jdk-jammy
 
+ARG DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Instala bash y curl en una sola capa limpia
 RUN apt-get update \
  && apt-get install -y bash curl \

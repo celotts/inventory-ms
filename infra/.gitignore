@@ -45,3 +45,7 @@ product-service~*
 *.bak
 *.swo
 *.old
+
+# === Infraestructura (permitida completamente) ===
+!infra/
+!infra/**

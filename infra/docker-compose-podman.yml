@@ -94,12 +94,12 @@ services:
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
 
       # Hikari (una vez, sin duplicados)
-      - SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=2
-      - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=10
-      - SPRING_DATASOURCE_HIKARI_AUTO_COMMIT=false
-      - SPRING_DATASOURCE_HIKARI_TRANSACTION_ISOLATION=TRANSACTION_READ_COMMITTED
-      - SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=60000
-      - SPRING_DATASOURCE_HIKARI_VALIDATION_TIMEOUT=30000
+      #- SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=2
+      #- SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=10
+      #- SPRING_DATASOURCE_HIKARI_AUTO_COMMIT=false
+      #- SPRING_DATASOURCE_HIKARI_TRANSACTION_ISOLATION=TRANSACTION_READ_COMMITTED
+      #- SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=60000
+      #- SPRING_DATASOURCE_HIKARI_VALIDATION_TIMEOUT=30000
 
       # Eureka
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
@@ -121,10 +121,18 @@ services:
 
       # Actuator + logs diagnóstico
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,env,configprops,beans
-      - MANAGEMENT_ENDPOINT_CONFIGPROPS_ENABLED=true
-      - MANAGEMENT_ENDPOINT_ENV_ENABLED=true
-      - MANAGEMENT_ENDPOINT_BEANS_ENABLED=true
-      - MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=ALWAYS
+      #- MANAGEMENT_ENDPOINT_CONFIGPROPS_ENABLED=true
+      #- MANAGEMENT_ENDPOINT_ENV_ENABLED=true
+      #- MANAGEMENT_ENDPOINT_BEANS_ENABLED=true
+      #- MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=ALWAYS
+      # Health/Probes y refresco
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,env,configprops,beans
+      - MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED=true
+      # Evita rebind en caliente que toca el pool:
+      - SPRING_CLOUD_REFRESH_ENABLED=false
+
+      # Asegura que el app escuche en 9090, como el puerto publicado/healthcheck
+      - SERVER_PORT=9090
     depends_on:
       discovery-service:
         condition: service_started  # 🔄 Cambiado de service_healthy a service_started
@@ -133,7 +141,8 @@ services:
       product-db:
         condition: service_healthy  # ✅ Mantenemos healthy solo para la DB
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1" ]
+      #test: [ "CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1" ]
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:9090/actuator/health | grep -q '\"status\":\"UP\"'" ]
       interval: 20s              # 🔄 Reducido de 30s
       timeout: 15s               # 🔄 Aumentado de 10s
       retries: 10                # 🔄 Aumentado de 5
@@ -150,6 +159,9 @@ services:
       POSTGRES_DB: ${SUPPLIER_DB_NAME:-supplier}
       POSTGRES_USER: ${SUPPLIER_DB_USERNAME:-supplier}
       POSTGRES_PASSWORD: ${SUPPLIER_DB_PASSWORD:-supplier123}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"  # 👈 fuerza UTF-8"
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
     ports:
       - "${SUPPLIER_DB_PORT:-5434}:5432"
     healthcheck:
@@ -177,17 +189,17 @@ services:
         - SPRING_APPLICATION_NAME=supplier-service
         - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
         - JAVA_OPTS=${JAVA_OPTS}
-        - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
+        #- SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
         - SPRING_DATASOURCE_URL=jdbc:postgresql://supplier-db:5432/${SUPPLIER_DB_NAME:-supplier}
         - SPRING_DATASOURCE_USERNAME=${SUPPLIER_DB_USERNAME:-supplier}
         - SPRING_DATASOURCE_PASSWORD=${SUPPLIER_DB_PASSWORD:-supplier123}
         - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
-        - SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=2
-        - SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=10
-        - SPRING_DATASOURCE_HIKARI_AUTO_COMMIT=false
-        - SPRING_DATASOURCE_HIKARI_TRANSACTION_ISOLATION=TRANSACTION_READ_COMMITTED
-        - SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=60000
-        - SPRING_DATASOURCE_HIKARI_VALIDATION_TIMEOUT=30000
+        #- SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=2
+        #- SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=10
+        #- SPRING_DATASOURCE_HIKARI_AUTO_COMMIT=false
+        #- SPRING_DATASOURCE_HIKARI_TRANSACTION_ISOLATION=TRANSACTION_READ_COMMITTED
+        #- SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=60000
+        #- SPRING_DATASOURCE_HIKARI_VALIDATION_TIMEOUT=30000
         - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
         - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=30
         - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=30
@@ -210,54 +222,53 @@ services:
       networks:
         - inventory-network
 
-
   purchase-db:
-    profiles: [ "purchase" ]
-    image: postgres:16
-      # ...
+      profiles: [ "purchase" ]
+      image: postgres:16
+
 
   purchase-service:
-    profiles: [ "purchase" ]
+      profiles: [ "purchase" ]
 
   api-gateway:
-    profiles: ["gateway"]
-    build:
-      context: ../api-gateway
-      dockerfile: Dockerfile
-    container_name: api-gateway
-    ports:
-      - "${GATEWAY_PORT:-8090}:8090"
-    environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - JAVA_OPTS=${JAVA_OPTS}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
-      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
-      - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWERCASESERVICEID=true
-      # 🆕 Configuraciones adicionales para mejor tolerancia
-      - SPRING_CLOUD_CONFIG_FAILFAST=false
-      - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=3
-    depends_on:
-      discovery-service:
-        condition: service_started  # 🔄 Cambiado de service_healthy a service_started
-      config-service:
-        condition: service_started  # 🔄 Cambiado de service_healthy a service_started
-      product-service:
-        condition: service_started  # 🔄 Cambiado de service_healthy a service_started
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8090/actuator/health || exit 1"]
-      interval: 25s              # 🔄 Reducido de 30s
-      timeout: 15s               # 🔄 Aumentado de 10s
-      retries: 8                 # 🔄 Aumentado de 5
-      start_period: 60s          # 🔄 Aumentado de 45s
-    restart: unless-stopped      # 🆕 Agregado restart policy
-    networks:
-      - inventory-network
+      profiles: ["gateway"]
+      build:
+        context: ../api-gateway
+        dockerfile: Dockerfile
+      container_name: api-gateway
+      ports:
+        - "${GATEWAY_PORT:-8090}:8090"
+      environment:
+        - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+        - JAVA_OPTS=${JAVA_OPTS}
+        - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+        - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
+        - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
+        - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWERCASESERVICEID=true
+        # 🆕 Configuraciones adicionales para mejor tolerancia
+        - SPRING_CLOUD_CONFIG_FAILFAST=false
+        - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=3
+      depends_on:
+        discovery-service:
+          condition: service_started  # 🔄 Cambiado de service_healthy a service_started
+        config-service:
+          condition: service_started  # 🔄 Cambiado de service_healthy a service_started
+        product-service:
+          condition: service_started  # 🔄 Cambiado de service_healthy a service_started
+      healthcheck:
+        test: ["CMD-SHELL", "curl -f http://localhost:8090/actuator/health || exit 1"]
+        interval: 25s              # 🔄 Reducido de 30s
+        timeout: 15s               # 🔄 Aumentado de 10s
+        retries: 8                 # 🔄 Aumentado de 5
+        start_period: 60s          # 🔄 Aumentado de 45s
+      restart: unless-stopped      # 🆕 Agregado restart policy
+      networks:
+        - inventory-network
 
 networks:
-  inventory-network:
-    driver: bridge
+    inventory-network:
+      driver: bridge
 
 volumes:
-  product-data:
-  supplier-data:
+    product-data:
+    supplier-data:

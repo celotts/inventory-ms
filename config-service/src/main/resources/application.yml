@@ -17,14 +17,14 @@ spring:
           search-paths: config
       fail-fast: true
 
-    gateway:
-      routes:
-        - id: product-service
-          uri: lb://product-service
-          predicates:
-            - Path=/product/**
-          filters:
-            - RewritePath=/product/(?<path>.*), /${path}
+    #gateway:
+      #routes:
+        #- id: product-service
+         # uri: lb://product-service
+         # predicates:
+         #   - Path=/product/**
+         # filters:
+         #   - RewritePath=/product/(?<path>.*), /${path}
 
 eureka:
   client:
