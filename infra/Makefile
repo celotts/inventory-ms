@@ -228,8 +228,13 @@ rebuild-supplier-local: podman-ready ## 🔁 Rebuild supplier-service (local)
 	@echo "🛠️  Rebuild supplier-service (local)"
 	cp $(ENV_FILE_LOCAL) .env.override
 	cd .. && ./gradlew :supplier-service:bootJar
-	$(COMPOSE_LOCAL) --profile supplier build supplier-service
-	$(COMPOSE_LOCAL) --profile supplier up -d supplier-db supplier-service
+	# build con perfiles infra,supplier
+	COMPOSE_PROFILES=infra,supplier \
+	$(COMPOSE_LOCAL) --profile infra --profile supplier build supplier-service
+	# up incluyendo dependencias reales
+	COMPOSE_PROFILES=infra,supplier \
+	$(COMPOSE_LOCAL) --profile infra --profile supplier \
+	  up -d discovery-service config-service supplier-db supplier-service
 
 rebuild-supplier-dev: podman-ready ## 🔁 Rebuild supplier-service (dev)
 	@echo "🛠️  Rebuild supplier-service (dev)"
