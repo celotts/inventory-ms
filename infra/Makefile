@@ -18,12 +18,24 @@ ENV_FILE_LOCAL_SUPPLIER_RESOLVED := $(if $(wildcard $(ENV_FILE_LOCAL_SUPPLIER)),
 COMPOSE_FILE_LOCAL ?= docker-compose-podman.yml
 COMPOSE_FILE_DEV   ?= docker-compose-podman.yml
 COMPOSE_FILE_PROD  ?= docker-compose-podman.yml
+# 📛 Nombre de proyecto para Compose (evita vacío en nombres y mensajes)
+COMPOSE_PROJECT_NAME ?= inventoryms
+# 🧰 Helpers DRY (usar subcomando oficial `podman compose` y aislar sockets)
+export COMPOSE_PROVIDER ?= podman
+export PODMAN_COMPOSE_PROVIDER ?= podman-compose
+# (opcional) desactivar paths heredados de docker-cli/build
+export COMPOSE_DOCKER_CLI_BUILD ?= 0
 
-# 🧰 Helpers DRY para Podman Compose por entorno
-COMPOSE_LOCAL := podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL)
-COMPOSE_LOCAL_SUPPLIER := podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)
-COMPOSE_DEV   := podman-compose -f $(COMPOSE_FILE_DEV)   --env-file $(ENV_FILE_DEV)
-COMPOSE_PROD  := podman-compose -f $(COMPOSE_FILE_PROD)  --env-file $(ENV_FILE_PROD)
+# 📌 CORRECCIÓN: Permitir que Podman Desktop vea los contenedores
+# Se removió CONTAINER_HOST= DOCKER_HOST= para usar la conexión por defecto
+RUN := COMPOSE_PROVIDER=$(COMPOSE_PROVIDER) \
+       PODMAN_COMPOSE_PROVIDER=$(PODMAN_COMPOSE_PROVIDER) \
+       COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME)
+
+COMPOSE_LOCAL          := $(RUN) podman compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL)
+COMPOSE_LOCAL_SUPPLIER := $(RUN) podman compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)
+COMPOSE_DEV            := $(RUN) podman compose -f $(COMPOSE_FILE_DEV)   --env-file $(ENV_FILE_DEV)
+COMPOSE_PROD           := $(RUN) podman compose -f $(COMPOSE_FILE_PROD)  --env-file $(ENV_FILE_PROD)
 
 # 🔖 Perfiles disponibles
 PROFILES_ALL := infra gateway product supplier purchase
@@ -31,6 +43,20 @@ PROFILES_ALL := infra gateway product supplier purchase
 # Usa UNO o VARIOS compose files (separados por espacio)
 COMPOSE_FILES ?= $(CURDIR)/docker-compose.yml
 COMPOSE_F := $(foreach f,$(COMPOSE_FILES),-f $(f))
+
+# ------------------------------------------------------------------------
+# 🧠 Verificación previa: Podman Machine y “connection” por defecto
+# ------------------------------------------------------------------------
+.PHONY: podman-ready
+podman-ready:
+	@unset CONTAINER_HOST DOCKER_HOST; \
+	if ! podman info >/dev/null 2>&1; then \
+	  echo "⚠️  Podman no responde. Iniciando VM..."; \
+	  podman machine start >/dev/null 2>&1 || podman machine init --now >/dev/null 2>&1; \
+	fi; \
+	podman system connection list | grep -q podman-machine-default-root && \
+	  podman system connection default podman-machine-default-root >/dev/null 2>&1 || true; \
+	podman info >/dev/null 2>&1 || ( echo "❌ No se pudo conectar a Podman."; exit 1 )
 
 #------------------------------------------------------------------------
 # 🧑‍💻 Funciones de desarrollo LOCAL (sin Docker)
@@ -44,24 +70,29 @@ validate-product-no-tests: ## ✅ Valida product-service sin ejecutar pruebas
 clean-gradle: ## 🧹 Limpia caché y compilación de Gradle
 	cd .. && ./gradlew clean
 
+compose-provider: ## 🔎 Mostrar provider y versión de podman compose
+	@echo "COMPOSE_PROVIDER=$(COMPOSE_PROVIDER)"
+	@echo "PODMAN_COMPOSE_PROVIDER=$(PODMAN_COMPOSE_PROVIDER)"
+	@podman compose version
+
 #------------------------------------------------------------------------
 # ♻️ Targets genéricos por perfil (UP/DOWN/LOGS)
 #------------------------------------------------------------------------
-up-%: ## Levanta por perfil: infra|gateway|product|supplier|purchase|all
+up-%: podman-ready ## Levanta por perfil: infra|gateway|product|supplier|purchase|all
 	@if [ "$*" = "all" ]; then \
 		$(COMPOSE_LOCAL) $(foreach p,$(PROFILES_ALL),--profile $(p)) up -d --build; \
 	else \
 		$(COMPOSE_LOCAL) --profile $* up -d --build; \
 	fi
 
-down-%: ## Baja por perfil: infra|gateway|product|supplier|purchase|all
+down-%: podman-ready ## Baja por perfil: infra|gateway|product|supplier|purchase|all
 	@if [ "$*" = "all" ]; then \
 		$(COMPOSE_LOCAL) $(foreach p,$(PROFILES_ALL),--profile $(p)) down -v --remove-orphans; \
 	else \
 		$(COMPOSE_LOCAL) --profile $* down -v --remove-orphans; \
 	fi
 
-logs-%: ## Logs por perfil: infra|gateway|product|supplier|purchase
+logs-%: podman-ready ## Logs por perfil: infra|gateway|product|supplier|purchase
 	$(COMPOSE_LOCAL) --profile $* logs -f
 
 #------------------------------------------------------------------------
@@ -69,7 +100,7 @@ logs-%: ## Logs por perfil: infra|gateway|product|supplier|purchase
 #------------------------------------------------------------------------
 
 ## 🔽 Infraestructura por entorno
-up-local: fix-container-orphans ## 🧪 Infra + product + gateway para trabajar desde IntelliJ
+up-local: podman-ready fix-container-orphans ## 🧪 Infra + product + gateway para trabajar desde IntelliJ
 	@echo "🧹 Copiando variables de entorno..."
 	cp $(ENV_FILE_LOCAL) .env.override
 	@echo "🔨 Construyendo servicios..."
@@ -77,14 +108,14 @@ up-local: fix-container-orphans ## 🧪 Infra + product + gateway para trabajar 
 	@echo "🦭 Levantando contenedores con Podman (perfiles: infra, product, gateway)..."
 	$(COMPOSE_LOCAL) --profile infra --profile product --profile gateway up -d --build
 
-up-local-supplier: fix-container-orphans
+up-local-supplier: podman-ready fix-container-orphans
 	@echo "🧹 Copiando variables de entorno (supplier)..."
 	@echo "[INFO] Archivo supplier detectado: $(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)"
 	cp "$(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)" "$(CURDIR)/.env.override"
 
 	@echo "🔎 Verificando que supplier-db y supplier-service existan (perfiles: infra,supplier)..."
 	@SERVICES="$$(COMPOSE_PROFILES=infra,supplier \
-	  podman-compose -f "$(COMPOSE_FILE_LOCAL)" --env-file "$(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)" \
+	  $(RUN) podman compose -f "$(COMPOSE_FILE_LOCAL)" --env-file "$(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)" \
 	    --profile infra --profile supplier config --services 2>/dev/null || true)"; \
 	echo "$$SERVICES" | grep -qx "supplier-db"      || { echo "❌ Falta supplier-db"; exit 1; }; \
 	echo "$$SERVICES" | grep -qx "supplier-service" || { echo "❌ Falta supplier-service"; exit 1; }; \
@@ -99,22 +130,38 @@ up-local-supplier: fix-container-orphans
 	  --profile infra --profile supplier \
 	  up -d --build discovery-service config-service supplier-db supplier-service
 
-
 ## 🔽 Levantar solo supplier (más la base)
-up-local-product-supplier: fix-container-orphans
+up-local-product-supplier: podman-ready fix-container-orphans
 	@echo "🧹 Copiando variables de entorno..."
 	@echo "ℹ️  Archivo supplier detectado: $(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)"
 	cp "$(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)" "$(CURDIR)/.env.override"
 
 	@COMPOSE_FILE="$(CURDIR)/docker-compose-podman.yml"; \
 	echo "🔎 Verificando que existan supplier-db/supplier-service y product-db/product-service en $$COMPOSE_FILE..."; \
-	SERVICES="$$(COMPOSE_PROFILES=infra,supplier,product podman-compose -f $$COMPOSE_FILE --env-file "$(ENV_FILE_LOCAL)" \
-	  --profile infra --profile supplier --profile product config --services 2>/dev/null || true)"; \
-	echo "$$SERVICES" | grep -qx "supplier-db"      || { echo "❌ Falta supplier-db"; exit 1; }; \
-	echo "$$SERVICES" | grep -qx "supplier-service" || { echo "❌ Falta supplier-service"; exit 1; }; \
-	echo "$$SERVICES" | grep -qx "product-db"       || { echo "❌ Falta product-db"; exit 1; }; \
-	echo "$$SERVICES" | grep -qx "product-service"  || { echo "❌ Falta product-service"; exit 1; }; \
-	echo "✅ Servicios detectados: supplier y product."; \
+	echo "▶ Env file: $(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)"; \
+	OUT="$$(COMPOSE_PROFILES=infra,supplier,product \
+	  $(RUN) podman compose -f $$COMPOSE_FILE --env-file "$(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)" \
+	    --profile infra --profile supplier --profile product \
+	    config --services 2>/dev/null)"; \
+	rc=$$?; \
+	if [ $$rc -ne 0 ]; then \
+	  echo "❌ 'podman compose config --services' falló (rc=$$rc)"; exit $$rc; \
+	fi; \
+	if [ -z "$$OUT" ]; then \
+	  echo "⚠️  'config --services' devolvió vacío. Mostrando primeras líneas de 'config' para depurar:"; \
+	  COMPOSE_PROFILES=infra,supplier,product \
+	  $(RUN) podman compose -f $$COMPOSE_FILE --env-file "$(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)" \
+	    --profile infra --profile supplier --profile product \
+	    config | sed -n '1,120p'; \
+	  exit 1; \
+	fi; \
+	LINES="$$(printf "%s\n" "$$OUT" | tr ' ' '\n' | sed '/^$$/d')"; \
+	echo "📋 Servicios detectados:"; printf "%s\n" "$$LINES"; \
+	echo "$$LINES" | grep -xq supplier-db      || { echo "❌ Falta supplier-db"; exit 1; }; \
+	echo "$$LINES" | grep -xq supplier-service || { echo "❌ Falta supplier-service"; exit 1; }; \
+	echo "$$LINES" | grep -xq product-db       || { echo "❌ Falta product-db"; exit 1; }; \
+	echo "$$LINES" | grep -xq product-service  || { echo "❌ Falta product-service"; exit 1; }; \
+	echo "✅ Servicios requeridos presentes.";
 
 	@echo "🔨 Construyendo jars necesarios (incluye product)..."
 	cd "$(CURDIR)/.." && ./gradlew \
@@ -124,15 +171,19 @@ up-local-product-supplier: fix-container-orphans
 		:supplier-service:bootJar
 
 	@echo "🦭 Levantando discovery, config, product-db, product-service, supplier-db y supplier-service..."
-	COMPOSE_PROFILES=infra,product,supplier \
-	podman-compose -f "$(CURDIR)/docker-compose-podman.yml" --env-file "$(ENV_FILE_LOCAL)" \
+	@COMPOSE_PROFILES=infra,product,supplier \
+	$(RUN) podman compose -f "$(CURDIR)/docker-compose-podman.yml" --env-file "$(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)" \
 	  --profile infra --profile product --profile supplier \
 	  up -d --build \
 	  discovery-service config-service \
 	  product-db product-service \
-	  supplier-db supplier-service
+	  supplier-db supplier-service || { echo "❌ 'podman compose up' falló"; exit 1; }
 
-up-local-purchase: fix-container-orphans ## 🧪 Base + purchase
+	@$(COMPOSE_LOCAL_SUPPLIER) ps
+
+
+
+up-local-purchase: podman-ready fix-container-orphans ## 🧪 Base + purchase
 	@echo "🧹 Copiando variables de entorno..."
 	cp $(ENV_FILE_LOCAL) .env.override
 
@@ -145,22 +196,22 @@ up-local-purchase: fix-container-orphans ## 🧪 Base + purchase
 		:purchase-service:bootJar
 
 	@echo "🦭 Levantando contenedores (infra, product, gateway, purchase)..."
-	podman-compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) \
+	$(RUN) podman compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) \
 		--profile infra --profile gateway --profile product \
 		--profile purchase \
 		up -d --build
 
-up-dev: ## 🧪 Levanta todo el stack en contenedores (modo dev)
+up-dev: podman-ready ## 🧪 Levanta todo el stack en contenedores (modo dev)
 	cp $(ENV_FILE_DEV) .env.override
 	$(COMPOSE_DEV) $(foreach p,$(PROFILES_ALL),--profile $(p)) down -v --remove-orphans
 	$(COMPOSE_DEV) $(foreach p,$(PROFILES_ALL),--profile $(p)) up -d --build
 
-up-prod: ## 🚀 Levanta todo en entorno de producción
+up-prod: podman-ready ## 🚀 Levanta todo en entorno de producción
 	cp $(ENV_FILE_PROD) .env.override
 	$(COMPOSE_PROD) $(foreach p,$(PROFILES_ALL),--profile $(p)) down -v --remove-orphans
 	$(COMPOSE_PROD) $(foreach p,$(PROFILES_ALL),--profile $(p)) up -d --build
 
-up-db: ## 🔄 Levanta solo la base de datos para desarrollo local (product-db)
+up-db: podman-ready ## 🔄 Levanta solo la base de datos para desarrollo local (product-db)
 	$(COMPOSE_LOCAL) --profile product up -d product-db
 
 print-envs: ## 🔎 Mostrar qué .env usará cada target
@@ -170,19 +221,17 @@ print-envs: ## 🔎 Mostrar qué .env usará cada target
 	@echo "ENV_SUPPLIER_FALLBACK:          $(ENV_SUPPLIER_FALLBACK)"
 	@echo "ENV_FILE_LOCAL_SUPPLIER_RESOLVED: $(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)"
 
-
-
 # ---------------------------------------------------------------------
 # 🧪 Supplier Service
 # ---------------------------------------------------------------------
-rebuild-supplier-local: ## 🔁 Rebuild supplier-service (local)
+rebuild-supplier-local: podman-ready ## 🔁 Rebuild supplier-service (local)
 	@echo "🛠️  Rebuild supplier-service (local)"
 	cp $(ENV_FILE_LOCAL) .env.override
 	cd .. && ./gradlew :supplier-service:bootJar
 	$(COMPOSE_LOCAL) --profile supplier build supplier-service
 	$(COMPOSE_LOCAL) --profile supplier up -d supplier-db supplier-service
 
-rebuild-supplier-dev: ## 🔁 Rebuild supplier-service (dev)
+rebuild-supplier-dev: podman-ready ## 🔁 Rebuild supplier-service (dev)
 	@echo "🛠️  Rebuild supplier-service (dev)"
 	cp $(ENV_FILE_DEV) .env.override
 	$(COMPOSE_DEV) build supplier-service
@@ -201,14 +250,14 @@ health-supplier: ## 💚 Health de supplier-service
 # ---------------------------------------------------------------------
 # 🧪 Purchase Service
 # ---------------------------------------------------------------------
-rebuild-purchase-local: ## 🔁 Rebuild purchase-service (local)
+rebuild-purchase-local: podman-ready ## 🔁 Rebuild purchase-service (local)
 	@echo "🛠️  Rebuild purchase-service (local)"
 	cp $(ENV_FILE_LOCAL) .env.override
 	cd .. && ./gradlew :purchase-service:bootJar
 	$(COMPOSE_LOCAL) build purchase-service
 	$(COMPOSE_LOCAL) up -d purchase-service
 
-rebuild-purchase-dev: ## 🔁 Rebuild purchase-service (dev)
+rebuild-purchase-dev: podman-ready ## 🔁 Rebuild purchase-service (dev)
 	@echo "🛠️  Rebuild purchase-service (dev)"
 	cp $(ENV_FILE_DEV) .env.override
 	$(COMPOSE_DEV) build purchase-service
@@ -224,11 +273,11 @@ test-purchase: ## 🧪 Tests purchase-service
 health-purchase: ## 💚 Health de purchase-service
 	@curl -fsS http://localhost:$(PURCHASE_PORT)/actuator/health | jq . || echo "❌ purchase-service no responde"
 
-down-local: ## 🔻 Apaga infra local (perfiles: infra, product, gateway)
+down-local: podman-ready ## 🔻 Apaga infra local (perfiles: infra, product, gateway)
 	$(COMPOSE_LOCAL) --profile infra --profile product --profile gateway down -v --remove-orphans
 
 ## 🔁 Build y Rebuild
-build-images: ## 🏗️ Build manual de imágenes
+build-images: podman-ready ## 🏗️ Build manual de imágenes
 	podman build -t inventory/discovery-service ../discovery-service
 	podman build -t inventory/config-service ../config-service
 	podman build -t inventory/api-gateway ../api-gateway
@@ -238,54 +287,54 @@ build-jars:
 	cd .. && ./gradlew --console=plain :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar
 
 # 🆕 Comandos para servicios individuales
-rebuild-api-gateway-local: ## 🔁 Reconstruye solo api-gateway (local)
+rebuild-api-gateway-local: podman-ready ## 🔁 Reconstruye solo api-gateway (local)
 	@echo "🛠️  Reconstruyendo api-gateway con env: $(ENV_FILE_LOCAL)"
 	cp $(ENV_FILE_LOCAL) .env.override
 	cd .. && ./gradlew :api-gateway:bootJar
 	$(COMPOSE_LOCAL) build api-gateway
 	$(COMPOSE_LOCAL) up -d api-gateway
 
-rebuild-config-service-local: ## 🔁 Reconstruye solo config-service (local)
+rebuild-config-service-local: podman-ready ## 🔁 Reconstruye solo config-service (local)
 	@echo "🛠️  Reconstruyendo config-service con env: $(ENV_FILE_LOCAL)"
 	cp $(ENV_FILE_LOCAL) .env.override
 	$(COMPOSE_LOCAL) build config-service
 	$(COMPOSE_LOCAL) up -d config-service
 
-rebuild-discovery-local: ## 🔁 Reconstruye solo discovery-service (local)
+rebuild-discovery-local: podman-ready ## 🔁 Reconstruye solo discovery-service (local)
 	@echo "🛠️  Reconstruyendo discovery-service con env: $(ENV_FILE_LOCAL)"
 	cp $(ENV_FILE_LOCAL) .env.override
 	$(COMPOSE_LOCAL) build discovery-service
 	$(COMPOSE_LOCAL) up -d discovery-service
 
-rebuild-product-local: ## 🔁 Reconstruye solo product-service (local)
+rebuild-product-local: podman-ready ## 🔁 Reconstruye solo product-service (local)
 	@echo "🛠️  Reconstruyendo product-service con env: $(ENV_FILE_LOCAL)"
 	cp $(ENV_FILE_LOCAL) .env.override
 	$(COMPOSE_LOCAL) build product-service
 	$(COMPOSE_LOCAL) up -d product-service
 
-rebuild-product-dev: ## 🔁 Reconstruye solo product-service (dev)
+rebuild-product-dev: podman-ready ## 🔁 Reconstruye solo product-service (dev)
 	@echo "🛠️  Reconstruyendo product-service con env: $(ENV_FILE_DEV)"
 	cp $(ENV_FILE_DEV) .env.override
 	$(COMPOSE_DEV) build product-service
 	$(COMPOSE_DEV) up -d product-service
 
 ## ♻️ Mantenimiento y limpieza
-clean-volumes: ## 🧹 Limpia volúmenes no usados
+clean-volumes: podman-ready ## 🧹 Limpia volúmenes no usados
 	podman volume prune -f
 
-clean-images: ## 🧹 Limpia imágenes sin contenedor
+clean-images: podman-ready ## 🧹 Limpia imágenes sin contenedor
 	podman image prune -a -f
 
-clean-podman: ## 🧹 Limpia imágenes sin contenedor y volúmenes
+clean-podman: podman-ready ## 🧹 Limpia imágenes sin contenedor y volúmenes
 	$(MAKE) clean-images
 	$(MAKE) clean-volumes
 
-stop-all: ## 🛑 Detiene todos los contenedores activos en Podman
+stop-all: podman-ready ## 🛑 Detiene todos los contenedores activos en Podman
 	@echo "🛑 Deteniendo todos los contenedores..."
 	podman ps -q | xargs -r podman stop
 	podman system prune -f --volumes
 
-reset-db: ## 🧨 Reinicia product-db con script inicial
+reset-db: podman-ready ## 🧨 Reinicia product-db con script inicial
 	@echo "⛔ Eliminando contenedor y volumen de product-db..."
 	$(COMPOSE_LOCAL) down -v --remove-orphans
 	@echo "🚀 Levantando product-db..."
@@ -298,34 +347,34 @@ reset-local: ## 🔁 Reinicia completamente el entorno local
 	$(MAKE) clean-podman
 	$(MAKE) up-local
 
-reload-schema: ## ♻️ Ejecuta el script SQL en product-db
+reload-schema: podman-ready ## ♻️ Ejecuta el script SQL en product-db
 	podman cp ./init-scripts/product-init.sql product-db:/tmp/product-init.sql
 	podman exec -it product-db psql -U product -d product -f /tmp/product-init.sql
 
 ## 🔍 Logs y verificación
-logs-local: ## 📜 Logs de todos los servicios locales
+logs-local: podman-ready ## 📜 Logs de todos los servicios locales
 	$(COMPOSE_LOCAL) logs -f
 
-logs-dev: ## 📜 Logs del entorno dev
+logs-dev: podman-ready ## 📜 Logs del entorno dev
 	$(COMPOSE_DEV) logs -f
 
 # 🆕 Logs específicos por servicio
-logs-api-gateway: ## 📜 Logs del API Gateway
+logs-api-gateway: podman-ready ## 📜 Logs del API Gateway
 	$(COMPOSE_LOCAL) logs -f api-gateway
 
-logs-discovery: ## 📜 Logs del Discovery Service
+logs-discovery: podman-ready ## 📜 Logs del Discovery Service
 	$(COMPOSE_LOCAL) logs -f discovery-service
 
-logs-config: ## 📜 Logs del Config Service
+logs-config: podman-ready ## 📜 Logs del Config Service
 	$(COMPOSE_LOCAL) logs -f config-service
 
-logs-product: ## 📜 Logs del Product Service
+logs-product: podman-ready ## 📜 Logs del Product Service
 	$(COMPOSE_LOCAL) logs -f product-service
 
-logs-db: ## 📜 Logs de la base de datos
+logs-db: podman-ready ## 📜 Logs de la base de datos
 	$(COMPOSE_LOCAL) logs -f product-db
 
-check-db-init: ## 🔎 Verifica existencia del volumen product-db
+check-db-init: podman-ready ## 🔎 Verifica existencia del volumen product-db
 	@echo "🔎 Verificando volumen de la base de datos..."
 	@if ! podman volume inspect inventoryms_product-data >/dev/null 2>&1; then \
 		echo "✅ Volumen no existe. Se ejecutará el script SQL al levantar PostgreSQL."; \
@@ -335,10 +384,10 @@ check-db-init: ## 🔎 Verifica existencia del volumen product-db
 	@$(MAKE) up-local
 
 # 🆕 Status y testing
-status: ## 📊 Ver estado de todos los servicios
+status: podman-ready ## 📊 Ver estado de todos los servicios
 	$(COMPOSE_LOCAL) ps
 
-podman-status: ## 📊 Ver todos los contenedores Podman
+podman-status: podman-ready ## 📊 Ver todos los contenedores Podman
 	podman ps -a
 
 test-services: ## 🧪 Probar que todos los servicios estén funcionando
@@ -369,35 +418,34 @@ build-step-by-step:
 	@echo "🎉 Construcción completada con Podman!"
 
 # 🆕 Comandos adicionales para Podman
-pods-list: ## 📋 Lista todos los pods de Podman
+pods-list: podman-ready ## 📋 Lista todos los pods de Podman
 	podman pod ps
 
-pods-stats: ## 📊 Estadísticas de recursos de Podman
+pods-stats: podman-ready ## 📊 Estadísticas de recursos de Podman
 	podman stats --no-stream
 
-images-list: ## 🖼️ Lista todas las imágenes de Podman
+images-list: podman-ready ## 🖼️ Lista todas las imágenes de Podman
 	podman images
 
-system-info: ## ℹ️ Información del sistema Podman
+system-info: podman-ready ## ℹ️ Información del sistema Podman
 	podman system info
 
-podman-start: ## 🚀 Inicia la máquina virtual de Podman
+podman-start: podman-ready ## 🚀 Inicia la máquina virtual de Podman
 	podman machine start
 
-podman-machine-list: ## 📋 Lista todas las máquinas virtuales de Podman
+podman-machine-list: podman-ready ## 📋 Lista todas las máquinas virtuales de Podman
 	podman machine list
 
-podman-view-all: ## 👀 Ver todos los contenedores (activos e inactivos)
+podman-view-all: podman-ready ## 👀 Ver todos los contenedores (activos e inactivos)
 	podman ps -a
 
-podman-remove-all: ## 🗑️ Eliminar todos los contenedores
+podman-remove-all: podman-ready ## 🗑️ Eliminar todos los contenedores
 	podman rm --all --force
 
 #------------------------------------------------------------------------
 # 🧪 Product Service - Comandos específicos para desarrollo local
 #------------------------------------------------------------------------
-
-## 🧪 Testing del Product Service
+## (sin cambios funcionales aquí, se mantienen tal cual)
 test-product: ## 🧪 Ejecutar todos los tests del product-service
 	@echo "🧪 Ejecutando tests del product-service..."
 	cd ../product-service && ./gradlew test
@@ -551,59 +599,65 @@ test-integration-product: up-db ## 🧪 Tests de integración con BD real
 validate-pagination-feature: health-product test-pagination-endpoints ## ✅ Validar funcionalidad completa de paginación con filtros
 	@echo "✅ Validación de funcionalidad de paginación completada"
 
+print-services-local-supplier:
+	@COMPOSE_FILE="$(CURDIR)/docker-compose-podman.yml"; \
+    COMPOSE_PROFILES=infra,supplier,product \
+    $(RUN) podman compose -f $$COMPOSE_FILE --env-file "$(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)" \
+    	--profile infra --profile supplier --profile product \
+    	config --services
 #------------------------------------------------------------------------
 # 🆕 Nuevas funcionalidades agregadas
 #------------------------------------------------------------------------
 
 ## 📱 Monitoreo y debugging avanzado
-monitor-resources: ## 📊 Monitorear recursos del sistema en tiempo real
+monitor-resources: podman-ready ## 📊 Monitorear recursos del sistema en tiempo real
 	@echo "📊 Monitoreando recursos del sistema..."
 	podman stats --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}\t{{.BlockIO}}"
 
-debug-network: ## 🌐 Debugging de la red de contenedores
+debug-network: podman-ready ## 🌐 Debugging de la red de contenedores
 	@echo "🌐 Inspeccionando red de contenedores..."
 	podman network ls
 	@echo "\n📋 Detalles de la red por defecto:"
 	podman network inspect podman
 
-debug-volumes: ## 💾 Debugging de volúmenes de datos
+debug-volumes: podman-ready ## 💾 Debugging de volúmenes de datos
 	@echo "💾 Inspeccionando volúmenes..."
 	podman volume ls
 	@echo "\n📋 Detalles del volumen de datos:"
 	podman volume inspect inventoryms_product-data 2>/dev/null || echo "⚠️ Volumen no existe"
 
-debug-containers: ## 🔍 Debugging detallado de contenedores
+debug-containers: podman-ready ## 🔍 Debugging detallado de contenedores
 	@echo "🔍 Estado detallado de contenedores..."
 	podman ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}\t{{.Image}}"
 
 ## 🔧 Comandos de mantenimiento avanzado
-maintenance-full: ## 🛠️ Mantenimiento completo del sistema
+maintenance-full: podman-ready ## 🛠️ Mantenimiento completo del sistema
 	@echo "🛠️ Ejecutando mantenimiento completo..."
 	$(MAKE) stop-all
 	$(MAKE) clean-podman
 	podman system reset --force
 	@echo "✅ Mantenimiento completado"
 
-backup-volumes: ## 💾 Crear backup de volúmenes importantes
+backup-volumes: podman-ready ## 💾 Crear backup de volúmenes importantes
 	@echo "💾 Creando backup de volúmenes..."
 	@mkdir -p ./backups/$(shell date +%Y%m%d_%H%M%S)
 	podman run --rm -v inventoryms_product-data:/data -v ./backups:/backup alpine tar czf /backup/product-data-$(shell date +%Y%m%d_%H%M%S).tar.gz -C /data .
 	@echo "✅ Backup creado en ./backups/"
 
-restore-volumes: ## 🔄 Restaurar volúmenes desde backup (especificar BACKUP_FILE)
+restore-volumes: podman-ready ## 🔄 Restaurar volúmenes desde backup (especificar BACKUP_FILE)
 	@echo "🔄 Restaurando volúmenes desde backup: $(BACKUP_FILE)"
 	podman run --rm -v inventoryms_product-data:/data -v ./backups:/backup alpine tar xzf /backup/$(BACKUP_FILE) -C /data
 	@echo "✅ Volúmenes restaurados"
 
 ## 🚀 Despliegue y CI/CD helpers
-deploy-staging: ## 🎭 Desplegar en entorno de staging
+deploy-staging: podman-ready ## 🎭 Desplegar en entorno de staging
 	@echo "🎭 Desplegando en staging..."
 	$(MAKE) build-jars
 	$(MAKE) up-dev
 	$(MAKE) test-services
 	@echo "✅ Despliegue en staging completado"
 
-deploy-production: ## 🚀 Desplegar en entorno de producción
+deploy-production: podman-ready ## 🚀 Desplegar en entorno de producción
 	@echo "🚀 Desplegando en producción..."
 	$(MAKE) build-jars
 	$(MAKE) up-prod
@@ -636,7 +690,7 @@ load-test-basic: ## 🎯 Test de carga básico
 	wrk -t12 -c400 -d30s http://localhost:9090/api/v1/products
 
 ## 🔐 Seguridad y validación
-security-scan: ## 🔐 Escaneo de seguridad de imágenes
+security-scan: podman-ready ## 🔐 Escaneo de seguridad de imágenes
 	@echo "🔐 Escaneando imágenes en busca de vulnerabilidades..."
 	@command -v podman >/dev/null 2>&1 || { echo "❌ Podman no está disponible"; exit 1; }
 	@for image in inventory/discovery-service inventory/config-service inventory/api-gateway inventory/product-service; do \
@@ -644,7 +698,7 @@ security-scan: ## 🔐 Escaneo de seguridad de imágenes
 		podman run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image $$image || echo "⚠️ No se pudo escanear $$image"; \
 	done
 
-validate-configs: ## ✅ Validar archivos de configuración
+validate-configs: podman-ready ## ✅ Validar archivos de configuración
 	@echo "✅ Validando archivos de configuración..."
 	@echo "🔍 Validando docker-compose.yml..."
 	$(COMPOSE_LOCAL) config > /dev/null && echo "✅ docker-compose.yml válido" || echo "❌ docker-compose.yml inválido"
@@ -669,7 +723,7 @@ generate-reports: ## 📋 Generar reportes del proyecto
 	cd ../product-service && ./gradlew dependencyInsight --dependency org.springframework.boot > ../infrastructure/reports/$(shell date +%Y%m%d_%H%M%S)/dependencies.txt
 	@echo "✅ Reportes generados en ./reports/"
 
-system-info-full: ## ℹ️ Información completa del sistema
+system-info-full: podman-ready ## ℹ️ Información completa del sistema
 	@echo "ℹ️ Información completa del sistema:"
 	@echo "======================================"
 	@echo "🐳 Podman version:"
@@ -719,7 +773,7 @@ workflow-production: ## 🔄 Workflow de producción
 	@echo "✅ Workflow de producción completado"
 
 ## 🆘 Troubleshooting y diagnóstico
-troubleshoot-db: ## 🆘 Diagnóstico de problemas de base de datos
+troubleshoot-db: podman-ready ## 🆘 Diagnóstico de problemas de base de datos
 	@echo "🆘 Diagnosticando problemas de base de datos..."
 	@echo "🔍 Estado del contenedor de BD:"
 	podman ps -a --filter name=product-db
@@ -730,24 +784,24 @@ troubleshoot-db: ## 🆘 Diagnóstico de problemas de base de datos
 	@echo "\n🌐 Verificando conectividad:"
 	podman exec product-db pg_isready -U product 2>/dev/null && echo "✅ PostgreSQL respondiendo" || echo "❌ PostgreSQL no responde"
 
-troubleshoot-network: ## 🆘 Diagnóstico de problemas de red
+troubleshoot-network: podman-ready ## 🆘 Diagnóstico de problemas de red
 	@echo "🆘 Diagnosticando problemas de red..."
 	@echo "🌐 Redes disponibles:"
 	podman network ls
 	@echo "\n🔌 Conectividad entre contenedores:"
 	@for service in discovery-service config-service api-gateway product-service; do \
-		echo "🧪 Probando $service..."; \
-		podman exec product-service ping -c 1 $service 2>/dev/null && echo "✅ $service accesible" || echo "❌ $service no accesible"; \
+		echo "🧪 Probando $${service}..."; \
+		podman exec product-service ping -c 1 $${service} 2>/dev/null && echo "✅ $${service} accesible" || echo "❌ $${service} no accesible"; \
 	done
 
-troubleshoot-services: ## 🆘 Diagnóstico de problemas de servicios
+troubleshoot-services: podman-ready ## 🆘 Diagnóstico de problemas de servicios
 	@echo "🆘 Diagnosticando problemas de servicios..."
 	@echo "📊 Estado de servicios:"
 	$(MAKE) status
 	@echo "\n🧪 Health checks:"
 	$(MAKE) test-services
 	@echo "\n📋 Logs de errores recientes:"
-	podman-compose logs --tail 10 | grep -i error || echo "ℹ️ No se encontraron errores recientes"
+	$(RUN) podman compose logs --tail 10 | grep -i error || echo "ℹ️ No se encontraron errores recientes"
 
 fix-common-issues: ## 🔧 Solucionar problemas comunes
 	@echo "🔧 Solucionando problemas comunes..."
@@ -791,7 +845,7 @@ devops-setup: ## ⚙️ Configuración para DevOps
 	@echo "✅ Entorno DevOps configurado"
 
 ## 📊 Métricas y monitoreo
-collect-metrics: ## 📊 Recopilar métricas del sistema
+collect-metrics: podman-ready ## 📊 Recopilar métricas del sistema
 	@echo "📊 Recopilando métricas del sistema..."
 	@mkdir -p ./metrics/$(shell date +%Y%m%d_%H%M%S)
 	@echo "📈 Métricas de contenedores:" > ./metrics/$(shell date +%Y%m%d_%H%M%S)/container_stats.txt
@@ -933,7 +987,7 @@ help: ## 📖 Mostrar esta ayuda
 	@echo "🔍 CATEGORÍAS PRINCIPALES:"
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "  %-25s %s\n", $1, $2}' | \
+		awk 'BEGIN {FS = ":.*?## "}; {printf "  %-25s %s\n", $$1, $$2}' | \
 		grep -E "(🔽|🔁|♻️|🔍|📊|🧪|🚀|🔨|✅|🛠️|🎯|📊|🔄|🆘|📱|🔐|📋)" | \
 		head -20
 	@echo ""
@@ -941,7 +995,7 @@ help: ## 📖 Mostrar esta ayuda
 
 help-supplier: ## 📖 Comandos de supplier-service
 	@echo "supplier-service:"
-	@echo "  make up-supplier              - Levantar perfil supplier (docker-compose)"
+	@echo "  make up-supplier              - Levantar perfil supplier (compose)"
 	@echo "  make rebuild-supplier-local   - Rebuild + up (local)"
 	@echo "  make run-supplier-local       - Ejecutar sin contenedor (perfil local)"
 	@echo "  make test-supplier            - Ejecutar tests"
@@ -949,20 +1003,20 @@ help-supplier: ## 📖 Comandos de supplier-service
 
 help-purchase: ## 📖 Comandos de purchase-service
 	@echo "purchase-service:"
-	@echo "  make up-purchase              - Levantar perfil purchase (docker-compose)"
+	@echo "  make up-purchase              - Levantar perfil purchase (compose)"
 	@echo "  make rebuild-purchase-local   - Rebuild + up (local)"
 	@echo "  make run-purchase-local       - Ejecutar sin contenedor (perfil local)"
 	@echo "  make test-purchase            - Ejecutar tests"
 	@echo "  make health-purchase          - Ver health"
 
-fix-container-orphans: ## 🛠️ Limpia contenedores huérfanos del proyecto
+fix-container-orphans: podman-ready ## 🛠️ Limpia contenedores huérfanos del proyecto
 	@echo "🧹 Eliminando contenedores huérfanos (compose project: $(COMPOSE_PROJECT_NAME))..."
 	$(COMPOSE_LOCAL)  down -v --remove-orphans 2>/dev/null || true
 	$(COMPOSE_DEV)    down -v --remove-orphans 2>/dev/null || true
 	$(COMPOSE_PROD)   down -v --remove-orphans 2>/dev/null || true
 	@echo "🗑️  Pruning de recursos no usados..."
-	podman rm -af || true
-	podman system prune -af --volumes || true
+	$(RUN) podman rm -af || true
+	$(RUN) podman system prune -af --volumes || true
 	@echo "✅ Limpieza de huérfanos completada"
 
 help-all: ## 📖 Mostrar todos los comandos disponibles en el Makefile
@@ -971,16 +1025,16 @@ help-all: ## 📖 Mostrar todos los comandos disponibles en el Makefile
 	@grep -E '^[a-zA-Z0-9_.-]+:.*## ' $(MAKEFILE_LIST) | \
 	  awk -F ':.*## ' '{ printf "  %-35s %s\n", $$1, $$2 }' | sort
 
-up-supplier: ## 🚀 Levanta sólo la BD y el supplier-service
+up-supplier: podman-ready ## 🚀 Levanta sólo la BD y el supplier-service
 	$(COMPOSE_LOCAL) --profile supplier up -d --build supplier-db supplier-service
 
-logs-supplier: ## 📜 Logs de supplier-service
+logs-supplier: podman-ready ## 📜 Logs de supplier-service
 	$(COMPOSE_LOCAL) --profile supplier logs -f supplier-service
 
-status-supplier: ## 📊 Estado de servicios del perfil supplier
+status-supplier: podman-ready ## 📊 Estado de servicios del perfil supplier
 	$(COMPOSE_LOCAL) --profile supplier ps
 
-up-ms: fix-container-orphans ## 🚀 Infra + supplier + purchase (sin product)
+up-ms: podman-ready fix-container-orphans ## 🚀 Infra + supplier + purchase (sin product)
 	@echo "🧹 Copiando variables de entorno..."
 	cp $(ENV_FILE_LOCAL) .env.override
 	@echo "🔨 Construyendo JARs necesarios..."
@@ -990,7 +1044,23 @@ up-ms: fix-container-orphans ## 🚀 Infra + supplier + purchase (sin product)
 
 # --- target con check corregido ---
 
-
+#------------------------------------------------------------------------
+# 🍎 macOS: Sincronización de Podman Desktop
+#------------------------------------------------------------------------
+sync-podman-desktop: ## 🍎 Sincroniza Podman Desktop en macOS (usa podman-machine-default)
+	@echo "🔄 Sincronizando Podman Desktop en macOS..."
+	@echo ""
+	@echo "📋 Conexiones disponibles:"
+	podman system connection list
+	@echo ""
+	@echo "🔗 Cambiando a conexión de Podman Desktop (podman-machine-default)..."
+	podman system connection default podman-machine-default
+	@echo ""
+	@echo "✅ Verificando contenedores..."
+	podman ps
+	@echo ""
+	@echo "📌 Los contenedores deberían aparecer en Podman Desktop ahora"
+	@echo "💡 Si no ves nada, reinicia Podman Desktop completamente"
 
 .PHONY: help help-product help-workflows help-troubleshooting \
         up-local down-local up-dev up-prod up-db \
@@ -1010,5 +1080,5 @@ up-ms: fix-container-orphans ## 🚀 Infra + supplier + purchase (sin product)
         deploy-staging deploy-production pre-commit-checks benchmark-endpoints load-test-basic security-scan validate-configs \
         generate-reports system-info-full workflow-dev workflow-ci workflow-production troubleshoot-db troubleshoot-network troubleshoot-services \
         fix-common-issues dev-setup qa-setup devops-setup collect-metrics health-check-all auto-restart daily-maintenance \
-        quick-start quick-test quick-deploy quick-stop fix-orphans fix-container-orphans \
+        quick-start quick-test quick-deploy quick-stop fix-orphans fix-container-orphans compose-provider sync-podman-desktop \
         up-% down-% logs-%
