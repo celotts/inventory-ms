@@ -4,7 +4,10 @@ server:
 spring:
   application:
     name: product-service
-
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
