@@ -3,69 +3,58 @@ plugins {
     id 'org.springframework.boot' version '3.4.5'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'jacoco'
+    id 'com.github.ben-manes.versions' version '0.51.0'   // auditoría de versiones
 }
 
 group = 'com.celotts'
 version = '0.0.1-SNAPSHOT'
 
-jacoco {
-    toolVersion = "0.8.11"
-}
+jacoco { toolVersion = "0.8.11" }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
 
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
-}
+configurations { compileOnly { extendsFrom annotationProcessor } }
 
-repositories {
-    mavenCentral()
-}
+repositories { mavenCentral() }
 
 ext {
     set('springCloudVersion', "2024.0.1")
+    set('postgresDriverVersion', "42.7.8")
+    set('h2Version', "2.4.240")
+    set('lombokVersion', "1.18.42")
+    set('mapstructVersion', "1.6.3")
+    set('testcontainersBom', "1.21.3")
 }
 
 dependencies {
-    // Jackson (anotaciones donde vive JsonInclude)
-    implementation 'com.fasterxml.jackson.core:jackson-annotations'
-
-    // Web / JPA / Security / Actuator
+    // Web / JPA / Security / Actuator / Validation
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-security'   // quítalo si no lo usas aún
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
-    // Validación
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-    // Spring Cloud
+    // Spring Cloud (Config + Eureka)
     implementation 'org.springframework.cloud:spring-cloud-starter-config'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 
-    // OpenAPI
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
+    // OpenAPI (estable)
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
 
     // DB
-    runtimeOnly 'org.postgresql:postgresql'
-    testImplementation 'com.h2database:h2'
+    runtimeOnly "org.postgresql:postgresql:${postgresDriverVersion}"
+    testImplementation "com.h2database:h2:${h2Version}"
 
     // Lombok
-    compileOnly 'org.projectlombok:lombok:1.18.34'
-    annotationProcessor 'org.projectlombok:lombok:1.18.34'
-    testCompileOnly 'org.projectlombok:lombok:1.18.34'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
+    testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
     // MapStruct
-    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
-    testAnnotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+    testAnnotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
     // Dev
@@ -73,21 +62,18 @@ dependencies {
 
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-
-    // ✅ Testcontainers 1.20.x vía BOM
-    testImplementation platform('org.testcontainers:testcontainers-bom:1.20.2')
+    testImplementation platform("org.testcontainers:testcontainers-bom:${testcontainersBom}")
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
 
-    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
-
-    testImplementation 'org.mockito:mockito-core'
-    testImplementation 'org.mockito:mockito-junit-jupiter'
+    // Mockito / Security Test
+    testImplementation 'org.mockito:mockito-core:5.20.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.20.0'
     testImplementation 'org.mockito:mockito-inline:5.2.0'
     testImplementation 'org.springframework.security:spring-security-test'
 
-
-
+    // Configuration processor
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 }
 
 dependencyManagement {
@@ -99,18 +85,13 @@ dependencyManagement {
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
+    testLogging {
+        events = ["FAILED", "SKIPPED"]
+        exceptionFormat = "full"
+        showStandardStreams = false
+    }
 }
 
-bootJar {
-    archiveFileName = 'product-service-0.0.1-SNAPSHOT.jar'
-}
-
-compileJava {
-    options.compilerArgs += [
-            '-Amapstruct.defaultComponentModel=spring',
-            '-Amapstruct.unmappedTargetPolicy=IGNORE'
-    ]
-}
 jacocoTestReport {
     dependsOn test
     reports {
@@ -125,11 +106,24 @@ jacocoTestReport {
 jacocoTestCoverageVerification {
     violationRules {
         rule {
-            limit {
-                minimum = 0.0 // Por ejemplo: exige 80% cobertura
-            }
+            limit { minimum = 0.0 } // súbelo a 0.80 cuando agregues pruebas
         }
     }
+}
+
+springBoot {
+    mainClass = 'com.celotts.productservice.ProductServiceApplication'
+}
+
+bootJar {
+    archiveFileName = 'product-service-0.0.1-SNAPSHOT.jar'
+}
+
+compileJava {
+    options.compilerArgs += [
+            '-Amapstruct.defaultComponentModel=spring',
+            '-Amapstruct.unmappedTargetPolicy=IGNORE'
+    ]
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -139,8 +133,24 @@ tasks.withType(JavaCompile).configureEach {
     ]
 }
 
+tasks.withType(Jar).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+dependencyUpdates {
+    revision = 'release'
+    checkConstraints = true
+    rejectVersionIf {
+        def pre = ['alpha','beta','rc','m','preview','cr','snapshot']
+        pre.any { q -> it.candidate.version ==~ /(?i).*[.\-]${q}[.\d]*/ }
+    }
+    outputFormatter = 'json,html,plain'
+    outputDir = 'build/dependencyUpdates'
+    reportfileName = 'report'
+}
+
 // TEMP: deshabilitar tests y cobertura mientras refactorizas
 //tasks.named('test') { enabled = false }
 //tasks.named('jacocoTestReport') { enabled = false }
 //tasks.named('jacocoTestCoverageVerification') { enabled = false }
-
