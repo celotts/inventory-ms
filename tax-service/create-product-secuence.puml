@@ -1,0 +1,46 @@
+@startuml
+!theme plain
+skinparam linetype ortho
+actor Cliente
+participant "ProductController" as Controller
+participant "ProductRequestMapper" as RequestMapper
+participant "ProductService" as Service
+participant "ProductRepositoryPort" as Port
+participant "ProductRepositoryAdapter" as Adapter
+participant "ProductEntityMapper" as EntityMapper
+participant "ProductJpaRepository" as JpaRepo
+participant "AuditListener" as Audit
+database "PostgreSQL DB" as DB
+participant "ProductResponseMapper" as ResponseMapper
+
+== Inicio del flujo de creación ==
+Cliente -> Controller : POST /api/v1/products\ncon JSON (ProductRequestDTO)
+Controller -> RequestMapper : toModel(dto)
+RequestMapper --> Controller : ProductModel
+
+Controller -> Service : create(ProductModel)
+Service -> Port : create(ProductModel)
+
+Port -> Adapter : create(ProductModel)
+Adapter -> EntityMapper : toEntity(ProductModel)
+EntityMapper --> Adapter : ProductEntity
+
+Adapter -> JpaRepo : save(ProductEntity)
+activate Audit
+JpaRepo -> Audit : @PrePersist
+Audit -> ProductEntity : set createdAt,\ncreatedBy, etc.
+deactivate Audit
+
+JpaRepo -> DB : INSERT INTO product (...)
+DB --> JpaRepo : Producto persistido
+JpaRepo --> Adapter : ProductEntity
+
+Adapter -> EntityMapper : toModel(ProductEntity)
+EntityMapper --> Adapter : ProductModel
+Adapter --> Service : ProductModel
+Service -> ResponseMapper : toResponse(ProductModel)
+ResponseMapper --> Service : ProductResponseDTO
+
+Service --> Controller : ProductResponseDTO
+Controller --> Cliente : 201 Created\ncon ProductResponseDTO
+@enduml
