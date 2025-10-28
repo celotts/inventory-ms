@@ -1,9 +1,9 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.5.7'                   // 🔼 actualizado
-    id 'io.spring.dependency-management' version '1.1.7'            // 🔼 nuevo patch
+    id 'org.springframework.boot' version '3.4.5'
+    id 'io.spring.dependency-management' version '1.1.7'
     id 'jacoco'
-    id 'com.github.ben-manes.versions' version '0.53.0'             // 🔼 actualizado
+    id 'com.github.ben-manes.versions' version '0.53.0'
 }
 
 group = 'com.celotts'
@@ -18,12 +18,22 @@ configurations { compileOnly { extendsFrom annotationProcessor } }
 repositories { mavenCentral() }
 
 ext {
-    set('springCloudVersion', "2024.0.2")       // 🔼 nuevo release train (compañero de Boot 3.5.x)
+    set('springCloudVersion', "2024.0.2")
     set('postgresDriverVersion', "42.7.8")
     set('h2Version', "2.4.240")
     set('lombokVersion', "1.18.42")
     set('mapstructVersion', "1.6.3")
     set('testcontainersBom', "1.21.3")
+}
+
+sourceSets {
+    main {
+        java {
+            exclude 'com/celotts/supplierservice/infrastructure/config/SecurityConfig.java'
+            exclude 'com/celotts/supplierservice/infrastructure/config/JpaAuditingConfig.java'
+            exclude 'com/celotts/supplierservice/infrastructure/common/jpa/AuditListener.java'
+        }
+    }
 }
 
 dependencies {
@@ -33,17 +43,18 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-    // 🔒 Security (solo si lo necesitas)
-    implementation 'org.springframework.boot:spring-boot-starter-security'
+    // 🔒 Security (habilítalo solo si lo necesitas)
+    // implementation 'org.springframework.boot:spring-boot-starter-security'
 
     // ☁️ Spring Cloud
     implementation 'org.springframework.cloud:spring-cloud-starter-config'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
-    implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.3.0'  // 🔼
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3'
+    implementation 'io.github.resilience4j:resilience4j-rxjava3'
 
     // 📘 OpenAPI
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13' // 🔼
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
 
     // 🗄️ Base de datos
     runtimeOnly "org.postgresql:postgresql:${postgresDriverVersion}"
@@ -74,20 +85,22 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:5.20.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.20.0'
     testImplementation 'org.mockito:mockito-inline:5.2.0'
-    testImplementation 'org.springframework.security:spring-security-test:6.5.6'
+    // testImplementation 'org.springframework.security:spring-security-test:6.5.6'
 
     // 🛠️ Configuration processor
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 }
 
 dependencyManagement {
-    imports { mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}" }
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        mavenBom "io.github.resilience4j:resilience4j-bom:2.3.0" // ✅ alineado con spring-cloud 2024.0.2
+    }
 }
 
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
-
     testLogging {
         events = ["FAILED", "SKIPPED"]
         exceptionFormat = "full"
@@ -147,8 +160,3 @@ dependencyUpdates {
     outputDir = 'build/dependencyUpdates'
     reportfileName = 'report'
 }
-
-// 🧪 Deshabilitar tests temporalmente
-// tasks.named('test') { enabled = false }
-// tasks.named('jacocoTestReport') { enabled = false }
-// tasks.named('jacocoTestCoverageVerification') { enabled = false }

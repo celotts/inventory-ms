@@ -8,8 +8,8 @@ spring:
     fallback-to-system-locale: false
   application:
     name: product-service
-  security:
-    enabled: false
+  #security:
+  #  enabled: false
 
   # H2 Database
   datasource:
