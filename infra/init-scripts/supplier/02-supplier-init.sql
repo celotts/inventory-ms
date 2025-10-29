@@ -343,18 +343,32 @@ GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO supplier;
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE EXTENSION IF NOT EXISTS unaccent;
 
+-- 🔒 Crea una versión inmutable de unaccent para usarla en índices
+CREATE OR REPLACE FUNCTION immutable_unaccent(text)
+RETURNS text
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+AS $$
+  SELECT public.unaccent('public.unaccent', $1)
+$$;
+
+-- ============================================
+-- Índices trigram corregidos (usan immutable_unaccent)
+-- ============================================
+
 -- Proveedor
 CREATE INDEX IF NOT EXISTS idx_supplier_name_trgm
-  ON supplier USING gin (unaccent(lower(name)) gin_trgm_ops);
+  ON supplier USING gin (immutable_unaccent(lower(name)) gin_trgm_ops);
 
 CREATE INDEX IF NOT EXISTS idx_supplier_code_trgm
-  ON supplier USING gin (unaccent(lower(code)) gin_trgm_ops);
+  ON supplier USING gin (immutable_unaccent(lower(code)) gin_trgm_ops);
 
 CREATE INDEX IF NOT EXISTS idx_supplier_email_trgm
-  ON supplier USING gin (unaccent(lower(email)) gin_trgm_ops);
+  ON supplier USING gin (immutable_unaccent(lower(email)) gin_trgm_ops);
 
 CREATE INDEX IF NOT EXISTS idx_supplier_address_trgm
-  ON supplier USING gin (unaccent(lower(address)) gin_trgm_ops);
+  ON supplier USING gin (immutable_unaccent(lower(address)) gin_trgm_ops);
 
 -- (Opcional) Si filtras mucho por enabled y ordenas por name
 CREATE INDEX IF NOT EXISTS idx_supplier_enabled_name
@@ -362,4 +376,4 @@ CREATE INDEX IF NOT EXISTS idx_supplier_enabled_name
 
 -- Compras: si buscas mucho por order_number “contiene”
 CREATE INDEX IF NOT EXISTS idx_purchase_order_number_trgm
-  ON purchase_order USING gin (unaccent(lower(order_number)) gin_trgm_ops);
+  ON purchase_order USING gin (immutable_unaccent(lower(order_number)) gin_trgm_ops);

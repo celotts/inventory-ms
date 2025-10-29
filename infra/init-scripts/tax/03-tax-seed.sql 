@@ -1,0 +1,6 @@
+\connect tax
+INSERT INTO tax (code, name, rate, valid_from, is_active)
+VALUES
+  ('IVA16', 'IVA 16% MX', 16.00, CURRENT_DATE, TRUE),
+  ('IVA08', 'IVA 8% Zona Frontera', 8.00, CURRENT_DATE, TRUE)
+ON CONFLICT (code) DO NOTHING;
