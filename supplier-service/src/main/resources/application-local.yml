@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: product-service
+    name: supplier-service
   messages:
     basename: messages
     encoding: UTF-8
@@ -15,9 +15,9 @@ spring:
 
   # ✅ PostgreSQL para desarrollo local en Docker
   datasource:
-    url: jdbc:postgresql://localhost:5432/product
-    username: product
-    password: product123
+    url: jdbc:postgresql://localhost:5432/supplier
+    username: supplier
+    password: supplier123
     driver-class-name: org.postgresql.Driver
 
     hikari:
@@ -64,6 +64,7 @@ app:
     default-direction: desc
   cors:
     allowed-origin: "*"
+
 management:
   endpoints:
     web:
