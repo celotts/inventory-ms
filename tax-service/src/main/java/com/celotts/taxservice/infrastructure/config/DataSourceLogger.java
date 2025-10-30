@@ -3,8 +3,7 @@ package com.celotts.taxservice.infrastructure.config;
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
@@ -14,18 +13,27 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.util.Locale;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DataSourceLogger {
 
-    private static final Logger log = LoggerFactory.getLogger(DataSourceLogger.class);
-
     private final DataSource dataSource;
     private final MessageSource messageSource;
 
+    /** Traduce con fallback: si no existe la clave, devuelve la propia clave. */
     private String t(String code, Object... args) {
-        Locale locale = LocaleContextHolder.getLocale(); // en @PostConstruct usará el default (p.ej., es_MX)
-        return messageSource.getMessage(code, args, locale);
+        Locale locale = LocaleContextHolder.getLocale();
+        return messageSource.getMessage(code, args, code, locale); // <-- fallback=code
+    }
+
+    /** Traducción ultra-segura para usar dentro de catch (no depende de MessageSource). */
+    private String safe(String code, Object... args) {
+        try {
+            return t(code, args);
+        } catch (Exception e) {
+            return code; // último recurso
+        }
     }
 
     @PostConstruct
@@ -35,7 +43,7 @@ public class DataSourceLogger {
 
             String sep = "──────────────────────────────";
             log.info(sep);
-            log.info("{}", t("log.ds.section.db"));     // 📦 Database Connection Details / 📦 Detalles de Conexión a BD
+            log.info("{}", t("log.ds.section.db"));
             log.info(sep);
 
             log.info("{}: {}", t("log.ds.product"), md.getDatabaseProductName());
@@ -46,7 +54,7 @@ public class DataSourceLogger {
 
             if (dataSource instanceof HikariDataSource hikari) {
                 log.info(sep);
-                log.info("{}", t("log.ds.section.hikari")); // 💧 HikariCP Configuration / 💧 Configuración HikariCP
+                log.info("{}", t("log.ds.section.hikari"));
                 log.info(sep);
 
                 log.info("{}: {}", t("log.ds.poolName"), hikari.getPoolName());
@@ -56,9 +64,9 @@ public class DataSourceLogger {
             }
 
             log.info(sep);
-
         } catch (Exception e) {
-            log.warn("{}: {}", t("log.ds.error"), e.getMessage(), e);
+            // ¡Nunca vuelvas a llamar a t(...) directo si falta el bundle!
+            log.warn("{}: {}", safe("log.ds.error"), e.getMessage(), e);
         }
     }
 

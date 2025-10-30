@@ -1,16 +1,22 @@
+# ---- stage 1: traer curl binario sin apt ----
+FROM curlimages/curl:8.10.1 AS curlbin
+
+# ---- stage 2: runtime Java con bash (Ubuntu/Jammy) ----
 FROM eclipse-temurin:21-jre-jammy
 
-RUN apt-get update \
- && apt-get install -y bash curl \
- && rm -rf /var/lib/apt/lists/*
+# Locale básico (opcional, útil para logs)
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
 WORKDIR /app
 
-COPY wait-for-it.sh entrypoint.sh ./
-RUN chmod +x wait-for-it.sh entrypoint.sh
+# Copiamos curl y certificados al runtime (sin apt)
+COPY --from=curlbin /usr/bin/curl /usr/bin/curl
+COPY --from=curlbin /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
-# Copia el jar sin “clavar” el nombre
-COPY build/libs/*.jar app.jar
+# Copiamos app y scripts
+COPY build/libs/*.jar /app/app.jar
+COPY entrypoint.sh wait-for-it.sh /app/
+RUN chmod +x /app/entrypoint.sh /app/wait-for-it.sh
 
 EXPOSE 9092
-ENTRYPOINT ["bash", "entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint.sh"]
