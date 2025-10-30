@@ -267,11 +267,14 @@ rebuild-purchase-local: podman-ready ## 🔁 Rebuild purchase-service (local)
 
 help-tax: ## 📖 Comandos de tax-service
 	@echo "tax-service:"
-	@echo "  make up-tax                 - Levantar perfil tax (compose)"
-	@echo "  make rebuild-tax-local      - Rebuild + up (local)"
-	@echo "  make run-tax-local          - Ejecutar sin contenedor (perfil local)"
-	@echo "  make test-tax               - Ejecutar tests"
-	@echo "  make health-tax             - Ver health"
+	@echo "  make up-tax                      - Levantar perfil tax (compose)"
+	@echo "  make rebuild-tax-local           - Rebuild + up (local)"
+	@echo "  make run-tax-local               - Ejecutar sin contenedor (perfil local)"
+	@echo "  make test-tax                    - Ejecutar tests"
+	@echo "  make health-tax                  - Ver health"
+	@echo "  make tax-jar                     - Construir sólo el JAR de tax"
+	@echo "  make tax-verify                  - Verifica tablas/seed en tax-db"
+	@echo "  make tax-doctor                  - Diagnóstico rápido (i18n + compose + módulo)"
 
 test-tax: ## 🧪 Tests tax-service
 	cd ../tax-service && ./gradlew test

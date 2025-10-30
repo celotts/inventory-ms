@@ -168,6 +168,7 @@ services:
     volumes:
       - supplier-data:/var/lib/postgresql/data
       - ./init-scripts/supplier/02-supplier-init.sql:/docker-entrypoint-initdb.d/02-supplier-init.sql:ro
+
     networks:
       - inventory-network
 
@@ -268,17 +269,16 @@ services:
       LC_ALL: C.UTF-8
     ports:
       - "${TAX_DB_PORT:-5435}:5432"
-    healthcheck:
-      test: [ "CMD-SHELL","pg_isready -U ${TAX_DB_USERNAME:-tax} -d ${TAX_DB_NAME:-tax}" ]
-      interval: ${INTERVAL10S:-10s}
-      timeout: ${TIMEOUT5S:-5s}
-      retries: ${RETRIES5:-5}
-      start_period: 30s
     volumes:
       - tax-data:/var/lib/postgresql/data
-      - ./init-scripts/tax:/docker-entrypoint-initdb.d:ro   # ⬅️ carpeta completa
-    networks:
-      - inventory-network
+      - ./init-scripts/tax/01-tax-init.sql:/docker-entrypoint-initdb.d/01-tax-init.sql:ro
+    healthcheck:
+      test: [ "CMD-SHELL","pg_isready -U ${TAX_DB_USERNAME:-tax} -d ${TAX_DB_NAME:-tax}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks: [ inventory-network ]
 
   tax-service:
     profiles: [ "tax" ]
@@ -291,15 +291,18 @@ services:
     ports:
       - "${PORT9092:-9092}:9092"
     environment:
+      - SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING=true
       - SPRING_APPLICATION_NAME=tax-service
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - JAVA_OPTS=${JAVA_OPTS}
+      - SPRING_MESSAGES_BASENAME=messages
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
       # Datasource
       - SPRING_DATASOURCE_URL=jdbc:postgresql://tax-db:5432/${TAX_DB_NAME:-tax}
       - SPRING_DATASOURCE_USERNAME=${TAX_DB_USERNAME:-tax}
       - SPRING_DATASOURCE_PASSWORD=${TAX_DB_PASSWORD:-tax123}
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - SPRING_DATASOURCE_HIKARI_POOL_NAME=HikariPool-TaxService
       - WAIT_FOR=discovery-service:8761,config-service:7777,tax-db:5432
       - WAIT_TIMEOUT=40
       # Eureka
