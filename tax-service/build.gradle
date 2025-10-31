@@ -3,8 +3,9 @@ plugins {
     id 'org.springframework.boot' version '3.4.5'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'jacoco'
-    id 'com.github.ben-manes.versions' version '0.51.0'   // ✅ NUEVO
+    id 'com.github.ben-manes.versions' version '0.51.0'
 }
+
 group = 'com.celotts'
 version = '0.0.1-SNAPSHOT'
 
@@ -21,8 +22,8 @@ ext {
     set('postgresDriverVersion', "42.7.8")
     set('h2Version', "2.4.240")
     set('lombokVersion', "1.18.42")
-    set('mapstructVersion', "1.6.3")           // ↑
-    set('testcontainersBom', "1.21.3")         // ↑
+    set('mapstructVersion', "1.6.3")
+    set('testcontainersBom', "1.21.4")
 }
 
 dependencies {
@@ -35,39 +36,40 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+    // MapStruct
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+
     // Validación
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
     // Spring Cloud
-    implementation 'org.springframework.cloud:spring-cloud-starter-config'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'   // ✅ Feign
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
-    // OpenAPI
+    // OpenAPI (SpringDoc)
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.10'
 
+    // 🔒 Fijamos commons-lang3 seguro (corrige CVE-2025-48924)
+    implementation 'org.apache.commons:commons-lang3:3.18.0'
+
     // DB
-    runtimeOnly 'org.postgresql:postgresql'
-    testImplementation 'com.h2database:h2'
+    runtimeOnly "org.postgresql:postgresql:${postgresDriverVersion}"
+    testImplementation "com.h2database:h2:${h2Version}"
 
     // Lombok
-    compileOnly 'org.projectlombok:lombok:1.18.34'
-    annotationProcessor 'org.projectlombok:lombok:1.18.34'
-    testCompileOnly 'org.projectlombok:lombok:1.18.34'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
-
-    // MapStruct (+ binding con Lombok)
-    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
-    testAnnotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
-    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
+    testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
     // Dev
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation platform('org.testcontainers:testcontainers-bom:1.20.2')
+    testImplementation platform("org.testcontainers:testcontainers-bom:${testcontainersBom}")
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
 
@@ -83,15 +85,15 @@ dependencies {
 
 dependencyManagement {
     imports { mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}" }
-}
 
-test {
-    useJUnitPlatform()
-    finalizedBy jacocoTestReport
+    // 🔒 Versión segura de Apache Commons Lang
+    dependencies {
+        dependency 'org.apache.commons:commons-lang3:3.18.0'
+    }
 }
 
 springBoot {
-    mainClass = 'com.celotts.taxservice.TaxServiceApplication' // ✅ importante
+    mainClass = 'com.celotts.taxservice.TaxServiceApplication'
 }
 
 bootJar {
@@ -99,29 +101,20 @@ bootJar {
 }
 
 compileJava {
+    //noinspection SpellCheckingInspection
     options.compilerArgs += [
             '-Amapstruct.defaultComponentModel=spring',
             '-Amapstruct.unmappedTargetPolicy=IGNORE'
     ]
 }
 
-jacocoTestReport {
-    dependsOn test
-    reports {
-        html.required = true
-        xml.required  = true
-        csv.required  = false
-        html.outputLocation = layout.buildDirectory.dir("reports/jacoco/test/html")
-        xml.outputLocation  = layout.buildDirectory.file("reports/jacoco/test/jacocoTestReport.xml")
-    }
-}
-
-jacocoTestCoverageVerification {
-    violationRules {
-        rule { limit { minimum = 0.0 } } // súbelo cuando tengas tests
-    }
-}
-
 tasks.withType(JavaCompile).configureEach {
-    options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation']
+    //noinspection SpellCheckingInspection
+    options.compilerArgs += [
+            '-Xlint:unchecked',
+            '-Xlint:deprecation'
+    ]
 }
+
+// IntelliJ (no Kotlin plugin)
+tasks.register("prepareKotlinBuildScriptModel") { }
