@@ -5,6 +5,8 @@ import com.celotts.productservice.domain.port.input.product.ProductCategoryUseCa
 import com.celotts.productservice.domain.port.output.product.ProductCategoryRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productcategory.ProductCategoryCreateDto; // <-- IMPORTA EL DTO
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +19,7 @@ import java.util.UUID;
 public class ProductCategoryUseCaseImpl implements ProductCategoryUseCase {
 
     private final ProductCategoryRepositoryPort repo;
-
+    private final MessageSource messageSource; // ✅ inyección para i18n
     // === Nuevo: satisface la firma de la interfaz que recibe DTO ===
     public ProductCategoryModel assignCategoryToProduct(ProductCategoryCreateDto dto) {
         // map DTO -> Model (sin depender del mapper REST)
@@ -34,7 +36,12 @@ public class ProductCategoryUseCaseImpl implements ProductCategoryUseCase {
     public ProductCategoryModel assignCategoryToProduct(ProductCategoryModel dtoModel) {
         // Evitar duplicado activo (ajusta si tu repo no tiene este método)
         if (repo.existsByProductIdAndCategoryIdAndEnabledTrue(dtoModel.getProductId(), dtoModel.getCategoryId())) {
-            throw new IllegalArgumentException("Change text from Spanish to English");
+            String msg = messageSource.getMessage(
+                    "app.change.language",   // clave del mensaje
+                    null,                    // sin argumentos
+                    LocaleContextHolder.getLocale()
+            );
+            throw new IllegalArgumentException(msg);
         }
 
         var now = LocalDateTime.now();
@@ -52,7 +59,14 @@ public class ProductCategoryUseCaseImpl implements ProductCategoryUseCase {
     @Transactional(readOnly = true)
     public ProductCategoryModel getById(UUID id) {
         return repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("ProductCategory not found: " + id));
+                .orElseThrow(() -> {
+                    String msg = messageSource.getMessage(
+                            "productcategory.not-found",  // 🔑 clave i18n
+                            new Object[]{id},             // reemplaza {0} con el UUID
+                            LocaleContextHolder.getLocale()
+                    );
+                    return new IllegalArgumentException(msg);
+                });
     }
 
     @Override
