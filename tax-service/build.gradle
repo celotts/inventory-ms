@@ -3,7 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.4.5'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'jacoco'
-    id 'com.github.ben-manes.versions' version '0.51.0'
+    id 'com.github.ben-manes.versions' version '0.53.0'
 }
 
 group = 'com.celotts'
@@ -18,75 +18,74 @@ configurations { compileOnly { extendsFrom annotationProcessor } }
 repositories { mavenCentral() }
 
 ext {
-    set('springCloudVersion', "2024.0.1")
+    set('springCloudVersion', "2024.0.2")
     set('postgresDriverVersion', "42.7.8")
     set('h2Version', "2.4.240")
     set('lombokVersion', "1.18.42")
     set('mapstructVersion', "1.6.3")
-    set('testcontainersBom', "1.21.4")
+    set('testcontainersBom', "1.21.3")
 }
 
 dependencies {
-    // Jackson
-    implementation 'com.fasterxml.jackson.core:jackson-annotations'
-
-    // Web / JPA / Security / Actuator
+    // 🌐 Core Spring Boot
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
-    // MapStruct
-    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
-    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
-    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
-
-    // Validación
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-    // Spring Cloud
+    // 🔒 Security (si lo necesitas)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // ☁️ Spring Cloud
+    implementation 'org.springframework.cloud:spring-cloud-starter-config'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3'
 
-    // OpenAPI (SpringDoc)
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.10'
+    // 📘 OpenAPI
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
 
-    // 🔒 Fijamos commons-lang3 seguro (corrige CVE-2025-48924)
+    // 🧩 Commons Lang actualizado (corrige CVE)
     implementation 'org.apache.commons:commons-lang3:3.18.0'
 
-    // DB
+    // 🗄️ Base de datos
     runtimeOnly "org.postgresql:postgresql:${postgresDriverVersion}"
     testImplementation "com.h2database:h2:${h2Version}"
 
-    // Lombok
+    // 🧩 Lombok
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
     testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
     testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
-    // Dev
+    // 🔁 MapStruct
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+
+    // ⚙️ DevTools
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
-    // Testing
+    // 🧪 Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation platform("org.testcontainers:testcontainers-bom:${testcontainersBom}")
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
 
-    // Processors
-    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
-
-    // Mockito & Security Test
-    testImplementation 'org.mockito:mockito-core'
-    testImplementation 'org.mockito:mockito-junit-jupiter'
+    // 🧩 Mockito / Security Test
+    testImplementation 'org.mockito:mockito-core:5.20.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.20.0'
     testImplementation 'org.mockito:mockito-inline:5.2.0'
     testImplementation 'org.springframework.security:spring-security-test'
+
+    // 🛠️ Configuration processor
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 }
 
 dependencyManagement {
-    imports { mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}" }
-
-    // 🔒 Versión segura de Apache Commons Lang
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
     dependencies {
         dependency 'org.apache.commons:commons-lang3:3.18.0'
     }
@@ -101,7 +100,6 @@ bootJar {
 }
 
 compileJava {
-    //noinspection SpellCheckingInspection
     options.compilerArgs += [
             '-Amapstruct.defaultComponentModel=spring',
             '-Amapstruct.unmappedTargetPolicy=IGNORE'
@@ -109,12 +107,5 @@ compileJava {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    //noinspection SpellCheckingInspection
-    options.compilerArgs += [
-            '-Xlint:unchecked',
-            '-Xlint:deprecation'
-    ]
+    options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation']
 }
-
-// IntelliJ (no Kotlin plugin)
-tasks.register("prepareKotlinBuildScriptModel") { }
