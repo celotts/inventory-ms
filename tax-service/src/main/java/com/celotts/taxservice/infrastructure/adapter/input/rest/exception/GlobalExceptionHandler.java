@@ -131,7 +131,7 @@ public class GlobalExceptionHandler {
     }
 
     // Optional: ResourceNotFoundException handler (uncomment / adjust import if you have this exception in tax-service)
-    /*
+
     @ExceptionHandler(com.celotts.taxservice.domain.exception.ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiResponse<Void> handleResourceNotFound(com.celotts.taxservice.domain.exception.ResourceNotFoundException ex, HttpServletRequest req) {
@@ -142,7 +142,7 @@ public class GlobalExceptionHandler {
                 "ERR_NOT_FOUND"
         );
     }
-    */
+
 
     // ----------------- Helpers -----------------
     private ApiResponse.Violation toViolation(ConstraintViolation<?> cv) {
