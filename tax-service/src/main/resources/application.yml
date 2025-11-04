@@ -8,6 +8,10 @@ spring:
   application:
     name: tax-service
 
+  messages:
+    basename: messages
+    encoding: UTF-8
+
   # Permite leer de Config Server si está disponible (y no rompe si no lo está).
   config:
     import: "optional:configserver:"
