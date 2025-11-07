@@ -66,7 +66,7 @@ public class TaxUpdateDto {
         this.name         = collapseSpaces(trimToNull(name));
         this.jurisdiction = upper(trimToNull(jurisdiction));
         this.taxType      = upper(trimToNull(taxType));
-        // rate / fechas no se normalizan aquí
+
     }
 
     // -------- helpers ----------
