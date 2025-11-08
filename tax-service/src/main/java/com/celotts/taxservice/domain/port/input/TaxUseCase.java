@@ -30,4 +30,6 @@ public interface TaxUseCase {
     Page<TaxModel> findByActive(Boolean active, Pageable pageable);
     Page<TaxModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable);
     Page<TaxModel> findAllPaginated(String name, Boolean active,  Pageable pageable);
+
+    TaxModel create(TaxModel model);
 }

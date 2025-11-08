@@ -11,7 +11,8 @@ spring:
   messages:
     basename: messages
     encoding: UTF-8
-
+    fallback-to-system-locale: false
+    default-locale: es
   # Permite leer de Config Server si está disponible (y no rompe si no lo está).
   config:
     import: "optional:configserver:"
