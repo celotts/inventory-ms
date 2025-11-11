@@ -64,7 +64,7 @@ public record ApiResponse<T>(
     // ----------------- DTO de violaciones -----------------
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record Violation(
-            String field,       // "name", "price", etc. (puede ser null para errores globales)
+            String field,
             String message,     // mensaje legible
             Object rejectedValue // valor rechazado (opcional)
     ) { }

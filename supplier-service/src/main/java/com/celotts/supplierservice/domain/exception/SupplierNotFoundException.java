@@ -8,7 +8,6 @@ public class SupplierNotFoundException extends BaseDomainException {
         super("supplier.not-found", field, value);
     }
 
-    // ✅ overload para UUID
     public SupplierNotFoundException(UUID id) {
         super("supplier.not-found", "id", id.toString());
     }

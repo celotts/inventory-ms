@@ -10,6 +10,8 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - JAVA_OPTS=${JAVA_OPTS}
+      #- WAIT_FOR=discovery-db:5432   # si aplica
+      - WAIT_TIMEOUT=30
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
       interval: ${INTERVAL10S:-10s}
@@ -74,7 +76,7 @@ services:
     dns:
       - 1.1.1.1
       - 8.8.8.8
-    profiles: ["product"]
+    profiles: [ "product" ]
     build:
       context: ../product-service
       dockerfile: Dockerfile
@@ -93,18 +95,14 @@ services:
       - SPRING_DATASOURCE_PASSWORD=product123
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
 
-      # Hikari (una vez, sin duplicados)
-      #- SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=2
-      #- SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=10
-      #- SPRING_DATASOURCE_HIKARI_AUTO_COMMIT=false
-      #- SPRING_DATASOURCE_HIKARI_TRANSACTION_ISOLATION=TRANSACTION_READ_COMMITTED
-      #- SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=60000
-      #- SPRING_DATASOURCE_HIKARI_VALIDATION_TIMEOUT=30000
-
       # Eureka
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
       - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=30
       - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=30
+
+      # WAIT (tu entrypoint debe usarlas)
+      - WAIT_FOR=discovery-service:8761,config-service:7777,product-db:5432
+      - WAIT_TIMEOUT=40
 
       # Config Server (tolerancia a fallos)
       - SPRING_CLOUD_CONFIG_FAILFAST=false
@@ -119,35 +117,32 @@ services:
       - PAGINATION_DEFAULT_SORT_DIR=${PAGINATION_DEFAULT_SORT_DIR:-desc}
       - PAGINATION_ALLOWED_SORT_FIELDS=${PAGINATION_ALLOWED_SORT_FIELDS:-createdAt,updatedAt,code,description,unitPrice,currentStock}
 
-      # Actuator + logs diagnóstico
-      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,env,configprops,beans
-      #- MANAGEMENT_ENDPOINT_CONFIGPROPS_ENABLED=true
-      #- MANAGEMENT_ENDPOINT_ENV_ENABLED=true
-      #- MANAGEMENT_ENDPOINT_BEANS_ENABLED=true
-      #- MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=ALWAYS
-      # Health/Probes y refresco
+      # Actuator + diagnóstico
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,env,configprops,beans
       - MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED=true
-      # Evita rebind en caliente que toca el pool:
+
+      # Evita rebind en caliente que toca el pool
       - SPRING_CLOUD_REFRESH_ENABLED=false
 
-      # Asegura que el app escuche en 9090, como el puerto publicado/healthcheck
+      # Asegura que escuche en 9090
       - SERVER_PORT=9090
+
     depends_on:
       discovery-service:
-        condition: service_started  # 🔄 Cambiado de service_healthy a service_started
+        condition: service_started
       config-service:
-        condition: service_started  # 🔄 Cambiado de service_healthy a service_started
+        condition: service_started
       product-db:
-        condition: service_healthy  # ✅ Mantenemos healthy solo para la DB
+        condition: service_healthy
+
     healthcheck:
-      #test: [ "CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1" ]
       test: [ "CMD-SHELL", "curl -fsS http://localhost:9090/actuator/health | grep -q '\"status\":\"UP\"'" ]
-      interval: 20s              # 🔄 Reducido de 30s
-      timeout: 15s               # 🔄 Aumentado de 10s
-      retries: 10                # 🔄 Aumentado de 5
-      start_period: 90s          # 🔄 Aumentado de 60s para Podman
-    restart: unless-stopped      # 🆕 Agregado restart policy
+      interval: 20s
+      timeout: 15s
+      retries: 10
+      start_period: 90s
+
+    restart: unless-stopped
     networks:
       - inventory-network
 
@@ -173,6 +168,7 @@ services:
     volumes:
       - supplier-data:/var/lib/postgresql/data
       - ./init-scripts/supplier/02-supplier-init.sql:/docker-entrypoint-initdb.d/02-supplier-init.sql:ro
+
     networks:
       - inventory-network
 
@@ -189,22 +185,18 @@ services:
         - SPRING_APPLICATION_NAME=supplier-service
         - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
         - JAVA_OPTS=${JAVA_OPTS}
-        #- SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
         - SPRING_DATASOURCE_URL=jdbc:postgresql://supplier-db:5432/${SUPPLIER_DB_NAME:-supplier}
         - SPRING_DATASOURCE_USERNAME=${SUPPLIER_DB_USERNAME:-supplier}
         - SPRING_DATASOURCE_PASSWORD=${SUPPLIER_DB_PASSWORD:-supplier123}
         - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
-        #- SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE=2
-        #- SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=10
-        #- SPRING_DATASOURCE_HIKARI_AUTO_COMMIT=false
-        #- SPRING_DATASOURCE_HIKARI_TRANSACTION_ISOLATION=TRANSACTION_READ_COMMITTED
-        #- SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=60000
-        #- SPRING_DATASOURCE_HIKARI_VALIDATION_TIMEOUT=30000
         - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
         - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=30
         - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=30
         - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info
         - SERVER_PORT=9091
+        - WAIT_FOR=discovery-service:8761,config-service:7777,supplier-db:5432
+        #- WAIT_FOR=discovery-service:8761,config-service:7777,tax-db:5432
+        - WAIT_TIMEOUT=40
       depends_on:
         discovery-service:
           condition: service_started
@@ -245,9 +237,9 @@ services:
         - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
         - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
         - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWERCASESERVICEID=true
-        # 🆕 Configuraciones adicionales para mejor tolerancia
         - SPRING_CLOUD_CONFIG_FAILFAST=false
         - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=3
+        - WAIT_FOR=discovery-service:8761,config-service:7777
       depends_on:
         discovery-service:
           condition: service_started  # 🔄 Cambiado de service_healthy a service_started
@@ -264,11 +256,87 @@ services:
       restart: unless-stopped      # 🆕 Agregado restart policy
       networks:
         - inventory-network
+  tax-db:
+    profiles: [ "tax" ]
+    image: postgres:16
+    container_name: tax-db
+    environment:
+      POSTGRES_DB: ${TAX_DB_NAME:-tax}
+      POSTGRES_USER: ${TAX_DB_USERNAME:-tax}
+      POSTGRES_PASSWORD: ${TAX_DB_PASSWORD:-tax123}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+    ports:
+      - "${TAX_DB_PORT:-5435}:5432"
+    volumes:
+      - tax-data:/var/lib/postgresql/data
+      - ./init-scripts/tax/01-tax-init.sql:/docker-entrypoint-initdb.d/01-tax-init.sql:ro
+    healthcheck:
+      test: [ "CMD-SHELL","pg_isready -U ${TAX_DB_USERNAME:-tax} -d ${TAX_DB_NAME:-tax}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks: [ inventory-network ]
 
+  tax-service:
+    profiles: [ "tax" ]
+    build:
+      context: ../tax-service
+      dockerfile: Dockerfile
+    container_name: tax-service
+    # image opcional si publicas
+    # image: localhost/inventoryms_tax-service:latest
+    ports:
+      - "${PORT9092:-9092}:9092"
+    environment:
+      - SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING=true
+      - SPRING_APPLICATION_NAME=tax-service
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
+      - JAVA_OPTS=${JAVA_OPTS}
+      - SPRING_MESSAGES_BASENAME=messages
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
+      # Datasource
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://tax-db:5432/${TAX_DB_NAME:-tax}
+      - SPRING_DATASOURCE_USERNAME=${TAX_DB_USERNAME:-tax}
+      - SPRING_DATASOURCE_PASSWORD=${TAX_DB_PASSWORD:-tax123}
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - SPRING_DATASOURCE_HIKARI_POOL_NAME=HikariPool-TaxService
+      - WAIT_FOR=discovery-service:8761,config-service:7777,tax-db:5432
+      - WAIT_TIMEOUT=40
+      # Eureka
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=30
+      - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=30
+
+      # Actuator
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info
+      - SERVER_PORT=9092
+
+      # Evitar rebind que afecte Hikari
+      - SPRING_CLOUD_REFRESH_ENABLED=false
+    depends_on:
+      discovery-service:
+        condition: service_started
+      config-service:
+        condition: service_started
+      tax-db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -fsS http://localhost:9092/actuator/health | grep -q '\"status\":\"UP\"'" ]
+      interval: 20s
+      timeout: 15s
+      retries: 10
+      start_period: 90s
+    restart: unless-stopped
+    networks:
+      - inventory-network
 networks:
     inventory-network:
       driver: bridge
 
 volumes:
-    product-data:
-    supplier-data:
+  product-data:
+  supplier-data:
+  tax-data:

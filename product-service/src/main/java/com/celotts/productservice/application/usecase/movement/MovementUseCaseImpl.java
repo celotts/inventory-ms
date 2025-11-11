@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,7 @@ public class MovementUseCaseImpl implements MovementUseCase {
 
     private final InventoryMovementRepositoryPort movRepo;
     private final JdbcTemplate jdbc;
+    private final MessageSource messageSource;
 
     @Override
     public InventoryMovementModel registerIn(UUID productId, UUID lotId, BigDecimal qty, String reference, String user) {

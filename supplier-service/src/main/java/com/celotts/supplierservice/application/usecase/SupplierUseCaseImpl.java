@@ -26,12 +26,8 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
 
     @Override
     public SupplierModel create(SupplierModel supplier) {
-        // (Opcional) normaliza aquí si tu mapper/DTO no lo hizo
-        // normalize(supplier);
-
-        // Unicidad por code (recomendado)
+        // Unicidad por code
         if (supplier.getCode() != null && repo.existsByCode(supplier.getCode())) {
-            // Si usas i18n en excepciones: new SupplierAlreadyExistsException("supplier.already-exists", "code", supplier.getCode())
             throw new SupplierAlreadyExistsException("code", supplier.getCode());
         }
         return repo.save(supplier);
@@ -42,24 +38,18 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
     public SupplierModel update(UUID id, SupplierModel partial) {
         SupplierModel current = repo.findById(id)
                 .orElseThrow(() -> new SupplierNotFoundException(id));
-
-        // (Opcional) normalize(partial);
-
         // ✔️ evita colisión de code con otros registros
         if (partial.getCode() != null) {
             boolean codeChanged = current.getCode() == null
                     || !current.getCode().equalsIgnoreCase(partial.getCode());
             if (codeChanged) {
-                // a) si tu port ya expone existsByCodeExceptId, úsalo (mejor):
-                // if (repo.existsByCodeExceptId(partial.getCode(), id)) ...
-                // b) si NO lo tienes, usa existsByCode + compara con el actual:
+
                 if (repo.existsByCode(partial.getCode())) {
                     throw new SupplierAlreadyExistsException("code", partial.getCode());
                 }
             }
         }
 
-        // merge “partial” → “current”
         if (partial.getCode() != null)     current.setCode(partial.getCode());
         if (partial.getName() != null)     current.setName(partial.getName());
         if (partial.getTaxId() != null)    current.setTaxId(partial.getTaxId());
@@ -81,8 +71,7 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
 
     @Override
     public void delete(UUID id, String deletedBy, String reason) {
-        // FUTURO: si quieres persistir deleted_by / deleted_reason antes de soft-delete,
-        // agrega método custom en el repo.
+
         delete(id);
     }
 
@@ -115,7 +104,6 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
     @Override
     @Transactional(readOnly = true)
     public List<SupplierModel> searchByNameDescription(String q, int limit) {
-        // El repositorio/puerto de salida puede seguir llamándose “find…”
         return repo.findByNameDescription(q, limit);
     }
 

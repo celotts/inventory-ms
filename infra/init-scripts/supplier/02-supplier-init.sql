@@ -45,26 +45,48 @@ BEGIN
   END IF;
 END$$;
 
--- 3) Catálogo de impuestos (opcional, pero recomendado para gobernanza)
+-- 3) Catálogo de impuestos
 CREATE TABLE tax (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  code VARCHAR(30) NOT NULL,              -- p.ej. 'IVA16'
-  name VARCHAR(120) NOT NULL,             -- p.ej. 'IVA 16% MX'
-  rate DECIMAL(5,2) NOT NULL CHECK (rate >= 0 AND rate <= 100),
-  jurisdiction VARCHAR(60),               -- p.ej. 'MX'
-  tax_type VARCHAR(30),                   -- p.ej. 'VAT','IEPS'
-  valid_from DATE NOT NULL DEFAULT CURRENT_DATE,
-  valid_to DATE,                          -- NULL = vigente
-  enabled BOOLEAN NOT NULL DEFAULT TRUE,
-
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code          VARCHAR(30)  NOT NULL,
+  name          VARCHAR(120) NOT NULL,
+  rate          NUMERIC(7,4) NOT NULL CHECK (rate >= 0 AND rate <= 1),
+  jurisdiction  CHAR(2),              -- ISO-3166-1 alpha-2; puede ser NULL si es global
+  tax_type      VARCHAR(30),          -- p.ej. 'VAT','IEPS' (idealmente FK a catálogo)
+  valid_from    DATE NOT NULL DEFAULT CURRENT_DATE,
+  valid_to      DATE,                 -- NULL = vigente
+  enabled       BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT ck_tax_valid_window CHECK (valid_to IS NULL OR valid_to >= valid_from)
 );
-CREATE UNIQUE INDEX uq_tax_code_active
-  ON tax(code)
+
+-- Único: solo 1 impuesto ACTIVO por code + jurisdicción + tipo
+CREATE UNIQUE INDEX uq_tax_active_code_jur_type
+  ON tax(code, jurisdiction, tax_type)
   WHERE enabled IS TRUE AND valid_to IS NULL;
 
--- 4) Catálogo de proveedores
+-- Índices útiles de lectura
+CREATE INDEX ix_tax_active
+  ON tax (code)
+  WHERE enabled IS TRUE AND valid_to IS NULL;
+
+CREATE INDEX ix_tax_jur_type
+  ON tax (jurisdiction, tax_type);
+
+-- Trigger para mantener updated_at
+CREATE OR REPLACE FUNCTION trg_set_updated_at()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  NEW.updated_at := NOW();
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER set_updated_at
+BEFORE UPDATE ON tax
+FOR EACH ROW EXECUTE FUNCTION trg_set_updated_at();
+
 -- 4) Catálogo de proveedores
 CREATE TABLE supplier (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -84,7 +106,7 @@ CREATE TABLE supplier (
     deleted_by VARCHAR(120),
     deleted_reason VARCHAR(255),
 
-    -- ✅ Corrección: alternación en lugar de clase con Ñ
+    -- ✅ Validación RFC (ajústala a tus reglas)
     CONSTRAINT chk_supplier_tax_id_format
     CHECK (
       tax_id IS NULL
@@ -313,39 +335,40 @@ GRANT USAGE ON SCHEMA public TO supplier;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO supplier;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO supplier;
 
--- 11) Semillas (opcionales)
-INSERT INTO tax(code, name, rate, jurisdiction, tax_type)
-VALUES ('IVA16','IVA 16% MX',16.00,'MX','VAT')
-ON CONFLICT DO NOTHING;
-
-INSERT INTO supplier(id, code, name, enabled) VALUES
-  (gen_random_uuid(), 'SUP-DEFAULT', 'Proveedor Genérico', TRUE)
-ON CONFLICT DO NOTHING;
+-- 11) Semillas (ELIMINADAS a petición) -------------------------------
+-- (Ya no se insertan datos por defecto; el CRUD se hará cargo)
+-- --------------------------------------------------------------------
 
 -- 12) Búsquedas rápidas por "contiene" (trigramas) y opcionalmente sin acentos
--- Nota: CREATE EXTENSION requiere superusuario o permisos adecuados.
--- Si tu app no tiene permisos, ejecuta esto en el init del contenedor Postgres.
-
--- Extensiones
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
--- (Opcional) Para búsquedas que ignoran acentos:
 CREATE EXTENSION IF NOT EXISTS unaccent;
 
--- Índices trigram sin acentos (recomendado si usarás búsquedas flexibles)
--- Si NO quieres unaccent, cambia `unaccent(lower(campo))` por `lower(campo)`.
+-- 🔒 Crea una versión inmutable de unaccent para usarla en índices
+CREATE OR REPLACE FUNCTION immutable_unaccent(text)
+RETURNS text
+LANGUAGE sql
+IMMUTABLE
+PARALLEL SAFE
+AS $$
+  SELECT public.unaccent('public.unaccent', $1)
+$$;
+
+-- ============================================
+-- Índices trigram corregidos (usan immutable_unaccent)
+-- ============================================
 
 -- Proveedor
 CREATE INDEX IF NOT EXISTS idx_supplier_name_trgm
-  ON supplier USING gin (unaccent(lower(name)) gin_trgm_ops);
+  ON supplier USING gin (immutable_unaccent(lower(name)) gin_trgm_ops);
 
 CREATE INDEX IF NOT EXISTS idx_supplier_code_trgm
-  ON supplier USING gin (unaccent(lower(code)) gin_trgm_ops);
+  ON supplier USING gin (immutable_unaccent(lower(code)) gin_trgm_ops);
 
 CREATE INDEX IF NOT EXISTS idx_supplier_email_trgm
-  ON supplier USING gin (unaccent(lower(email)) gin_trgm_ops);
+  ON supplier USING gin (immutable_unaccent(lower(email)) gin_trgm_ops);
 
 CREATE INDEX IF NOT EXISTS idx_supplier_address_trgm
-  ON supplier USING gin (unaccent(lower(address)) gin_trgm_ops);
+  ON supplier USING gin (immutable_unaccent(lower(address)) gin_trgm_ops);
 
 -- (Opcional) Si filtras mucho por enabled y ordenas por name
 CREATE INDEX IF NOT EXISTS idx_supplier_enabled_name
@@ -353,4 +376,4 @@ CREATE INDEX IF NOT EXISTS idx_supplier_enabled_name
 
 -- Compras: si buscas mucho por order_number “contiene”
 CREATE INDEX IF NOT EXISTS idx_purchase_order_number_trgm
-  ON purchase_order USING gin (unaccent(lower(order_number)) gin_trgm_ops);
+  ON purchase_order USING gin (immutable_unaccent(lower(order_number)) gin_trgm_ops);
