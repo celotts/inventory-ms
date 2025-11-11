@@ -14,7 +14,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface TaxIdExists {
 
-    String message() default "El impuesto con el ID especificado no existe";
+
+    String message() default "{tax.id.not-found}";
 
     Class<?>[] groups() default {};
 

@@ -19,8 +19,9 @@ import java.util.UUID;
 public class TaxModel {
 
     @Id
-    @GeneratedValue
-    private UUID id;
+    @Builder.Default // <-- Lombok: Establece el valor por defecto al usar el builder
+    // Se elimina @GeneratedValue. El control pasa a la aplicación (Java).
+    private UUID id = UUID.randomUUID();
 
     @Column(length = 40, nullable = false, unique = true)
     @NotBlank(message = "{tax.code.required}")
@@ -66,9 +67,14 @@ public class TaxModel {
     @Column(name = "updated_by", length = 120)
     private String updatedBy;
 
+    // Métodos de auditoría (se mantienen por ahora, pero se sugiere moverlos)
     @PrePersist
     protected void onCreate() {
         OffsetDateTime now = OffsetDateTime.now();
+        // Si el ID es null (porque no se usó el builder, sino el constructor default), se genera aquí
+        if (this.id == null) {
+            this.id = UUID.randomUUID();
+        }
         this.createdAt = now;
         this.updatedAt = now;
     }

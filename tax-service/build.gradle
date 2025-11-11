@@ -45,7 +45,7 @@ dependencies {
     // 📘 OpenAPI
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
 
-    // 🧩 Commons Lang actualizado (corrige CVE)
+
     implementation 'org.apache.commons:commons-lang3:3.18.0'
 
     // 🗄️ Base de datos
@@ -71,6 +71,9 @@ dependencies {
     testImplementation platform("org.testcontainers:testcontainers-bom:${testcontainersBom}")
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
+
+// 🔒 Fija commons-compress a versión sin CVEs (parchE CVE-2024-25710 y CVE-2024-26308)
+    testImplementation 'org.apache.commons:commons-compress:1.26.1'
 
     // 🧩 Mockito / Security Test
     testImplementation 'org.mockito:mockito-core:5.20.0'

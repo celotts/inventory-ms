@@ -3,7 +3,7 @@ package com.celotts.taxservice.infrastructure.adapter.output.postgres.entity.sha
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
+import jakarta.persistence.EntityListeners;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedBy;
@@ -12,8 +12,7 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import jakarta.persistence.EntityListeners;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime; // <-- CAMBIO: Usar OffsetDateTime para zona horaria
 
 @Getter
 @Setter
@@ -21,9 +20,10 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 public abstract class AuditableEntity {
 
+    // Spring Data JPA Auditing se encargará de inicializar estos campos
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @CreatedBy
     @Column(name = "created_by", updatable = false, length = 255)
@@ -31,14 +31,15 @@ public abstract class AuditableEntity {
 
     @LastModifiedDate
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 
     @LastModifiedBy
     @Column(name = "updated_by", length = 255)
     private String updatedBy;
 
+    // Campos de Soft Delete
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    private OffsetDateTime deletedAt;
 
     @Column(name = "deleted_by", length = 255)
     private String deletedBy;
@@ -49,14 +50,12 @@ public abstract class AuditableEntity {
     @Column(nullable = false)
     private Boolean enabled = Boolean.TRUE;
 
+    // MANTENEMOS solo la lógica que Spring Data Auditing NO maneja.
     @PrePersist
     public void prePersist() {
-        if (createdAt == null) createdAt = LocalDateTime.now();
+        // La inicialización de createdAt y updatedAt se ELIMINA, ya que la maneja @CreatedDate/@LastModifiedDate
         if (enabled == null) enabled = Boolean.TRUE;
     }
 
-    @PreUpdate
-    public void preUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
+    // ELIMINAMOS @PreUpdate. Spring Data Auditing lo maneja con @LastModifiedDate.
 }

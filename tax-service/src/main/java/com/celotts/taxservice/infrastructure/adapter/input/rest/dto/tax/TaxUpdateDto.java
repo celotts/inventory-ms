@@ -13,7 +13,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class TaxUpdateDto {
 
-    @Pattern(regexp = "^[A-Z0-9\\-_]{3,40}$", message = "{tax.code.pattern}")
+    @Size(max = 30, message = "{tax.code.max-length}")
+    @Pattern(regexp = "^[A-Z0-9-]+$", message = "{tax.code.pattern}")
     private String code;
 
     @Size(min = 2, max = 120, message = "{tax.name.size}")
@@ -24,10 +25,8 @@ public class TaxUpdateDto {
     @Digits(integer = 3, fraction = 2, message = "{tax.rate.digits}")
     private BigDecimal rate;
 
-    @PastOrPresent(message = "{tax.validfrom.pastOrPresent}")
     private LocalDate validFrom;
 
-    @FutureOrPresent(message = "{tax.validto.futureOrPresent}")
     private LocalDate validTo;
 
     private Boolean isActive;

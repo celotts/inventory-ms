@@ -14,7 +14,8 @@ import java.time.LocalDate;
 public class TaxCreateDto {
 
     @NotBlank(message = "{tax.code.required}")
-    @Pattern(regexp = "^[A-Z0-9\\-_]{3,40}$", message = "{tax.code.pattern}")
+    @Size(max = 40, message = "{tax.code.max-length}")
+    @Pattern(regexp = "^[A-Z0-9-]+$", message = "{tax.code.pattern}")
     private String code;
 
     @NotBlank(message = "{tax.name.required}")
@@ -27,11 +28,9 @@ public class TaxCreateDto {
     @Digits(integer = 3, fraction = 2, message = "{tax.rate.digits}")
     private BigDecimal rate;
 
-    @PastOrPresent(message = "{tax.validfrom.pastOrPresent}")
-    @Builder.Default
-    private LocalDate validFrom = LocalDate.now();
+    @NotNull(message = "{tax.validfrom.required}")
+    private LocalDate validFrom;
 
-    @FutureOrPresent(message = "{tax.validto.futureOrPresent}")
     private LocalDate validTo;
 
     @Builder.Default
