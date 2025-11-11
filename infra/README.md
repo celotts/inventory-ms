@@ -25,7 +25,7 @@ inventory-ms/
 ├── discovery-service/          # Microservicio Eureka (Service Discovery)
 ├── product-service/            # Microservicio de productos
 ├── infra/                      # Infraestructura Docker
-│   └── docker-compose.yml
+│   └── docker-compose-no-usar.yml
 ├── Makefile_old2 old                    # Automatización de tareas
 ├── .env.local                  # Configuración local
 ├── .env.dev                    # Configuración desarrollo
@@ -340,4 +340,18 @@ make troubleshoot-network
 ```
 
 ### Solución de problemas comunes
-```bash
+
+### 🧩 Solución de problemas comunes
+
+#### 🔑 Credenciales BD
+
+```markdown
+
+#### 🔑 Credenciales BD supplier
+
+| Campo     | Valor       |
+|-----------|--------------|
+| Port      | `5434`       |
+| Database  | `supplier`   |
+| User      | `supplier`   |
+| Password  | `supplier123` |

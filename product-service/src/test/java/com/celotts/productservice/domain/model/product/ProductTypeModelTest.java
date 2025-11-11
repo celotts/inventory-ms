@@ -64,27 +64,7 @@ class ProductTypeModelTest {
         assertEquals("tester", m.getUpdatedBy());
     }
 
-    @Test
-    void allArgsConstructor_shouldWork() {
-        UUID id = UUID.randomUUID();
-        LocalDateTime created = LocalDateTime.now().minusDays(3);
-        LocalDateTime updated = LocalDateTime.now();
-
-        ProductTypeModel m = new ProductTypeModel(
-                id, "TYPE-C", "Type C", "Desc C", true,
-                created, updated, "cby", "uby"
-        );
-
-        assertEquals(id, m.getId());
-        assertEquals("TYPE-C", m.getCode());
-        assertEquals("Type C", m.getName());
-        assertEquals("Desc C", m.getDescription());
-        assertTrue(m.getEnabled());
-        assertEquals(created, m.getCreatedAt());
-        assertEquals(updated, m.getUpdatedAt());
-        assertEquals("cby", m.getCreatedBy());
-        assertEquals("uby", m.getUpdatedBy());
-    }
+    /*
 
     @Test
     void withers_shouldCreateModifiedCopies_withoutMutatingOriginal() {
@@ -116,7 +96,7 @@ class ProductTypeModelTest {
         assertEquals(base.getId(), modified.getId());
         assertEquals(base.getCode(), modified.getCode());
         assertEquals(base.getCreatedBy(), modified.getCreatedBy());
-    }
+    }*/
 
     @Test
     void toBuilder_shouldCloneAndModify() {

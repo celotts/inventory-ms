@@ -10,23 +10,21 @@ spring:
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
       - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
 
-  # ✅ PostgreSQL para desarrollo local en Docker
   datasource:
     url: jdbc:postgresql://localhost:5432/product
     username: product
     password: product123
     driver-class-name: org.postgresql.Driver
 
-  hikari:
-    pool-name: HikariPool-ProductService
-    maximum-pool-size: 10                         # -> "Maximum pool size"
-    minimum-idle: 2                               # Hikari no tiene "min pool size" como tal; usa minimumIdle
-    auto-commit: false                            # -> "Autocommit mode"
-    transaction-isolation: TRANSACTION_READ_COMMITTED  # -> "Isolation level"
-    # Opcionales útiles:
-    connection-timeout: 30000
-    idle-timeout: 600000
-    max-lifetime: 1800000
+    hikari:
+      pool-name: HikariPool-ProductService
+      maximum-pool-size: 10
+      minimum-idle: 2
+      auto-commit: true
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
 
   jpa:
     hibernate:
@@ -46,12 +44,11 @@ eureka:
 
 springdoc:
   api-docs:
-    path: /v3/api-docs       # JSON
+    path: /v3/api-docs
   swagger-ui:
-    path: /swagger-ui.html   # UI
+    path: /swagger-ui.html
     display-request-duration: true
 
-# Configuración de paginación
 app:
   pagination:
     default-page: 0
@@ -61,12 +58,12 @@ app:
     default-direction: desc
   cors:
     allowed-origin: "*"
+
 management:
   endpoints:
     web:
       exposure:
         include: "*"
-
 
 logging:
   level:

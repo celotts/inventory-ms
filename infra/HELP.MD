@@ -25,7 +25,7 @@ inventory-ms/
 ├── discovery-service/          # Microservicio Eureka (Service Discovery)
 ├── product-service/            # Microservicio de productos
 ├── infra/                      # Infraestructura Docker
-│   └── docker-compose.yml
+│   └── docker-compose-no-usar.yml
 ├── Makefile_old2 old                    # Automatización de tareas
 ├── .env.local                  # Configuración local
 ├── .env.dev                    # Configuración desarrollo

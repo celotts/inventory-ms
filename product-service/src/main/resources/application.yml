@@ -1,5 +1,5 @@
 server:
-  port: ${PORT9091:9091}
+  port: ${PORT9090:9090}
 
 spring:
   application:
@@ -13,7 +13,8 @@ spring:
       enabled: false
 
   datasource:
-    url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:${PRODUCT_DB_PORT:5432}/${PRODUCT_DB_NAME:product_db}
+    #url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:${PRODUCT_DB_PORT:5432}/${PRODUCT_DB_NAME:product_db}
+    url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:${PRODUCT_DB_PORT:5432}/${PRODUCT_DB_NAME:product}
     username: ${PRODUCT_DB_USERNAME:product}
     password: ${PRODUCT_DB_PASSWORD:product123}
     driver-class-name: org.postgresql.Driver
@@ -22,7 +23,7 @@ spring:
       maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
       auto-commit: ${AUTO_COMMIT:true}
       validation-timeout: ${VALIDATION_TIMEOUT:3000}
-      connection-test-query: ${CONNECTION_TEST_QUERY:SELECT 1}
+      #connection-test-query: ${CONNECTION_TEST_QUERY:"SELECT 1"}
 
   jpa:
     hibernate:

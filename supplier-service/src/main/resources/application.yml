@@ -1,5 +1,8 @@
 # application.yml (común)
 spring:
+  profiles:
+    active: local
+
   application:
     name: supplier-service
 
@@ -23,6 +26,10 @@ management:
 # ---------- Perfil: local (app arrancando EN TU MAC) ----------
 ---
 spring:
+  messages:
+    basename: messages
+    fallback-to-system-locale: false
+
   config:
     activate:
       on-profile: local
