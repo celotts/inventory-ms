@@ -1,11 +1,33 @@
+pluginManagement {
+    // 1. REPOSITORIOS: ¡ESTO ARREGLA EL ERROR DE BÚSQUEDA!
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+
+    // 2. ESTRATEGIA DE RESOLUCIÓN (Opcional, pero recomendado para fijar la versión 3.4.5)
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == 'org.springframework.boot') {
+                useModule('org.springframework.boot:spring-boot-gradle-plugin:3.4.5')
+            }
+        }
+    }
+
+    // NOTA: Hemos eliminado el bloque 'plugins { ... }' que estaba causando confusión.
+}
+
+// 2. Otras declaraciones deben ir DESPUÉS
 rootProject.name = 'inventory-ms'
+
+// 3. Las inclusiones van al final
 include(
-  'infra',
-  'api-gateway',
-  'config-service',
-  'discovery-service',
-  'product-service',
-  'supplier-service',
-  'purchase-service',
-  'tax-service'
+        'infra',
+        'api-gateway',
+        'config-service',
+        'discovery-service',
+        'product-service',
+        'supplier-service',
+        'purchase-service',
+        'tax-service'
 )
