@@ -1,9 +1,10 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.5'
+    id 'org.springframework.boot' version '3.5.0'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'jacoco'
     id 'com.github.ben-manes.versions' version '0.53.0'
+    id 'org.owasp.dependencycheck' version '9.0.7'
 }
 
 group = 'com.celotts'
@@ -23,7 +24,7 @@ ext {
     set('h2Version', "2.4.240")
     set('lombokVersion', "1.18.42")
     set('mapstructVersion', "1.6.3")
-    set('testcontainersBom', "1.21.3")
+    set('testcontainersBom', "1.23.3")
 }
 
 dependencies {
@@ -111,3 +112,10 @@ tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation']
 }
 
+dependencyCheck {
+    autoUpdate = false
+    failBuildOnCVSS = 0
+    nvd {
+        skip = true
+    }
+}
