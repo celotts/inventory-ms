@@ -10,7 +10,7 @@ import lombok.extern.jackson.Jacksonized;
 import java.util.UUID;
 
 @Value
-@Builder
+@Builder(toBuilder = true)
 @Jacksonized
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SupplierDeleteDto {
@@ -28,7 +28,17 @@ public class SupplierDeleteDto {
     @Size(max = 255, message = "{supplier.delete.reason.size}")
     String reason;
 
-    public void normalizeFields() {
-        // Objeto inmutable: normaliza antes de construir (Builder/factory).
+
+    public SupplierDeleteDto normalizeFields() {
+        return this.toBuilder()
+                .deletedBy(normalize(deletedBy))
+                .reason(normalize(reason))
+                .build();
+    }
+
+    private static String normalize(String value) {
+        if (value == null) return null;
+        String normalized = value.trim().replaceAll("\\s+", " ");
+        return normalized.isEmpty() ? null : normalized;
     }
 }

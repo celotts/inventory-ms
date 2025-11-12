@@ -1,0 +1,92 @@
+# ==========================================
+# tax-service / src/main/resources/application.yml
+# ==========================================
+server:
+  port: ${PORT9092:9092}   # Puerto por defecto del tax-service
+
+spring:
+  application:
+    name: tax-service
+
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+    default-locale: es
+  # Permite leer de Config Server si está disponible (y no rompe si no lo está).
+  config:
+    import: "optional:configserver:"
+
+  cloud:
+    config:
+      enabled: ${SPRING_CLOUD_CONFIG_ENABLED:false}   # En contenedor puedes habilitarlo por env
+      fail-fast: false
+    # Evita re-cargar propiedades en caliente que tocan el pool Hikari (problema “sealed once started”)
+    refresh:
+      enabled: false
+
+  datasource:
+    url: jdbc:postgresql://${TAX_DB_HOST:tax-db}:${TAX_DB_PORT:5432}/${TAX_DB_NAME:tax}
+    username: ${TAX_DB_USERNAME:tax}
+    password: ${TAX_DB_PASSWORD:tax123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: ${MINIMUM_IDLE:2}
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
+      auto-commit: ${AUTO_COMMIT:true}
+      validation-timeout: ${VALIDATION_TIMEOUT:3000}
+      # Si tu driver lo requiere, puedes habilitar esta query:
+      # connection-test-query: ${CONNECTION_TEST_QUERY:SELECT 1}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+app:
+  cors:
+    allowed-origin: "*"
+  pagination:
+    default-page: ${PAGINATION_DEFAULT_PAGE:0}
+    default-size: ${PAGINATION_DEFAULT_SIZE:10}
+    max-size: ${PAGINATION_MAX_SIZE:100}
+    default-sort: ${PAGINATION_DEFAULT_SORT_BY:createdAt}
+    default-direction: ${PAGINATION_DEFAULT_SORT_DIR:desc}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,env,configprops,beans"
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: "never"
+
+# ------------------------------------------
+# Perfil LOCAL: para correr en tu Mac (fuera de contenedor)
+# ------------------------------------------
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:postgresql://${TAX_DB_HOST:localhost}:${TAX_DB_PORT:5435}/${TAX_DB_NAME:tax}
+    username: ${TAX_DB_USERNAME:tax}
+    password: ${TAX_DB_PASSWORD:tax123}
+
+server:
+  port: ${PORT9092:9092}   # puedes usar 9092 también localmente

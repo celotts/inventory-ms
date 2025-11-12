@@ -1,8 +1,11 @@
 rootProject.name = 'inventory-ms'
-include 'config-service'
-include 'discovery-service'
-include 'product-service'
-include 'infra'
-include 'api-gateway'
-include 'supplier-service'
-include 'purchase-service'
+include(
+  'infra',
+  'api-gateway',
+  'config-service',
+  'discovery-service',
+  'product-service',
+  'supplier-service',
+  'purchase-service',
+  'tax-service'
+)

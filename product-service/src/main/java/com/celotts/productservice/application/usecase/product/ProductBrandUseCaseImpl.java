@@ -6,6 +6,8 @@ import com.celotts.productservice.domain.model.product.ProductBrandModel;
 import com.celotts.productservice.domain.port.input.product.ProductBrandUseCase;
 import com.celotts.productservice.domain.port.output.product.ProductBrandRepositoryPort;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,7 @@ import java.util.UUID;
 public class ProductBrandUseCaseImpl implements ProductBrandUseCase {
 
     private final ProductBrandRepositoryPort repository;
+    private final MessageSource messageSource; // ✅ inyección para i18n
 
     private String norm(String s) { return s == null ? null : s.trim(); }
 
@@ -28,7 +31,13 @@ public class ProductBrandUseCaseImpl implements ProductBrandUseCase {
     public ProductBrandModel save(ProductBrandModel brand) {
         String name = norm(brand.getName());
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Brand.name is required");
+            // ✅ Usa i18n en lugar de texto literal
+            String msg = messageSource.getMessage(
+                    "brand.name.required",   // clave en messages_*.properties
+                    null,                    // sin parámetros
+                    LocaleContextHolder.getLocale()
+            );
+            throw new IllegalArgumentException(msg);
         }
         if (repository.existsByName(name)) {
             throw new ResourceAlreadyExistsException("Brand", name);
@@ -43,11 +52,9 @@ public class ProductBrandUseCaseImpl implements ProductBrandUseCase {
         ProductBrandModel existing = repository.findById(id)
                 .orElseThrow(() -> new BrandNotFoundException(id));
 
-        // Validar y aplicar nombre
         String newName = norm(patch.getName());
         if (newName != null) {
             if (!newName.equalsIgnoreCase(existing.getName()) && repository.existsByName(newName)) {
-                // ⬅️ Usa la excepción de dominio (no IllegalArgumentException)
                 throw new ResourceAlreadyExistsException("Brand", newName);
             }
             existing.setName(newName);
@@ -66,6 +73,7 @@ public class ProductBrandUseCaseImpl implements ProductBrandUseCase {
         return Optional.ofNullable(repository.findById(id)
                 .orElseThrow(() -> new BrandNotFoundException(id)));
     }
+
     @Override public Optional<ProductBrandModel> findByName(String name) { return repository.findByName(name); }
     @Override public List<ProductBrandModel> findAll() { return repository.findAll(); }
     @Override public boolean existsByName(String name) { return repository.existsByName(name); }

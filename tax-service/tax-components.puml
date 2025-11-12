@@ -1,0 +1,61 @@
+@startuml
+title Componentes – Tax (Arquitectura Hexagonal, con colores)
+
+left to right direction
+skinparam linetype ortho
+skinparam shadowing false
+skinparam roundcorner 12
+skinparam packageStyle rectangle
+skinparam componentStyle rectangle
+skinparam ArrowThickness 1.3
+skinparam ArrowColor #333333
+skinparam defaultFontName JetBrains Mono
+
+' Colores por capa
+skinparam package {
+  BackgroundColor<<Domain>> #FFF2CC
+  BackgroundColor<<Application>> #D5E8D4
+  BackgroundColor<<Input>> #DAE8FC
+  BackgroundColor<<Output>> #F8CECC
+  BackgroundColor<<Database>> #E1D5E7
+}
+
+package "Domain" <<Domain>> {
+  component "TaxModel" as D_Model
+  component "«port» ManageTaxUseCase" as D_UseCase
+  component "«port» TaxRepositoryPort" as D_RepoPort
+}
+
+package "Application" <<Application>> {
+  component "ManageTaxUseCaseImpl" as A_UseCaseImpl
+}
+
+package "Infrastructure – Input (REST)" <<Input>> {
+  component "TaxController" as IN_Controller
+  component "TaxMapper" as IN_Mapper
+  component "TaxDTOs" as IN_DTOs
+}
+
+package "Infrastructure – Output (Postgres)" <<Output>> {
+  component "TaxRepositoryAdapter" as OUT_RepoAdapter
+  component "TaxEntityMapper" as OUT_EntityMapper
+}
+
+package "Database" <<Database>> {
+  component "TaxJpaRepository" as DB_JpaRepo
+  database "PostgreSQL" as DB_PG
+}
+
+' Relaciones principales
+IN_Controller --> D_UseCase
+IN_Controller --> IN_Mapper
+
+A_UseCaseImpl ..|> D_UseCase
+A_UseCaseImpl --> D_RepoPort
+
+OUT_RepoAdapter ..> D_RepoPort
+OUT_RepoAdapter --> OUT_EntityMapper
+OUT_RepoAdapter --> DB_JpaRepo
+
+DB_JpaRepo --> DB_PG
+@enduml

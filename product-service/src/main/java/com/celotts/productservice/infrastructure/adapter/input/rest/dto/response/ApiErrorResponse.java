@@ -15,7 +15,6 @@ public record ApiErrorResponse(
         String message,
         String path
 ) {
-    // Constructor compacto para validación o normalización
     public ApiErrorResponse {
         if (status < 100 || status > 599) {
             throw new IllegalArgumentException("El código de estado HTTP no es válido: " + status);

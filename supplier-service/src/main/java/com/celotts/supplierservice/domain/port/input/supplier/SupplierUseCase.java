@@ -14,8 +14,8 @@ public interface SupplierUseCase {
     void delete(UUID id, String deletedBy, String reason);
 
     SupplierModel getById(UUID id);
-    SupplierModel getByCode(String code);     // <-- nuevo
-    boolean existsByCode(String code);        // <-- nuevo
+    SupplierModel getByCode(String code);
+    boolean existsByCode(String code);
 
     Page<SupplierModel> findAll(Pageable pageable);
     Page<SupplierModel> findByNameContaining(String name, Pageable pageable);

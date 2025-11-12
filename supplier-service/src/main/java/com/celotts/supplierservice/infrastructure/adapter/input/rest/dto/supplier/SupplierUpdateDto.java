@@ -5,7 +5,11 @@ import com.fasterxml.jackson.annotation.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SupplierUpdateDto {

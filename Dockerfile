@@ -1,22 +1,16 @@
-FROM eclipse-temurin:21-jdk-jammy
+# ---- build stage ----
+FROM gradle:8.10.2-jdk21 AS build
+WORKDIR /workspace
+COPY gradlew settings.gradle build.gradle ./
+COPY gradle ./gradle
+COPY tax-service ./tax-service
+RUN ./gradlew --no-daemon :tax-service:bootJar
 
-# Instala bash y curl en una sola capa limpia
-RUN apt-get update \
- && apt-get install -y bash curl \
- && rm -rf /var/lib/apt/lists/*
-
+# ---- runtime ----
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
-
-# 🔁 Copia los scripts primero
-COPY wait-for-it.sh wait-for-it.sh
-COPY entrypoint.sh entrypoint.sh
-
-# ✅ Asegura permisos de ejecución después de copiarlos
+COPY tax-service/wait-for-it.sh tax-service/entrypoint.sh ./
 RUN chmod +x wait-for-it.sh entrypoint.sh
-
-# 📦 Copia el .jar generado por Gradle
-COPY build/libs/*.jar app.jar
-
-EXPOSE 8081
-
-# 🔕 No pongas ENTRYPOINT aquí si lo defines en docker-compose
+COPY --from=build /workspace/tax-service/build/libs/*.jar app.jar
+EXPOSE 9092
+ENTRYPOINT ["./entrypoint.sh"]

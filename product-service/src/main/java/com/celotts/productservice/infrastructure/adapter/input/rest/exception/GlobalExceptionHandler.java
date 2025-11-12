@@ -7,6 +7,9 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -23,11 +26,18 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @Autowired
+    private MessageSource messageSource;
+
+    private String msg(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
+    }
+
     // 400 - Body malformado / JSON inválido
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiResponse<Void> handleNotReadable(HttpMessageNotReadableException ex, HttpServletRequest req) {
-        return ApiResponse.badRequest("Request body inválido o mal formado", path(req), method(req), null);
+        return ApiResponse.badRequest(msg("error.badrequest.body"), path(req), method(req), null);
     }
 
     // 400 - @Valid en @RequestBody (DTO con BindingResult)
@@ -44,7 +54,7 @@ public class GlobalExceptionHandler {
                 })
                 .collect(Collectors.toList());
 
-        return ApiResponse.badRequest("Validación fallida", path(req), method(req), violations);
+        return ApiResponse.badRequest(msg("error.validation.failed"), path(req), method(req), violations);
     }
 
     // 400 - @Validated en @RequestParam / @PathVariable (ConstraintViolation)
@@ -56,7 +66,7 @@ public class GlobalExceptionHandler {
                 .map(this::toViolation)
                 .collect(Collectors.toList());
 
-        return ApiResponse.badRequest("Parámetros inválidos", path(req), method(req), violations);
+        return ApiResponse.badRequest(msg("error.constraint.invalid"), path(req), method(req), violations);
     }
 
     @ExceptionHandler(BrandNotFoundException.class)
@@ -80,7 +90,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiResponse<Void> handleConflict(DataIntegrityViolationException ex, HttpServletRequest req) {
-        return ApiResponse.conflict("Conflicto de integridad de datos", path(req), method(req), "ERR_DB_INTEGRITY");
+        return ApiResponse.conflict(msg("error.db.conflict"), path(req), method(req), "ERR_DB_INTEGRITY");
     }
 
     // Errores “HTTP” ya construidos (opcional)
@@ -93,7 +103,10 @@ public class GlobalExceptionHandler {
             case 404 -> "ERR_NOT_FOUND";
             default -> "ERR_HTTP";
         };
-        return ApiResponse.error(status, ex.getBody().getDetail(), path(req), method(req), code, null);
+        String detail = (ex.getBody() != null && ex.getBody().getDetail() != null)
+                ? ex.getBody().getDetail()
+                : msg("error.http.invalid");
+        return ApiResponse.error(status, detail, path(req), method(req), code, null);
     }
 
     // 500 - Fallback
@@ -101,7 +114,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiResponse<Void> handleUnexpected(Exception ex, HttpServletRequest req) {
         // En producción evita ex.getMessage() si puede filtrar detalles sensibles
-        return ApiResponse.internal("Ocurrió un error inesperado", path(req), method(req), "ERR_INTERNAL");
+        return ApiResponse.internal(msg("error.internal"), path(req), method(req), "ERR_INTERNAL");
     }
 
     // ----------------- Helpers -----------------
