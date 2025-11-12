@@ -24,8 +24,8 @@ public class TaxEntityMapper {
                 .validFrom(entity.getValidFrom())
                 .validTo(entity.getValidTo())
                 .isActive(entity.getIsActive())
-                .createdAt(localDateTimeToOffsetDateTime(entity.getCreatedAt()))
-                .updatedAt(localDateTimeToOffsetDateTime(entity.getUpdatedAt()))
+                .createdAt(localDateTimeToOffsetDateTime(entity.getCreatedAt().toLocalDateTime()))
+                .updatedAt(localDateTimeToOffsetDateTime(entity.getUpdatedAt().toLocalDateTime()))
                 .build();
     }
 
