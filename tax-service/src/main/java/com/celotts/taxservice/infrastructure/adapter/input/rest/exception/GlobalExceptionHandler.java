@@ -107,7 +107,8 @@ public class GlobalExceptionHandler {
             case 404 -> "ERR_NOT_FOUND";
             default -> "ERR_HTTP";
         };
-        String detail = ex.getBody() != null ? ex.getBody().getDetail() : msg("error.http.invalid");
+        // CORRECCIÓN APLICADA: Se eliminó la verificación de ex.getBody() != null
+        String detail = ex.getBody().getDetail();
         return ApiResponse.error(
                 status,
                 detail,
