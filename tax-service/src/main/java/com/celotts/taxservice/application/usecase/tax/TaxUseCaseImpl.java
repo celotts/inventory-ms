@@ -1,8 +1,8 @@
 package com.celotts.taxservice.application.usecase.tax;
 
-import com.celotts.taxservice.domain.model.TaxModel;
-import com.celotts.taxservice.domain.port.input.TaxUseCase;
-import com.celotts.taxservice.domain.port.output.TaxRepositoryPort;
+import com.celotts.taxservice.domain.model.tax.TaxModel;
+import com.celotts.taxservice.domain.port.input.tax.TaxUseCase;
+import com.celotts.taxservice.domain.port.output.tax.TaxRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -12,10 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 

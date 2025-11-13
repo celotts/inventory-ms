@@ -1,6 +1,6 @@
-package com.celotts.taxservice.domain.port.input;
+package com.celotts.taxservice.domain.port.input.tax;
 
-import com.celotts.taxservice.domain.model.TaxModel;
+import com.celotts.taxservice.domain.model.tax.TaxModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

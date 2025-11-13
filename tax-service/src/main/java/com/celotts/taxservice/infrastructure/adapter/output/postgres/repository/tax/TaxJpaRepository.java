@@ -1,6 +1,6 @@
 package com.celotts.taxservice.infrastructure.adapter.output.postgres.repository.tax;
 
-import com.celotts.taxservice.infrastructure.adapter.output.postgres.entity.TaxEntity;
+import com.celotts.taxservice.infrastructure.adapter.output.postgres.entity.tax.TaxEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

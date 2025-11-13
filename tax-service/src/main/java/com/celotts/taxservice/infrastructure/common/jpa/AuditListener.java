@@ -1,7 +1,11 @@
 package com.celotts.taxservice.infrastructure.common.jpa;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -10,7 +14,11 @@ import java.time.LocalDateTime;
 
 
 @Slf4j
-public class AuditListener {
+@Entity
+@Getter
+@Setter
+@EntityListeners(AuditListener.class)
+public class AuditListener  implements Auditable{
 
     @PrePersist
     public void prePersist(Object entity) {
@@ -58,5 +66,45 @@ public class AuditListener {
         }
 
         return "system";
+    }
+
+    @Override
+    public void setCreatedAt(LocalDateTime createdAt) {
+
+    }
+
+    @Override
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+
+    }
+
+    @Override
+    public void setCreatedBy(String createdBy) {
+
+    }
+
+    @Override
+    public void setUpdatedBy(String updatedBy) {
+
+    }
+
+    @Override
+    public LocalDateTime getCreatedAt() {
+        return null;
+    }
+
+    @Override
+    public LocalDateTime getUpdatedAt() {
+        return null;
+    }
+
+    @Override
+    public String getCreatedBy() {
+        return "";
+    }
+
+    @Override
+    public String getUpdatedBy() {
+        return "";
     }
 }

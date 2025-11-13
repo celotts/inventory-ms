@@ -1,4 +1,4 @@
-package com.celotts.taxservice.infrastructure.adapter.output.postgres.entity;
+package com.celotts.taxservice.infrastructure.adapter.output.postgres.entity.tax;
 
 import com.celotts.taxservice.infrastructure.adapter.output.postgres.entity.shared.AuditableEntity;
 import jakarta.persistence.Column;

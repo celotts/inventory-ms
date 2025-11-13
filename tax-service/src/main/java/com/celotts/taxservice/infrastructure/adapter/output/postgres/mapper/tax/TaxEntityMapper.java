@@ -1,7 +1,7 @@
 package com.celotts.taxservice.infrastructure.adapter.output.postgres.mapper.tax;
 
-import com.celotts.taxservice.domain.model.TaxModel;
-import com.celotts.taxservice.infrastructure.adapter.output.postgres.entity.TaxEntity;
+import com.celotts.taxservice.domain.model.tax.TaxModel;
+import com.celotts.taxservice.infrastructure.adapter.output.postgres.entity.tax.TaxEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;

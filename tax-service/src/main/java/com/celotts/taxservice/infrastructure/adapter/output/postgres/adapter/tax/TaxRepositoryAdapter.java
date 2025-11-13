@@ -1,8 +1,8 @@
-package com.celotts.taxservice.infrastructure.adapter.output.postgres.adapter;
+package com.celotts.taxservice.infrastructure.adapter.output.postgres.adapter.tax;
 
-import com.celotts.taxservice.domain.model.TaxModel;
-import com.celotts.taxservice.domain.port.output.TaxRepositoryPort;
-import com.celotts.taxservice.infrastructure.adapter.output.postgres.entity.TaxEntity;
+import com.celotts.taxservice.domain.model.tax.TaxModel;
+import com.celotts.taxservice.domain.port.output.tax.TaxRepositoryPort;
+import com.celotts.taxservice.infrastructure.adapter.output.postgres.entity.tax.TaxEntity;
 import com.celotts.taxservice.infrastructure.adapter.output.postgres.mapper.tax.TaxEntityMapper;
 import com.celotts.taxservice.infrastructure.adapter.output.postgres.repository.tax.TaxJpaRepository;
 import lombok.RequiredArgsConstructor;
