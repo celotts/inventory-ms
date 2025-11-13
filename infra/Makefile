@@ -215,7 +215,7 @@ up-prod: podman-ready ## 🚀 Levanta todo en entorno de producción
 	$(COMPOSE_PROD) $(foreach p,$(PROFILES_ALL),--profile $(p)) up -d --build
 
 up-db: podman-ready ## 🔄 Levanta solo la base de datos para desarrollo local (product-db)
-	$(COMPOSE_LOCAL) --profile product up -d product-db
+	$(COMPOSE_LOCAL) --profile infra --profile product up -d product-db
 
 print-envs: ## 🔎 Mostrar qué .env usará cada target
 	@echo "CURDIR:                         $(CURDIR)"
@@ -223,6 +223,22 @@ print-envs: ## 🔎 Mostrar qué .env usará cada target
 	@echo "ENV_FILE_LOCAL_SUPPLIER:        $(ENV_FILE_LOCAL_SUPPLIER)"
 	@echo "ENV_SUPPLIER_FALLBACK:          $(ENV_SUPPLIER_FALLBACK)"
 	@echo "ENV_FILE_LOCAL_SUPPLIER_RESOLVED: $(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)"
+
+up-local-all: podman-ready ## 🚀 Levanta TODO el stack con .env.local
+	@echo "🧹 Copiando variables de entorno..."
+	cp $(ENV_FILE_LOCAL) .env.override
+
+	@echo "🔨 Construyendo TODOS los JARs..."
+	$(MAKE) build-jars-all
+
+	@echo "🦭 Levantando contenedores (TODOS los perfiles)..."
+	$(RUN) podman compose -f $(COMPOSE_FILE_LOCAL) --env-file $(ENV_FILE_LOCAL) \
+	   $(foreach p,$(PROFILES_ALL),--profile $(p)) \
+	   up -d --build
+# ---------------------------------------------------------------------
+# 🆕 Nuevo: Levantar TODO el stack localmente con .env.local
+# ---------------------------------------------------------------------
+
 
 # ---------------------------------------------------------------------
 # 🧪 Supplier Service
