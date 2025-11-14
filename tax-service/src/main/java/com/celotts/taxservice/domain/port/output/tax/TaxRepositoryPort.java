@@ -55,4 +55,6 @@ public interface TaxRepositoryPort {
     long count();
 
     long countByActive(boolean active);
+
+    List<TaxModel> findByDescriptionContaining(String name);
 }

@@ -17,7 +17,11 @@ public interface TaxUseCase {
     List<TaxModel> findAll();
     List<TaxModel> findAllById(List<UUID> ids);
 
+    List<TaxModel> findByNameContaining(String name);
+    List<TaxModel> findByDescriptionContaining(String name);
+
     List<TaxModel> finjdByNameContaining(String name);
+
     List<TaxModel> searchByNameOrDescriptionm(String query, int limit);
 
     void deleteById(UUID id);

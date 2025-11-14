@@ -40,6 +40,11 @@ public class TaxEntity extends AuditableEntity {
     @Column(name = "name", nullable = false, length = 120)
     private String name;
 
+    @NotBlank(message = "{tax.description.required}")
+    @Size(min = 2, max = 120, message = "{tax.description.size}")
+    @Column(name = "description", nullable = false, length = 120)
+    private String description;
+
     @NotNull(message = "{tax.rate.required}")
     @DecimalMin(value = "0.00", inclusive = true, message = "{tax.rate.min}")
     @DecimalMax(value = "100.00", inclusive = true, message = "{tax.rate.max}")
@@ -77,6 +82,9 @@ public class TaxEntity extends AuditableEntity {
             @NotBlank(message = "{tax.name.required}")
             @Size(min = 2, max = 120, message = "{tax.name.size}")
             String name,
+            @NotBlank(message = "{tax.description.required}")
+            @Size(min = 2, max = 120, message = "{tax.description.size}")
+            String description,
             @NotNull(message = "{tax.rate.required}")
             @DecimalMin(value = "0.00", inclusive = true, message = "{tax.rate.min}")
             @DecimalMax(value = "100.00", inclusive = true, message = "{tax.rate.max}")

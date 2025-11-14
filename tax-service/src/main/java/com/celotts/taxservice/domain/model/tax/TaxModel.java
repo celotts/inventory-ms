@@ -33,6 +33,11 @@ public class TaxModel {
     @Size(min = 2, max = 120, message = "{tax.name.size}")
     private String name;
 
+    @Column(length = 120, nullable = false)
+    @NotBlank(message =  "{tax.description.required}")
+    @Size(min = 2, max= 120, message = "{tax.description.size}")
+    private String description;
+
     @Column(name = "rate", precision = 5, scale = 2, nullable = false)
     @DecimalMin(value = "0.00", inclusive = true, message = "{tax.rate.min}")
     @DecimalMax(value = "100.00", inclusive = true, message = "{tax.rate.max}")
@@ -83,4 +88,6 @@ public class TaxModel {
     protected void onUpdate() {
         this.updatedAt = OffsetDateTime.now();
     }
+
+
 }

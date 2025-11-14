@@ -82,6 +82,17 @@ public class TaxRepositoryAdapter implements TaxRepositoryPort {
     }
 
     @Override
+    public List<TaxModel> findByDescriptionContaining(String name) {
+        log.debug("Finding taxes by description containing: {}", name);
+        // Asumiendo que TaxJpaRepository tiene este método de consulta derivada
+        return jpa.findByDescriptionIgnoreCase(name, Pageable.unpaged())
+                .getContent()
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<TaxModel> findByNameOrDescription(String query, int limit) {
         log.debug("Finding taxes by name or code containing: {}", query);
         return jpa.findByCodeIgnoreCase(query, Pageable.unpaged())

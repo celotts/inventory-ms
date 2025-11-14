@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+// Importación incorrecta eliminada: javax.xml.crypto.dsig.SignatureProperty
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -45,6 +46,17 @@ public interface TaxJpaRepository extends JpaRepository<TaxEntity, UUID> {
         ORDER BY t.createdAt DESC
     """)
     Page<TaxEntity> findByNameIgnoreCase(@Param("name") String name, Pageable pageable);
+
+    // ---------- Búsqueda case-insensitive por descripción (CORREGIDO) ----------
+    /**
+     * Busca impuestos cuya descripción contenga el texto dado, sin distinción entre mayúsculas y minúsculas.
+     */
+    @Query("""
+        SELECT t FROM TaxEntity t
+        WHERE LOWER(t.description) LIKE LOWER(CONCAT('%', :name, '%'))
+        ORDER BY t.createdAt DESC
+    """)
+    Page<TaxEntity> findByDescriptionIgnoreCase(@Param("name") String name, Pageable pageable);
 
     // ---------- Rango de tasas ----------
     Page<TaxEntity> findByRateBetween(BigDecimal minRate, BigDecimal maxRate, Pageable pageable);
