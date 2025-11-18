@@ -1,17 +1,44 @@
 plugins {
-    id 'org.springframework.boot' version '3.4.5' apply false
+    id 'org.springframework.boot' version '3.5.0' apply false
     id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
 allprojects {
     group = 'com.celotts.inventory'
     version = '0.0.1-SNAPSHOT'
-    repositories { mavenCentral() }
+
+    repositories {
+        mavenCentral()
+        maven { url = 'https://repo.spring.io/milestone' }
+    }
 }
 
 subprojects {
     apply plugin: 'java'
-    java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'org.springframework.boot'
+
+    // ✅ ¡AQUÍ ESTÁ CORRECTO!
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+    }
+
+    // ⭐ BLOQUE AÑADIDO PARA FORZAR LA VERSIÓN DE SPRING BOOT
+    dependencyManagement {
+        imports {
+            // Esto establece la versión base de todos los Spring Boot Starters a 3.5.0,
+            // lo que permite que Spring Cloud 2025.0.0 (que se define en el módulo hijo)
+            // se resuelva sin degradar Spring Boot a 3.4.5.
+            mavenBom "org.springframework.boot:spring-boot-dependencies:3.5.0"
+        }
+    }
+    // -------------------------------------------------------------
 
     tasks.withType(JavaCompile).configureEach {
         options.encoding = 'UTF-8'
@@ -21,4 +48,3 @@ subprojects {
         useJUnitPlatform()
     }
 }
-

@@ -1,16 +1,14 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.5'
+    id 'org.springframework.boot'
     id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'com.celotts'
 version = '0.0.1-SNAPSHOT'
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
+tasks.withType(JavaCompile).configureEach {
+    options.release = 21
 }
 
 repositories {
@@ -48,9 +46,11 @@ dependencyManagement {
     }
 }
 
-tasks.named('test') {
+// Debes cambiar la llamada a tasks.named para especificar que es de tipo Test
+tasks.named('test', Test).configure {
     useJUnitPlatform()
 }
+
 bootJar {
     archiveFileName = 'discovery-service-0.0.1-SNAPSHOT.jar'
 }

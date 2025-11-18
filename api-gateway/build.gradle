@@ -1,15 +1,15 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.5'
+    id 'org.springframework.boot'
     id 'io.spring.dependency-management' version '1.1.7'
+    id 'com.github.ben-manes.versions' version '0.53.0'
+    id 'org.owasp.dependencycheck' version '9.0.7'
 }
 
 group = 'com.celotts'
 version = '0.0.1-SNAPSHOT'
 
-java {
-    sourceCompatibility = '21'
-}
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
 
 configurations {
     compileOnly {
@@ -19,10 +19,18 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven {
+        url = 'https://repo.spring.io/milestone'
+    }
 }
 
 ext {
-    set('springCloudVersion', "2024.0.1")
+    set('springCloudVersion', "2024.0.2")
+    set('postgresDriverVersion', "42.7.8")
+    set('h2Version', "2.4.240")
+    set('lombokVersion', "1.18.42")
+    set('mapstructVersion', "1.6.3")
+    set('testcontainersBom', "1.19.8")
 }
 
 dependencies {
@@ -32,6 +40,18 @@ dependencies {
     implementation 'org.springframework.cloud:spring-cloud-starter-config'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // 🔁 MapStruct (Añadir para consistencia, aunque el Gateway no lo use extensamente)
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+
+    // 📘 OpenAPI
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0'
+
+    // ⚙️ DevTools
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     // 🆕 Dependencias JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
@@ -55,6 +75,22 @@ dependencyManagement {
     }
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation']
+}
+
+springBoot {
+    // Ajusta el main class según tu paquete y clase principal del API Gateway
+    mainClass = 'com.celotts.apigateway.ApiGatewayApplication'
+}
+
+bootJar {
+    archiveFileName = 'api-gateway-0.0.1-SNAPSHOT.jar'
+}
+
+compileJava {
+    options.compilerArgs += [
+            '-Amapstruct.defaultComponentModel=spring',
+            '-Amapstruct.unmappedTargetPolicy=IGNORE'
+    ]
 }
