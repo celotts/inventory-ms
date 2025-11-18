@@ -55,7 +55,7 @@ dependencyManagement {
 
 
 // ⭐ BLOQUE AÑADIDO PARA FORZAR EXPLÍCITAMENTE LAS VERSIONES COMPATIBLES
-        configurations.all {
+        configurations.configureEach {
             resolutionStrategy {
                 // Forzamos Spring Boot 3.5.0, anulando la degradación causada por Spring Cloud BOM.
                 force 'org.springframework.boot:spring-boot:3.5.0'

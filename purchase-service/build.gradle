@@ -1,0 +1,7 @@
+// En purchase-service/build.gradle
+
+springBoot {
+    // ⭐ DEBES REEMPLAZAR 'com.celotts.purchaseservice.PurchaseServiceApplication' 
+    // CON LA RUTA REAL Y COMPLETA DE TU CLASE @SpringBootApplication
+    mainClass = 'com.celotts.purchaseservice.PurchaseServiceApplication'
+}
