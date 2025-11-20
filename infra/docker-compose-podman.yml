@@ -39,6 +39,9 @@ services:
       - GIT_USERNAME=${GIT_USERNAME}
       - GIT_TOKEN=${GIT_TOKEN}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
     depends_on:
       discovery-service:
         condition: service_started  # 🔄 Cambiado de service_healthy a service_started
@@ -134,7 +137,7 @@ services:
       discovery-service:
         condition: service_started
       config-service:
-        condition: service_started
+        condition: service_healthy
       product-db:
         condition: service_healthy
 
@@ -144,7 +147,6 @@ services:
       timeout: 15s
       retries: 10
       start_period: 90s
-
     restart: unless-stopped
     networks:
       - inventory-network
@@ -186,6 +188,7 @@ services:
       - "${PORT9091:-9091}:9091"
     environment:
       - SPRING_APPLICATION_NAME=supplier-service
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - JAVA_OPTS=${JAVA_OPTS}
       - SPRING_DATASOURCE_URL=jdbc:postgresql://supplier-db:5432/${SUPPLIER_DB_NAME:-supplier}
@@ -198,8 +201,10 @@ services:
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info
       - SERVER_PORT=9091
       - WAIT_FOR=discovery-service:8761,config-service:7777,supplier-db:5432
-      #- WAIT_FOR=discovery-service:8761,config-service:7777,tax-db:5432
       - WAIT_TIMEOUT=40
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8 # 🆕 AGREGADO DNS
     depends_on:
       discovery-service:
         condition: service_started
@@ -229,8 +234,6 @@ services:
       POSTGRES_PASSWORD: ${PURCHASE_DB_PASSWORD:-purchase123}
     volumes: # ⭐ Nuevo
       - purchase-data:/var/lib/postgresql/data
-      # Si tienes un script de inicialización para la base de datos de compra
-      #- ./init-scripts/purchase/03-purchase-init.sql:/docker-entrypoint-initdb.d/03-purchase-init.sql:ro
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${PURCHASE_DB_USERNAME:-purchase}" ]
       interval: ${INTERVAL10S:-10s}
@@ -295,6 +298,9 @@ services:
       - SPRING_CLOUD_CONFIG_FAILFAST=false
       - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=3
       - WAIT_FOR=discovery-service:8761,config-service:7777
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8 # 🆕 AGREGADO DNS
     depends_on:
       discovery-service:
         condition: service_started  # 🔄 Cambiado de service_healthy a service_started
@@ -368,9 +374,10 @@ services:
       # Actuator
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info
       - SERVER_PORT=9092
-
-      # Evitar rebind que afecte Hikari
       - SPRING_CLOUD_REFRESH_ENABLED=false
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8 # 🆕 AGREGADO DNS
     depends_on:
       discovery-service:
         condition: service_started

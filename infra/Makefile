@@ -240,7 +240,8 @@ up-local-all: podman-ready ## 🚀 Levanta TODO el stack con .env.local
 # 🆕 Nuevo: Levantar TODO el stack localmente con .env.local
 # ---------------------------------------------------------------------
 
-
+tax-jar: build-tax ## 🔨 Alias para construir solo el JAR de tax
+	@echo "✅ JAR de tax-service construido."
 # ---------------------------------------------------------------------
 # 🧪 Supplier Service
 # ---------------------------------------------------------------------
@@ -271,6 +272,9 @@ test-supplier: ## 🧪 Tests supplier-service
 
 health-supplier: ## 💚 Health de supplier-service
 	@curl -fsS http://localhost:$(SUPPLIER_PORT)/actuator/health | jq . || echo "❌ supplier-service no responde"
+
+build-purchase: ## 🔨 Construir purchase-service
+	cd ../purchase-service && ./gradlew build
 
 # ---------------------------------------------------------------------
 # 🧪 Purchase Service
@@ -380,9 +384,26 @@ rebuild-product-dev: podman-ready ## 🔁 Reconstruye solo product-service (dev)
 	$(COMPOSE_DEV) build product-service
 	$(COMPOSE_DEV) up -d product-service
 
+# ---------------------------------------------------------------------
+# 🧹 Mantenimiento y limpieza (Consolidación)
+# ---------------------------------------------------------------------
+
+.PHONY: clear-all
+clear-all: podman-ready ## 🧨 Detiene y elimina TODOS los contenedores, volúmenes e imágenes no usadas.
+	@echo "🧨 Limpieza profunda de Podman: Down, Prune, Images."
+	# 1. Elimina contenedores y volúmenes de Compose
+	$(MAKE) down-all
+	# 2. Limpia volúmenes huérfanos y cache de imágenes
+	$(MAKE) clean-podman
+	# 3. Elimina TODOS los contenedores que hayan quedado
+	$(MAKE) podman-remove-all
+
 ## ♻️ Mantenimiento y limpieza
 clean-volumes: podman-ready ## 🧹 Limpia volúmenes no usados
 	podman volume prune -f
+down-%: podman-ready
+	@echo "🧹 Bajando perfil: $*"
+	$(COMPOSE_LOCAL) --profile $* down -v --remove-orphans
 
 clean-images: podman-ready ## 🧹 Limpia imágenes sin contenedor
 	podman image prune -a -f
@@ -404,6 +425,10 @@ reset-db: podman-ready ## 🧨 Reinicia product-db con script inicial
 	@echo "📋 Mostrando logs..."
 	podman logs -f product-db
 
+down-all: podman-ready
+	@echo "🧹 Limpiando todo el stack (Todos los perfiles)..."
+	$(COMPOSE_LOCAL) $(foreach p,$(PROFILES_ALL),--profile $(p)) down -v --remove-orphans
+
 reset-local: ## 🔁 Reinicia completamente el entorno local
 	$(MAKE) down-local
 	$(MAKE) clean-podman
@@ -412,6 +437,7 @@ reset-local: ## 🔁 Reinicia completamente el entorno local
 reload-schema: podman-ready ## ♻️ Ejecuta el script SQL en product-db
 	podman cp ./init-scripts/product-init.sql product-db:/tmp/product-init.sql
 	podman exec -it product-db psql -U product -d product -f /tmp/product-init.sql
+
 
 ## 🔍 Logs y verificación
 logs-local: podman-ready ## 📜 Logs de todos los servicios locales
@@ -1117,8 +1143,9 @@ up-ms: podman-ready fix-container-orphans ## 🚀 Infra + supplier + purchase (s
 	$(COMPOSE_LOCAL) --profile infra --profile supplier --profile purchase up -d --build
 
 # --- TAX Service ---
-up-tax: podman-ready ## 🚀 Levanta sólo tax-db + tax-service (y la infra si no está)
-	$(COMPOSE_LOCAL) --profile infra --profile tax up -d --build tax-db tax-service
+up-tax: podman-ready fix-container-orphans ## 🚀 Levantar perfil tax (compose)
+	@echo "🦭 Levantando discovery, config, tax-db y tax-service..."
+	$(COMPOSE_LOCAL) --profile infra --profile tax up -d --build discovery-service config-service tax-db tax-service
 
 # Variante con TAX (no pisa up-local base)
 up-local-with-tax: podman-ready fix-container-orphans ## 🧪 Infra + product + gateway + tax
@@ -1134,6 +1161,10 @@ up-local-with-tax: podman-ready fix-container-orphans ## 🧪 Infra + product + 
 	fi
 	@echo "🦭 Levantando contenedores con Podman (perfiles: infra, product, gateway, tax)..."
 	$(COMPOSE_LOCAL) --profile infra --profile product --profile gateway --profile tax up -d --build
+
+up-purchase: podman-ready fix-container-orphans ## 🚀 Levantar perfil purchase (compose)
+	@echo "🦭 Levantando discovery, config, purchase-db y purchase-service..."
+	$(COMPOSE_LOCAL) --profile infra --profile purchase up -d --build discovery-service config-service purchase-db purchase-service
 
 up-local-product-supplier-tax: podman-ready fix-container-orphans ## 🧪 Infra + product + supplier + tax
 	@echo "🧹 Copiando variables de entorno (supplier/local)..."
@@ -1187,9 +1218,7 @@ rebuild-tax-local: podman-ready ## 🔁 Rebuild tax-service (local)
 	@echo "🛠️  Rebuild tax-service (local)"
 	cp $(ENV_FILE_LOCAL) .env.override
 	cd .. && ./gradlew :tax-service:bootJar
-	COMPOSE_PROFILES=infra,tax \
 	$(COMPOSE_LOCAL) --profile infra --profile tax build tax-service
-	COMPOSE_PROFILES=infra,tax \
 	$(COMPOSE_LOCAL) --profile infra --profile tax \
 	  up -d discovery-service config-service tax-db tax-service
 
