@@ -6,7 +6,7 @@ spring:
     name: config-service
 
   cloud:
-    config:
+    config: # La configuración Config Server para entornos de despliegue
       server:
         git:
           uri: ${SPRING_CLOUD_CONFIG_SERVER_GIT_URI}
@@ -16,15 +16,6 @@ spring:
           default-label: main
           search-paths: config
       fail-fast: true
-
-    #gateway:
-      #routes:
-        #- id: product-service
-         # uri: lb://product-service
-         # predicates:
-         #   - Path=/product/**
-         # filters:
-         #   - RewritePath=/product/(?<path>.*), /${path}
 
 eureka:
   client:

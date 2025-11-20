@@ -1,22 +1,26 @@
-# ---- stage 1: traer curl binario sin apt ----
-FROM curlimages/curl:8.10.1 AS curlbin
+# Imagen de runtime (se mantiene JDK si lo necesitas para herramientas de desarrollo/debugging)
+FROM eclipse-temurin:21-jdk-jammy
 
-# ---- stage 2: runtime Java con bash (Ubuntu/Jammy) ----
-FROM eclipse-temurin:21-jre-jammy
-
-# Locale básico (opcional, útil para logs)
-ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+ARG DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+# Instala bash y curl en una sola capa limpia
+RUN apt-get update \
+ && apt-get install -y bash curl \
+ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copiamos curl y certificados al runtime (sin apt)
-COPY --from=curlbin /usr/bin/curl /usr/bin/curl
-COPY --from=curlbin /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+# 🔁 Copia los scripts desde la ubicación central (infra/scripts)
+# ¡CORRECCIÓN APLICADA AQUÍ!
+COPY ../infra/scripts/wait-for-it.sh ./
+COPY ../infra/scripts/entrypoint.sh ./
 
-# Copiamos app y scripts
-COPY build/libs/*.jar /app/app.jar
-COPY entrypoint.sh wait-for-it.sh /app/
-RUN chmod +x /app/entrypoint.sh /app/wait-for-it.sh
+# ✅ Asegura permisos de ejecución
+RUN chmod +x wait-for-it.sh entrypoint.sh
+
+# 📦 Copia el .jar generado por Gradle (Asegúrate de que el nombre del JAR sea correcto)
+COPY tax-service/build/libs/*.jar app.jar
 
 EXPOSE 9092
-ENTRYPOINT ["/app/entrypoint.sh"]
+
+ENTRYPOINT ["bash", "entrypoint.sh"]

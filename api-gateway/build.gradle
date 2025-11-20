@@ -31,7 +31,7 @@ ext {
     set('lombokVersion', "1.18.42")
     set('mapstructVersion', "1.6.3")
     set('testcontainersBom', "1.19.8")
-    set('springBootVersion', "3.5.0")
+    set('springBootVersion', "3.4.0")
     set('springCloudGatewayVersion', "4.1.4") // Compatible con 3.5.0
     set('springCloudNetflixVersion', "4.1.3") // Compatible con 3.5.0
 }

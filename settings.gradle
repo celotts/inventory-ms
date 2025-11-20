@@ -28,7 +28,6 @@ include(
         'discovery-service',
         'product-service',
         'supplier-service',
-        'purchase-service',
         'tax-service',
         'auth-service'
 )

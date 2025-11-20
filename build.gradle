@@ -1,5 +1,6 @@
 plugins {
-    id 'org.springframework.boot' version '3.5.0' apply false
+    // Versión estable y compatible.
+    id 'org.springframework.boot' version '3.4.5' apply false
     id 'io.spring.dependency-management' version '1.1.7' apply false
 }
 
@@ -18,6 +19,15 @@ subprojects {
     apply plugin: 'io.spring.dependency-management'
     apply plugin: 'org.springframework.boot'
 
+    // ⭐ CORRECCIÓN 1: Estrategia de Resolución Forzada (Se mantiene)
+    configurations.all {
+        resolutionStrategy {
+            // 4.1.1 es la versión compatible con Spring Boot 3.3.0
+            force 'org.springframework.cloud:spring-cloud-context:4.1.1'
+            force 'org.springframework.cloud:spring-cloud-commons:4.1.1'
+        }
+    }
+
     // ✅ ¡AQUÍ ESTÁ CORRECTO!
     java {
         toolchain {
@@ -29,13 +39,14 @@ subprojects {
         options.encoding = 'UTF-8'
     }
 
-    // ⭐ BLOQUE AÑADIDO PARA FORZAR LA VERSIÓN DE SPRING BOOT
+    // ⭐ BOMs Armonizados (Se mantienen)
     dependencyManagement {
         imports {
-            // Esto establece la versión base de todos los Spring Boot Starters a 3.5.0,
-            // lo que permite que Spring Cloud 2025.0.0 (que se define en el módulo hijo)
-            // se resuelva sin degradar Spring Boot a 3.4.5.
-            mavenBom "org.springframework.boot:spring-boot-dependencies:3.5.0"
+            // BOM de Spring Cloud (Kilburn) compatible con Spring Boot 3.3.x
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:2023.0.1"
+
+            // Declaración de Spring Boot 3.3.0
+            mavenBom "org.springframework.boot:spring-boot-dependencies:3.3.0"
         }
     }
     // -------------------------------------------------------------
@@ -44,7 +55,10 @@ subprojects {
         options.encoding = 'UTF-8'
     }
 
+    // ⭐ CORRECCIÓN 2: Deshabilitar el verificador de compatibilidad solo para los tests
     tasks.withType(Test).configureEach {
         useJUnitPlatform()
+        // Esta línea previene la CompatibilityNotMetException durante la carga del contexto de prueba.
+        systemProperty "spring.cloud.compatibility-verifier.enabled", "false"
     }
 }

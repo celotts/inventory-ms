@@ -15,7 +15,7 @@ COPY entrypoint.sh entrypoint.sh
 RUN chmod +x wait-for-it.sh entrypoint.sh
 
 # 📦 Copia el .jar correcto para API Gateway
-COPY build/libs/api-gateway-0.0.1-SNAPSHOT.jar app.jar
+COPY api-gateway/build/libs/*.jar app.jar
 
 # 🌐 Puerto actualizado para API Gateway
 EXPOSE 8090

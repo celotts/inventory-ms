@@ -1,26 +1,39 @@
+# ----------------------------------------------------------------------
+# RUNTIME STAGE (Usando JDK 21 como base, según la solicitud)
+# Base con JDK para herramientas de desarrollo/debugging.
+# ----------------------------------------------------------------------
 FROM eclipse-temurin:21-jdk-jammy
 
 ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-# Instala bash y curl en una sola capa limpia
+
+# Instala bash y curl para el entrypoint y el script wait-for-it
 RUN apt-get update \
  && apt-get install -y bash curl \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# 🔁 Copia los scripts primero
-COPY wait-for-it.sh wait-for-it.sh
-COPY entrypoint.sh entrypoint.sh
+# 📦 Copia el .jar generado por Gradle/Maven y lo renombra a 'app.jar'
+# NOTA: Esta ruta asume que el JAR ya fue construido por Gradle.
+COPY product-service/build/libs/*.jar app.jar
 
-# ✅ Asegura permisos de ejecución después de copiarlos
+# 🔁 Copia los scripts de ejecución desde el directorio 'infra/scripts'
+# IMPORTANTE: Esto asume que el comando 'docker build' se ejecuta desde el
+# directorio raíz del proyecto para que la ruta 'infra/scripts' sea válida.
+COPY infra/scripts/wait-for-it.sh ./
+COPY infra/scripts/entrypoint.sh ./
+
+# ✅ Asegura permisos de ejecución
 RUN chmod +x wait-for-it.sh entrypoint.sh
-
-# 📦 Copia el .jar generado por Gradle
-COPY build/libs/product-service-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 9090
 
-ENTRYPOINT ["bash", "entrypoint.sh"]
-# 🔕 No pongas ENTRYPOINT aquí si lo defines en docker-compose
+# Define la ruta del JAR para el script entrypoint
+ENV JAR_PATH=/app/app.jar
 
+# Usa el script como Entrypoint del contenedor
+ENTRYPOINT ["bash", "entrypoint.sh"]
+
+# Comando por defecto (si el entrypoint no lo reemplaza)
+CMD ["java", "-jar", "/app/app.jar"]

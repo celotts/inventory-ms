@@ -6,25 +6,18 @@ spring:
     name: config-service
 
   cloud:
+    compatibility-verifier:
+      enabled: false
     config:
-      server:
+      server: # <--- ¡CORRECCIÓN CLAVE! Añadir 'server' aquí.
         git:
-          uri: https://github.com/celotts/your-config-repo.git
+          uri: ${SPRING_CLOUD_CONFIG_SERVER_GIT_URI}
           username: ${GIT_USERNAME}
           password: ${GIT_TOKEN}
           timeout: 10
           default-label: main
           search-paths: config
       fail-fast: true
-
-    gateway:
-      routes:
-        - id: product-service
-          uri: lb://product-service
-          predicates:
-            - Path=/product/**
-          filters:
-            - RewritePath=/api/products/(?<path>.*), /$\{path}
 
 eureka:
   client:

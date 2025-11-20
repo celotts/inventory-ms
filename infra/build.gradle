@@ -1,16 +1,24 @@
 // Archivo: infra/build.gradle
+// Módulo de infraestructura (sin código de aplicación Java)
 
-// Deshabilita la creación del JAR ejecutable de Spring Boot, resolviendo el error principal.
-tasks.named('bootJar') {
+plugins {
+    // Se mantienen los plugins de Java y Spring Boot para la consistencia del proyecto,
+    // pero se deshabilitarán las tareas que generan.
+    id 'java'
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+// Deshabilita la creación de todos los JARs (incluyendo 'jar' y 'bootJar'),
+// ya que este módulo no debe producir artefactos.
+tasks.withType(Jar) {
     enabled = false
 }
 
-// Deshabilita la creación del JAR estándar.
-tasks.named('jar') {
+// Deshabilita explícitamente la compilación de Java,
+// ya que el módulo no contiene código fuente.
+tasks.withType(JavaCompile) {
     enabled = false
 }
 
-// Deshabilita la compilación de código Java, ya que este módulo no lo contiene.
-tasks.named('compileJava') {
-    enabled = false
-}
+// El bloque 'sourceSets' problemático ha sido ELIMINADO para resolver el error de sintaxis.

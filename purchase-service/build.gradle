@@ -1,7 +1,117 @@
-// En purchase-service/build.gradle
+plugins {
+    id 'java'
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
+    id 'com.github.ben-manes.versions' version '0.53.0'
+    id 'org.owasp.dependencycheck' version '9.0.7'
+}
+
+group = 'com.celotts'
+version = '0.0.1-SNAPSHOT'
+tasks.named('bootJar') {
+    enabled = false
+}
+jacoco { toolVersion = "0.8.11" }
+
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
+
+configurations { compileOnly { extendsFrom annotationProcessor } }
+
+repositories { mavenCentral() }
+
+ext {
+    set('springCloudVersion', "2024.0.2")
+    set('postgresDriverVersion', "42.7.8")
+    set('h2Version', "2.4.240")
+    set('lombokVersion', "1.18.42")
+    set('mapstructVersion', "1.6.3")
+    set('testcontainersBom', "1.19.8")
+}
+
+dependencies {
+    // 🌐 Core Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // 🔒 Security (si lo necesitas)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // ☁️ Spring Cloud
+    implementation 'org.springframework.cloud:spring-cloud-starter-config'
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3'
+
+    // 📘 OpenAPI
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+
+
+    implementation 'org.apache.commons:commons-lang3:3.18.0'
+
+    // 🗄️ Base de datos
+    runtimeOnly "org.postgresql:postgresql:${postgresDriverVersion}"
+    testImplementation "com.h2database:h2:${h2Version}"
+
+    // 🧩 Lombok
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
+    testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+    // 🔁 MapStruct
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+
+    // ⚙️ DevTools
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // 🧪 Testing
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation platform("org.testcontainers:testcontainers-bom:${testcontainersBom}")
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+
+// 🔒 Fija commons-compress a versión sin CVEs (parchE CVE-2024-25710 y CVE-2024-26308)
+    testImplementation 'org.apache.commons:commons-compress:1.26.1'
+
+    // 🧩 Mockito / Security Test
+    testImplementation 'org.mockito:mockito-core:5.20.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.20.0'
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    // 🛠️ Configuration processor
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+    dependencies {
+        dependency 'org.apache.commons:commons-lang3:3.18.0'
+    }
+}
 
 springBoot {
-    // ⭐ DEBES REEMPLAZAR 'com.celotts.purchaseservice.PurchaseServiceApplication' 
-    // CON LA RUTA REAL Y COMPLETA DE TU CLASE @SpringBootApplication
-    mainClass = 'com.celotts.purchaseservice.PurchaseServiceApplication'
+    mainClass = 'com.celotts.taxservice.TaxServiceApplication'
+}
+
+bootJar {
+    archiveFileName = 'tax-service-0.0.1-SNAPSHOT.jar'
+}
+
+compileJava {
+    options.compilerArgs += [
+            '-Amapstruct.defaultComponentModel=spring',
+            '-Amapstruct.unmappedTargetPolicy=IGNORE'
+    ]
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation']
 }

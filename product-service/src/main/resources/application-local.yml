@@ -11,7 +11,7 @@ spring:
       - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/product
+    url: jdbc:postgresql://product-db:5432/product
     username: product
     password: product123
     driver-class-name: org.postgresql.Driver

@@ -9,6 +9,7 @@ ROOT_DIR := $(abspath $(CURDIR)/..)
 GRADLEW  := $(ROOT_DIR)/gradlew
 
 # Archivos .env (con rutas absolutas)
+# 🎯 APUNTAR A LA RAÍZ DEL PROYECTO (ROOT_DIR)
 ENV_FILE_LOCAL            ?= $(CURDIR)/.env.local
 ENV_FILE_LOCAL_SUPPLIER   ?= $(CURDIR)/.env.local-supplier
 ENV_FILE_DEV              ?= $(CURDIR)/.env.dev
