@@ -1,19 +1,36 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+# entrypoint.sh - Lógica de arranque para Product Service (con BD)
 
-function wait_for_service() {
-  local name="$1"
-  local host_port="$2"
-  local timeout="${3:-30}"
+# ----------------------------------------------------------------
+# CONFIGURACIÓN Y RUTAS
+# ----------------------------------------------------------------
+WAIT_FOR_IT=/app/wait-for-it.sh
+JAR_NAME=${1:-app.jar}
 
-  echo "🕒 Esperando $name en $host_port (timeout ${timeout}s)..."
-  bash ./wait-for-it.sh "$host_port" --timeout="$timeout" --strict -- \
-    echo "✅ $name está disponible."
-}
+# DEPENDENCIAS DE INFRAESTRUCTURA
+DISCOVERY_HOST=discovery-service:8761
+CONFIG_HOST=config-service:7777
 
-# === Esperar a PostgreSQL ===
-wait_for_service "PostgreSQL" "product-db:5432" 30
+# ⭐⭐⭐ AJUSTADO PARA PRODUCT SERVICE ⭐⭐⭐
+DB_HOST=product-db:5432
 
-# === Lanzar app ===
-echo "🚀 Iniciando app.jar..."
-exec java $JAVA_OPTS -jar app.jar
+echo "======================================================"
+echo " INICIANDO ENTRYPOINT CON BD (Product) para $JAR_NAME"
+echo "======================================================"
+
+# 1. Esperar a la Base de Datos
+echo "-> 1/3 Esperando a la base de datos en $DB_HOST..."
+$WAIT_FOR_IT $DB_HOST -t 90 -- echo "Base de datos OK."
+
+# 2. Esperar al Servidor de Descubrimiento (Eureka)
+echo "-> 2/3 Esperando a Discovery Service en $DISCOVERY_HOST..."
+$WAIT_FOR_IT $DISCOVERY_HOST -t 60 -- echo "Discovery Service OK."
+
+# 3. Esperar al Servidor de Configuración (Config Server)
+echo "-> 3/3 Esperando a Config Service en $CONFIG_HOST..."
+$WAIT_FOR_IT $CONFIG_HOST -t 60 -- echo "Config Service OK. Procediendo..."
+
+
+# 4. Lanzar la aplicación principal
+echo "-> Lanzando la aplicación $JAR_NAME..."
+exec java -jar /app/$JAR_NAME

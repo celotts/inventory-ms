@@ -1,29 +1,14 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+# entrypoint.sh - Lógica de arranque para el Config Service
 
-log() {
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
-}
+# Variables (Asume que el JAR fue renombrado a /app/app.jar)
+JAR_NAME=${1:-app.jar}
 
-wait_for_service() {
-  local name="$1"
-  local host_port="$2"
-  local timeout="${3:-30}"
+echo "======================================================"
+echo " INICIANDO ENTRYPOINT DE INFRAESTRUCTURA (Config) para $JAR_NAME"
+echo "======================================================"
 
-  log "🕒 Esperando $name en $host_port (timeout ${timeout}s)..."
-  bash ./wait-for-it.sh "$host_port" --timeout="$timeout" --strict --
-  log "✅ $name está disponible."
-}
+echo "-> Iniciando sin dependencias de red externas. Nota: La configuración de espera a Eureka debe estar en el docker-compose/application.yml."
 
-# === Espera por servicios externos ===
-wait_for_service "discovery-service" "discovery-service:8761" 60
-
-# === Validación de archivo JAR ===
-if [[ ! -f app.jar ]]; then
-  log "❌ Error: app.jar no se encontró en el directorio /app"
-  exit 1
-fi
-
-# === Lanzar aplicación ===
-log "🚀 Iniciando app.jar..."
-exec java ${JAVA_OPTS:-} -jar app.jar
+# Lanzar la aplicación principal
+exec java -jar /app/$JAR_NAME

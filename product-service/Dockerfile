@@ -1,39 +1,53 @@
-# ----------------------------------------------------------------------
-# RUNTIME STAGE (Usando JDK 21 como base, según la solicitud)
-# Base con JDK para herramientas de desarrollo/debugging.
-# ----------------------------------------------------------------------
-FROM eclipse-temurin:21-jdk-jammy
-
-ARG DEBIAN_FRONTEND=noninteractive
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# Instala bash y curl para el entrypoint y el script wait-for-it
-RUN apt-get update \
- && apt-get install -y bash curl \
- && rm -rf /var/lib/apt/lists/*
+# ---------------------------------------------------------------------
+# ETAPA 1: CONSTRUCTOR (Compila la aplicación)
+# ---------------------------------------------------------------------
+FROM eclipse-temurin:21-jdk-jammy AS builder
+LABEL maintainer="Inventory MS Team"
 
 WORKDIR /app
 
-# 📦 Copia el .jar generado por Gradle/Maven y lo renombra a 'app.jar'
-# NOTA: Esta ruta asume que el JAR ya fue construido por Gradle.
-COPY product-service/build/libs/*.jar app.jar
+# Copias iniciales de archivos de Gradle del proyecto raíz
+COPY gradle/ gradle/
+COPY gradlew .
+COPY settings.gradle .
+COPY build.gradle .
 
-# 🔁 Copia los scripts de ejecución desde el directorio 'infra/scripts'
-# IMPORTANTE: Esto asume que el comando 'docker build' se ejecuta desde el
-# directorio raíz del proyecto para que la ruta 'infra/scripts' sea válida.
-COPY infra/scripts/wait-for-it.sh ./
-COPY infra/scripts/entrypoint.sh ./
+# Copia específica del build.gradle y el código fuente del módulo
+COPY product-service/build.gradle product-service/build.gradle
+COPY product-service/src product-service/src
 
-# ✅ Asegura permisos de ejecución
-RUN chmod +x wait-for-it.sh entrypoint.sh
+# Permisos de ejecución
+RUN chmod +x ./gradlew
 
+# Paso 1: Resolver y cachear dependencias
+RUN ./gradlew :product-service:dependencies -x test --console=plain --no-daemon
+
+# Paso 2: Ejecutar la compilación y generar el JAR
+RUN ./gradlew :product-service:bootJar -x test --console=plain --no-daemon
+
+# ---------------------------------------------------------------------
+# ETAPA 2: EJECUCIÓN (Crea la imagen final mínima)
+# ---------------------------------------------------------------------
+FROM eclipse-temurin:21-jre-jammy AS runner
+LABEL maintainer="Inventory MS Team"
+
+# Puerto para Product Service
 EXPOSE 9090
 
-# Define la ruta del JAR para el script entrypoint
-ENV JAR_PATH=/app/app.jar
+RUN addgroup --system spring && adduser --system --ingroup spring spring
+USER spring:spring
 
-# Usa el script como Entrypoint del contenedor
-ENTRYPOINT ["bash", "entrypoint.sh"]
+WORKDIR /app
 
-# Comando por defecto (si el entrypoint no lo reemplaza)
-CMD ["java", "-jar", "/app/app.jar"]
+# Copiar el JAR compilado desde la etapa 'builder'
+COPY --from=builder /app/product-service/build/libs/product-service-*.jar /app/app.jar
+
+# ⭐ COPIAR LOS SCRIPTS DE ARRANQUE Y ESPERA (Incluye espera a la BD en su entrypoint.sh)
+COPY product-service/entrypoint.sh ./
+COPY wait-for-it.sh ./
+
+# Hacerlos ejecutables
+#RUN chmod +x entrypoint.sh wait-for-it.sh
+
+# ⭐ ESTABLECER EL PUNTO DE ENTRADA
+ENTRYPOINT ["/app/entrypoint.sh"]

@@ -12,18 +12,18 @@ COPY gradlew .
 COPY settings.gradle .
 COPY build.gradle .
 
-# Copia específica del build.gradle y el código fuente del módulo (!!! CAMBIO A API-GATEWAY !!!)
-COPY api-gateway/build.gradle api-gateway/build.gradle
-COPY api-gateway/src api-gateway/src
+# Copia específica del build.gradle y el código fuente del módulo (!!! CAMBIO A PURCHASE-SERVICE !!!)
+COPY purchase-service/build.gradle purchase-service/build.gradle
+COPY purchase-service/src purchase-service/src
 
 # Permisos de ejecución
 RUN chmod +x ./gradlew
 
 # Paso 1: Resolver y cachear dependencias
-RUN ./gradlew :api-gateway:dependencies -x test --console=plain --no-daemon
+RUN ./gradlew :purchase-service:dependencies -x test --console=plain --no-daemon
 
 # Paso 2: Ejecutar la compilación y generar el JAR
-RUN ./gradlew :api-gateway:bootJar -x test --console=plain --no-daemon
+RUN ./gradlew :purchase-service:bootJar -x test --console=plain --no-daemon
 
 # ---------------------------------------------------------------------
 # ETAPA 2: EJECUCIÓN (Crea la imagen final mínima)
@@ -31,19 +31,19 @@ RUN ./gradlew :api-gateway:bootJar -x test --console=plain --no-daemon
 FROM eclipse-temurin:21-jre-jammy AS runner
 LABEL maintainer="Inventory MS Team"
 
-# ⭐ PUERTO DE API GATEWAY (Diferente a Eureka)
-EXPOSE 8090
+# ⭐ PUERTO PARA PURCHASE SERVICE
+EXPOSE 9094
 
 RUN addgroup --system spring && adduser --system --ingroup spring spring
 USER spring:spring
 
 WORKDIR /app
 
-# Copiar el JAR compilado desde la etapa 'builder' (!!! CAMBIO A API-GATEWAY !!!)
-COPY --from=builder /app/api-gateway/build/libs/api-gateway-*.jar /app/app.jar
+# Copiar el JAR compilado desde la etapa 'builder'
+COPY --from=builder /app/purchase-service/build/libs/purchase-service-*.jar /app/app.jar
 
-# ⭐ COPIAR LOS SCRIPTS DE ARRANQUE (!!! CAMBIO A API-GATEWAY ENTRYPOINT !!!)
-COPY api-gateway/entrypoint.sh ./
+# ⭐ COPIAR LOS SCRIPTS DE ARRANQUE Y ESPERA (Asume espera a BD y Eureka en su entrypoint.sh)
+COPY purchase-service/entrypoint.sh ./
 COPY wait-for-it.sh ./
 
 # Hacerlos ejecutables

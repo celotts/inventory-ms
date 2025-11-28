@@ -1,296 +1,379 @@
+
+# Definición de la red interna para la comunicación entre contenedores
+networks:
+  inventory-net:
+    driver: bridge
+
 services:
-  discovery-service:
-    profiles: ["infra"]
-    build:
-      context: .. # ✅ CORREGIDO: Contexto al root del proyecto
-      dockerfile: discovery-service/Dockerfile # ✅ CORREGIDO: Ruta del Dockerfile relativa al root
-    container_name: discovery-service
-    ports:
-      - "${DISCOVERY_PORT:-8761}:8761"
+
+  # ====================================================================
+  # 1. SERVICIOS DE BASES DE DATOS (NUEVOS NOMBRES, HEALTHCHECKS MEJORADOS)
+  # Se utiliza el nombre 'db_product' para consistencia interna.
+  # ====================================================================
+
+  db_product:
+    profiles: [ "product" ]
+    image: postgres:16
+    container_name: db_product
     environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - JAVA_OPTS=${JAVA_OPTS}
-      #- WAIT_FOR=discovery-db:5432   # si aplica
-      - WAIT_TIMEOUT=30
-    dns:
-      - 1.1.1.1
-      - 8.8.8.8
+      POSTGRES_DB: ${PRODUCT_DB_NAME:-db_product} # Se usa el valor por defecto corregido
+      POSTGRES_USER: ${PRODUCT_DB_USERNAME:-product}
+      POSTGRES_PASSWORD: ${PRODUCT_DB_PASSWORD:-product123}
+    ports:
+      - "${PORT_5432:-5431}:5432" # Se mantuvo el puerto variable y el valor por defecto
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
-      interval: ${INTERVAL10S:-10s}
-      timeout: ${TIMEOUT5S:-5s}
-      retries: ${RETRIES3:-3}
-      start_period: 30s
+      test: [ "CMD-SHELL", "pg_isready -U ${PRODUCT_DB_USERNAME:-product} -d ${PRODUCT_DB_NAME:-db_product}" ]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
     networks:
-      - inventory-network
+      - inventory-net
+    volumes:
+      - db_product_data:/var/lib/postgresql/data
+      # VOLUMEN REINTEGRADO: Para la inicialización de la base de datos
+      - ./init-scripts/product/01-product-init.sql:/docker-entrypoint-initdb.d/01-product-init.sql:ro
+    restart: unless-stopped
+
+  db_supplier:
+    profiles: [ "supplier" ]
+    image: postgres:15-alpine
+    container_name: db_supplier
+    environment:
+      POSTGRES_DB: ${SUPPLIER_DB_NAME:-db_supplier}
+      POSTGRES_USER: ${SUPPLIER_DB_USERNAME:-user}
+      POSTGRES_PASSWORD: ${SUPPLIER_DB_PASSWORD:-password}
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${SUPPLIER_DB_USERNAME:-user} -d ${SUPPLIER_DB_NAME:-db_supplier}" ]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+    networks:
+      - inventory-net
+    volumes:
+      - db_supplier_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  db_purchase:
+    profiles: [ "purchase" ]
+    image: postgres:15-alpine
+    container_name: db_purchase
+    environment:
+      POSTGRES_DB: ${PURCHASE_DB_NAME:-db_purchase}
+      POSTGRES_USER: ${PURCHASE_DB_USERNAME:-user}
+      POSTGRES_PASSWORD: ${PURCHASE_DB_PASSWORD:-password}
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${PURCHASE_DB_USERNAME:-user} -d ${PURCHASE_DB_NAME:-db_purchase}" ]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+    networks:
+      - inventory-net
+    volumes:
+      - db_purchase_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # ====================================================================
+  # 2. SERVICIOS DE INFRAESTRUCTURA (Config Server y Eureka)
+  # ====================================================================
 
   config-service:
-    profiles: ["infra"]
-    build:
-      context: .. # ✅ CORREGIDO: Contexto al root del proyecto
-      dockerfile: config-service/Dockerfile # ✅ CORREGIDO: Ruta del Dockerfile relativa al root
+    profiles: [ "infra" ]
     container_name: config-service
+    build:
+      context: ..
+      dockerfile: ./config-service/Dockerfile
     ports:
-      - "${CONFIG_PORT:-7777}:${CONFIG_PORT:-7777}"
+      - "7777:7777"
     environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - JAVA_OPTS=${JAVA_OPTS}
-      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/celotts/config-repo.git
-      - GIT_USERNAME=${GIT_USERNAME}
-      - GIT_TOKEN=${GIT_TOKEN}
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=7777
+      # Variable reintegrada
+      - WAIT_FOR_DISCOVERY=true
+      # Variables reintegradas (Java Options)
+      - JAVA_OPTS=-Xmx512m -Dspring.cloud.config.server.git.timeout=60 -Dspring.cloud.config.server.git.connection-timeout=30000
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-    dns:
-      - 1.1.1.1
-      - 8.8.8.8
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=${SPRING_CLOUD_CONFIG_SERVER_GIT_URI}
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL=${SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL}
+      # Variables de Paths y Auth reintegradas
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_SEARCH_PATHS=${SPRING_CLOUD_CONFIG_SERVER_GIT_SEARCH_PATHS}
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_USERNAME=${GIT_USERNAME}
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_PASSWORD=${GIT_TOKEN}
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:7777/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 45s
     depends_on:
       discovery-service:
-        condition: service_started  # 🔄 Cambiado de service_healthy a service_started
+        condition: service_healthy # Espera a Eureka, lo cual es inusual pero respetado de su config
+    networks:
+      - inventory-net
+    restart: unless-stopped
+
+  discovery-service:
+    profiles: [ "infra" ]
+    container_name: discovery-service
+    build:
+      context: ..
+      dockerfile: ./discovery-service/Dockerfile
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8761
+      - EUREKA_CLIENT_REGISTER-WITH-EUREKA=false
+      - EUREKA_CLIENT_FETCH-REGISTRY=false
+      # Variables reintegradas (Java Options)
+      - JAVA_OPTS=-Xmx256m -Xms128m
+      # CORRECCIÓN: El discovery DEBE esperar al config-service (Crítico)
+      #- WAIT_FOR=config-service:7777
+      #- WAIT_TIMEOUT=60
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:${CONFIG_PORT:-7777}/actuator/health || exit 1"]
-      interval: 30s
+      test: [ "CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1" ]
+      interval: 20s
       timeout: 10s
       retries: 5
       start_period: 30s
-    restart: unless-stopped  # 🆕 Agregado restart policy
+    #depends_on:
+    #  config-service:
+    #    condition: service_started
     networks:
-      - inventory-network
+      - inventory-net
+    restart: unless-stopped
 
-  product-db:
-    profiles: ["product"]
-    image: postgres:16
-    container_name: product-db
+  # ====================================================================
+  # 3. SERVICIOS DE NEGOCIO Y AUTORIZACIÓN
+  # ====================================================================
+
+  auth-service:
+    profiles: [ "auth" ]
+    container_name: auth-service
+    build:
+      context: ..
+      dockerfile: ./auth-service/Dockerfile
     ports:
-      - "${PORT_5432:-5431}:5432"
+      - "8080:8080"
     environment:
-      POSTGRES_DB: ${PRODUCT_DB_NAME:-product}
-      POSTGRES_USER: ${PRODUCT_DB_USERNAME:-product}
-      POSTGRES_PASSWORD: ${PRODUCT_DB_PASSWORD:-product123}
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8080
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - WAIT_FOR=discovery-service:8761,config-service:7777
+      - WAIT_TIMEOUT=60
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${PRODUCT_DB_USERNAME:-product}" ]
-      interval: ${INTERVAL10S:-10s}
-      timeout: ${TIMEOUT5S:-5s}
-      retries: ${RETRIES5:-5}
-      start_period: 30s
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 15s
+      retries: 10
+      start_period: 60s
     networks:
-      - inventory-network
-    volumes:
-      - product-data:/var/lib/postgresql/data
-      - ./init-scripts/product/01-product-init.sql:/docker-entrypoint-initdb.d/01-product-init.sql:ro
-      #- ./init-scripts/product-init.sql:/docker-entrypoint-initdb.d/product-init.sql:ro  # ✅ NUEVA LÍNEA
+      - inventory-net
+    restart: unless-stopped
 
   product-service:
-    dns:
-      - 1.1.1.1
-      - 8.8.8.8
     profiles: [ "product" ]
-    build:
-      context: .. # ✅ CORREGIDO: Contexto al root del proyecto
-      dockerfile: product-service/Dockerfile # ✅ CORREGIDO: Ruta del Dockerfile relativa al root
     container_name: product-service
+    build:
+      context: ..
+      dockerfile: ./product-service/Dockerfile
+      # Build args reintegrados
+      args:
+        - http_proxy
+        - https_proxy
+        - no_proxy
     ports:
       - "${PORT9090:-9090}:9090"
+    deploy:
+      # Bloque Deploy reintegrado
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    entrypoint: ["/app/entrypoint.sh"]
     environment:
       - SPRING_APPLICATION_NAME=product-service
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - JAVA_OPTS=${JAVA_OPTS}
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
-
-      # Datasource / Driver
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://product-db:5432/product
-      - SPRING_DATASOURCE_USERNAME=product
-      - SPRING_DATASOURCE_PASSWORD=product123
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+      - JAVA_OPTS=${JAVA_OPTS:-}
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
+      # Datasource vars reintegradas
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_product:5432/${PRODUCT_DB_NAME:-db_product} # Nombre de DB corregido a db_product
+      - SPRING_DATASOURCE_USERNAME=${PRODUCT_DB_USERNAME:-product}
+      - SPRING_DATASOURCE_PASSWORD=${PRODUCT_DB_PASSWORD:-product123}
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
-
-      # Eureka
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=30
-      - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=30
-
-      # WAIT (tu entrypoint debe usarlas)
-      - WAIT_FOR=discovery-service:${DISCOVERY_PORT:-8761},config-service:${CONFIG_PORT:-7777},product-db:5432
-      - WAIT_TIMEOUT=40
-
-      # Config Server (tolerancia a fallos)
+      # Eureka client timing reintegrado
+      - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=10
+      - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=10
+      # CORRECCIÓN CRÍTICA: WAIT_FOR ahora incluye la DB (db_product)
+      - WAIT_FOR=db_product:5432,discovery-service:8761,config-service:7777
+      - WAIT_TIMEOUT=60
       - SPRING_CLOUD_CONFIG_FAILFAST=false
       - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=6
       - SPRING_CLOUD_CONFIG_RETRY_INITIALINTERVAL=3000
-
-      # Paginación
+      # Parámetros de Paginación reintegrados
       - PAGINATION_DEFAULT_PAGE=${PAGINATION_DEFAULT_PAGE:-0}
       - PAGINATION_DEFAULT_SIZE=${PAGINATION_DEFAULT_SIZE:-10}
       - PAGINATION_MAX_SIZE=${PAGINATION_MAX_SIZE:-100}
       - PAGINATION_DEFAULT_SORT_BY=${PAGINATION_DEFAULT_SORT_BY:-createdAt}
       - PAGINATION_DEFAULT_SORT_DIR=${PAGINATION_DEFAULT_SORT_DIR:-desc}
       - PAGINATION_ALLOWED_SORT_FIELDS=${PAGINATION_ALLOWED_SORT_FIELDS:-createdAt,updatedAt,code,description,unitPrice,currentStock}
-
-      # Actuator + diagnóstico
+      # Parámetros de Actuator reintegrados
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,env,configprops,beans
       - MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED=true
-
-      # Evita rebind en caliente que toca el pool
       - SPRING_CLOUD_REFRESH_ENABLED=false
-
-      # Asegura que escuche en 9090
       - SERVER_PORT=9090
-
+    dns:
+      # DNS reintegrado
+      - 1.1.1.1
+      - 8.8.8.8
     depends_on:
+      db_product:
+        condition: service_healthy
       discovery-service:
-        condition: service_started
+        condition: service_healthy
       config-service:
         condition: service_healthy
-      product-db:
-        condition: service_healthy
-
     healthcheck:
-      test: [ "CMD-SHELL", "curl -fsS http://localhost:9090/actuator/health | grep -q '\"status\":\"UP\"'" ]
-      interval: 20s
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9090/actuator/health || exit 1"]
+      interval: 15s
       timeout: 15s
       retries: 10
-      start_period: 90s
+      start_period: 60s
+    networks:
+      - inventory-net
     restart: unless-stopped
-    networks:
-      - inventory-network
-
-  supplier-db:
-    profiles: [ "supplier" ]
-    image: postgres:16
-    container_name: supplier-db
-    environment:
-      POSTGRES_DB: ${SUPPLIER_DB_NAME:-supplier}
-      POSTGRES_USER: ${SUPPLIER_DB_USERNAME:-supplier}
-      POSTGRES_PASSWORD: ${SUPPLIER_DB_PASSWORD:-supplier123}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"  # 👈 fuerza UTF-8"
-      LANG: C.UTF-8
-      LC_ALL: C.UTF-8
-    ports:
-      - "${SUPPLIER_DB_PORT:-5434}:5432"
-    healthcheck:
-      test: [ "CMD-SHELL","pg_isready -U ${SUPPLIER_DB_USERNAME:-supplier} -d ${SUPPLIER_DB_NAME:-supplier}" ]
-      interval: ${INTERVAL10S:-10s}
-      timeout: ${TIMEOUT5S:-5s}
-      retries: ${RETRIES5:-5}
-      start_period: 30s
-    volumes:
-      - supplier-data:/var/lib/postgresql/data
-      - ./init-scripts/supplier/02-supplier-init.sql:/docker-entrypoint-initdb.d/02-supplier-init.sql:ro
-
-    networks:
-      - inventory-network
 
   supplier-service:
     profiles: [ "supplier" ]
-    build:
-      context: .. # ✅ CORREGIDO: Contexto al root del proyecto
-      dockerfile: supplier-service/Dockerfile # ✅ CORREGIDO: Ruta del Dockerfile relativa al root
-    image: localhost/infra_supplier-service:latest
     container_name: supplier-service
+    build:
+      context: ..
+      dockerfile: ./supplier-service/Dockerfile
     ports:
-      - "${PORT9091:-9091}:9091"
+      - "9091:9091"
     environment:
-      - SPRING_APPLICATION_NAME=supplier-service
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - JAVA_OPTS=${JAVA_OPTS}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://supplier-db:5432/${SUPPLIER_DB_NAME:-supplier}
-      - SPRING_DATASOURCE_USERNAME=${SUPPLIER_DB_USERNAME:-supplier}
-      - SPRING_DATASOURCE_PASSWORD=${SUPPLIER_DB_PASSWORD:-supplier123}
-      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=30
-      - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=30
-      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info
+      - SPRING_PROFILES_ACTIVE=docker
       - SERVER_PORT=9091
-      - WAIT_FOR=discovery-service:8761,config-service:7777,supplier-db:5432
-      - WAIT_TIMEOUT=40
-    dns:
-      - 1.1.1.1
-      - 8.8.8.8 # 🆕 AGREGADO DNS
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - WAIT_FOR=db_supplier:5432,discovery-service:8761,config-service:7777
+      - WAIT_TIMEOUT=60
     depends_on:
+      db_supplier:
+        condition: service_healthy
       discovery-service:
-        condition: service_started
+        condition: service_healthy
       config-service:
-        condition: service_started
-      supplier-db:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD-SHELL","curl -f http://localhost:9091/actuator/health || exit 1" ]
-      interval: 20s
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9091/actuator/health || exit 1"]
+      interval: 15s
       timeout: 15s
       retries: 10
-      start_period: 90s
+      start_period: 60s
+    networks:
+      - inventory-net
     restart: unless-stopped
-    networks:
-      - inventory-network
 
-  purchase-db:
+  purchase-service:
     profiles: [ "purchase" ]
-    image: postgres:16
-    container_name: purchase-db # ⭐ Nuevo
-    ports: # ⭐ Nuevo
-      - "${PURCHASE_DB_PORT:-5433}:5432" # Se asume un puerto diferente al 5432, 5434 y 5435
-    environment: # ⭐ Nuevo
-      POSTGRES_DB: ${PURCHASE_DB_NAME:-purchase}
-      POSTGRES_USER: ${PURCHASE_DB_USERNAME:-purchase}
-      POSTGRES_PASSWORD: ${PURCHASE_DB_PASSWORD:-purchase123}
-    volumes: # ⭐ Nuevo
-      - purchase-data:/var/lib/postgresql/data
+    container_name: purchase-service
+    build:
+      context: ..
+      dockerfile: ./purchase-service/Dockerfile
+    ports:
+      - "9094:9094"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=9094
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - WAIT_FOR=db_purchase:5432,discovery-service:8761,config-service:7777
+      - WAIT_TIMEOUT=60
+    depends_on:
+      db_purchase:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${PURCHASE_DB_USERNAME:-purchase}" ]
-      interval: ${INTERVAL10S:-10s}
-      timeout: ${TIMEOUT5S:-5s}
-      retries: ${RETRIES5:-5}
-      start_period: 30s
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9094/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 15s
+      retries: 10
+      start_period: 60s
     networks:
-      - inventory-network
+      - inventory-net
+    restart: unless-stopped
 
+  tax-service:
+    profiles: [ "tax" ]
+    container_name: tax-service
+    build:
+      context: ..
+      dockerfile: ./tax-service/Dockerfile
+    ports:
+      - "9092:9092"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=9092
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - WAIT_FOR=discovery-service:8761,config-service:7777
+      - WAIT_TIMEOUT=60
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9092/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 15s
+      retries: 10
+      start_period: 60s
+    networks:
+      - inventory-net
+    restart: unless-stopped
 
-  #purchase-service:
-   # profiles: [ "purchase" ]
-   # build: # ⭐ Bloque que faltaba
-   #   context: .. # ✅ CORREGIDO: Contexto al root del proyecto
-   #   dockerfile: purchase-service/Dockerfile # ✅ CORREGIDO: Ruta del Dockerfile relativa al root
-   # container_name: purchase-service # ⭐ Nuevo
-    #ports: # ⭐ Nuevo
-   #   - "${PURCHASE_PORT:-9095}:9095" # Puerto 9095 según tu Makefile
-   # environment: # ⭐ Nuevas variables
-   #   - SPRING_APPLICATION_NAME=purchase-service
-   #   - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-   #   - JAVA_OPTS=${JAVA_OPTS}
-   #   - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
-   #   - SPRING_DATASOURCE_URL=jdbc:postgresql://purchase-db:5432/purchase
-   #   - SPRING_DATASOURCE_USERNAME=purchase
-   #   - SPRING_DATASOURCE_PASSWORD=purchase123
-   #   - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-   #   - WAIT_FOR=discovery-service:8761,config-service:7777,purchase-db:5432
-   #   - SERVER_PORT=9095
-   # depends_on: # ⭐ Depende de la base de datos
-   #   discovery-service:
-   #     condition: service_started
-   #   config-service:
-   #     condition: service_started
-   #   purchase-db:
-   #     condition: service_healthy
-   # healthcheck:
-   #   test: [ "CMD-SHELL", "curl -fsS http://localhost:9095/actuator/health | grep -q '\"status\":\"UP\"'" ]
-   #   interval: 20s
-   #   timeout: 15s
-   #   retries: 10
-   #   start_period: 90s
-   # restart: unless-stopped
-   # networks:
-   #   - inventory-network
+  # ====================================================================
+  # 4. API GATEWAY (Punto de entrada)
+  # ====================================================================
 
   api-gateway:
-    profiles: ["gateway"]
-    build:
-      context: .. # ✅ CORREGIDO: Contexto al root del proyecto
-      dockerfile: api-gateway/Dockerfile # ✅ CORREGIDO: Ruta del Dockerfile relativa al root
+    profiles: [ "gateway" ]
     container_name: api-gateway
+    build:
+      context: ..
+      dockerfile: ./api-gateway/Dockerfile
+      # Build args reintegrados
+      args:
+        - http_proxy
+        - https_proxy
+        - no_proxy
     ports:
       - "${GATEWAY_PORT:-8090}:8090"
+    entrypoint: ["/app/entrypoint.sh"]
     environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - JAVA_OPTS=${JAVA_OPTS}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+      - JAVA_OPTS=${JAVA_OPTS:-}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
       - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
@@ -298,108 +381,30 @@ services:
       - SPRING_CLOUD_CONFIG_FAILFAST=false
       - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=3
       - WAIT_FOR=discovery-service:8761,config-service:7777
+      - WAIT_TIMEOUT=60
     dns:
+      # DNS reintegrado
       - 1.1.1.1
-      - 8.8.8.8 # 🆕 AGREGADO DNS
-    depends_on:
-      discovery-service:
-        condition: service_started  # 🔄 Cambiado de service_healthy a service_started
-      config-service:
-        condition: service_started  # 🔄 Cambiado de service_healthy a service_started
-      product-service:
-        condition: service_started  # 🔄 Cambiado de service_healthy a service_started
+      - 8.8.8.8
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8090/actuator/health || exit 1"]
-      interval: 25s              # 🔄 Reducido de 30s
-      timeout: 15s               # 🔄 Aumentado de 10s
-      retries: 8                 # 🔄 Aumentado de 5
-      start_period: 60s          # 🔄 Aumentado de 45s
-    restart: unless-stopped      # 🆕 Agregado restart policy
-    networks:
-      - inventory-network
-  tax-db:
-    profiles: [ "tax" ]
-    image: postgres:16
-    container_name: tax-db
-    environment:
-      POSTGRES_DB: ${TAX_DB_NAME:-tax}
-      POSTGRES_USER: ${TAX_DB_USERNAME:-tax}
-      POSTGRES_PASSWORD: ${TAX_DB_PASSWORD:-tax123}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
-      LANG: C.UTF-8
-      LC_ALL: C.UTF-8
-    ports:
-      - "${TAX_DB_PORT:-5435}:5432"
-    volumes:
-      - tax-data:/var/lib/postgresql/data
-      - ./init-scripts/tax/01-tax-init.sql:/docker-entrypoint-initdb.d/01-tax-init.sql:ro
-    healthcheck:
-      test: [ "CMD-SHELL","pg_isready -U ${TAX_DB_USERNAME:-tax} -d ${TAX_DB_NAME:-tax}" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8090/actuator/health || exit 1"]
+      interval: 8s
+      timeout: 8s
+      retries: 8
       start_period: 30s
-    networks: [ inventory-network ]
-
-  tax-service:
-    profiles: [ "tax" ]
-    build:
-      context: .. # ✅ CORREGIDO: Contexto al root del proyecto
-      dockerfile: tax-service/Dockerfile # ✅ CORREGIDO: Ruta del Dockerfile relativa al root
-    container_name: tax-service
-    # image opcional si publicas
-    # image: localhost/inventoryms_tax-service:latest
-    ports:
-      - "${PORT9092:-9092}:9092"
-    environment:
-      - SPRING_MAIN_ALLOW_BEAN_DEFINITION_OVERRIDING=true
-      - SPRING_APPLICATION_NAME=tax-service
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
-      - JAVA_OPTS=${JAVA_OPTS}
-      - SPRING_MESSAGES_BASENAME=messages
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
-      # Datasource
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://tax-db:5432/${TAX_DB_NAME:-tax}
-      - SPRING_DATASOURCE_USERNAME=${TAX_DB_USERNAME:-tax}
-      - SPRING_DATASOURCE_PASSWORD=${TAX_DB_PASSWORD:-tax123}
-      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
-      - SPRING_DATASOURCE_HIKARI_POOL_NAME=HikariPool-TaxService
-      - WAIT_FOR=discovery-service:8761,config-service:7777,tax-db:5432
-      - WAIT_TIMEOUT=40
-      # Eureka
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=30
-      - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=30
-
-      # Actuator
-      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info
-      - SERVER_PORT=9092
-      - SPRING_CLOUD_REFRESH_ENABLED=false
-    dns:
-      - 1.1.1.1
-      - 8.8.8.8 # 🆕 AGREGADO DNS
     depends_on:
       discovery-service:
-        condition: service_started
-      config-service:
-        condition: service_started
-      tax-db:
         condition: service_healthy
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -fsS http://localhost:9092/actuator/health | grep -q '\"status\":\"UP\"'" ]
-      interval: 20s
-      timeout: 15s
-      retries: 10
-      start_period: 90s
-    restart: unless-stopped
+      config-service:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
     networks:
-      - inventory-network
-networks:
-  inventory-network:
-    driver: bridge
+      - inventory-net
+    restart: unless-stopped
 
+# Volúmenes para persistir los datos de las bases de datos
 volumes:
-  product-data:
-  supplier-data:
-  tax-data:
-  purchase-data:
+  db_product_data:
+  db_supplier_data:
+  db_purchase_data:

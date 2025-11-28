@@ -1,44 +1,48 @@
-# --- STAGE 1: Builder (Compiles the JAR) ---
-# Use a JDK image suitable for building (we use 21)
+# ---------------------------------------------------------------------
+# ETAPA 1: CONSTRUCTOR (Compila la aplicación)
+# ---------------------------------------------------------------------
 FROM eclipse-temurin:21-jdk-jammy AS builder
+LABEL maintainer="Inventory MS Team"
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the Gradle wrapper and configuration files for dependency resolution
+# Copias iniciales de archivos de Gradle del proyecto raíz
+COPY gradle/ gradle/
 COPY gradlew .
-COPY gradle /app/gradle
-COPY build.gradle /app/
-COPY settings.gradle /app/
+COPY settings.gradle .
+COPY build.gradle .
 
-# Copy the specific service code
-COPY discovery-service /app/discovery-service
+# Copia específica del build.gradle y el código fuente del módulo
+COPY supplier-service/build.gradle supplier-service/build.gradle
+COPY supplier-service/src supplier-service/src
 
-# Run the build, skipping tests since they are failing and we need the artifact first
-# Using `./gradlew :discovery-service:bootJar` ensures only this service is built
-RUN chmod +x ./gradlew && ./gradlew :discovery-service:bootJar --no-daemon -x test
+# Permisos de ejecución
+RUN chmod +x ./gradlew
 
-# --- STAGE 2: Runner (Produces the final, lean runtime image) ---
-# Use the JRE image for smaller size
-FROM eclipse-temurin:21-jre-jammy
+# Configuración de timeouts para Gradle
+ENV GRADLE_OPTS="-Dorg.gradle.internal.http.connectionTimeout=600000 -Dorg.gradle.internal.http.socketTimeout=600000"
 
-# Set the working directory
+# Paso 1: Resolver y cachear dependencias
+RUN ./gradlew :supplier-service:dependencies -x test --console=plain --no-daemon
+
+# Paso 2: Ejecutar la compilación y generar el JAR
+RUN ./gradlew :supplier-service:bootJar -x test --console=plain --no-daemon
+
+# ---------------------------------------------------------------------
+# ETAPA 2: EJECUCIÓN (Crea la imagen final mínima)
+# ---------------------------------------------------------------------
+FROM eclipse-temurin:21-jre-jammy AS runner
+LABEL maintainer="Inventory MS Team"
+
+EXPOSE 9091
+
+RUN addgroup --system spring && adduser --system --ingroup spring spring
+USER spring:spring
+
 WORKDIR /app
 
-# Install necessary scripts (like curl and bash for the wait-for-it.sh script)
-RUN apt-get update && apt-get install -y bash curl && rm -rf /var/lib/apt/lists/*
+# Copiar el JAR compilado desde la etapa 'builder'
+COPY --from=builder /app/supplier-service/build/libs/supplier-service-*.jar /app/app.jar
 
-# Copy the build artifact from the builder stage
-# The path changes because the build command was run in /app and the source directory was /app/discovery-service
-COPY --from=builder /app/discovery-service/build/libs/*.jar app.jar
-
-# Copy entrypoint and wait-for-it script
-COPY infra/scripts/wait-for-it.sh ./
-COPY discovery-service/entrypoint.sh ./
-RUN chmod +x wait-for-it.sh entrypoint.sh
-
-# Expose the service port (assuming default 8080 or custom port)
-EXPOSE 8761
-
-# Run the application using the entrypoint script
-ENTRYPOINT ["./entrypoint.sh"]
+# ENTRYPOINT para ejecutar la aplicación
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

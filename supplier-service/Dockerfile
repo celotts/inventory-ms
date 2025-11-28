@@ -1,34 +1,53 @@
-# ----------------------------------------------------------------------
-# RUNTIME STAGE (JDK 21)
-# ----------------------------------------------------------------------
-FROM eclipse-temurin:21-jdk-jammy
-
-ARG DEBIAN_FRONTEND=noninteractive
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# Instala bash y curl para el entrypoint
-RUN apt-get update \
- && apt-get install -y bash curl \
- && rm -rf /var/lib/apt/lists/*
+# ---------------------------------------------------------------------
+# ETAPA 1: CONSTRUCTOR (Compila la aplicación)
+# ---------------------------------------------------------------------
+FROM eclipse-temurin:21-jdk-jammy AS builder
+LABEL maintainer="Inventory MS Team"
 
 WORKDIR /app
 
-# 📦 Copia el .jar desde la raíz del contexto de construcción (..)
-# 💥 CORRECCIÓN FINAL: Usamos el nombre de archivo JAR esperado (supplier-service-0.0.1-SNAPSHOT.jar)
-# para garantizar que el archivo se encuentre en el contexto de construcción.
-COPY supplier-service/build/libs/supplier-service-0.0.1-SNAPSHOT.jar app.jar
+# Copias iniciales de archivos de Gradle del proyecto raíz
+COPY gradle/ gradle/
+COPY gradlew .
+COPY settings.gradle .
+COPY build.gradle .
 
-# 🔁 Copia los scripts de ejecución desde el root del contexto
-COPY infra/scripts/wait-for-it.sh ./
-COPY infra/scripts/entrypoint.sh ./
+# Copia específica del build.gradle y el código fuente del módulo (!!! CAMBIO A SUPPLIER-SERVICE !!!)
+COPY supplier-service/build.gradle supplier-service/build.gradle
+COPY supplier-service/src supplier-service/src
 
-# ✅ Asegura permisos de ejecución
-RUN chmod +x wait-for-it.sh entrypoint.sh
+# Permisos de ejecución
+RUN chmod +x ./gradlew
 
+# Paso 1: Resolver y cachear dependencias
+RUN ./gradlew :supplier-service:dependencies -x test --console=plain --no-daemon
+
+# Paso 2: Ejecutar la compilación y generar el JAR
+RUN ./gradlew :supplier-service:bootJar -x test --console=plain --no-daemon
+
+# ---------------------------------------------------------------------
+# ETAPA 2: EJECUCIÓN (Crea la imagen final mínima)
+# ---------------------------------------------------------------------
+FROM eclipse-temurin:21-jre-jammy AS runner
+LABEL maintainer="Inventory MS Team"
+
+ # ⭐ PUERTO PARA SUPPLIER SERVICE (Diferente al Product Service 9090)
 EXPOSE 9091
 
-# Define la ruta del JAR para el script entrypoint
-ENV JAR_PATH=/app/app.jar
+RUN addgroup --system spring && adduser --system --ingroup spring spring
+USER spring:spring
 
-# Usa el script como Entrypoint del contenedor
-ENTRYPOINT ["bash", "entrypoint.sh"]
+WORKDIR /app
+
+# Copiar el JAR compilado desde la etapa 'builder'
+COPY --from=builder /app/supplier-service/build/libs/supplier-service-*.jar /app/app.jar
+
+# ⭐ COPIAR LOS SCRIPTS DE ARRANQUE Y ESPERA (Asume espera a la BD y a Eureka en su entrypoint.sh)
+COPY supplier-service/entrypoint.sh ./
+COPY wait-for-it.sh ./
+
+# Hacerlos ejecutables
+#RUN chmod +x entrypoint.sh wait-for-it.sh
+
+# ⭐ ESTABLECER EL PUNTO DE ENTRADA
+ENTRYPOINT ["/app/entrypoint.sh"]

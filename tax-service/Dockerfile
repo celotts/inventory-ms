@@ -1,26 +1,53 @@
-# Imagen de runtime (se mantiene JDK si lo necesitas para herramientas de desarrollo/debugging)
-FROM eclipse-temurin:21-jdk-jammy
-
-ARG DEBIAN_FRONTEND=noninteractive
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-# Instala bash y curl en una sola capa limpia
-RUN apt-get update \
- && apt-get install -y bash curl \
- && rm -rf /var/lib/apt/lists/*
+# ---------------------------------------------------------------------
+# ETAPA 1: CONSTRUCTOR (Compila la aplicación)
+# ---------------------------------------------------------------------
+FROM eclipse-temurin:21-jdk-jammy AS builder
+LABEL maintainer="Inventory MS Team"
 
 WORKDIR /app
 
-# 🔁 Copia los scripts desde la ubicación central (infra/scripts)
-# ¡CORRECCIÓN APLICADA AQUÍ!
-COPY ../infra/scripts/wait-for-it.sh ./
-COPY ../infra/scripts/entrypoint.sh ./
+# Copias iniciales de archivos de Gradle del proyecto raíz
+COPY gradle/ gradle/
+COPY gradlew .
+COPY settings.gradle .
+COPY build.gradle .
 
-# ✅ Asegura permisos de ejecución
-RUN chmod +x wait-for-it.sh entrypoint.sh
+# Copia específica del build.gradle y el código fuente del módulo (!!! CAMBIO A TAX-SERVICE !!!)
+COPY tax-service/build.gradle tax-service/build.gradle
+COPY tax-service/src tax-service/src
 
-# 📦 Copia el .jar generado por Gradle (Asegúrate de que el nombre del JAR sea correcto)
-COPY tax-service/build/libs/*.jar app.jar
+# Permisos de ejecución
+RUN chmod +x ./gradlew
 
+# Paso 1: Resolver y cachear dependencias
+RUN ./gradlew :tax-service:dependencies -x test --console=plain --no-daemon
+
+# Paso 2: Ejecutar la compilación y generar el JAR
+RUN ./gradlew :tax-service:bootJar -x test --console=plain --no-daemon
+
+# ---------------------------------------------------------------------
+# ETAPA 2: EJECUCIÓN (Crea la imagen final mínima)
+# ---------------------------------------------------------------------
+FROM eclipse-temurin:21-jre-jammy AS runner
+LABEL maintainer="Inventory MS Team"
+
+ # ⭐ PUERTO PARA TAX SERVICE
 EXPOSE 9092
 
-ENTRYPOINT ["bash", "entrypoint.sh"]
+RUN addgroup --system spring && adduser --system --ingroup spring spring
+USER spring:spring
+
+WORKDIR /app
+
+# Copiar el JAR compilado desde la etapa 'builder'
+COPY --from=builder /app/tax-service/build/libs/tax-service-*.jar /app/app.jar
+
+# ⭐ COPIAR LOS SCRIPTS DE ARRANQUE Y ESPERA (Asume espera a Eureka en su entrypoint.sh)
+COPY tax-service/entrypoint.sh ./
+COPY wait-for-it.sh ./
+
+# Hacerlos ejecutables
+#RUN chmod +x entrypoint.sh wait-for-it.sh
+
+# ⭐ ESTABLECER EL PUNTO DE ENTRADA
+ENTRYPOINT ["/app/entrypoint.sh"]

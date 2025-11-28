@@ -1,5 +1,5 @@
 #!/bin/sh
-# entrypoint.sh - Lógica de arranque para Supplier Service (con BD)
+# entrypoint.sh - Lógica de arranque para Auth Service (con BD)
 
 # ----------------------------------------------------------------
 # CONFIGURACIÓN Y RUTAS
@@ -11,11 +11,11 @@ JAR_NAME=${1:-app.jar}
 DISCOVERY_HOST=discovery-service:8761
 CONFIG_HOST=config-service:7777
 
-# ⭐⭐⭐ AJUSTADO PARA SUPPLIER SERVICE ⭐⭐⭐
-DB_HOST=supplier-db:5432
+# ⭐⭐⭐ AJUSTADO PARA AUTH SERVICE ⭐⭐⭐
+DB_HOST=auth-db:5432
 
 echo "======================================================"
-echo " INICIANDO ENTRYPOINT CON BD (Supplier) para $JAR_NAME"
+echo " INICIANDO ENTRYPOINT CON BD (Auth) para $JAR_NAME"
 echo "======================================================"
 
 # 1. Esperar a la Base de Datos
