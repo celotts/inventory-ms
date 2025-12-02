@@ -4,43 +4,53 @@
 FROM eclipse-temurin:21-jdk-jammy AS builder
 LABEL maintainer="Inventory MS Team"
 
+# ⭐ PASO CRÍTICO 1: Definir los argumentos de construcción (ARG)
+# Estos recibirán los valores pasados desde docker-compose.yml o la línea de comandos 'docker build --build-arg ...'
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+
 WORKDIR /app
 
-# Copias iniciales de archivos de Gradle del proyecto raíz
+# Copias iniciales de archivos de Gradle
 COPY gradle/ gradle/
 COPY gradlew .
 COPY settings.gradle .
 COPY build.gradle .
-
-# Copia específica del build.gradle y el código fuente del módulo (!!! CAMBIO A TAX-SERVICE !!!)
 COPY tax-service/build.gradle tax-service/build.gradle
 COPY tax-service/src tax-service/src
 
 # Permisos de ejecución
 RUN chmod +x ./gradlew
 
-# ⭐ PASOS DE DIAGNÓSTICO DE RED ⭐
-# 1. Instalar ping para verificar la conectividad de red
-RUN apt-get update && apt-get install -y iputils-ping
-# 2. Hacer una prueba de conectividad a una URL externa
-RUN ping -c 3 google.com
+# ⭐ PASO CRÍTICO 2: Establecer las variables de entorno (ENV)
+# Esto hace que el proxy esté disponible para todos los comandos subsiguientes (apt-get, curl, gradlew)
+ENV HTTP_PROXY=$http_proxy
+ENV HTTPS_PROXY=$https_proxy
+ENV NO_PROXY=$no_proxy
+ENV http_proxy=$http_proxy
+ENV https_proxy=$https_proxy
+ENV no_proxy=$no_proxy
 
-# Paso 1: Resolver y cachear dependencias
-# Si el ping anterior FALLA, el problema es de red/proxy en tu entorno.
-# Si estás detrás de un proxy, es posible que necesites inyectar las propiedades directamente en este comando:
-# Ejemplo: RUN ./gradlew -Dhttp.proxyHost=proxy.corp.com -Dhttp.proxyPort=8080 :tax-service:dependencies ...
+# ⭐ PASOS DE DIAGNÓSTICO DE RED (Ahora usarán el proxy si está configurado) ⭐
+# 1. Instalar curl para verificar la conectividad de red
+RUN apt-get update && apt-get install -y curl
+# Si el proxy está configurado correctamente, este curl ya no debería fallar.
+RUN curl -s -I http://google.com | grep "HTTP"
+
+# Paso 1: Resolver y cachear dependencias (Ahora usará las variables ENV)
 RUN ./gradlew :tax-service:dependencies -x test --console=plain --no-daemon
 
 # Paso 2: Ejecutar la compilación y generar el JAR
 RUN ./gradlew :tax-service:bootJar -x test --console=plain --no-daemon
 
 # ---------------------------------------------------------------------
-# ETAPA 2: EJECUCIÓN (Crea la imagen final mínima)
+# ETAPA 2: EJECUCIÓN (No necesita cambios si ya funciona la Etapa 1)
 # ---------------------------------------------------------------------
 FROM eclipse-temurin:21-jre-jammy AS runner
 LABEL maintainer="Inventory MS Team"
 
-EXPOSE 9092 # ⭐ PUERTO TENTATIVO PARA TAX SERVICE
+EXPOSE 9092 # PUERTO TAX SERVICE
 
 RUN addgroup --system spring && adduser --system --ingroup spring spring
 USER spring:spring

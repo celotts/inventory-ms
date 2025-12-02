@@ -243,8 +243,8 @@ run-product-local: ## 🚀 Ejecutar Product Service localmente
 rebuild-product-local: podman-ready ## 🔁 Reconstruir Product Service
 	$(Q) cp $(ENV_FILE_LOCAL) .env.override
 	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :product-service:bootJar
-	$(Q) $(COMPOSE_LOCAL) build product-service
-	$(Q) $(COMPOSE_LOCAL) up -d product-service
+	$(Q) $(COMPOSE_LOCAL) --profile infra build product-service
+	$(Q) $(COMPOSE_LOCAL) --profile infra --profile product up -d product-service
 
 #🏷️ SUPPLIER SERVICE
 test-supplier: ## 🧪 Tests de Supplier Service

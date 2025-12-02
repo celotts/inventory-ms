@@ -6,23 +6,25 @@ LABEL maintainer="Inventory MS Team"
 
 WORKDIR /app
 
-# Copias iniciales de archivos de Gradle del proyecto raíz
+# 1. Copia archivos de la raíz del proyecto (configuración de Gradle)
 COPY gradle/ gradle/
 COPY gradlew .
 COPY settings.gradle .
 COPY build.gradle .
-
-# Copia específica del build.gradle y el código fuente del módulo
-COPY product-service/build.gradle product-service/build.gradle
-COPY product-service/src product-service/src
-
-# Permisos de ejecución
 RUN chmod +x ./gradlew
 
-# Paso 1: Resolver y cachear dependencias
+# 2. COPIA DEL SERVICIO Y SCRIPTS RELACIONADOS
+COPY product-service/ /app/product-service/
+
+# 2b. CORRECCIÓN CRÍTICA: Aplicar CHMOD AQUÍ (Donde debe funcionar)
+RUN chmod +x /app/product-service/entrypoint.sh /app/product-service/wait-for-it.sh
+
+
+# 3. DESCARGA Y CACHÉ DE DEPENDENCIAS
 RUN ./gradlew :product-service:dependencies -x test --console=plain --no-daemon
 
-# Paso 2: Ejecutar la compilación y generar el JAR
+
+# 4. COMPILA EL JAR
 RUN ./gradlew :product-service:bootJar -x test --console=plain --no-daemon
 
 # ---------------------------------------------------------------------
@@ -33,21 +35,18 @@ LABEL maintainer="Inventory MS Team"
 
 # Puerto para Product Service
 EXPOSE 9090
-
 RUN addgroup --system spring && adduser --system --ingroup spring spring
 USER spring:spring
-
 WORKDIR /app
 
-# Copiar el JAR compilado desde la etapa 'builder'
+
 COPY --from=builder /app/product-service/build/libs/product-service-*.jar /app/app.jar
 
-# ⭐ COPIAR LOS SCRIPTS DE ARRANQUE Y ESPERA (Incluye espera a la BD en su entrypoint.sh)
-COPY product-service/entrypoint.sh ./
-COPY wait-for-it.sh ./
+# 5. COPIAR SCRIPTS DESDE LA UBICACIÓN EN EL BUILDER
+COPY --from=builder /app/product-service/entrypoint.sh /app/entrypoint.sh
+COPY --from=builder /app/product-service/wait-for-it.sh /app/wait-for-it.sh
 
-# Hacerlos ejecutables
-#RUN chmod +x entrypoint.sh wait-for-it.sh
+# 6. HACERLOS EJECUTABLES (ELIMINAMOS ESTE PASO QUE FALLA)
+# RUN chmod +x /app/entrypoint.sh /app/wait-for-it.sh <--- ¡ELIMINADO!
 
-# ⭐ ESTABLECER EL PUNTO DE ENTRADA
 ENTRYPOINT ["/app/entrypoint.sh"]

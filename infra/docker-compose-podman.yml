@@ -1,26 +1,18 @@
-
-# Definición de la red interna para la comunicación entre contenedores
 networks:
   inventory-net:
     driver: bridge
 
 services:
-
-  # ====================================================================
-  # 1. SERVICIOS DE BASES DE DATOS (NUEVOS NOMBRES, HEALTHCHECKS MEJORADOS)
-  # Se utiliza el nombre 'db_product' para consistencia interna.
-  # ====================================================================
-
   db_product:
     profiles: [ "product" ]
     image: postgres:16
     container_name: db_product
     environment:
-      POSTGRES_DB: ${PRODUCT_DB_NAME:-db_product} # Se usa el valor por defecto corregido
+      POSTGRES_DB: ${PRODUCT_DB_NAME:-db_product}
       POSTGRES_USER: ${PRODUCT_DB_USERNAME:-product}
       POSTGRES_PASSWORD: ${PRODUCT_DB_PASSWORD:-product123}
     ports:
-      - "${PORT_5432:-5431}:5432" # Se mantuvo el puerto variable y el valor por defecto
+      - "${PRODUCT_DB_PORT_HOST:-5431}:5432" # <-- Corregido
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${PRODUCT_DB_USERNAME:-product} -d ${PRODUCT_DB_NAME:-db_product}" ]
       interval: 5s
@@ -31,7 +23,6 @@ services:
       - inventory-net
     volumes:
       - db_product_data:/var/lib/postgresql/data
-      # VOLUMEN REINTEGRADO: Para la inicialización de la base de datos
       - ./init-scripts/product/01-product-init.sql:/docker-entrypoint-initdb.d/01-product-init.sql:ro
     restart: unless-stopped
 
@@ -44,7 +35,7 @@ services:
       POSTGRES_USER: ${SUPPLIER_DB_USERNAME:-user}
       POSTGRES_PASSWORD: ${SUPPLIER_DB_PASSWORD:-password}
     ports:
-      - "5433:5432"
+      - "${SUPPLIER_DB_PORT_HOST:-5433}:5432"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${SUPPLIER_DB_USERNAME:-user} -d ${SUPPLIER_DB_NAME:-db_supplier}" ]
       interval: 5s
@@ -66,7 +57,7 @@ services:
       POSTGRES_USER: ${PURCHASE_DB_USERNAME:-user}
       POSTGRES_PASSWORD: ${PURCHASE_DB_PASSWORD:-password}
     ports:
-      - "5434:5432"
+      - "${PURCHASE_DB_PORT_HOST:-5434}:5432" # <-- Corregido
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${PURCHASE_DB_USERNAME:-user} -d ${PURCHASE_DB_NAME:-db_purchase}" ]
       interval: 5s
@@ -79,9 +70,27 @@ services:
       - db_purchase_data:/var/lib/postgresql/data
     restart: unless-stopped
 
-  # ====================================================================
-  # 2. SERVICIOS DE INFRAESTRUCTURA (Config Server y Eureka)
-  # ====================================================================
+  db_tax:
+    profiles: [ "tax" ]
+    image: postgres:15-alpine
+    container_name: db_tax
+    environment:
+      POSTGRES_DB: ${TAX_DB_NAME:-db_tax}
+      POSTGRES_USER: ${TAX_DB_USERNAME:-user}
+      POSTGRES_PASSWORD: ${TAX_DB_PASSWORD:-password}
+    ports:
+      - "${TAX_DB_PORT_HOST:-5436}:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${TAX_DB_USERNAME:-user} -d ${TAX_DB_NAME:-db_tax}" ]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+    networks:
+      - inventory-net
+    volumes:
+      - db_tax_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   config-service:
     profiles: [ "infra" ]
@@ -90,18 +99,15 @@ services:
       context: ..
       dockerfile: ./config-service/Dockerfile
     ports:
-      - "7777:7777"
+      - "${CONFIG_PORT:-7777}:7777" # <-- Variable USADA
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SERVER_PORT=7777
-      # Variable reintegrada
       - WAIT_FOR_DISCOVERY=true
-      # Variables reintegradas (Java Options)
       - JAVA_OPTS=-Xmx512m -Dspring.cloud.config.server.git.timeout=60 -Dspring.cloud.config.server.git.connection-timeout=30000
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
       - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=${SPRING_CLOUD_CONFIG_SERVER_GIT_URI}
       - SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL=${SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL}
-      # Variables de Paths y Auth reintegradas
       - SPRING_CLOUD_CONFIG_SERVER_GIT_SEARCH_PATHS=${SPRING_CLOUD_CONFIG_SERVER_GIT_SEARCH_PATHS}
       - SPRING_CLOUD_CONFIG_SERVER_GIT_USERNAME=${GIT_USERNAME}
       - SPRING_CLOUD_CONFIG_SERVER_GIT_PASSWORD=${GIT_TOKEN}
@@ -113,7 +119,7 @@ services:
       start_period: 45s
     depends_on:
       discovery-service:
-        condition: service_healthy # Espera a Eureka, lo cual es inusual pero respetado de su config
+        condition: service_healthy
     networks:
       - inventory-net
     restart: unless-stopped
@@ -124,34 +130,27 @@ services:
     build:
       context: ..
       dockerfile: ./discovery-service/Dockerfile
+      args:
+        - http_proxy
+        - https_proxy
+        - no_proxy
     ports:
-      - "8761:8761"
+      - "${DISCOVERY_PORT:-8761}:8761" # <-- Variable USADA
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SERVER_PORT=8761
       - EUREKA_CLIENT_REGISTER-WITH-EUREKA=false
       - EUREKA_CLIENT_FETCH-REGISTRY=false
-      # Variables reintegradas (Java Options)
       - JAVA_OPTS=-Xmx256m -Xms128m
-      # CORRECCIÓN: El discovery DEBE esperar al config-service (Crítico)
-      #- WAIT_FOR=config-service:7777
-      #- WAIT_TIMEOUT=60
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1" ]
       interval: 20s
       timeout: 10s
       retries: 5
       start_period: 30s
-    #depends_on:
-    #  config-service:
-    #    condition: service_started
     networks:
       - inventory-net
     restart: unless-stopped
-
-  # ====================================================================
-  # 3. SERVICIOS DE NEGOCIO Y AUTORIZACIÓN
-  # ====================================================================
 
   auth-service:
     profiles: [ "auth" ]
@@ -159,6 +158,10 @@ services:
     build:
       context: ..
       dockerfile: ./auth-service/Dockerfile
+      args:
+        - http_proxy
+        - https_proxy
+        - no_proxy
     ports:
       - "8080:8080"
     environment:
@@ -189,15 +192,13 @@ services:
     build:
       context: ..
       dockerfile: ./product-service/Dockerfile
-      # Build args reintegrados
       args:
         - http_proxy
         - https_proxy
         - no_proxy
     ports:
-      - "${PORT9090:-9090}:9090"
+      - "${PRODUCT_PORT:-9090}:9090" # <-- Variable USADA
     deploy:
-      # Bloque Deploy reintegrado
       resources:
         limits:
           memory: 512M
@@ -211,35 +212,29 @@ services:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
       - JAVA_OPTS=${JAVA_OPTS:-}
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
-      # Datasource vars reintegradas
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_product:5432/${PRODUCT_DB_NAME:-db_product} # Nombre de DB corregido a db_product
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_product:5432/${PRODUCT_DB_NAME:-db_product}
       - SPRING_DATASOURCE_USERNAME=${PRODUCT_DB_USERNAME:-product}
       - SPRING_DATASOURCE_PASSWORD=${PRODUCT_DB_PASSWORD:-product123}
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      # Eureka client timing reintegrado
       - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=10
       - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=10
-      # CORRECCIÓN CRÍTICA: WAIT_FOR ahora incluye la DB (db_product)
       - WAIT_FOR=db_product:5432,discovery-service:8761,config-service:7777
       - WAIT_TIMEOUT=60
       - SPRING_CLOUD_CONFIG_FAILFAST=false
       - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=6
       - SPRING_CLOUD_CONFIG_RETRY_INITIALINTERVAL=3000
-      # Parámetros de Paginación reintegrados
       - PAGINATION_DEFAULT_PAGE=${PAGINATION_DEFAULT_PAGE:-0}
       - PAGINATION_DEFAULT_SIZE=${PAGINATION_DEFAULT_SIZE:-10}
       - PAGINATION_MAX_SIZE=${PAGINATION_MAX_SIZE:-100}
       - PAGINATION_DEFAULT_SORT_BY=${PAGINATION_DEFAULT_SORT_BY:-createdAt}
       - PAGINATION_DEFAULT_SORT_DIR=${PAGINATION_DEFAULT_SORT_DIR:-desc}
       - PAGINATION_ALLOWED_SORT_FIELDS=${PAGINATION_ALLOWED_SORT_FIELDS:-createdAt,updatedAt,code,description,unitPrice,currentStock}
-      # Parámetros de Actuator reintegrados
       - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,env,configprops,beans
       - MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED=true
       - SPRING_CLOUD_REFRESH_ENABLED=false
       - SERVER_PORT=9090
     dns:
-      # DNS reintegrado
       - 1.1.1.1
       - 8.8.8.8
     depends_on:
@@ -265,8 +260,12 @@ services:
     build:
       context: ..
       dockerfile: ./supplier-service/Dockerfile
+      args:
+        - http_proxy
+        - https_proxy
+        - no_proxy
     ports:
-      - "9091:9091"
+      - "${SUPPLIER_PORT:-9091}:9091" # <-- Variable USADA
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SERVER_PORT=9091
@@ -297,8 +296,12 @@ services:
     build:
       context: ..
       dockerfile: ./purchase-service/Dockerfile
+      args:
+        - http_proxy
+        - https_proxy
+        - no_proxy
     ports:
-      - "9094:9094"
+      - "${PURCHASE_PORT:-9092}:9094" # <-- Variable USADA (Host: 9092 / Contenedor: 9094)
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SERVER_PORT=9094
@@ -334,15 +337,17 @@ services:
         - https_proxy
         - no_proxy
     ports:
-      - "9092:9092"
+      - "${TAX_PORT:-9093}:9092" # <-- Variable USADA (Host: 9093 / Contenedor: 9092)
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SERVER_PORT=9092
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      - WAIT_FOR=discovery-service:8761,config-service:7777
+      - WAIT_FOR=discovery-service:8761,config-service:7777,db_tax:5432 # <-- Agregada dependencia a db_tax
       - WAIT_TIMEOUT=60
     depends_on:
+      db_tax:
+        condition: service_healthy # <-- Agregada dependencia a db_tax
       discovery-service:
         condition: service_healthy
       config-service:
@@ -357,23 +362,18 @@ services:
       - inventory-net
     restart: unless-stopped
 
-  # ====================================================================
-  # 4. API GATEWAY (Punto de entrada)
-  # ====================================================================
-
   api-gateway:
     profiles: [ "gateway" ]
     container_name: api-gateway
     build:
       context: ..
       dockerfile: ./api-gateway/Dockerfile
-      # Build args reintegrados
       args:
         - http_proxy
         - https_proxy
         - no_proxy
     ports:
-      - "${GATEWAY_PORT:-8090}:8090"
+      - "${API_GATEWAY_PORT:-8090}:8090" # <-- Variable USADA
     entrypoint: ["/app/entrypoint.sh"]
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
@@ -387,7 +387,6 @@ services:
       - WAIT_FOR=discovery-service:8761,config-service:7777
       - WAIT_TIMEOUT=60
     dns:
-      # DNS reintegrado
       - 1.1.1.1
       - 8.8.8.8
     healthcheck:
@@ -401,14 +400,14 @@ services:
         condition: service_healthy
       config-service:
         condition: service_healthy
-      auth-service:
-        condition: service_healthy
+
     networks:
       - inventory-net
     restart: unless-stopped
 
-# Volúmenes para persistir los datos de las bases de datos
 volumes:
   db_product_data:
   db_supplier_data:
   db_purchase_data:
+  db_tax_data:
+  db_auth_data:
