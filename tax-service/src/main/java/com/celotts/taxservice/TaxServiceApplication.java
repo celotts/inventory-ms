@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @EnableFeignClients
 @ConfigurationPropertiesScan("com.celotts.taxservice.infrastructure.config")
 // ó alternativamente: @EnableConfigurationProperties(AppProperties.class)
-@EnableJpaAuditing
+//@EnableJpaAuditing
 @SpringBootApplication
 public class TaxServiceApplication {
     public static void main(String[] args) {

@@ -37,15 +37,14 @@ export COMPOSE_DOCKER_CLI_BUILD ?= 0
 # Puertos de servicios
 PRODUCT_PORT ?= 9090
 SUPPLIER_PORT ?= 9091
-PURCHASE_PORT ?= 9095
 TAX_PORT ?= 9092
 GATEWAY_PORT ?= 8090
 DISCOVERY_PORT ?= 8761
 CONFIG_PORT ?= 7777
 
-# Perfiles y servicios
-PROFILES_ALL := infra gateway product supplier tax purchase
-SERVICES_ALL := discovery-service config-service api-gateway product-service supplier-service tax-service purchase-service
+# Perfiles y servicios (PURCHASE/purchase-service excluidos)
+PROFILES_ALL := infra gateway product supplier tax
+SERVICES_ALL := discovery-service config-service api-gateway product-service supplier-service tax-service
 
 # Comandos base
 RUN := COMPOSE_PROVIDER=$(COMPOSE_PROVIDER) COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME)
@@ -90,7 +89,7 @@ build-jars: ## 🔨 Construir JARs base
 	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar
 build-jars-all: ## 🔨 Construir TODOS los JARs
 	@echo "🔨 Construyendo todos los JARs..."
-	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar :supplier-service:bootJar :tax-service:bootJar #:purchase-service:bootJar
+	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar :supplier-service:bootJar :tax-service:bootJar
 
 build-images-all-nocache: build-jars-all ## 🔨 Construye TODAS las imágenes sin caché
 	@echo "🔨 Construyendo imágenes sin caché para todos los servicios..."
@@ -164,8 +163,6 @@ up-local-all-ordered: podman-ready fix-container-orphans ## 🚀 Stack completo 
 	$(Q) sleep 15
 	$(Q) $(MAKE) health-check-extended
 	@echo "🎉 STACK COMPLETO LEVANTADO!"
-
-# REMOVIDO: up-local-all-nocache (se integró la lógica de build en build-images-all-nocache y up-local-all-ordered)
 
 up-local-supplier: podman-ready fix-container-orphans ## 🧪 Infra + Supplier
 	@echo "🧹 Configurando entorno supplier..."
@@ -269,19 +266,13 @@ rebuild-tax-local: podman-ready ## 🔁 Reconstruir Tax Service
 	$(Q) $(COMPOSE_LOCAL) build tax-service
 	$(Q) $(COMPOSE_LOCAL) up -d tax-service
 
-#🏷️ PURCHASE SERVICE
-test-purchase: ## 🧪 Tests de Purchase Service
-	$(Q) cd $(ROOT_DIR)/purchase-service && $(GRADLEW) test
-run-purchase-local: ## 🚀 Ejecutar Purchase Service localmente
-	@echo "🚀 Purchase Service en http://localhost:$(PURCHASE_PORT)"
-	$(Q) cd $(ROOT_DIR)/purchase-service && $(GRADLEW) bootRun --args='--spring.profiles.active=local'
+# El Purchase Service ha sido eliminado por no estar desarrollado.
 #------------------------------------------------------------------------
 
 #🗃️ BASE DE DATOS
 #------------------------------------------------------------------------
 up-db: podman-ready ## 🗃️ Levantar solo bases de datos
 	@echo "🗄️ Levantando bases de datos (solo por perfiles)..."
-	# AJUSTE: Eliminamos la lista explícita de servicios
 	$(Q) $(COMPOSE_LOCAL) --profile infra --profile product --profile supplier --profile tax up -d
 reset-db: podman-ready ## 🗃️ Reiniciar base de datos principal
 	@echo "🔄 Reiniciando product-db..."
@@ -319,9 +310,6 @@ fix-discovery: podman-ready ## 🔧 Solucionar problemas del Discovery Service (
 	@echo "5. Verificando logs..."
 	$(Q) podman logs $(COMPOSE_PROJECT_NAME)_discovery-service_1 --tail 20
 
-# ESTE BLOQUE DUPLICADO FUE ELIMINADO COMPLETAMENTE.
-# fix-discovery-chmod: podman-ready ## 🛠️ Solucionar específicamente el problema de chmod en discovery (Antigua definición)
-
 check-discovery-health: podman-ready ## 🔍 Verificar salud específica del Discovery
 	@echo "🔍 Verificando salud de Discovery Service..."
 	@if curl -s http://localhost:$(DISCOVERY_PORT)/actuator/health >/dev/null; then \
@@ -331,6 +319,8 @@ check-discovery-health: podman-ready ## 🔍 Verificar salud específica del Dis
 	   echo "📜 Últimos logs:"; \
 	   $(Q) podman logs $(COMPOSE_PROJECT_NAME)_discovery-service_1 --tail 30 2>/dev/null || echo "No hay logs disponibles"; \
 	fi
+#------------------------------------------------------------------------
+
 #📊 DIAGNÓSTICO COMPLETO DEL SISTEMA
 diagnose: podman-ready ## 🔍 Diagnóstico completo del sistema
 	@echo "🔍 Ejecutando diagnóstico completo del sistema..."
@@ -362,7 +352,7 @@ check-resources: ## 📊 Verificar recursos del sistema
 check-ports: ## 🔍 Verificar puertos en uso
 	@echo "🔍 Verificando puertos en uso (solo en el host):"
 	@if ! command -v lsof >/dev/null; then echo "⚠️ Advertencia: 'lsof' no está instalado. No se puede verificar la disponibilidad de puertos del host."; exit 1; fi
-	@for port in $(DISCOVERY_PORT) $(CONFIG_PORT) $(GATEWAY_PORT) $(PRODUCT_PORT) $(SUPPLIER_PORT) $(TAX_PORT) $(PURCHASE_PORT) 5432; do \
+	@for port in $(DISCOVERY_PORT) $(CONFIG_PORT) $(GATEWAY_PORT) $(PRODUCT_PORT) $(SUPPLIER_PORT) $(TAX_PORT) 5432; do \
 	   if lsof -Pi :$$port -sTCP:LISTEN -t >/dev/null; then \
 	      echo "🔴 Puerto $$port: OCUPADO"; \
 	   else \
@@ -492,7 +482,16 @@ help-services: ## 📖 Ayuda de servicios individuales
 	@echo "  make run-product-local   - Ejecutar localmente (host)"
 	@echo "  make test-product        - Ejecutar tests"
 	@echo "  make rebuild-product-local - Reconstruir y levantar el contenedor"
-	@echo "..."
+	@echo ""
+	@echo "🏷️ Supplier Service:"
+	@echo "  make run-supplier-local  - Ejecutar localmente (host)"
+	@echo "  make test-supplier       - Ejecutar tests"
+	@echo "  make rebuild-supplier-local - Reconstruir y levantar el contenedor"
+	@echo ""
+	@echo "🏷️ Tax Service:"
+	@echo "  make run-tax-local       - Ejecutar localmente (host)"
+	@echo "  make test-tax            - Ejecutar tests"
+	@echo "  make rebuild-tax-local   - Reconstruir y levantar el contenedor"
 help-db: ## 📖 Ayuda de bases de datos
 	@echo "🗃️ BASES DE DATOS:"
 	@echo ""
@@ -525,6 +524,6 @@ help-troubleshoot: ## 📖 Ayuda de solución de problemas
 	down-local down-all logs-% health-check-extended fix-container-orphans clean-all \
 	clean-podman-prune clean-gradle reset-local test-product run-product-local rebuild-product-local \
 	test-supplier run-supplier-local rebuild-supplier-local test-tax run-tax-local rebuild-tax-local \
-	test-purchase run-purchase-local up-db reset-db tax-db-reset diagnose check-ports \
+	up-db reset-db tax-db-reset diagnose check-ports \
 	sync-podman-desktop debug-discovery fix-discovery check-discovery-health check-resources \
 	service-logs check-container-status emergency-clean restart-podman-vm fix-discovery-chmod diagnose-chmod build-images-all-nocache

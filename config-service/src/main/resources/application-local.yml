@@ -1,3 +1,5 @@
+# --- CONFIGURACIÓN LOCAL (application-local.yml) ---
+
 server:
   port: ${CONFIG_PORT:7777}
 
@@ -9,7 +11,7 @@ spring:
     compatibility-verifier:
       enabled: false
     config:
-      server: # <--- ¡CORRECCIÓN CLAVE! Añadir 'server' aquí.
+      server: # Configura esta aplicación como un Config Server
         git:
           uri: ${SPRING_CLOUD_CONFIG_SERVER_GIT_URI}
           username: ${GIT_USERNAME}
@@ -23,13 +25,17 @@ eureka:
   client:
     enabled: ${EUREKA_CLIENT_ENABLED:true}
     register-with-eureka: true
-    fetch-registry: false
+    # CAMBIO CLAVE: Permite que el servicio obtenga (fetch) la lista de otros servicios
+    # registrados en Eureka. Esto es necesario para que sea un cliente completo.
+    fetch-registry: true
     service-url:
       defaultZone: http://discovery-service:8761/eureka/
 
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+    # Simplificación: Usar solo el nombre de la aplicación y el puerto.
+    # Es más robusto que depender de la resolución de IP en entornos de contenedor.
+    instance-id: ${spring.application.name}:${server.port}
 
 management:
   endpoints:

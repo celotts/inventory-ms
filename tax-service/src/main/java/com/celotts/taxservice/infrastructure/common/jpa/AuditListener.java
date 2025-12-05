@@ -1,11 +1,7 @@
 package com.celotts.taxservice.infrastructure.common.jpa;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,11 +10,7 @@ import java.time.LocalDateTime;
 
 
 @Slf4j
-@Entity
-@Getter
-@Setter
-@EntityListeners(AuditListener.class)
-public class AuditListener  implements Auditable{
+public class AuditListener {
 
     @PrePersist
     public void prePersist(Object entity) {
@@ -29,6 +21,8 @@ public class AuditListener  implements Auditable{
 
         log.debug("PrePersist: Setting audit fields for entity: {}", entity.getClass().getSimpleName());
 
+        // Es crucial que la clase que use este Listener (tu entidad)
+        // implemente Auditable y tenga los campos @Column correspondientes.
         auditable.setCreatedAt(now);
         auditable.setCreatedBy(currentUser);
         auditable.setUpdatedAt(null);
@@ -66,45 +60,5 @@ public class AuditListener  implements Auditable{
         }
 
         return "system";
-    }
-
-    @Override
-    public void setCreatedAt(LocalDateTime createdAt) {
-
-    }
-
-    @Override
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-
-    }
-
-    @Override
-    public void setCreatedBy(String createdBy) {
-
-    }
-
-    @Override
-    public void setUpdatedBy(String updatedBy) {
-
-    }
-
-    @Override
-    public LocalDateTime getCreatedAt() {
-        return null;
-    }
-
-    @Override
-    public LocalDateTime getUpdatedAt() {
-        return null;
-    }
-
-    @Override
-    public String getCreatedBy() {
-        return "";
-    }
-
-    @Override
-    public String getUpdatedBy() {
-        return "";
     }
 }
