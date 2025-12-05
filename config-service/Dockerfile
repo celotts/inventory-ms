@@ -19,14 +19,24 @@ COPY config-service/src config-service/src
 # Permisos de ejecución
 RUN chmod +x ./gradlew
 
-# Configuración de timeouts para Gradle (Opcional, pero se mantiene)
-ENV GRADLE_OPTS="-Dorg.gradle.internal.http.connectionTimeout=600000 -Dorg.gradle.internal.http.socketTimeout=600000"
+# =====================================================================
+# CORRECCIÓN DE MEMORIA DE GRADLE: Se añaden límites de memoria (OOM Kill)
+# y se mantienen los timeouts existentes.
+# =====================================================================
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Xmx512m -Xms256m -Dorg.gradle.internal.http.connectionTimeout=600000 -Dorg.gradle.internal.http.socketTimeout=600000"
 
 # Paso 1: Resolver y cachear dependencias (!!! CAMBIO A CONFIG-SERVICE !!!)
-RUN ./gradlew :config-service:dependencies -x test --console=plain --no-daemon
+# Se elimina --no-daemon
+RUN ./gradlew :config-service:dependencies -x test --console=plain
 
 # Paso 2: Ejecutar la compilación y generar el JAR (!!! CAMBIO A CONFIG-SERVICE !!!)
-RUN ./gradlew :config-service:bootJar -x test --console=plain --no-daemon
+# Se elimina --no-daemon
+RUN ./gradlew :config-service:bootJar -x test --console=plain
+
+# Verificar que el JAR se generó correctamente
+RUN ls -lh config-service/build/libs/ && \
+    test -f config-service/build/libs/config-service-*.jar || \
+    (echo "ERROR: JAR no fue generado" && exit 1)
 
 # ---------------------------------------------------------------------
 # ETAPA 2: EJECUCIÓN (Crea la imagen final mínima)
@@ -37,8 +47,12 @@ LABEL maintainer="Inventory MS Team"
 # ⭐ PUERTO DEL CONFIG SERVICE
 EXPOSE 7777
 
+# Instalar dos2unix como root
+# (Se mueve este paso antes de añadir el usuario para usar permisos de root)
+RUN apt-get update && apt-get install -y dos2unix && rm -rf /var/lib/apt/lists/*
+
 RUN addgroup --system spring && adduser --system --ingroup spring spring
-USER spring:spring
+# USER spring:spring (Se mueve abajo, después de las operaciones de root)
 
 WORKDIR /app
 
@@ -46,11 +60,22 @@ WORKDIR /app
 COPY --from=builder /app/config-service/build/libs/config-service-*.jar /app/app.jar
 
 # ⭐ COPIAR LOS SCRIPTS DE ARRANQUE Y ESPERA
+# ASUMIMOS que wait-for-it.sh está DENTRO de config-service/ junto a entrypoint.sh
 COPY config-service/entrypoint.sh ./
-COPY wait-for-it.sh ./
+COPY config-service/wait-for-it.sh ./
 
-# Hacerlos ejecutables
-#RUN chmod +x entrypoint.sh wait-for-it.sh
+# =====================================================================
+# ⭐ CORRECCIÓN DE PERMISOS (SOLUCIÓN FINAL CON DOS2UNIX) ⭐
+# =====================================================================
+# PASO CRÍTICO: Sanitizar el formato de línea (CRLF -> LF) de forma robusta.
+# dos2unix es una utilidad dedicada que resuelve este problema de raíz.
+RUN dos2unix ./entrypoint.sh ./wait-for-it.sh
+
+# Hacerlos ejecutables (AHORA FUNCIONARÁ)
+RUN chmod +x entrypoint.sh wait-for-it.sh
+
+# Cambiar al usuario spring después de las operaciones de instalación y corrección
+USER spring:spring
 
 # ⭐ ESTABLECER EL PUNTO DE ENTRADA CON EL SCRIPT
 ENTRYPOINT ["/app/entrypoint.sh"]

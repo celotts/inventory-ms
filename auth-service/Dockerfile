@@ -19,14 +19,24 @@ COPY auth-service/src auth-service/src
 # Permisos de ejecución
 RUN chmod +x ./gradlew
 
-# Configuración de timeouts para Gradle
-ENV GRADLE_OPTS="-Dorg.gradle.internal.http.connectionTimeout=600000 -Dorg.gradle.internal.http.socketTimeout=600000"
+# =====================================================================
+# CORRECCIÓN DE MEMORIA DE GRADLE: Se han fusionado los timeouts
+# existentes con la corrección de MEMORIA (OOM Kill)
+# =====================================================================
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Xmx512m -Xms256m -Dorg.gradle.internal.http.connectionTimeout=600000 -Dorg.gradle.internal.http.socketTimeout=600000"
 
 # Paso 1: Resolver y cachear dependencias
-RUN ./gradlew :auth-service:dependencies -x test --console=plain --no-daemon
+# Se elimina --no-daemon
+RUN ./gradlew :auth-service:dependencies -x test --console=plain
 
 # Paso 2: Ejecutar la compilación y generar el JAR
-RUN ./gradlew :auth-service:bootJar -x test --console=plain --no-daemon
+# Se elimina --no-daemon
+RUN ./gradlew :auth-service:bootJar -x test --console=plain
+
+# Verificar que el JAR se generó correctamente
+RUN ls -lh auth-service/build/libs/ && \
+    test -f auth-service/build/libs/auth-service-*.jar || \
+    (echo "ERROR: JAR no fue generado" && exit 1)
 
 # ---------------------------------------------------------------------
 # ETAPA 2: EJECUCIÓN (Crea la imagen final mínima)
@@ -37,21 +47,32 @@ LABEL maintainer="Inventory MS Team"
 # Puerto común de Auth Service
 EXPOSE 8080
 
+# Instalar dos2unix como root para solucionar el problema de formato CRLF/LF.
+RUN apt-get update && apt-get install -y dos2unix && rm -rf /var/lib/apt/lists/*
+
 RUN addgroup --system spring && adduser --system --ingroup spring spring
-USER spring:spring
+# USER spring:spring (Movido abajo, después de las operaciones de root)
 
 WORKDIR /app
 
 # Copiar el JAR compilado desde la etapa 'builder'
 COPY --from=builder /app/auth-service/build/libs/auth-service-*.jar /app/app.jar
 
-# ⭐ COPIAR LOS SCRIPTS DE ARRANQUE Y ESPERA
-# Asegúrese de que wait-for-it.sh esté en la carpeta raíz del proyecto
+# ⭐ COPIAR LOS SCRIPTS DE ARRANQUE Y ESPERA (Asegúrate de que las rutas sean correctas)
 COPY auth-service/entrypoint.sh ./
 COPY wait-for-it.sh ./
 
+# =====================================================================
+# ⭐ CORRECCIÓN DE PERMISOS (SOLUCIÓN FINAL CON DOS2UNIX) ⭐
+# =====================================================================
+# PASO CRÍTICO: Sanitizar el formato de línea (CRLF -> LF) con dos2unix.
+RUN dos2unix ./entrypoint.sh ./wait-for-it.sh
+
 # Hacerlos ejecutables
 RUN chmod +x entrypoint.sh wait-for-it.sh
+
+# Cambiar al usuario spring después de las operaciones de instalación y corrección
+USER spring:spring
 
 # ⭐ ESTABLECER EL PUNTO DE ENTRADA CON EL SCRIPT
 ENTRYPOINT ["/app/entrypoint.sh"]

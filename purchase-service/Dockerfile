@@ -19,11 +19,24 @@ COPY purchase-service/src purchase-service/src
 # Permisos de ejecución
 RUN chmod +x ./gradlew
 
+# =====================================================================
+# CORRECCIÓN DE MEMORIA DE GRADLE: Se añaden límites de memoria (OOM Kill)
+# para el proceso de construcción de Gradle.
+# =====================================================================
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Xmx512m -Xms256m"
+
 # Paso 1: Resolver y cachear dependencias
-RUN ./gradlew :purchase-service:dependencies -x test --console=plain --no-daemon
+# Se elimina --no-daemon
+RUN ./gradlew :purchase-service:dependencies -x test --console=plain
 
 # Paso 2: Ejecutar la compilación y generar el JAR
-RUN ./gradlew :purchase-service:bootJar -x test --console=plain --no-daemon
+# Se elimina --no-daemon
+RUN ./gradlew :purchase-service:bootJar -x test --console=plain
+
+# Verificar que el JAR se generó correctamente
+RUN ls -lh purchase-service/build/libs/ && \
+    test -f purchase-service/build/libs/purchase-service-*.jar || \
+    (echo "ERROR: JAR no fue generado" && exit 1)
 
 # ---------------------------------------------------------------------
 # ETAPA 2: EJECUCIÓN (Crea la imagen final mínima)
@@ -46,8 +59,16 @@ COPY --from=builder /app/purchase-service/build/libs/purchase-service-*.jar /app
 COPY purchase-service/entrypoint.sh ./
 COPY wait-for-it.sh ./
 
+# =====================================================================
+# ⭐ CORRECCIÓN DE PERMISOS (SANEAR FORMATO DE LÍNEA) ⭐
+# =====================================================================
+# PASO CRÍTICO: Sanitizar el formato de línea (CRLF -> LF).
+# Esto elimina los caracteres '\r' (retorno de carro) que causan el error
+# de "Operation not permitted" en el chmod.
+RUN sed -i 's/\r$//' ./entrypoint.sh ./wait-for-it.sh
+
 # Hacerlos ejecutables
-#RUN chmod +x entrypoint.sh wait-for-it.sh
+RUN chmod +x entrypoint.sh wait-for-it.sh
 
 # ⭐ ESTABLECER EL PUNTO DE ENTRADA
 ENTRYPOINT ["/app/entrypoint.sh"]

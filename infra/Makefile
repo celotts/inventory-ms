@@ -92,6 +92,10 @@ build-jars-all: ## 🔨 Construir TODOS los JARs
 	@echo "🔨 Construyendo todos los JARs..."
 	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar :supplier-service:bootJar :tax-service:bootJar #:purchase-service:bootJar
 
+build-images-all-nocache: build-jars-all ## 🔨 Construye TODAS las imágenes sin caché
+	@echo "🔨 Construyendo imágenes sin caché para todos los servicios..."
+	$(Q) $(COMPOSE_LOCAL) $(foreach p,$(PROFILES_ALL),--profile $(p)) build --no-cache
+
 #🧪 TESTING
 test-all: ## 🧪 Ejecutar todos los tests
 	$(Q) cd $(ROOT_DIR) && $(GRADLEW) test
@@ -111,11 +115,11 @@ health: health-check-extended ## 💚 Verificación de salud completa
 .PHONY: podman-ready
 podman-ready: ## 🔍 Verificar que Podman esté listo
 	@if ! podman info >/dev/null 2>&1; then \
-		echo "⚠️ Podman no responde. Intentando iniciar VM..."; \
-		podman machine start >/dev/null 2>&1 || { \
-			echo "⚠️ Podman Machine no existe. Inicializando y arrancando..."; \
-			podman machine init --now >/dev/null 2>&1; \
-		}; \
+	   echo "⚠️ Podman no responde. Intentando iniciar VM..."; \
+	   podman machine start >/dev/null 2>&1 || { \
+	      echo "⚠️ Podman Machine no existe. Inicializando y arrancando..."; \
+	      podman machine init --now >/dev/null 2>&1; \
+	   }; \
 	fi; \
 	podman info >/dev/null 2>&1 || ( echo "❌ No se pudo conectar a Podman. Asegúrate de que la VM esté en marcha."; exit 1 )
 
@@ -133,48 +137,43 @@ up-local-all: podman-ready fix-container-orphans
 	@echo "🔍 Verificando salud de los servicios (espera 30s)..."
 	$(Q) sleep 30
 	$(Q) $(MAKE) health-check-extended
+
 up-local-all-ordered: podman-ready fix-container-orphans ## 🚀 Stack completo en orden correcto
-	@echo "🚀 INICIANDO STACK COMPLETO (ORDENADO)..."
-	$(Q) echo "🧹 Limpieza previa..."
+	@echo "🚀 INICIANDO STACK COMPLETO (ORDENADO Y SIN CACHÉ)..."
+	$(Q) echo "🧹 Limpieza previa y forzando construcción de imágenes..."
 	$(Q) $(MAKE) fix-container-orphans
 	$(Q) cp $(ENV_FILE_LOCAL) .env.override
-	$(Q) $(MAKE) build-jars-all
+	$(Q) $(MAKE) build-images-all-nocache # ⭐ Nuevo target que forza el build sin caché
 
-	@echo "🔨 Construyendo discovery-service..."
-	$(Q) podman build --no-cache -f $(ROOT_DIR)/discovery-service/Dockerfile -t discovery-service:latest $(ROOT_DIR)
-
-	@echo "🔧 1/5: Discovery Service..."
-	$(Q) $(COMPOSE_LOCAL) --profile infra up -d --build discovery-service
+	@echo "🔧 1/4: Discovery y Config Services..."
+	$(Q) $(COMPOSE_LOCAL) --profile infra up -d --no-recreate discovery-service config-service
 	$(Q) sleep 30
 
-	@echo "🔧 2/5: Config Service..."
-	$(Q) $(COMPOSE_LOCAL) --profile infra up -d --build config-service
-	$(Q) sleep 30
-
-	# AJUSTE CRÍTICO: Eliminamos los nombres explícitos de los servicios (product-db, etc.)
-	# y confiamos en que los perfiles (--profile product, --profile supplier, --profile tax)
-	# levantarán las bases de datos definidas en docker-compose-podman.yml.
-	@echo "🗄️ 3/5: Bases de datos (Levantando por perfiles)..."
-	$(Q) $(COMPOSE_LOCAL) --profile infra --profile product --profile supplier --profile tax up -d
+	@echo "🗄️ 2/4: Bases de datos (Levantando por perfiles)..."
+	$(Q) $(COMPOSE_LOCAL) --profile infra --profile product --profile supplier --profile tax up -d --no-recreate
 	$(Q) sleep 15
 
-	@echo "🛠️ 4/5: Microservicios (Product, Supplier, Tax)..."
-	$(Q) $(COMPOSE_LOCAL) --profile infra --profile product --profile supplier --profile tax up -d --build product-service supplier-service tax-service
+	@echo "🛠️ 3/4: Microservicios (Product, Supplier, Tax)..."
+	$(Q) $(COMPOSE_LOCAL) --profile infra --profile product --profile supplier --profile tax up -d --no-recreate product-service supplier-service tax-service
 	$(Q) sleep 45
 
-	@echo "🌐 5/5: API Gateway..."
-	$(Q) $(COMPOSE_LOCAL) --profile infra --profile gateway up -d --build api-gateway
+	@echo "🌐 4/4: API Gateway..."
+	$(Q) $(COMPOSE_LOCAL) --profile infra --profile gateway up -d --no-recreate api-gateway
 
 	@echo "🔍 Verificación final (espera 15s)..."
 	$(Q) sleep 15
 	$(Q) $(MAKE) health-check-extended
 	@echo "🎉 STACK COMPLETO LEVANTADO!"
+
+# REMOVIDO: up-local-all-nocache (se integró la lógica de build en build-images-all-nocache y up-local-all-ordered)
+
 up-local-supplier: podman-ready fix-container-orphans ## 🧪 Infra + Supplier
 	@echo "🧹 Configurando entorno supplier..."
 	$(Q) cp "$(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)" "$(CURDIR)/.env.override"
 	$(Q) cd "$(ROOT_DIR)" && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar :supplier-service:bootJar
 	@echo "🦭 Levantando supplier..."
 	$(Q) $(COMPOSE_LOCAL_SUPPLIER) --profile infra --profile supplier up -d --build --remove-orphans
+
 up-local-with-tax: podman-ready fix-container-orphans ## 🧪 Infra + Product + Gateway + Tax
 	@echo "🧹 Configurando entorno con tax..."
 	$(Q) cp $(ENV_FILE_LOCAL) .env.override
@@ -293,45 +292,45 @@ tax-db-reset: podman-ready ## 🗃️ Reiniciar base de datos de tax
 	$(Q) $(COMPOSE_LOCAL) --profile tax down -v tax-db
 	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :tax-service:bootJar
 	$(Q) $(COMPOSE_LOCAL) --profile tax up -d tax-db tax-service
-#------------------------------------------------------------------------
 
-#🆘 DIAGNÓSTICO AVANZADO Y SOLUCIÓN DE PROBLEMAS
-#------------------------------------------------------------------------
 
-#🔍 DIAGNÓSTICO ESPECÍFICO PARA DISCOVERY SERVICE
 debug-discovery: podman-ready ## 🐛 Debug del Discovery Service
 	@echo "🐛 Iniciando diagnóstico del Discovery Service..."
 	@echo "📋 Estado del contenedor:"
-	$(Q) podman ps -a --filter name=$(COMPOSE_PROJECT_NAME)-discovery-service-1
+	$(Q) podman ps -a --filter name=$(COMPOSE_PROJECT_NAME)_discovery-service_1
 	@echo ""
 	@echo "📜 Últimos logs (100 líneas):"
-	$(Q) podman logs $(COMPOSE_PROJECT_NAME)-discovery-service-1 --tail 100 2>/dev/null || echo "❌ No se pueden obtener logs del discovery-service"
+	$(Q) podman logs $(COMPOSE_PROJECT_NAME)_discovery-service_1 --tail 100 2>/dev/null || echo "❌ No se pueden obtener logs del discovery-service"
 	@echo ""
 	@echo "🔍 Verificando recursos de Podman:"
 	$(Q) podman system info | grep -E "(CPUs|Memory)" | head -2
-fix-discovery: podman-ready ## 🔧 Solucionar problemas del Discovery Service
+
+fix-discovery: podman-ready ## 🔧 Solucionar problemas del Discovery Service (General fix)
 	@echo "🔧 Aplicando correcciones para Discovery Service..."
 	@echo "1. Deteniendo contenedor..."
-	$(Q) podman stop $(COMPOSE_PROJECT_NAME)-discovery-service-1 2>/dev/null || true
-	$(Q) podman rm $(COMPOSE_PROJECT_NAME)-discovery-service-1 2>/dev/null || true
-	@echo "2. Reconstruyendo imagen (desde la raíz)..."
+	$(Q) podman stop $(COMPOSE_PROJECT_NAME)_discovery-service_1 2>/dev/null || true
+	$(Q) podman rm $(COMPOSE_PROJECT_NAME)_discovery-service_1 2>/dev/null || true
+	@echo "2. Reconstruyendo imagen (SIN CACHÉ)..."
 	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :discovery-service:bootJar
 	$(Q) podman build --no-cache -f $(ROOT_DIR)/discovery-service/Dockerfile -t discovery-service:latest $(ROOT_DIR)
 	@echo "3. Levantando solo discovery service..."
 	$(Q) $(COMPOSE_LOCAL) --profile infra up -d discovery-service
 	$(Q) sleep 10
 	@echo "5. Verificando logs..."
-	$(Q) podman logs $(COMPOSE_PROJECT_NAME)-discovery-service-1 --tail 20
-check-discovery-health: ## 🔍 Verificar salud específica del Discovery
+	$(Q) podman logs $(COMPOSE_PROJECT_NAME)_discovery-service_1 --tail 20
+
+# ESTE BLOQUE DUPLICADO FUE ELIMINADO COMPLETAMENTE.
+# fix-discovery-chmod: podman-ready ## 🛠️ Solucionar específicamente el problema de chmod en discovery (Antigua definición)
+
+check-discovery-health: podman-ready ## 🔍 Verificar salud específica del Discovery
 	@echo "🔍 Verificando salud de Discovery Service..."
 	@if curl -s http://localhost:$(DISCOVERY_PORT)/actuator/health >/dev/null; then \
-		echo "✅ Discovery Service está saludable"; \
+	   echo "✅ Discovery Service está saludable"; \
 	else \
-		echo "❌ Discovery Service no responde"; \
-		echo "📜 Últimos logs:"; \
-		podman logs $(COMPOSE_PROJECT_NAME)-discovery-service-1 --tail 30 2>/dev/null || echo "No hay logs disponibles"; \
+	   echo "❌ Discovery Service no responde"; \
+	   echo "📜 Últimos logs:"; \
+	   $(Q) podman logs $(COMPOSE_PROJECT_NAME)_discovery-service_1 --tail 30 2>/dev/null || echo "No hay logs disponibles"; \
 	fi
-
 #📊 DIAGNÓSTICO COMPLETO DEL SISTEMA
 diagnose: podman-ready ## 🔍 Diagnóstico completo del sistema
 	@echo "🔍 Ejecutando diagnóstico completo del sistema..."
@@ -364,20 +363,20 @@ check-ports: ## 🔍 Verificar puertos en uso
 	@echo "🔍 Verificando puertos en uso (solo en el host):"
 	@if ! command -v lsof >/dev/null; then echo "⚠️ Advertencia: 'lsof' no está instalado. No se puede verificar la disponibilidad de puertos del host."; exit 1; fi
 	@for port in $(DISCOVERY_PORT) $(CONFIG_PORT) $(GATEWAY_PORT) $(PRODUCT_PORT) $(SUPPLIER_PORT) $(TAX_PORT) $(PURCHASE_PORT) 5432; do \
-		if lsof -Pi :$$port -sTCP:LISTEN -t >/dev/null; then \
-			echo "🔴 Puerto $$port: OCUPADO"; \
-		else \
-			echo "🟢 Puerto $$port: LIBRE"; \
-		fi; \
+	   if lsof -Pi :$$port -sTCP:LISTEN -t >/dev/null; then \
+	      echo "🔴 Puerto $$port: OCUPADO"; \
+	   else \
+	      echo "🟢 Puerto $$port: LIBRE"; \
+	   fi; \
 	done
 
 #🐛 HERRAMIENTAS DE DEBUGGING
 service-logs: podman-ready ## 📜 Ver logs de todos los servicios recientes
 	@echo "📜 Mostrando últimos 50 líneas de logs de cada servicio activo:"
 	@for service in $$( $(COMPOSE_LOCAL) ps --services ); do \
-		echo ""; \
-		echo "=== $$service ==="; \
-		podman logs $(COMPOSE_PROJECT_NAME)-$$service-1 --tail 50 2>/dev/null | tail -20 || echo "No hay logs disponibles"; \
+	   echo ""; \
+	   echo "=== $$service ==="; \
+	   podman logs $(COMPOSE_PROJECT_NAME)-$$service-1 --tail 50 2>/dev/null | tail -20 || echo "No hay logs disponibles"; \
 	done
 check-container-status: ## 🔍 Ver estado detallado de contenedores
 	@echo "🔍 Estado detallado de contenedores:"
@@ -389,17 +388,17 @@ emergency-clean: ## 🚑 Limpieza de emergencia (cuando nada funciona)
 	@echo "⛔️ ¡ADVERTENCIA! Esto eliminará todos los contenedores, imágenes y volúmenes!"
 	@read -p "¿Estás seguro? (solo escribe 'SI' para continuar): " confirm; \
 	if [ "$$confirm" = "SI" ]; then \
-		echo "🧹 Eliminando todos los contenedores..."; \
-		podman rm -f $$(podman ps -aq) 2>/dev/null || true; \
-		echo "🧹 Eliminando todas las imágenes..."; \
-		podman rmi -f $$(podman images -aq) 2>/dev/null || true; \
-		echo "🧹 Eliminando todos los volúmenes..."; \
-		podman volume rm -f $$(podman volume ls -q) 2>/dev/null || true; \
-		echo "🧹 Limpiando sistema..."; \
-		podman system prune -a -f --volumes; \
-		echo "✅ Limpieza de emergencia completada"; \
+	   echo "🧹 Eliminando todos los contenedores..."; \
+	   podman rm -f $$(podman ps -aq) 2>/dev/null || true; \
+	   echo "🧹 Eliminando todas las imágenes..."; \
+	   podman rmi -f $$(podman images -aq) 2>/dev/null || true; \
+	   echo "🧹 Eliminando todos los volúmenes..."; \
+	   podman volume rm -f $$(podman volume ls -q) 2>/dev/null || true; \
+	   echo "🧹 Limpiando sistema..."; \
+	   podman system prune -a -f --volumes; \
+	   echo "✅ Limpieza de emergencia completada"; \
 	else \
-		echo "❌ Limpieza cancelada"; \
+	   echo "❌ Limpieza cancelada"; \
 	fi
 restart-podman-vm: ## 🔄 Reiniciar la máquina virtual de Podman
 	@echo "🔄 Reiniciando Podman Machine..."
@@ -412,7 +411,8 @@ sync-podman-desktop: ## 🍎 Sincronizar con Podman Desktop (macOS)
 	$(Q) podman system connection default podman-machine-default
 	@echo "✅ Podman Desktop sincronizado"
 	@echo "💡 Si no ves los contenedores, reinicia Podman Desktop completamente"
-fix-discovery-chmod: ## 🛠️ Solucionar específicamente el problema de chmod en discovery
+
+fix-discovery-chmod: podman-ready ## 🛠️ Solucionar específicamente el problema de chmod en discovery
 	@echo "🛠️ Aplicando fix específico para discovery service..."
 	# 1. Dar permisos en el host
 	$(Q) chmod +x $(ROOT_DIR)/discovery-service/entrypoint.sh $(ROOT_DIR)/discovery-service/wait-for-it.sh
@@ -423,24 +423,25 @@ fix-discovery-chmod: ## 🛠️ Solucionar específicamente el problema de chmod
 	$(Q) podman build --no-cache -f $(ROOT_DIR)/discovery-service/Dockerfile -t discovery-service:latest $(ROOT_DIR)
 	# 4. Levantar solo discovery
 	$(Q) $(COMPOSE_LOCAL) --profile infra up -d discovery-service
-	@echo "✅ Fix aplicado, verificando..."
 	$(Q) sleep 10
-	$(Q) podman logs $(COMPOSE_PROJECT_NAME)-discovery-service-1 --tail 10
+	@echo "✅ Fix aplicado, verificando..."
+	$(Q) podman logs $(COMPOSE_PROJECT_NAME)_discovery-service_1 --tail 10
+
 diagnose-chmod: ## 🔍 Diagnóstico específico de problemas chmod
 	@echo "🔍 Diagnóstico de problemas chmod..."
 	@echo ""
 	@echo "📋 Permisos de scripts en host:"
 	@for service in discovery-service config-service api-gateway product-service supplier-service tax-service; do \
-		if [ -f "$(ROOT_DIR)/$$service/entrypoint.sh" ]; then \
-			echo "$$service/entrypoint.sh: $$(ls -l $(ROOT_DIR)/$$service/entrypoint.sh | cut -d' ' -f1)"; \
-		else \
-			echo "❌ $$service/entrypoint.sh: NO EXISTE"; \
-		fi; \
-		if [ -f "$(ROOT_DIR)/$$service/wait-for-it.sh" ]; then \
-			echo "$$service/wait-for-it.sh: $$(ls -l $(ROOT_DIR)/$$service/wait-for-it.sh | cut -d' ' -f1)"; \
-		else \
-			echo "❌ $$service/wait-for-it.sh: NO EXISTE"; \
-		fi; \
+	   if [ -f "$(ROOT_DIR)/$$service/entrypoint.sh" ]; then \
+	      echo "$$service/entrypoint.sh: $$(ls -l $(ROOT_DIR)/$$service/entrypoint.sh | cut -d' ' -f1)"; \
+	   else \
+	      echo "❌ $$service/entrypoint.sh: NO EXISTE"; \
+	   fi; \
+	   if [ -f "$(ROOT_DIR)/wait-for-it.sh" ]; then \
+	      echo "wait-for-it.sh (Root): $$(ls -l $(ROOT_DIR)/wait-for-it.sh | cut -d' ' -f1)"; \
+	   else \
+	      echo "❌ wait-for-it.sh: NO EXISTE en la raíz"; \
+	   fi; \
 	done
 	@echo ""
 	@echo "🐳 Estado de contenedores:"
@@ -463,6 +464,7 @@ help: ## 📖 Mostrar ayuda general
 	@echo ""
 	@echo "🛠️ DESARROLLO:"
 	@echo "  make build-all           - Construir todos los JARs"
+	@echo "  make build-images-all-nocache - Forzar la reconstrucción de todas las imágenes (ideal si tienes problemas de caché)"
 	@echo "  make test-all            - Ejecutar todos los tests"
 	@echo "  make status              - Estado de los servicios"
 	@echo "  make logs                - Logs de todos los servicios"
@@ -525,4 +527,4 @@ help-troubleshoot: ## 📖 Ayuda de solución de problemas
 	test-supplier run-supplier-local rebuild-supplier-local test-tax run-tax-local rebuild-tax-local \
 	test-purchase run-purchase-local up-db reset-db tax-db-reset diagnose check-ports \
 	sync-podman-desktop debug-discovery fix-discovery check-discovery-health check-resources \
-	service-logs check-container-status emergency-clean restart-podman-vm fix-discovery-chmod diagnose-chmod
+	service-logs check-container-status emergency-clean restart-podman-vm fix-discovery-chmod diagnose-chmod build-images-all-nocache
