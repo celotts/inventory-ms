@@ -40,7 +40,7 @@ export COMPOSE_DOCKER_CLI_BUILD ?= 1 # Habilitar BuildKit
 # Puertos de servicios
 PRODUCT_PORT ?= 9090
 SUPPLIER_PORT ?= 9091
-TAX_PORT ?= 9092
+TAX_PORT ?= 9093
 GATEWAY_PORT ?= 8090
 DISCOVERY_PORT ?= 8761
 CONFIG_PORT ?= 7777
@@ -138,6 +138,14 @@ up-local-all: podman-ready fix-line-endings fix-container-orphans
 
 up-local-all-ordered: podman-ready fix-line-endings fix-container-orphans ## 🚀 Stack completo en orden correcto
 	@echo "🚀 INICIANDO STACK COMPLETO (ORDENADO Y SIN CACHÉ)..."
+	#=========================================================
+	#⏱️ INICIO DEL REGISTRO DE TIEMPO
+	#=========================================================
+	@START_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
+	START_SECONDS=$$(date +%s); \
+	echo "========================================================="
+	echo "⏱️ INICIO DEL PROCESO: $$START_TIME"; \
+	echo "========================================================="
 	$(Q) echo "🧹 Limpieza previa y forzando construcción de imágenes..."
 	$(Q) $(MAKE) fix-container-orphans
 	$(Q) cp $(ENV_FILE_LOCAL) .env.override
@@ -164,6 +172,19 @@ up-local-all-ordered: podman-ready fix-line-endings fix-container-orphans ## �
 	$(Q) sleep 90
 	$(Q) $(MAKE) health-check-extended
 	@echo "🎉 STACK COMPLETO LEVANTADO!"
+	#=========================================================
+	#⏱️ FINAL DEL REGISTRO DE TIEMPO Y CÁLCULO
+ 	#=========================================================
+	#=========================================================
+    #⏱️ FINAL DEL REGISTRO DE TIEMPO Y CÁLCULO
+    #=========================================================
+    @END_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
+    END_SECONDS=$$(date +%s); \
+    DURATION_SECONDS=$$((END_SECONDS - START_SECONDS)); \
+    echo "========================================================="; \
+    echo "⏱️ FIN DEL PROCESO: $$END_TIME"; \
+    echo "⏳ TIEMPO TOTAL DEMORADO: $$DURATION_SECONDS segundos"; \
+    echo "========================================================="
 
 # ------------------------------------------------------------------------
 # ✅ SOLUCIÓN AL ERROR DE SINTAXIS: Mover lógica a script y garantizar permisos.
@@ -216,9 +237,9 @@ health-check-extended: podman-ready ## 💚 Verificación de salud extendida
 
 	@echo "🔍 Bases de datos (pg_isready):"
 	# Se usa el nombre completo del contenedor para mayor robustez
-	$(Q) podman exec $(COMPOSE_PROJECT_NAME)_db_product_1 pg_isready -U postgres >/dev/null 2>&1 && echo "✅ Product DB" || echo "❌ Product DB"
-	$(Q) podman exec $(COMPOSE_PROJECT_NAME)_db_supplier_1 pg_isready -U postgres >/dev/null 2>&1 && echo "✅ Supplier DB" || echo "❌ Supplier DB"
-	$(Q) podman exec $(COMPOSE_PROJECT_NAME)_db_tax_1 pg_isready -U postgres >/dev/null 2>&1 && echo "✅ Tax DB" || echo "❌ Tax DB"
+	$(Q) podman exec db_product pg_isready -U postgres >/dev/null 2>&1 && echo "✅ Product DB"
+	$(Q) podman exec db_supplier pg_isready -U postgres >/dev/null 2>&1 && echo "✅ Supplier DB"
+	$(Q) podman exec db_tax pg_isready -U postgres >/dev/null 2>&1 && echo "✅ Tax DB"
 
 	@echo "🔍 Microservicios (Health Actuator):"
 	$(call check_health, http://localhost:$(PRODUCT_PORT)/actuator/health, Product)
