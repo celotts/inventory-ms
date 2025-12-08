@@ -4,6 +4,9 @@
 FROM eclipse-temurin:21-jdk-jammy AS builder
 LABEL maintainer="Inventory MS Team"
 
+ARG DOCKER_USERNAME
+ARG DOCKER_PASSWORD
+
 WORKDIR /app
 
 # 1. Copia archivos de la raíz del proyecto (configuración de Gradle)
@@ -65,6 +68,7 @@ COPY --from=builder /app/product-service/build/libs/product-service-*.jar /app/a
 # ya fueron establecidos correctamente en la etapa 'builder'
 COPY --from=builder /app/product-service/entrypoint.sh /app/entrypoint.sh
 COPY --from=builder /app/product-service/wait-for-it.sh /app/wait-for-it.sh
+
 
 # 6. HACERLOS EJECUTABLES (ELIMINADO PORQUE YA SE HIZO EN LA ETAPA BUILDER)
 

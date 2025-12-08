@@ -4,6 +4,9 @@
 FROM eclipse-temurin:21-jdk-jammy AS builder
 LABEL maintainer="Inventory MS Team"
 
+#ARG DOCKER_USERNAME
+#ARG DOCKER_PASSWORD
+
 WORKDIR /app
 
 # Copias iniciales de archivos de Gradle del proyecto raíz

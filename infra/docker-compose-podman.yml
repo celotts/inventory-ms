@@ -134,6 +134,8 @@ services:
         - http_proxy
         - https_proxy
         - no_proxy
+        - DOCKER_USERNAME=${DOCKER_USERNAME}
+        - DOCKER_PASSWORD=${DOCKER_PASSWORD}
     ports:
       - "${DISCOVERY_PORT:-8761}:8761" # <-- Variable USADA
     environment:
