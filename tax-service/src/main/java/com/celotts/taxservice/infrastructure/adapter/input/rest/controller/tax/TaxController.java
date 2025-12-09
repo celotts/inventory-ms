@@ -1,14 +1,14 @@
-package com.celotts.taxservice.infrastructure.adapter.input.rest.controller;
+package com.celotts.taxservice.infrastructure.adapter.input.rest.controller.tax;
 
-import com.celotts.taxservice.domain.model.TaxModel;
-import com.celotts.taxservice.domain.port.input.TaxUseCase;
+import com.celotts.taxservice.domain.model.tax.TaxModel;
+import com.celotts.taxservice.domain.port.input.tax.TaxUseCase;
 // IMPORTACIÓN DE LA EXCEPCIÓN PERSONALIZADA
 import com.celotts.taxservice.domain.exception.ResourceNotFoundException;
 import com.celotts.taxservice.infrastructure.adapter.input.rest.dto.response.ApiResponse;
 import com.celotts.taxservice.infrastructure.adapter.input.rest.dto.tax.TaxCreateDto;
 import com.celotts.taxservice.infrastructure.adapter.input.rest.dto.tax.TaxResponseDto;
 import com.celotts.taxservice.infrastructure.adapter.input.rest.dto.tax.TaxUpdateDto;
-import com.celotts.taxservice.infrastructure.adapter.input.rest.mapper.TaxMapper;
+import com.celotts.taxservice.infrastructure.adapter.input.rest.mapper.tax.TaxMapper;
 import com.celotts.taxservice.infrastructure.common.dto.PageableRequestDto;
 import com.celotts.taxservice.infrastructure.common.util.PageableUtils;
 import jakarta.validation.Valid;

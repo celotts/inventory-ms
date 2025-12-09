@@ -1,4 +1,4 @@
-package com.celotts.taxservice.domain.model;
+package com.celotts.taxservice.domain.model.tax;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -32,6 +32,11 @@ public class TaxModel {
     @NotBlank(message = "{tax.name.required}")
     @Size(min = 2, max = 120, message = "{tax.name.size}")
     private String name;
+
+    @Column(length = 120, nullable = false)
+    @NotBlank(message =  "{tax.description.required}")
+    @Size(min = 2, max= 120, message = "{tax.description.size}")
+    private String description;
 
     @Column(name = "rate", precision = 5, scale = 2, nullable = false)
     @DecimalMin(value = "0.00", inclusive = true, message = "{tax.rate.min}")
@@ -83,4 +88,6 @@ public class TaxModel {
     protected void onUpdate() {
         this.updatedAt = OffsetDateTime.now();
     }
+
+
 }

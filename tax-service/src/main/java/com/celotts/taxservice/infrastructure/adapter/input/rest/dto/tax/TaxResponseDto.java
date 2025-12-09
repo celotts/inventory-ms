@@ -25,6 +25,8 @@ public class TaxResponseDto {
 
     private String name;
 
+    private String description;
+
     private BigDecimal rate;
 
     private LocalDate validFrom;

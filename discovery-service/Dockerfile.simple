@@ -1,0 +1,23 @@
+FROM eclipse-temurin:21-jre-jammy
+
+LABEL maintainer="Inventory MS Team"
+
+EXPOSE 8761
+
+RUN apt-get update && apt-get install -y netcat && rm -rf /var/lib/apt/lists/*
+
+RUN addgroup --system spring && adduser --system --ingroup spring spring
+
+USER spring:spring
+
+WORKDIR /app
+
+# Copiar el JAR desde el host
+COPY build/libs/discovery-service-*.jar app.jar
+
+# Copiar los scripts desde el host
+COPY entrypoint.sh wait-for-it.sh ./
+
+RUN chmod +x entrypoint.sh wait-for-it.sh
+
+ENTRYPOINT ["./entrypoint.sh"]

@@ -1,6 +1,6 @@
-package com.celotts.taxservice.infrastructure.adapter.input.rest.mapper;
+package com.celotts.taxservice.infrastructure.adapter.input.rest.mapper.tax;
 
-import com.celotts.taxservice.domain.model.TaxModel;
+import com.celotts.taxservice.domain.model.tax.TaxModel;
 import com.celotts.taxservice.infrastructure.adapter.input.rest.dto.tax.TaxCreateDto;
 import com.celotts.taxservice.infrastructure.adapter.input.rest.dto.tax.TaxUpdateDto;
 import com.celotts.taxservice.infrastructure.adapter.input.rest.dto.tax.TaxResponseDto;

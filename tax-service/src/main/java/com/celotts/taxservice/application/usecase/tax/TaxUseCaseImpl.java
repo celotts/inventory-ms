@@ -1,8 +1,8 @@
 package com.celotts.taxservice.application.usecase.tax;
 
-import com.celotts.taxservice.domain.model.TaxModel;
-import com.celotts.taxservice.domain.port.input.TaxUseCase;
-import com.celotts.taxservice.domain.port.output.TaxRepositoryPort;
+import com.celotts.taxservice.domain.model.tax.TaxModel;
+import com.celotts.taxservice.domain.port.input.tax.TaxUseCase;
+import com.celotts.taxservice.domain.port.output.tax.TaxRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -12,10 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -130,6 +127,48 @@ public class TaxUseCaseImpl implements TaxUseCase {
     }
 
     @Override
+    public List<TaxModel> findByNameContaining(String name) {
+        // 1. Loggear la búsqueda
+        log.debug(getLocalizedMessage("log.tax.finding.byname.containing", name));
+
+        // 2. Consultar el repositorio
+        List<TaxModel> models = taxRepository.findByNameContaining(name);
+
+        // 3. Verificar si la lista está vacía
+        if (models.isEmpty()) {
+            // Log de advertencia
+            log.warn(getNotFoundWarnMessage(name, false));
+
+            // Lanzar excepción de Recurso No Encontrado
+            throw resourceNotFoundException(name, false);
+        }
+
+        // 4. Devolver la lista
+        return models;
+    }
+
+    @Override
+    public List<TaxModel> findByDescriptionContaining(String name) {
+        // 1. Loggear la búsqueda (Usaremos una clave similar a la de nombre)
+        log.debug(getLocalizedMessage("log.tax.finding.bydescription.containing", name));
+
+        // 2. Consultar el repositorio
+        List<TaxModel> models = taxRepository.findByDescriptionContaining(name);
+
+        // 3. Verificar si la lista está vacía
+        if (models.isEmpty()) {
+            // Log de advertencia (Reutilizando el mensaje de no encontrado)
+            log.warn(getNotFoundWarnMessage(name, false));
+
+            // Lanzar excepción de Recurso No Encontrado
+            throw resourceNotFoundException(name, false);
+        }
+
+        // 4. Devolver la lista
+        return models;
+    }
+
+    @Override
     public List<TaxModel> finjdByNameContaining(String name) {
         // ANTES: log.debug("Finding taxes by name containing: {}", name);
         log.debug(getLocalizedMessage("log.tax.finding.byname.containing", name));
@@ -234,7 +273,6 @@ public class TaxUseCaseImpl implements TaxUseCase {
             throw new IllegalArgumentException(msg);
         }
 
-        // ... (resto de la lógica) ...
 
         return taxRepository.save(model);
     }

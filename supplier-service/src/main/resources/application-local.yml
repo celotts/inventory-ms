@@ -1,60 +1,72 @@
+# application-local.yml (Supplier Service - Perfil Local/Host)
 server:
-  port: 9090
+  port: 9091 # Usar 9091 para Supplier Service si 9090 ya es usado por Product
 
 spring:
+  # --- Configuración de Activación ---
+  config:
+    activate:
+      # CRÍTICO: Debe ser 'local' para coincidir con el nombre del archivo/intención
+      on-profile: local
+
   application:
     name: supplier-service
-  messages:
-    basename: messages
-    encoding: UTF-8
-    fallback-to-system-locale: false
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
-      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
 
-  # ✅ PostgreSQL para desarrollo local en Docker
+  # --- Dependencias de la Nube (DEBEN ESTAR DESHABILITADAS EN LOCAL) ---
+  cloud:
+    config:
+      enabled: false # 🛑 DESHABILITADO: No se necesita Config Server en ejecución local
+
+  eureka:
+    client:
+      enabled: false # 🛑 DESHABILITADO: No se conecta a Eureka al ejecutar en el host
+
+  # --- Base de Datos (Conexión al localhost/Host Mapeado) ---
   datasource:
+    # CRÍTICO: Apunta a localhost (o el puerto mapeado, si no es 5432)
     url: jdbc:postgresql://localhost:5432/supplier
     username: supplier
     password: supplier123
     driver-class-name: org.postgresql.Driver
 
     hikari:
-      pool-name: HikariPool-ProductService
-      maximum-pool-size: 10                         # -> "Maximum pool size"
-      minimum-idle: 2                               # Hikari no tiene "min pool size" como tal; usa minimumIdle
-      auto-commit: false                            # -> "Autocommit mode"
-      transaction-isolation: TRANSACTION_READ_COMMITTED  # -> "Isolation level"
-      # Opcionales útiles:
+      pool-name: HikariPool-SupplierServiceLocal # Renombrado para claridad
+      maximum-pool-size: 10
+      minimum-idle: 2
+      auto-commit: false
+      transaction-isolation: TRANSACTION_READ_COMMITTED
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
 
+  # --- JPA/Hibernate ---
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
-eureka:
-  client:
-    service-url:
-      defaultZone: http://discovery-service:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+  # --- Exclusiones ---
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
 
+  # --- Configuración General de Spring ---
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+# --- Documentación/Swagger ---
 springdoc:
   api-docs:
-    path: /v3/api-docs       # JSON
+    path: /v3/api-docs
   swagger-ui:
-    path: /swagger-ui.html   # UI
+    path: /swagger-ui.html
     display-request-duration: true
 
-# Configuración de paginación
+# --- Configuraciones Propias de la Aplicación (Pag. y CORS) ---
 app:
   pagination:
     default-page: 0
@@ -65,15 +77,17 @@ app:
   cors:
     allowed-origin: "*"
 
+# --- Management Endpoints ---
 management:
   endpoints:
     web:
       exposure:
         include: "*"
 
-
+# --- Logging ---
 logging:
   level:
-    com.celotts.productservice: DEBUG
+    # Usar el nombre correcto del paquete de la aplicación
+    com.celotts.supplierservice: DEBUG
     com.netflix.eureka: WARN
     com.netflix.discovery: WARN

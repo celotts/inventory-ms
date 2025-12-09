@@ -1,8 +1,8 @@
-package com.celotts.taxservice.infrastructure.adapter.output.postgres.adapter;
+package com.celotts.taxservice.infrastructure.adapter.output.postgres.adapter.tax;
 
-import com.celotts.taxservice.domain.model.TaxModel;
-import com.celotts.taxservice.domain.port.output.TaxRepositoryPort;
-import com.celotts.taxservice.infrastructure.adapter.output.postgres.entity.TaxEntity;
+import com.celotts.taxservice.domain.model.tax.TaxModel;
+import com.celotts.taxservice.domain.port.output.tax.TaxRepositoryPort;
+import com.celotts.taxservice.infrastructure.adapter.output.postgres.entity.tax.TaxEntity;
 import com.celotts.taxservice.infrastructure.adapter.output.postgres.mapper.tax.TaxEntityMapper;
 import com.celotts.taxservice.infrastructure.adapter.output.postgres.repository.tax.TaxJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -75,6 +75,17 @@ public class TaxRepositoryAdapter implements TaxRepositoryPort {
     public List<TaxModel> findByNameContaining(String name) {
         log.debug("Finding taxes by name containing: {}", name);
         return jpa.findByNameIgnoreCase(name, Pageable.unpaged())
+                .getContent()
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TaxModel> findByDescriptionContaining(String name) {
+        log.debug("Finding taxes by description containing: {}", name);
+        // Asumiendo que TaxJpaRepository tiene este método de consulta derivada
+        return jpa.findByDescriptionIgnoreCase(name, Pageable.unpaged())
                 .getContent()
                 .stream()
                 .map(mapper::toDomain)

@@ -22,6 +22,9 @@ public class TaxCreateDto {
     @Size(min = 2, max = 120, message = "{tax.name.size}")
     private String name;
 
+    @Size(min = 2, max = 120, message = "{tax.name.size}")
+    private String description;
+
     @NotNull(message = "{tax.rate.required}")
     @DecimalMin(value = "0.00", inclusive = true, message = "{tax.rate.min}")
     @DecimalMax(value = "100.00", inclusive = true, message = "{tax.rate.max}")

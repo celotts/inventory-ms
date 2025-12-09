@@ -1,29 +1,33 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
+# Script de entrada para el config-service.
+# Ejecuta 'wait-for-it.sh' para esperar por el Discovery Service (Eureka).
 
-log() {
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
-}
+# ------------------------------------------------------------------------------------------------
+# 1. ESPERAR DEPENDENCIA CRÍTICA (DISCOVERY SERVICE)
+# ------------------------------------------------------------------------------------------------
+# Asumimos que la URL de Eureka es 'discovery-service:8761', que es el nombre del servicio
+# y puerto predeterminados en Docker Compose.
+WAIT_HOST="discovery-service:8761"
+WAIT_TIMEOUT=45
 
-wait_for_service() {
-  local name="$1"
-  local host_port="$2"
-  local timeout="${3:-30}"
+echo "Esperando a que Discovery Service (Eureka) esté disponible en $WAIT_HOST (Timeout: $WAIT_TIMEOUTs)..."
 
-  log "🕒 Esperando $name en $host_port (timeout ${timeout}s)..."
-  bash ./wait-for-it.sh "$host_port" --timeout="$timeout" --strict --
-  log "✅ $name está disponible."
-}
+# Sintaxis: ./wait-for-it.sh <host>:<port> -t <timeout> -- <comando a ejecutar después>
+# La ruta a wait-for-it.sh es /app/wait-for-it.sh, según la configuración de tu Dockerfile
+/app/wait-for-it.sh $WAIT_HOST -t $WAIT_TIMEOUT -- \
+    echo "Discovery Service listo. Procediendo a iniciar el Config Server..."
 
-# === Espera por servicios externos ===
-wait_for_service "discovery-service" "discovery-service:8761" 60
-
-# === Validación de archivo JAR ===
-if [[ ! -f app.jar ]]; then
-  log "❌ Error: app.jar no se encontró en el directorio /app"
-  exit 1
+# Comprobación del resultado de wait-for-it.sh
+if [ $? -ne 0 ]; then
+    echo "ERROR: El tiempo de espera para $WAIT_HOST ha expirado. El Config Server no se iniciará."
+    exit 1
 fi
 
-# === Lanzar aplicación ===
-log "🚀 Iniciando app.jar..."
-exec java ${JAVA_OPTS:-} -jar app.jar
+# ------------------------------------------------------------------------------------------------
+# 2. INICIAR LA APLICACIÓN SPRING BOOT
+# ------------------------------------------------------------------------------------------------
+# Ejecuta el JAR principal de Spring Boot. El 'exec' asegura que el proceso Java reemplace
+# el proceso del script shell como PID 1.
+
+echo "Iniciando Config Server: java -jar /app/app.jar"
+exec java -Djava.security.egd=file:/dev/./urandom -jar /app/app.jar
