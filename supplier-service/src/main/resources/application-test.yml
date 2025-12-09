@@ -1,47 +1,61 @@
-# Configuración para tests con logging detallado
+# application-test.yml (Product Service - Perfil Test)
 # Ubicación: src/test/resources/application-test.yml
 
 spring:
+  # --- Configuración de Activación ---
+  config:
+    activate:
+      # CRÍTICO: Debe ser 'test' para el ambiente de pruebas
+      on-profile: test
+
+  application:
+    name: product-service
+
+  # --- Dependencias de la Nube (DEBEN ESTAR DESHABILITADAS EN TESTS) ---
+  cloud:
+    config:
+      enabled: false # 🛑 DESHABILITADO: No se usa Config Server en tests.
+
+  eureka:
+    client:
+      enabled: false # 🛑 DESHABILITADO: No se conecta a Eureka durante las pruebas.
+
+  # --- Base de Datos: H2 en Memoria (Estándar para Tests de Integración) ---
+  datasource:
+    # URL estándar de H2 en memoria.
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  # --- JPA/Hibernate ---
+  jpa:
+    hibernate:
+      # ddl-auto: create-drop es el estándar para H2 en tests
+      ddl-auto: create-drop
+    show-sql: true
+    # CRÍTICO: La plataforma debe coincidir con H2
+    database-platform: org.hibernate.dialect.H2Dialect
+
   messages:
     basename: messages
     encoding: UTF-8
     fallback-to-system-locale: false
-  application:
-    name: product-service
+
   #security:
   #  enabled: false
 
-  # H2 Database
-  datasource:
-    url: jdbc:postgresql://localhost:5432/product
-    username: product
-    password: product123
-    driver-class-name: org.postgresql.Driver
-
-  # JPA/Hibernate
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true  # ✅ Activar para debug
-    database-platform: org.hibernate.dialect.H2Dialect
-
-# Desactivar servicios externos
-eureka:
-  client:
-    enabled: false
-  instance:
-    prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
-
-# ✅ Logging detallado para debug
+# --- Logging Detallado para Debugging de Pruebas ---
 logging:
   level:
     org.springframework.web: DEBUG
     org.hibernate: DEBUG
+    # Ajustar al nombre correcto del paquete del producto
     com.celotts.productservice: DEBUG
     org.springframework.security: DEBUG
     root: INFO
 
+# --- Configuraciones Propias de la Aplicación ---
 app:
   product-type:
     service:
@@ -49,6 +63,7 @@ app:
     use-case:
       enabled: true
 
+# --- Management Endpoints ---
 management:
   endpoints:
     web:
