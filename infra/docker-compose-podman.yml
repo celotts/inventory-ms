@@ -274,7 +274,7 @@ services:
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
       - WAIT_FOR=db_supplier:5432,discovery-service:8761,config-service:7777
-      - WAIT_TIMEOUT=60
+      - WAIT_TIMEOUT=300
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db_supplier:5432/${SUPPLIER_DB_NAME:-db_supplier} # <-- Agregado, asumiendo que no estaba
       - SPRING_DATASOURCE_USERNAME=${SUPPLIER_DB_USERNAME:-user}
       - SPRING_DATASOURCE_PASSWORD=${SUPPLIER_DB_PASSWORD:-password}

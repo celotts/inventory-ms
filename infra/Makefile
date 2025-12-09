@@ -223,6 +223,15 @@ down-all: podman-ready ## 🔻 Detener TODOS los servicios
 	@echo "🧹 Deteniendo todos los servicios..."
 	$(COMPOSE_LOCAL) $(foreach p,$(PROFILES_ALL),--profile $(p)) down -v --remove-orphans
 
+supplier-db-reset: podman-ready fix-line-endings ## 🗃️ Reiniciar base de datos de supplier
+	@echo "🔄 Reiniciando supplier-db y supplier-service..."
+    # 1. Detener y eliminar el contenedor y su volumen de datos
+	$(Q) $(COMPOSE_LOCAL) --profile supplier down -v db_supplier
+    # 2. Reconstruir el JAR
+	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :supplier-service:bootJar
+    # 3. Levantar la infra y el servicio del proveedor para recrear la DB
+	$(Q) $(COMPOSE_LOCAL) --profile infra --profile supplier up -d supplier-service
+
 #🔍 MONITOREO Y LOGS
 logs-%: podman-ready ## 📜 Logs por perfil
 	$(COMPOSE_LOCAL) --profile $* logs -f
@@ -302,10 +311,13 @@ test-supplier: ## 🧪 Tests de Supplier Service
 run-supplier-local: fix-line-endings ## 🚀 Ejecutar Supplier Service localmente
 	@echo "🚀 Supplier Service en http://localhost:$(SUPPLIER_PORT)"
 	$(Q) cd $(ROOT_DIR)/supplier-service && $(GRADLEW) bootRun --args='--spring.profiles.active=local'
+
 rebuild-supplier-local: podman-ready fix-line-endings ## 🔁 Reconstruir Supplier Service
 	$(Q) cp $(ENV_FILE_LOCAL) .env.override
 	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :supplier-service:bootJar
-	$(Q) $(COMPOSE_LOCAL) --profile supplier build supplier-service
+    # ❌ ANTES: $(Q) $(COMPOSE_LOCAL) --profile supplier build supplier-service
+    # ✅ DESPUÉS: Incluir el perfil 'infra' para resolver dependencias (discovery-service)
+	$(Q) $(COMPOSE_LOCAL) --profile infra --profile supplier build supplier-service
 	$(Q) $(COMPOSE_LOCAL) --profile infra --profile supplier up -d supplier-service
 
 #🏷️ TAX SERVICE
