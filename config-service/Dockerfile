@@ -23,10 +23,10 @@ COPY config-service/src config-service/src
 RUN chmod +x ./gradlew
 
 # =====================================================================
-# CORRECCIÓN DE MEMORIA DE GRADLE: Se añaden límites de memoria (OOM Kill)
-# y se mantienen los timeouts existentes.
+# CORRECCIÓN DE MEMORIA DE GRADLE: AUMENTO DEL HEAP A 1GB
+# Esto corrige el error "Gradle build daemon disappeared unexpectedly" (OOM Kill).
 # =====================================================================
-ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Xmx512m -Xms256m -Dorg.gradle.internal.http.connectionTimeout=600000 -Dorg.gradle.internal.http.socketTimeout=600000"
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Xmx2048m -Xms1024m -XX:MaxMetaspaceSize=1024m -Dorg.gradle.internal.http.connectionTimeout=600000 -Dorg.gradle.internal.http.socketTimeout=600000"
 
 # Paso 1: Resolver y cachear dependencias (!!! CAMBIO A CONFIG-SERVICE !!!)
 # Se elimina --no-daemon

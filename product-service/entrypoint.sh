@@ -13,6 +13,8 @@ CONFIG_HOST=config-service:7777
 
 # ⭐⭐⭐ AJUSTADO PARA PRODUCT SERVICE ⭐⭐⭐
 DB_HOST=product-db:5432
+DB_USER=${PRODUCT_DB_USERNAME}
+DB_PASS=${PRODUCT_DB_PASSWORD}
 
 echo "======================================================"
 echo " INICIANDO ENTRYPOINT CON BD (Product) para $JAR_NAME"

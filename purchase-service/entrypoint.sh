@@ -4,7 +4,8 @@ set -euo pipefail
 log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
 }
-
+DB_USER=${PRODUCT_DB_USERNAME}  # <-- Usar la variable de entorno
+DB_PASS=${PRODUCT_DB_PASSWORD}  # <-- Usar la variable de entorno
 wait_for_service() {
   local name="$1"
   local host_port="$2"
@@ -14,6 +15,7 @@ wait_for_service() {
   bash ./wait-for-it.sh "$host_port" --timeout="$timeout" --strict --
   log "✅ $name está disponible."
 }
+
 
 # === Espera por servicios externos ===
 wait_for_service "discovery-service" "discovery-service:8761" 60

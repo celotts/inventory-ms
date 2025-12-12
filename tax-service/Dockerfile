@@ -51,10 +51,10 @@ ENV https_proxy=$https_proxy
 ENV no_proxy=$no_proxy
 
 # =====================================================================
-# CORRECCIÓN DE MEMORIA DE GRADLE: Se añaden límites de memoria (OOM Kill)
-# y se incluyen las configuraciones de proxy/timeouts existentes.
+# ✅ MODIFICACIÓN APLICADA: AUMENTO DE MEMORIA DE GRADLE A 2GB (2048m)
+# Esto corrige el error "Gradle build daemon disappeared unexpectedly" (OOM Kill).
 # =====================================================================
-ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Xmx512m -Xms256m -Dorg.gradle.internal.http.connectionTimeout=600000 -Dorg.gradle.internal.http.socketTimeout=600000"
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Xmx2048m -Xms1024m -XX:MaxMetaspaceSize=1024m -Dorg.gradle.internal.http.connectionTimeout=600000 -Dorg.gradle.internal.http.socketTimeout=600000"
 
 # ⭐ PASOS DE DIAGNÓSTICO DE RED (Ahora usarán el proxy si está configurado) ⭐
 # 1. Instalar curl para verificar la conectividad de red

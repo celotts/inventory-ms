@@ -20,10 +20,10 @@ RUN chmod +x ./gradlew
 RUN apt-get update && apt-get install -y dos2unix && rm -rf /var/lib/apt/lists/*
 
 # =====================================================================
-# CORRECCIÓN DE MEMORIA DE GRADLE: Se añaden límites de memoria (OOM Kill)
-# para el proceso de construcción de Gradle.
+# CORRECCIÓN DE MEMORIA DE GRADLE: AUMENTO DEL HEAP A 1GB
+# Esto corrige el error "Gradle build daemon disappeared unexpectedly" (OOM Kill).
 # =====================================================================
-ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Xmx512m -Xms256m"
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Xmx3072m -Xms1536m -XX:MaxMetaspaceSize=1536m -Dorg.gradle.internal.http.connectionTimeout=600000 -Dorg.gradle.internal.http.socketTimeout=600000"
 
 # 2. COPIA DEL SERVICIO Y SCRIPTS RELACIONADOS
 COPY product-service/ /app/product-service/
