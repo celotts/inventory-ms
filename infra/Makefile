@@ -67,7 +67,7 @@ COMPOSE_PROD := $(COMPOSE_BASE) --env-file $(ENV_FILE_PROD)
 
 # 💡 MACROS DE UTILIDAD
 define check_health
-	curl -f --max-time 5 $(1) >/dev/null 2>&1 && echo "✅ $(2)" || echo "❌ $(2)"
+	curl -f --max-time 20 $(1) >/dev/null 2>&1 && echo "✅ $(2)" || echo "❌ $(2)"
 endef
 
 #🎯 COMANDOS PRINCIPALES - FLUJOS DE TRABAJO ESENCIALES
@@ -75,7 +75,7 @@ endef
 
 #🚀 INICIAR SERVICIOS
 start: up-local ## 🚀 Iniciar servicios base (Infra + Product + Gateway)
-start-all: up-local-all-ordered ## 🚀 Iniciar TODOS los servicios
+start-all-LEVANTA-SIN-ERROR-CONTENEDORES: up-local-all-ordered ## 🚀 Iniciar TODOS los servicios
 start-parallel: up-local-all ## 🚀 Iniciar todos los servicios en paralelo
 
 #🛑 DETENER SERVICIOS
@@ -217,7 +217,7 @@ podman-ready: ## 🔍 Confirma el estado y asume que el Login fue manual.
 	# Comprobación simple para asegurar que Podman está disponible
 	@podman machine ls >/dev/null 2>&1 || { echo "🚨 ERROR: Podman machine no responde. Ejecute 'podman machine start' manualmente."; exit 1; }
 
-up-local-supplier: podman-ready fix-line-endings fix-container-orphans ## 🧪 Infra + Supplier
+up-local-supplier: docker-login podman-ready fix-line-endings fix-container-orphans ## 🧪 Infra + Supplier
 	@echo "🧹 Configurando entorno supplier..."
 	$(Q) cp "$(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)" "$(CURDIR)/.env.override"
 	$(Q) $(MAKE) build-jars-all
@@ -261,10 +261,12 @@ health-check-extended: podman-ready ## 💚 Verificación de salud extendida
 
 	@echo "🔍 Bases de datos (pg_isready):"
 	# Se usa el nombre completo del contenedor para mayor robustez
+	#$(Q) podman exec db_product pg_isready -U postgres >/dev/null 2>&1 && echo "✅ Product DB"
+	#$(Q) podman exec db_supplier pg_isready -U postgres >/dev/null 2>&1 && echo "✅ Supplier DB"
+	#$(Q) podman exec db_tax pg_isready -U postgres >/dev/null 2>&1 && echo "✅ Tax DB"
 	$(Q) podman exec db_product pg_isready -U postgres >/dev/null 2>&1 && echo "✅ Product DB"
 	$(Q) podman exec db_supplier pg_isready -U postgres >/dev/null 2>&1 && echo "✅ Supplier DB"
 	$(Q) podman exec db_tax pg_isready -U postgres >/dev/null 2>&1 && echo "✅ Tax DB"
-
 	@echo "🔍 Microservicios (Health Actuator):"
 	$(call check_health, http://localhost:$(PRODUCT_PORT)/actuator/health, Product)
 	$(call check_health, http://localhost:$(SUPPLIER_PORT)/actuator/health, Supplier)
@@ -307,7 +309,15 @@ reset-local: clean-all up-local-all-ordered ## 🔄 Reinicio completo del entorn
 
 #🧪 SERVICIOS INDIVIDUALES
 #------------------------------------------------------------------------
-
+docker-login:
+	@echo "🔑 Forzando login de Podman/Docker con credenciales de .env.local..."
+	@if [ -z "$(DOCKER_USERNAME)" ] || [ -z "$(DOCKER_PASSWORD)" ]; then \
+		echo "🔴 ERROR: DOCKER_USERNAME o DOCKER_PASSWORD no definidos en .env.local."; \
+		exit 1; \
+	fi
+	# Usa pipe para pasar la password. Esto es menos seguro, pero es la única manera de automatizar sin prompt.
+	echo "$(DOCKER_PASSWORD)" | podman login -u "$(DOCKER_USERNAME)" --password-stdin docker.io
+	@echo "✅ Login completado."
 #🏷️ PRODUCT SERVICE
 test-product: ## 🧪 Tests de Product Service
 	$(Q) cd $(ROOT_DIR)/product-service && $(GRADLEW) test
