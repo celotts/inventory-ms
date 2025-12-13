@@ -12,7 +12,7 @@ services:
       POSTGRES_USER: ${PRODUCT_DB_USERNAME:-product}
       POSTGRES_PASSWORD: ${PRODUCT_DB_PASSWORD:-product123}
     ports:
-      - "${PRODUCT_DB_PORT_HOST:-5433}:5432" # <-- Corregido
+      - "${PRODUCT_DB_PORT_HOST:-5433}:5432"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${PRODUCT_DB_USERNAME:-product} -d ${PRODUCT_DB_NAME:-db_product}" ]
       interval: 5s
@@ -99,7 +99,7 @@ services:
       context: ..
       dockerfile: ./config-service/Dockerfile
     ports:
-      - "${CONFIG_PORT:-7777}:7777" # <-- Variable USADA
+      - "${CONFIG_PORT:-7777}:7777"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SERVER_PORT=7777
@@ -137,7 +137,7 @@ services:
         - DOCKER_USERNAME=${DOCKER_USERNAME}
         - DOCKER_PASSWORD=${DOCKER_PASSWORD}
     ports:
-      - "${DISCOVERY_PORT:-8761}:8761" # <-- Variable USADA
+      - "${DISCOVERY_PORT:-8761}:8761"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SERVER_PORT=8761
@@ -199,14 +199,14 @@ services:
         - https_proxy
         - no_proxy
     ports:
-      - "${PRODUCT_PORT:-9090}:9090" # <-- Variable USADA
+      - "${PRODUCT_PORT:-9090}:9090"
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 1024M
           cpus: '1.0'
         reservations:
-          memory: 256M
+          memory: 512M
           cpus: '0.5'
     entrypoint: ["/app/entrypoint.sh"]
     environment:
@@ -222,7 +222,7 @@ services:
       - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=10
       - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=10
       - WAIT_FOR=db_product:5432,discovery-service:8761,config-service:7777
-      - WAIT_TIMEOUT=60
+      - WAIT_TIMEOUT=300
       - SPRING_CLOUD_CONFIG_FAILFAST=false
       - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=6
       - SPRING_CLOUD_CONFIG_RETRY_INITIALINTERVAL=3000
@@ -267,17 +267,40 @@ services:
         - https_proxy
         - no_proxy
     ports:
-      - "${SUPPLIER_PORT:-9091}:9091" # <-- Variable USADA
+      - "${SUPPLIER_PORT:-9091}:9091"
+    entrypoint: ["/app/entrypoint.sh"]
+    dns:
+      - 1.1.1.1 # Cloudflare DNS
+      - 8.8.8.8 # Google DNS
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=9091
+      - SPRING_APPLICATION_NAME=supplier-service
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+      - JAVA_OPTS=${JAVA_OPTS:-}
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_supplier:5432/${SUPPLIER_DB_NAME:-db_supplier}
+      - SPRING_DATASOURCE_USERNAME=${SUPPLIER_DB_USERNAME:-supplier}
+      - SPRING_DATASOURCE_PASSWORD=${SUPPLIER_DB_PASSWORD:-supplier123}
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=10
+      - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=10
+      - eureka.client.serviceUrl.defaultZone=http://discovery-service:8761/eureka/ # <-- Anulación 1: Confirma URL con alta precedencia
+      - eureka.client.enabled=true # <-- Anulación 2: CRÍTICO. Garantiza la activación del registro.
       - WAIT_FOR=db_supplier:5432,discovery-service:8761,config-service:7777
       - WAIT_TIMEOUT=300
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_supplier:5432/${SUPPLIER_DB_NAME:-db_supplier} # <-- Agregado, asumiendo que no estaba
-      - SPRING_DATASOURCE_USERNAME=${SUPPLIER_DB_USERNAME:-user}
-      - SPRING_DATASOURCE_PASSWORD=${SUPPLIER_DB_PASSWORD:-password}
+      - SPRING_CLOUD_CONFIG_FAILFAST=false
+      - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=6
+      - SPRING_CLOUD_CONFIG_RETRY_INITIALINTERVAL=3000
+      - PAGINATION_DEFAULT_PAGE=${PAGINATION_DEFAULT_PAGE:-0}
+      - PAGINATION_DEFAULT_SIZE=${PAGINATION_DEFAULT_SIZE:-10}
+      - PAGINATION_MAX_SIZE=${PAGINATION_MAX_SIZE:-100}
+      - PAGINATION_DEFAULT_SORT_BY=${PAGINATION_DEFAULT_SORT_BY:-createdAt}
+      - PAGINATION_DEFAULT_SORT_DIR=${PAGINATION_DEFAULT_SORT_DIR:-desc}
+      - PAGINATION_ALLOWED_SORT_FIELDS=${PAGINATION_ALLOWED_SORT_FIELDS:-createdAt,updatedAt,name,code}
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,env,configprops,beans
+      - MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED=true
+      - SPRING_CLOUD_REFRESH_ENABLED=false
+      - SERVER_PORT=9091
     depends_on:
       db_supplier:
         condition: service_healthy
@@ -308,15 +331,32 @@ services:
     ports:
       - "${PURCHASE_PORT:-9092}:9094" # <-- Variable USADA (Host: 9092 / Contenedor: 9094)
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=9094
+      - SPRING_APPLICATION_NAME=purchase-service
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+      - JAVA_OPTS=${JAVA_OPTS:-}
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_purchase:5432/${PURCHASE_DB_NAME:-db_purchase}
+      - SPRING_DATASOURCE_USERNAME=${PURCHASE_DB_USERNAME:-purchase}
+      - SPRING_DATASOURCE_PASSWORD=${PURCHASE_DB_PASSWORD:-purchase123}
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=10
+      - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=10
       - WAIT_FOR=db_purchase:5432,discovery-service:8761,config-service:7777
-      - WAIT_TIMEOUT=60
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_purchase:5432/${PURCHASE_DB_NAME:-db_purchase} # <-- Agregado, asumiendo que no estaba
-      - SPRING_DATASOURCE_USERNAME=${PURCHASE_DB_USERNAME:-user}
-      - SPRING_DATASOURCE_PASSWORD=${PURCHASE_DB_PASSWORD:-password}
+      - WAIT_TIMEOUT=300
+      - SPRING_CLOUD_CONFIG_FAILFAST=false
+      - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=6
+      - SPRING_CLOUD_CONFIG_RETRY_INITIALINTERVAL=3000
+      - PAGINATION_DEFAULT_PAGE=${PAGINATION_DEFAULT_PAGE:-0}
+      - PAGINATION_DEFAULT_SIZE=${PAGINATION_DEFAULT_SIZE:-10}
+      - PAGINATION_MAX_SIZE=${PAGINATION_MAX_SIZE:-100}
+      - PAGINATION_DEFAULT_SORT_BY=${PAGINATION_DEFAULT_SORT_BY:-createdAt}
+      - PAGINATION_DEFAULT_SORT_DIR=${PAGINATION_DEFAULT_SORT_DIR:-desc}
+      - PAGINATION_ALLOWED_SORT_FIELDS=${PAGINATION_ALLOWED_SORT_FIELDS:-createdAt,updatedAt,purchaseNumber,date}
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,env,configprops,beans
+      - MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED=true
+      - SPRING_CLOUD_REFRESH_ENABLED=false
+      - SERVER_PORT=9094
     depends_on:
       db_purchase:
         condition: service_healthy
@@ -345,19 +385,34 @@ services:
         - https_proxy
         - no_proxy
     ports:
-      - "${TAX_PORT:-9093}:9092" # <-- Variable USADA (Host: 9093 / Contenedor: 9092)
+      - "${TAX_PORT:-9093}:9092"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=9092
+      - SPRING_APPLICATION_NAME=tax-service
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+      - JAVA_OPTS=${JAVA_OPTS:-}
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      - WAIT_FOR=discovery-service:8761,config-service:7777,db_tax:5432
-      - WAIT_TIMEOUT=60
-      # === FIX: Define el host correcto como variable de entorno ===
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db_tax:5432/${TAX_DB_NAME:-db_tax}
-      - SPRING_DATASOURCE_USERNAME=${TAX_DB_USERNAME:-user}
-      - SPRING_DATASOURCE_PASSWORD=${TAX_DB_PASSWORD:-password}
-      # ==========================================================
+      - SPRING_DATASOURCE_USERNAME=${TAX_DB_USERNAME:-tax}
+      - SPRING_DATASOURCE_PASSWORD=${TAX_DB_PASSWORD:-tax123}
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=10
+      - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=10
+      - WAIT_FOR=discovery-service:8761,config-service:7777,db_tax:5432
+      - WAIT_TIMEOUT=300
+      - SPRING_CLOUD_CONFIG_FAILFAST=false
+      - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=6
+      - SPRING_CLOUD_CONFIG_RETRY_INITIALINTERVAL=3000
+      - PAGINATION_DEFAULT_PAGE=${PAGINATION_DEFAULT_PAGE:-0}
+      - PAGINATION_DEFAULT_SIZE=${PAGINATION_DEFAULT_SIZE:-10}
+      - PAGINATION_MAX_SIZE=${PAGINATION_MAX_SIZE:-100}
+      - PAGINATION_DEFAULT_SORT_BY=${PAGINATION_DEFAULT_SORT_BY:-createdAt}
+      - PAGINATION_DEFAULT_SORT_DIR=${PAGINATION_DEFAULT_SORT_DIR:-desc}
+      - PAGINATION_ALLOWED_SORT_FIELDS=${PAGINATION_ALLOWED_SORT_FIELDS:-createdAt,updatedAt,name,rate}
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,env,configprops,beans
+      - MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED=true
+      - SPRING_CLOUD_REFRESH_ENABLED=false
+      - SERVER_PORT=9092
     depends_on:
       db_tax:
         condition: service_healthy
@@ -389,6 +444,7 @@ services:
       - "${API_GATEWAY_PORT:-8090}:8090" # <-- Variable USADA
     entrypoint: ["/app/entrypoint.sh"]
     environment:
+      - SPRING_APPLICATION_NAME=api-gateway
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
       - JAVA_OPTS=${JAVA_OPTS:-}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
@@ -396,9 +452,14 @@ services:
       - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
       - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_LOWERCASESERVICEID=true
       - SPRING_CLOUD_CONFIG_FAILFAST=false
-      - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=3
+      - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=6
+      - SPRING_CLOUD_CONFIG_RETRY_INITIALINTERVAL=3000
       - WAIT_FOR=discovery-service:8761,config-service:7777
-      - WAIT_TIMEOUT=60
+      - WAIT_TIMEOUT=300
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,env,configprops,beans
+      - MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED=true
+      - SPRING_CLOUD_REFRESH_ENABLED=false
+      - SERVER_PORT=8090
     dns:
       - 1.1.1.1
       - 8.8.8.8

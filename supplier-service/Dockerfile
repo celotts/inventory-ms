@@ -18,9 +18,10 @@ COPY supplier-service/build.gradle supplier-service/build.gradle
 COPY supplier-service/src supplier-service/src
 
 # =====================================================================
-# CORRECCIÓN DE MEMORIA DE GRADLE: Limita la RAM para evitar OOM Kill
+# CORRECCIÓN DE MEMORIA DE GRADLE: AUMENTO DEL HEAP A 1GB
+# Esto corrige el error "Gradle build daemon disappeared unexpectedly" (OOM Kill).
 # =====================================================================
-ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Xmx512m -Xms256m"
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Xmx2048m -Xms1024m -XX:MaxMetaspaceSize=1024m -Dorg.gradle.internal.http.connectionTimeout=600000 -Dorg.gradle.internal.http.socketTimeout=600000"
 
 # Resolver dependencias (con reintentos en caso de error de red)
 # El flag '--no-daemon' se elimina porque se definió en GRADLE_OPTS

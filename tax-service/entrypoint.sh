@@ -11,6 +11,9 @@ JAR_NAME=${1:-app.jar}
 DISCOVERY_HOST=discovery-service:8761
 CONFIG_HOST=config-service:7777
 
+DB_USER=${PRODUCT_DB_USERNAME}  # <-- Usar la variable de entorno
+DB_PASS=${PRODUCT_DB_PASSWORD}  # <-- Usar la variable de entorno
+
 echo "======================================================"
 echo " INICIANDO ENTRYPOINT ESTÁNDAR (Tax) para $JAR_NAME"
 echo "======================================================"

@@ -13,6 +13,8 @@ CONFIG_HOST=config-service:7777
 
 # ⭐⭐⭐ AJUSTADO PARA PRODUCT SERVICE ⭐⭐⭐
 DB_HOST=product-db:5432
+DB_USER=${PRODUCT_DB_USERNAME}
+DB_PASS=${PRODUCT_DB_PASSWORD}
 
 echo "======================================================"
 echo " INICIANDO ENTRYPOINT CON BD (Product) para $JAR_NAME"
@@ -20,7 +22,7 @@ echo "======================================================"
 
 # 1. Esperar a la Base de Datos
 echo "-> 1/3 Esperando a la base de datos en $DB_HOST..."
-$WAIT_FOR_IT $DB_HOST -t 90 -- echo "Base de datos OK."
+$WAIT_FOR_IT $DB_HOST -t 180 -- echo "Base de datos OK."
 
 # 2. Esperar al Servidor de Descubrimiento (Eureka)
 echo "-> 2/3 Esperando a Discovery Service en $DISCOVERY_HOST..."
