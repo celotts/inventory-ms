@@ -22,7 +22,7 @@ echo "======================================================"
 
 # 1. Esperar a la Base de Datos
 echo "-> 1/3 Esperando a la base de datos en $DB_HOST..."
-$WAIT_FOR_IT $DB_HOST -t 90 -- echo "Base de datos OK."
+$WAIT_FOR_IT $DB_HOST -t 180 -- echo "Base de datos OK."
 
 # 2. Esperar al Servidor de Descubrimiento (Eureka)
 echo "-> 2/3 Esperando a Discovery Service en $DISCOVERY_HOST..."
