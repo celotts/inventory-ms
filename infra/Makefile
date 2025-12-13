@@ -175,14 +175,14 @@ up-local-all-ordered: podman-ready fix-line-endings fix-container-orphans ## �
 	@echo "🛠️ 3/4: Microservicios (Product, Supplier, Tax)..."
 	# ✅ CORRECCIÓN DE DEPENDENCIA (Perfiles: infra, product, supplier, tax)
 	$(Q) $(COMPOSE_LOCAL) --profile infra --profile product --profile supplier --profile tax up -d --no-recreate product-service supplier-service tax-service
-	$(Q) sleep 70
+	$(Q) sleep 120
 
 	@echo "🌐 4/4: API Gateway..."
 	#$(Q) $(COMPOSE_LOCAL) --profile gateway up -d --no-recreate api-gateway
 	$(Q) $(COMPOSE_LOCAL) --profile infra --profile gateway up -d --no-recreate api-gateway
 
 	@echo "🔍 Verificación final (espera 15s)..."
-	$(Q) sleep 90
+	$(Q) sleep 120
 	$(Q) $(MAKE) health-check-extended
 	@echo "🎉 STACK COMPLETO LEVANTADO!"
 	#=========================================================
@@ -251,7 +251,7 @@ supplier-db-reset: podman-ready fix-line-endings ## 🗃️ Reiniciar base de da
 logs-%: podman-ready ## 📜 Logs por perfil
 	$(COMPOSE_LOCAL) --profile $* logs -f
 
-health-check-extended: podman-ready ## 💚 Verificación de salud extendida
+health-check-extended2: podman-ready ## 💚 Verificación de salud extendida
 	@echo "🩺 Verificación de salud EXTENDIDA..."
 	@if ! command -v curl >/dev/null; then echo "❌ Error: 'curl' no está instalado. No se puede verificar la salud de los microservicios."; fi
 
@@ -273,6 +273,26 @@ health-check-extended: podman-ready ## 💚 Verificación de salud extendida
 	$(call check_health, http://localhost:$(TAX_PORT)/actuator/health, Tax)
 	$(call check_health, http://localhost:$(GATEWAY_PORT)/actuator/health, Gateway)
 
+health-check-extended: podman-ready ## 💚 Verificación de salud extendida
+	@echo "🩺 Verificación de salud EXTENDIDA..."
+	@if ! command -v curl >/dev/null; then echo "❌ Error: 'curl' no está instalado. No se puede verificar la salud de los microservicios."; fi
+
+	@echo "🔍 Infraestructura (Health Actuator):"
+	$(call check_health, http://localhost:$(DISCOVERY_PORT)/actuator/health, Discovery)
+	$(call check_health, http://localhost:$(CONFIG_PORT)/actuator/health, Config)
+
+	@echo "🔍 Bases de datos (pg_isready):"
+    # Se usa el nombre completo del contenedor para mayor robustez
+    # ✅ AÑADIR EL GUION (-) AQUÍ PARA IGNORAR EL ERROR 125 SI FALLA
+	-$(Q) podman exec db_product pg_isready -U postgres >/dev/null 2>&1 && echo "✅ Product DB"
+	-$(Q) podman exec db_supplier pg_isready -U postgres >/dev/null 2>&1 && echo "✅ Supplier DB"
+	-$(Q) podman exec db_tax pg_isready -U postgres >/dev/null 2>&1 && echo "✅ Tax DB"
+
+	@echo "🔍 Microservicios (Health Actuator):"
+	$(call check_health, http://localhost:$(PRODUCT_PORT)/actuator/health, Product)
+	$(call check_health, http://localhost:$(SUPPLIER_PORT)/actuator/health, Supplier)
+	$(call check_health, http://localhost:$(TAX_PORT)/actuator/health, Tax)
+	$(call check_health, http://localhost:$(GATEWAY_PORT)/actuator/health, Gateway)
 #------------------------------------------------------------------------
 
 #🛠️ MANTENIMIENTO Y LIMPIEZA
@@ -461,8 +481,7 @@ service-logs: podman-ready ## 📜 Ver logs de todos los servicios recientes
 	@for service in $$( $(COMPOSE_LOCAL) ps --services ); do \
 		echo ""; \
 		echo "=== $$service ==="; \
-		# Se usa el nombre completo del contenedor
-	$(Q) podman logs $(COMPOSE_PROJECT_NAME)_$$service_1 --tail 50 2>/dev/null | tail -20 || echo "No hay logs disponibles"; \
+		$(Q) podman logs $(COMPOSE_PROJECT_NAME)_$$service_1 --tail 50 2>/dev/null | tail -20 || echo "No hay logs disponibles"; \
 	done
 
 check-container-status: ## 🔍 Ver estado detallado de contenedores
