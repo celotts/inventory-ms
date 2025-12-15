@@ -21,3 +21,11 @@
 docker-compose-podman.yml
 .env.local
 .env.override
+
+# Excluir archivos comprimidos de build (como el zip que está causando el problema)
+**/*.zip
+**/*.tar
+
+# Excluir TODOS los JARs por defecto, EXCEPTO el JAR del Wrapper
+**/*.jar
+!gradle/wrapper/gradle-wrapper.jar

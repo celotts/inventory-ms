@@ -186,9 +186,6 @@ up-local-all-ordered: podman-ready fix-line-endings fix-container-orphans ## �
 	$(Q) $(MAKE) health-check-extended
 	@echo "🎉 STACK COMPLETO LEVANTADO!"
 	#=========================================================
-	#⏱️ FINAL DEL REGISTRO DE TIEMPO Y CÁLCULO
- 	#=========================================================
-	#=========================================================
     #⏱️ FINAL DEL REGISTRO DE TIEMPO Y CÁLCULO
     #=========================================================
     @END_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
@@ -199,9 +196,7 @@ up-local-all-ordered: podman-ready fix-line-endings fix-container-orphans ## �
     echo "⏳ TIEMPO TOTAL DEMORADO: $$DURATION_SECONDS segundos"; \
     echo "========================================================="
 
-# ------------------------------------------------------------------------
-# ✅ SOLUCIÓN AL ERROR DE SINTAXIS: Mover lógica a script y garantizar permisos.
-# ------------------------------------------------------------------------
+
 .PHONY: ensure-script-exec
 ensure-script-exec:
 	# 🚨 Comando crítico: Garantizar permisos de ejecución al script antes de usarlo.

@@ -22,19 +22,16 @@ COPY auth-service/src auth-service/src
 # Permisos de ejecución
 RUN chmod +x ./gradlew
 
-# =====================================================================
-# CORRECCIÓN DE MEMORIA DE GRADLE: AUMENTO DEL HEAP A 1GB
-# Esto corrige el error "Gradle build daemon disappeared unexpectedly" (OOM Kill).
-# =====================================================================
+# Definir la ENV por si acaso, aunque la forzaremos en el RUN
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Xmx2048m -Xms1024m -XX:MaxMetaspaceSize=1024m -Dorg.gradle.internal.http.connectionTimeout=600000 -Dorg.gradle.internal.http.socketTimeout=600000"
 
 # Paso 1: Resolver y cachear dependencias
-# Se elimina --no-daemon
-RUN ./gradlew :auth-service:dependencies -x test --console=plain
+# ⭐ CRÍTICO: Forzar GRADLE_OPTS y asegurar --no-daemon
+RUN GRADLE_OPTS="-Xmx2048m -Xms1024m" ./gradlew :auth-service:dependencies -x test --console=plain --no-daemon
 
 # Paso 2: Ejecutar la compilación y generar el JAR
-# Se elimina --no-daemon
-RUN ./gradlew :auth-service:bootJar -x test --console=plain
+# ⭐ CRÍTICO: Forzar GRADLE_OPTS y asegurar --no-daemon
+RUN GRADLE_OPTS="-Xmx2048m -Xms1024m" ./gradlew :auth-service:bootJar -x test --console=plain --no-daemon
 
 # Verificar que el JAR se generó correctamente
 RUN ls -lh auth-service/build/libs/ && \

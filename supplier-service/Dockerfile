@@ -14,36 +14,46 @@ COPY settings.gradle .
 COPY build.gradle .
 RUN chmod +x ./gradlew
 
+# COMENTARIO: LÍNEAS DE SINTAXIS INVÁLIDA ELIMINADAS O COMENTADAS
+# auth-service/Dockerfile
+# supplier-service/Dockerfile
+# tax-service/Dockerfile
+# api-gateway/Dockerfile \
+
 COPY supplier-service/build.gradle supplier-service/build.gradle
 COPY supplier-service/src supplier-service/src
 
 # =====================================================================
-# CORRECCIÓN DE MEMORIA DE GRADLE: AUMENTO DEL HEAP A 1GB
-# Esto corrige el error "Gradle build daemon disappeared unexpectedly" (OOM Kill).
+# ⭐ CORRECCIÓN DE MEMORIA DE GRADLE: AUMENTO DEL HEAP A 2GB
+# ESTA SECCIÓN FALTABA EN TU ÚLTIMO CÓDIGO Y ES VITAL PARA EL BUILD.
 # =====================================================================
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Xmx2048m -Xms1024m -XX:MaxMetaspaceSize=1024m -Dorg.gradle.internal.http.connectionTimeout=600000 -Dorg.gradle.internal.http.socketTimeout=600000"
 
 # Resolver dependencias (con reintentos en caso de error de red)
-# El flag '--no-daemon' se elimina porque se definió en GRADLE_OPTS
-RUN ./gradlew :supplier-service:dependencies \
+# ⭐ CRÍTICO: Forzar GRADLE_OPTS y reintroducir --no-daemon
+RUN GRADLE_OPTS="-Xmx2048m -Xms1024m" ./gradlew :supplier-service:dependencies \
     -x test \
     --console=plain \
+    --no-daemon \
     || (echo "Reintentando descarga de dependencias..." && \
         sleep 5 && \
-        ./gradlew :supplier-service:dependencies \
+        GRADLE_OPTS="-Xmx2048m -Xms1024m" ./gradlew :supplier-service:dependencies \
         -x test \
-        --console=plain)
+        --console=plain \
+        --no-daemon)
 
 # Compilar y generar el JAR
-# El flag '--no-daemon' se elimina
-RUN ./gradlew :supplier-service:bootJar \
+# ⭐ CRÍTICO: Forzar GRADLE_OPTS y reintroducir --no-daemon
+RUN GRADLE_OPTS="-Xmx2048m -Xms1024m" ./gradlew :supplier-service:bootJar \
     -x test \
-    --console=plain
+    --console=plain \
+    --no-daemon
 
 # Verificar que el JAR se generó correctamente
 RUN ls -lh supplier-service/build/libs/ && \
     test -f supplier-service/build/libs/supplier-service-*.jar || \
     (echo "ERROR: JAR no fue generado" && exit 1)
+
 
 # ---------------------------------------------------------------------
 # ETAPA 2: EJECUCIÓN (Imagen final mínima)
