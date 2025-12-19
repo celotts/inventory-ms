@@ -39,7 +39,14 @@ spring:
       service-url:
         # 🚨 DEBE SER discovery-service
         defaultZone: http://discovery-service:8761/eureka/
-
+      serviceUrl:
+        # Busca la variable de entorno; si no existe, cae en localhost
+        defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+        # Obligatorio para que se registre y para que descargue la lista de otros MS
+        register-with-eureka: true
+        fetch-registry: true
+    instance:
+      prefer-ip-address: true
   # ✅ Gestión de Endpoints
   management:
     endpoint:

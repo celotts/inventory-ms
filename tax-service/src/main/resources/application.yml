@@ -18,9 +18,14 @@ spring:
     import: "optional:configserver:"
 
   cloud:
+    cloud:
+    # --- CONFIG SERVER ---
     config:
-      enabled: ${SPRING_CLOUD_CONFIG_ENABLED:false}   # En contenedor puedes habilitarlo por env
+      enabled: ${SPRING_CLOUD_CONFIG_ENABLED:false} # Habilitado vía ENV en Podman
       fail-fast: false
+      uri: http://config-service:7777
+      discovery:
+        enabled: false
     # Evita re-cargar propiedades en caliente que tocan el pool Hikari (problema “sealed once started”)
     refresh:
       enabled: false

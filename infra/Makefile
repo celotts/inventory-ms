@@ -229,10 +229,13 @@ up-local-all-ordered: podman-ready fix-line-endings ## 🚀 Stack completo sin d
 	@END_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
 	END_SECONDS=$$(date +%s); \
 	DURATION_SECONDS=$$((END_SECONDS - START_SECONDS)); \
-	echo "========================================================="; \
-	echo "⏱️ FIN DEL PROCESO: $$END_TIME"; \
-	echo "⏳ TIEMPO TOTAL DEMORADO: $$DURATION_SECONDS segundos"; \
-	echo "========================================================="
+	HOURS=$((DURATION_SECONDS / 3600)); \
+    MINUTES=$(( (DURATION_SECONDS % 3600) / 60 )); \
+    SECONDS=$((DURATION_SECONDS % 60)); \
+    echo "========================================================="; \
+    echo "⏱️ FIN DEL PROCESO: $END_TIME"; \
+    printf "⏳ TIEMPO TOTAL DEMORADO: %02d:%02d:%02d\n" $HOURS $MINUTES $SECONDS; \
+    echo "========================================================="\
 
 
 .PHONY: ensure-script-exec
