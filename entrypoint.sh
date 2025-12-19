@@ -1,29 +1,28 @@
 #!/bin/sh
-# entrypoint.sh - Lógica de arranque para un microservicio Spring Boot
+# entrypoint.sh - Lógica de arranque corregida
 
-# Ruta al script de espera (asume que fue copiado al root / del contenedor)
-WAIT_FOR_IT=/wait-for-it.sh
-
-# Nombre del JAR (adaptar por servicio: product-service.jar, supplier-service.jar, etc.)
+# Usamos la ruta donde el log dice que está el script
+WAIT_FOR_IT=/app/wait-for-it.sh
 JAR_NAME=$1
 
-# Host y Puerto del Discovery Service (Asume el nombre de servicio de Docker Compose)
-DISCOVERY_HOST=discovery-service:8761
+echo "======================================================"
+echo " INICIANDO ENTRYPOINT ESTÁNDAR para $JAR_NAME"
+echo "======================================================"
 
-echo "Iniciando Entrypoint para $JAR_NAME"
+# 1. Esperar al Discovery Service
+echo "-> 1/3 Esperando a Discovery Service en discovery-service:8761..."
+$WAIT_FOR_IT discovery-service:8761 --timeout=60 --strict -- echo "-> Discovery Service OK"
 
-# 1. Esperar al Servidor de Descubrimiento (Crucial para el registro de servicios)
-echo "-> Esperando a Discovery Service en $DISCOVERY_HOST..."
-# El timeout se establece en 60 segundos
-$WAIT_FOR_IT $DISCOVERY_HOST -t 60 -- echo "Discovery Service OK. Procediendo..."
+# 2. Esperar al Config Service (Tus logs mostraron que fallaba aquí también)
+echo "-> 2/3 Esperando a Config Service en config-service:7777..."
+$WAIT_FOR_IT config-service:7777 --timeout=60 --strict -- echo "-> Config Service OK"
 
-# 2. Si el servicio también usa una base de datos, añádela aquí:
-# DB_HOST=product-db:5432
-# echo "-> Esperando a la base de datos en $DB_HOST..."
-# $WAIT_FOR_IT $DB_HOST -t 60 -- echo "Base de datos OK."
+# 3. Esperar a la Base de Datos (Solo si la variable DB_HOST existe)
+# En tu docker-compose para Tax es 'db_tax'
+if [ -n "$DB_HOST" ]; then
+    echo "-> 3/3 Esperando a Base de Datos en $DB_HOST:5432..."
+    $WAIT_FOR_IT $DB_HOST:5432 --timeout=60 --strict -- echo "-> Base de Datos OK"
+fi
 
-
-# 3. Lanzar la aplicación principal
-# El JAR debe haber sido copiado a /app/ en el Dockerfile.
-echo "-> Lanzando $JAR_NAME..."
-exec java -jar /app/$JAR_NAME
+echo "-> Lanzando la aplicación $JAR_NAME..."
+exec java $JAVA_OPTS -jar /app/$JAR_NAME

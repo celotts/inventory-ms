@@ -60,6 +60,11 @@ management:
     web:
       exposure:
         include: "*"
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
 
 # Logging
 logging:

@@ -73,7 +73,7 @@ management:
     health:
       probes:
         enabled: true
-      show-details: "never"
+      show-details: "always"
 
 # ------------------------------------------
 # Perfil LOCAL: para correr en tu Mac (fuera de contenedor)

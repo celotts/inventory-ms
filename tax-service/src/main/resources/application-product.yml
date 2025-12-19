@@ -43,7 +43,12 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: "*" # Expones todo para debug local
+  endpoint:
+    health:
+      show-details: always # Muestra qué base de datos o servicio externo falló
+      probes:
+        enabled: true
 
 logging:
   level:
