@@ -32,6 +32,7 @@ ENV_FILE_RESOLVED := $(if $(wildcard $(ENV_FILE)),$(ENV_FILE),)
 
 # Configuración de Compose
 COMPOSE_FILE ?= docker-compose-podman.yml
+COMPOSE_FILE_OPTIMIZED := docker-compose-optimizado-podman.yml  # <--- Definir el nuevo archivo
 COMPOSE_PROJECT_NAME ?= inventoryms
 COMPOSE_PROVIDER ?= podman
 export DOCKER_BUILDKIT := 1
@@ -57,7 +58,7 @@ SERVICES_ALL := discovery-service config-service api-gateway product-service sup
 # Comandos base
 RUN := COMPOSE_PROVIDER=$(COMPOSE_PROVIDER) COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME)
 COMPOSE_BASE := $(RUN) podman compose -f $(COMPOSE_FILE)
-
+COMPOSE_OPTIMIZED := $(RUN) podman compose -f $(COMPOSE_FILE_OPTIMIZED) --env-file $(ENV_FILE_LOCAL) # <--- Comando para el archivo optimizado
 # Comandos específicos por entorno
 COMPOSE_LOCAL := $(COMPOSE_BASE) --env-file $(ENV_FILE_LOCAL)
 COMPOSE_LOCAL_SUPPLIER := $(COMPOSE_BASE) --env-file $(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)
@@ -65,9 +66,11 @@ COMPOSE_DEV := $(COMPOSE_BASE) --env-file $(ENV_FILE_DEV)
 COMPOSE_PROD := $(COMPOSE_BASE) --env-file $(ENV_FILE_PROD)
 
 # Extraer valores de tu .env.local
-D_USER := $(shell grep "^DOCKER_USERNAME=" .env.local | cut -d'=' -f2)
-D_PASS := $(shell grep "^DOCKER_PASSWORD=" .env.local | cut -d'=' -f2)
+#D_USER := $(shell grep "^DOCKER_USERNAME=" .env.local | cut -d'=' -f2)
+#D_PASS := $(shell grep "^DOCKER_PASSWORD=" .env.local | cut -d'=' -f2)
 
+D_USER := $(shell grep "^DOCKER_USERNAME=" .env.local | cut -d'=' -f2 | tr -d '\r' | xargs)
+D_PASS := $(shell grep "^DOCKER_PASSWORD=" .env.local | cut -d'=' -f2 | tr -d '\r' | xargs)
 #------------------------------------------------------------------------
 
 # 💡 MACROS DE UTILIDAD
@@ -147,7 +150,7 @@ logs: podman-ready ## 📜 Logs de todos los servicios
 health: health-check-extended ## 💚 Verificación de salud completa
 
 # --- Autenticación Automática ---
-podman-auth:
+podman-auth2:
 	@echo "🔑 Configurando autenticación automática para Podman..."
 	@# Extraemos las credenciales directamente del archivo .env.local
 	$(eval DOCKER_USER := $(shell grep DOCKER_USERNAME $(ENV_FILE_LOCAL) | cut -d'=' -f2))
@@ -155,6 +158,26 @@ podman-auth:
 	@echo "Iniciando sesión en docker.io como $(DOCKER_USER)..."
 	@echo "$(DOCKER_PASS)" | podman login docker.io -u "$(DOCKER_USER)" --password-stdin
 
+podman-auth1: ## 🔑 Autenticar en Docker Hub usando .env.local
+	@echo "🔑 Configurando autenticación automática para Podman..."
+	-podman logout docker.io > /dev/null 2>&1
+	$(eval DOCKER_USER := $(shell grep "^DOCKER_USERNAME=" $(ENV_FILE_LOCAL) | cut -d'=' -f2 | tr -d '\r' | xargs))
+	$(eval DOCKER_PASS := $(shell grep "^DOCKER_PASSWORD=" $(ENV_FILE_LOCAL) | cut -d'=' -f2 | tr -d '\r' | xargs))
+	@if [ -z "$(DOCKER_USER)" ] || [ -z "$(DOCKER_PASS)" ]; then \
+		echo "❌ Error: Credenciales no encontradas en $(ENV_FILE_LOCAL)"; \
+		exit 1; \
+	fi
+	@echo "Iniciando sesión en docker.io como $(DOCKER_USER)..."
+	@echo "$(DOCKER_PASS)" | podman login docker.io -u "$(DOCKER_USER)" --password-stdin || (echo "❌ Error de login"; exit 1)
+
+podman-auth: ## 🔑 Autenticar y asegurar imagen base
+	@echo "🔑 Configurando autenticación automática para Podman..."
+	$(eval D_USER := $(shell grep "^DOCKER_USERNAME=" $(ENV_FILE_LOCAL) | cut -d'=' -f2 | tr -d '\r' | xargs))
+	$(eval D_PASS := $(shell grep "^DOCKER_PASSWORD=" $(ENV_FILE_LOCAL) | cut -d'=' -f2 | tr -d '\r' | xargs))
+	@echo "Iniciando sesión en docker.io como $(D_USER)..."
+	@echo "$(D_PASS)" | podman login docker.io -u "$(D_USER)" --password-stdin || (echo "❌ Error de login"; exit 1)
+	@echo "📥 Asegurando imagen base Java 21..."
+	podman pull eclipse-temurin:21-jdk-jammy || (echo "❌ Error al descargar imagen base"; exit 1)
 # ------------------------------------------------------------------------
 # 🚀 TARGETS DE UP (INICIO)
 # ------------------------------------------------------------------------
@@ -172,7 +195,7 @@ up-local-all: podman-ready fix-line-endings fix-container-orphans
 	$(Q) sleep 30
 	$(Q) $(MAKE) health-check-extended
 
-up-local-all-ordered: podman-ready fix-line-endings ## 🚀 Stack completo sin duplicados y con métricas
+up-local-all-ordered2: podman-ready fix-line-endings ## 🚀 Stack completo sin duplicados y con métricas
 	# =========================================================
 	# 🔑 PASO 0: AUTENTICACIÓN Y LIMPIEZA PREVENTIVA
     # =========================================================
@@ -238,6 +261,26 @@ up-local-all-ordered: podman-ready fix-line-endings ## 🚀 Stack completo sin d
     echo "========================================================="\
 
 
+up-local-all-ordered: podman-ready fix-line-endings
+	@START_SECONDS=$$(date +%s); \
+	START_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
+	echo "========================================================="; \
+	echo "⏱️ INICIO: $$START_TIME"; \
+	echo "========================================================="; \
+	$(MAKE) build-images-all-nocache; \
+	PROFILES="--profile infra --profile product --profile supplier --profile tax --profile gateway"; \
+	echo "🔧 1/4: Discovery y Config..."; $(COMPOSE_LOCAL) $$PROFILES up -d discovery-service config-service && sleep 40; \
+	echo "🗄️ 2/4: Bases de datos..."; $(COMPOSE_LOCAL) $$PROFILES up -d db_product db_supplier db_tax && sleep 55; \
+	echo "🛠️ 3/4: Microservicios..."; $(COMPOSE_LOCAL) $$PROFILES up -d product-service supplier-service tax-service && sleep 120; \
+	echo "🌐 4/4: API Gateway..."; $(COMPOSE_LOCAL) $$PROFILES up -d api-gateway && sleep 120; \
+	END_SECONDS=$$(date +%s); \
+	DURATION_SECONDS=$$((END_SECONDS - START_SECONDS)); \
+	HOURS=$$((DURATION_SECONDS / 3600)); \
+	MINUTES=$$(( (DURATION_SECONDS % 3600) / 60 )); \
+	SECONDS=$$((DURATION_SECONDS % 60)); \
+	echo "========================================================="; \
+	printf "⏳ TIEMPO TOTAL: %02d:%02d:%02d\n" $$HOURS $$MINUTES $$SECONDS; \
+	echo "========================================================="
 .PHONY: ensure-script-exec
 ensure-script-exec:
 	# 🚨 Comando crítico: Garantizar permisos de ejecución al script antes de usarlo.
@@ -674,6 +717,47 @@ help-troubleshoot: ## 📖 Ayuda de solución de problemas
 	@echo "💡 CONSEJOS:"
 	@echo "	• Si un servicio falla al iniciar, usa 'make service-logs' para ver el error."
 	@echo "	• Los errores de 'exec format error' suelen ser problemas de permisos. Usa 'make diagnose-chmod' y 'make fix-discovery-chmod'."
+
+.PHONY: up-local-all-ordered up-local-all-optimized
+# ✅ Agregamos podman-auth a la lista de dependencias
+up-local-all-optimized: podman-ready fix-line-endings podman-auth ## 🚀 Iniciar stack optimizado
+	@START_SECONDS=$$(date +%s); \
+	START_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
+	echo "========================================================="; \
+	echo "🚀 INICIO OPTIMIZADO: $$START_TIME"; \
+	echo "========================================================="; \
+	\
+	$(MAKE) build-jars-all; \
+	ALL_PROFILES="--profile infra --profile product --profile supplier --profile tax --profile gateway"; \
+	\
+	echo "🔧 1/4: Levantando Infraestructura (Discovery & Config)..."; \
+	#$(COMPOSE_OPTIMIZED) $$PROFILES up -d discovery-service config-service || (echo "❌ Error en Infra"; exit 1); \
+	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d discovery-service config-service; \
+    echo "⏱️ Esperando 20s..."; \
+    sleep 20; \
+    \
+	echo "🗄️ 2/4: Levantando Bases de Datos..."; \
+	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d db_product db_supplier db_tax; \
+    \
+	sleep 10; \
+	\
+	echo "🛠️ 3/4: Levantando Microservicios en paralelo..."; \
+	$(COMPOSE_OPTIMIZED) $$PROFILES up -d product-service supplier-service tax-service || (echo "❌ Error en MS"; exit 1); \
+	echo "⏱️ Cargando contextos de Spring (35s)..."; \
+	sleep 35; \
+	\
+	echo "🌐 4/4: Levantando API Gateway..."; \
+	$(COMPOSE_OPTIMIZED) $$PROFILES up -d api-gateway; \
+	\
+	END_SECONDS=$$(date +%s); \
+	DURATION_SECONDS=$$((END_SECONDS - START_SECONDS)); \
+	MINUTES=$$(( (DURATION_SECONDS % 3600) / 60 )); \
+	SECONDS=$$((DURATION_SECONDS % 60)); \
+	echo "========================================================="; \
+	printf "⏳ TIEMPO TOTAL OPTIMIZADO: %02d:%02d\n" $$MINUTES $$SECONDS; \
+	echo "========================================================="; \
+	$(MAKE) health-check-extended
+
 .PHONY: help help-services help-db help-troubleshoot start start-all start-parallel \
 	stop restart restart-all dev dev-full dev-supplier dev-tax build-all build-jars \
 	build-jars-all test-all test-quick status status-all logs health podman-ready ensure-script-exec \
