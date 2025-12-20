@@ -21,17 +21,14 @@ spring:
 
   eureka:
     client:
-      # CAMBIO 3: Habilitar Eureka Client
       enabled: true
       service-url:
-        # Usar el nombre de servicio de la red de contenedores
-        #defaultZone: http://discovery-service:8761/eureka/
-        defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://discovery-service:8761/eureka/}
+        defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
       register-with-eureka: true
       fetch-registry: true
     instance:
       prefer-ip-address: true
-      instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+      instance-id: ${spring.application.name}:${random.value}
 
   # --- Base de Datos (Conexión por nombre de servicio) ---
   datasource:

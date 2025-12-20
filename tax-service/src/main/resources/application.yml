@@ -61,13 +61,14 @@ app:
 
 eureka:
   client:
+    enabled: true
     service-url:
       defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+    instance-id: ${spring.application.name}:${random.value}
 
 management:
   endpoints:
