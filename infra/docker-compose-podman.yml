@@ -336,7 +336,6 @@ services:
     environment:
       - DB_HOST=db_supplier
       - WAIT_FOR=db_supplier:5432,discovery-service:8761,config-service:7777
-      # AJUSTE 1: Bajamos el tiempo de espera a 120 para detectar errores rápido
       - WAIT_TIMEOUT=120
       - SPRING_APPLICATION_NAME=supplier-service
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
@@ -344,11 +343,14 @@ services:
       - SPRING_CLOUD_CONFIG_FAILFAST=false
       - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=6
       - SPRING_CLOUD_CONFIG_RETRY_INITIALINTERVAL=3000
+      - SPRING_CLOUD_CONFIG_IMPORT=optional:configserver:http://config-service:7777
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db_supplier:5432/${SUPPLIER_DB_NAME:-db_supplier}
       - SPRING_DATASOURCE_USERNAME=${SUPPLIER_DB_USERNAME:-supplier}
       - SPRING_DATASOURCE_PASSWORD=${SUPPLIER_DB_PASSWORD:-supplier123}
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - SPRING_APPLICATION_JSON={"eureka":{"client":{"serviceUrl":{"defaultZone":"http://discovery-service:8761/eureka/"}}}}
+      - EUREKA_INSTANCE_HOSTNAME=supplier-service
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
       - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=10
       - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=10

@@ -719,7 +719,6 @@ help-troubleshoot: ## 📖 Ayuda de solución de problemas
 	@echo "	• Los errores de 'exec format error' suelen ser problemas de permisos. Usa 'make diagnose-chmod' y 'make fix-discovery-chmod'."
 
 .PHONY: up-local-all-ordered up-local-all-optimized
-# ✅ Agregamos podman-auth a la lista de dependencias
 up-local-all-optimized: podman-ready fix-line-endings podman-auth ## 🚀 Iniciar stack optimizado
 	@START_SECONDS=$$(date +%s); \
 	START_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
