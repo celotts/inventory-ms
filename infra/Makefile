@@ -214,9 +214,9 @@ up-local-all-ordered2: podman-ready fix-line-endings ## 🚀 Stack completo sin 
 	# =========================================================
 	@START_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
 	START_SECONDS=$$(date +%s); \
-	echo "========================================================="; \
+	echo "================================================================================="; \
 	echo "⏱️ INICIO DEL PROCESO: $$START_TIME"; \
-	echo "========================================================="
+	echo "=================================================================================";
 
 	$(Q) cp $(ENV_FILE_LOCAL) .env.override
 	$(Q) $(MAKE) build-images-all-nocache
@@ -255,32 +255,44 @@ up-local-all-ordered2: podman-ready fix-line-endings ## 🚀 Stack completo sin 
 	HOURS=$((DURATION_SECONDS / 3600)); \
     MINUTES=$(( (DURATION_SECONDS % 3600) / 60 )); \
     SECONDS=$((DURATION_SECONDS % 60)); \
-    echo "========================================================="; \
+   	echo "================================================================================="; \
     echo "⏱️ FIN DEL PROCESO: $END_TIME"; \
     printf "⏳ TIEMPO TOTAL DEMORADO: %02d:%02d:%02d\n" $HOURS $MINUTES $SECONDS; \
-    echo "========================================================="\
+    echo "================================================================================="; \
 
 
 up-local-all-ordered: podman-ready fix-line-endings
 	@START_SECONDS=$$(date +%s); \
 	START_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
-	echo "========================================================="; \
-	echo "⏱️ INICIO: $$START_TIME"; \
-	echo "========================================================="; \
+	echo "================================================================================="; \
+	echo "⏱️ PROCESO INICIO: $$START_TIME"; \
+	echo "================================================================================="; \
 	$(MAKE) build-images-all-nocache; \
 	PROFILES="--profile infra --profile product --profile supplier --profile tax --profile gateway"; \
 	echo "🔧 1/4: Discovery y Config..."; $(COMPOSE_LOCAL) $$PROFILES up -d discovery-service config-service && sleep 40; \
 	echo "🗄️ 2/4: Bases de datos..."; $(COMPOSE_LOCAL) $$PROFILES up -d db_product db_supplier db_tax && sleep 55; \
 	echo "🛠️ 3/4: Microservicios..."; $(COMPOSE_LOCAL) $$PROFILES up -d product-service supplier-service tax-service && sleep 120; \
 	echo "🌐 4/4: API Gateway..."; $(COMPOSE_LOCAL) $$PROFILES up -d api-gateway && sleep 120; \
-	END_SECONDS=$$(date +%s); \
-	DURATION_SECONDS=$$((END_SECONDS - START_SECONDS)); \
-	HOURS=$$((DURATION_SECONDS / 3600)); \
-	MINUTES=$$(( (DURATION_SECONDS % 3600) / 60 )); \
-	SECONDS=$$((DURATION_SECONDS % 60)); \
-	echo "========================================================="; \
-	printf "⏳ TIEMPO TOTAL: %02d:%02d:%02d\n" $$HOURS $$MINUTES $$SECONDS; \
-	echo "========================================================="
+	echo "================================================================================="; \
+    echo "📊 ESTADO FINAL DE LOS CONTENEDORES"; \
+    echo "================================================================================="; \
+    podman ps --format "{{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "service|db|discovery|config|gateway" | awk -F'\t' '{ \
+    		status_icon = "❌"; \
+    		if ($$2 ~ /healthy/) status_icon = "✅"; \
+    		else if ($$2 ~ /running/) status_icon = "🟡"; \
+    		printf "%s %-20s %-25s %s\n", status_icon, $$1, $$2, $$3; \
+    }'; \
+    END_SECONDS=$$(date +%s); \
+    DURATION_SECONDS=$$((END_SECONDS - START_SECONDS)); \
+    HOURS=$$((DURATION_SECONDS / 3600)); \
+    MINUTES=$$(( (DURATION_SECONDS % 3600) / 60 )); \
+    SECONDS=$$((DURATION_SECONDS % 60)); \
+    END_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
+    echo "================================================================================="; \
+    echo "⏱️ PROCESO INICIO...: $$START_TIME"; \
+    echo "⏱️ PROCESO CULMINADO: $$END_TIME"; \
+    printf "⏳ TIEMPO TOTAL: %02d:%02d:%02d\n" $$HOURS $$MINUTES $$SECONDS; \
+    echo "================================================================================="
 .PHONY: ensure-script-exec
 ensure-script-exec:
 	# 🚨 Comando crítico: Garantizar permisos de ejecución al script antes de usarlo.
@@ -722,39 +734,47 @@ help-troubleshoot: ## 📖 Ayuda de solución de problemas
 up-local-all-optimized: podman-ready fix-line-endings podman-auth ## 🚀 Iniciar stack optimizado
 	@START_SECONDS=$$(date +%s); \
 	START_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
-	echo "========================================================="; \
+	echo "================================================================================="; \
 	echo "🚀 INICIO OPTIMIZADO: $$START_TIME"; \
-	echo "========================================================="; \
+	echo "================================================================================="; \
 	\
 	$(MAKE) build-jars-all; \
 	ALL_PROFILES="--profile infra --profile product --profile supplier --profile tax --profile gateway"; \
 	\
 	echo "🔧 1/4: Levantando Infraestructura (Discovery & Config)..."; \
-	#$(COMPOSE_OPTIMIZED) $$PROFILES up -d discovery-service config-service || (echo "❌ Error en Infra"; exit 1); \
 	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d discovery-service config-service; \
-    echo "⏱️ Esperando 20s..."; \
-    sleep 20; \
-    \
+	echo "⏱️ Esperando 20s..."; \
+	sleep 20; \
+	\
 	echo "🗄️ 2/4: Levantando Bases de Datos..."; \
 	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d db_product db_supplier db_tax; \
-    \
 	sleep 10; \
 	\
 	echo "🛠️ 3/4: Levantando Microservicios en paralelo..."; \
-	$(COMPOSE_OPTIMIZED) $$PROFILES up -d product-service supplier-service tax-service || (echo "❌ Error en MS"; exit 1); \
+	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d product-service supplier-service tax-service || (echo "❌ Error en MS"; exit 1); \
 	echo "⏱️ Cargando contextos de Spring (35s)..."; \
 	sleep 35; \
 	\
 	echo "🌐 4/4: Levantando API Gateway..."; \
-	$(COMPOSE_OPTIMIZED) $$PROFILES up -d api-gateway; \
+	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d api-gateway; \
+	\
+	echo "========================================================="; \
+	echo "📊 ESTADO FINAL DE LOS CONTENEDORES"; \
+	echo "========================================================="; \
+	podman ps --format "{{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "service|db|discovery|config|gateway" | awk -F'\t' '{ \
+		status_icon = "❌"; \
+		if ($$2 ~ /healthy/) status_icon = "✅"; \
+		else if ($$2 ~ /running/) status_icon = "🟡"; \
+		printf "%s %-20s %-25s %s\n", status_icon, $$1, $$2, $$3; \
+	}'; \
 	\
 	END_SECONDS=$$(date +%s); \
 	DURATION_SECONDS=$$((END_SECONDS - START_SECONDS)); \
 	MINUTES=$$(( (DURATION_SECONDS % 3600) / 60 )); \
 	SECONDS=$$((DURATION_SECONDS % 60)); \
-	echo "========================================================="; \
+	echo "================================================================================="; \
 	printf "⏳ TIEMPO TOTAL OPTIMIZADO: %02d:%02d\n" $$MINUTES $$SECONDS; \
-	echo "========================================================="; \
+	echo "================================================================================="; \
 	$(MAKE) health-check-extended
 
 .PHONY: help help-services help-db help-troubleshoot start start-all start-parallel \

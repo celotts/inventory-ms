@@ -28,7 +28,7 @@ spring:
       fetch-registry: true
     instance:
       prefer-ip-address: true
-      instance-id: ${spring.application.name}:${random.value}
+      instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
 
   # --- Base de Datos (Conexión por nombre de servicio) ---
   datasource:

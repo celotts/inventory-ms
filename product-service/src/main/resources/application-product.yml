@@ -28,7 +28,9 @@ eureka:
     enabled: false               # ← CLAVE: Desactivar Eureka
     register-with-eureka: false
     fetch-registry: false
-
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
 # Configuración de paginación
 app:
   pagination:

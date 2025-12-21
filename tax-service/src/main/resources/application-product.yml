@@ -31,7 +31,7 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${random.value}
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
 
 # Configuración de paginación
 app:
