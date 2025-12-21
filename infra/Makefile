@@ -32,6 +32,7 @@ ENV_FILE_RESOLVED := $(if $(wildcard $(ENV_FILE)),$(ENV_FILE),)
 
 # Configuración de Compose
 COMPOSE_FILE ?= docker-compose-podman.yml
+COMPOSE_FILE_OPTIMIZED := docker-compose-optimizado-podman.yml  # <--- Definir el nuevo archivo
 COMPOSE_PROJECT_NAME ?= inventoryms
 COMPOSE_PROVIDER ?= podman
 export DOCKER_BUILDKIT := 1
@@ -57,12 +58,19 @@ SERVICES_ALL := discovery-service config-service api-gateway product-service sup
 # Comandos base
 RUN := COMPOSE_PROVIDER=$(COMPOSE_PROVIDER) COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME)
 COMPOSE_BASE := $(RUN) podman compose -f $(COMPOSE_FILE)
-
+COMPOSE_OPTIMIZED := $(RUN) podman compose -f $(COMPOSE_FILE_OPTIMIZED) --env-file $(ENV_FILE_LOCAL) # <--- Comando para el archivo optimizado
 # Comandos específicos por entorno
 COMPOSE_LOCAL := $(COMPOSE_BASE) --env-file $(ENV_FILE_LOCAL)
 COMPOSE_LOCAL_SUPPLIER := $(COMPOSE_BASE) --env-file $(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)
 COMPOSE_DEV := $(COMPOSE_BASE) --env-file $(ENV_FILE_DEV)
 COMPOSE_PROD := $(COMPOSE_BASE) --env-file $(ENV_FILE_PROD)
+
+# Extraer valores de tu .env.local
+#D_USER := $(shell grep "^DOCKER_USERNAME=" .env.local | cut -d'=' -f2)
+#D_PASS := $(shell grep "^DOCKER_PASSWORD=" .env.local | cut -d'=' -f2)
+
+D_USER := $(shell grep "^DOCKER_USERNAME=" .env.local | cut -d'=' -f2 | tr -d '\r' | xargs)
+D_PASS := $(shell grep "^DOCKER_PASSWORD=" .env.local | cut -d'=' -f2 | tr -d '\r' | xargs)
 #------------------------------------------------------------------------
 
 # 💡 MACROS DE UTILIDAD
@@ -100,21 +108,30 @@ build-jars-all: fix-line-endings ## 🔨 Construir TODOS los JARs
 	@echo "🔨 Construyendo todos los JARs..."
 	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar :supplier-service:bootJar :tax-service:bootJar
 
-# ⭐ CORRECCIÓN RADICAL: Usar un solo script en línea para eliminar errores de sintaxis
 build-images-all-nocache: build-jars-all ## 🔨 Construye TODAS las imágenes sin caché (SERIAL)
 	@echo "🔨 Construyendo imágenes SIN caché para todos los servicios (SERIAL)..."
 	export DOCKER_CONFIG=$(BUILD_DIR); \
-	echo "   [1/5] Construyendo discovery-service y config-service..."; \
-	$(COMPOSE_LOCAL) --profile infra build --no-cache discovery-service config-service; \
+  	echo "   [1/5] Construyendo discovery-service y config-service..."; \
+	$(COMPOSE_LOCAL) --profile infra build --no-cache \
+		--build-arg DOCKER_USERNAME=$(D_USER) --build-arg DOCKER_PASSWORD=$(D_PASS) \
+		discovery-service config-service; \
 	echo "   [2/5] Construyendo product-service..."; \
-	$(COMPOSE_LOCAL) --profile infra --profile product build --no-cache product-service; \
+	$(COMPOSE_LOCAL) --profile infra --profile product build --no-cache \
+		--build-arg DOCKER_USERNAME=$(D_USER) --build-arg DOCKER_PASSWORD=$(D_PASS) \
+		product-service; \
 	echo "   [3/5] Construyendo supplier-service..."; \
-	$(COMPOSE_LOCAL) --profile infra --profile supplier build --no-cache supplier-service; \
+	$(COMPOSE_LOCAL) --profile infra --profile supplier build --no-cache \
+		--build-arg DOCKER_USERNAME=$(D_USER) --build-arg DOCKER_PASSWORD=$(D_PASS) \
+		supplier-service; \
 	echo "   [4/5] Construyendo tax-service..."; \
-	$(COMPOSE_LOCAL) --profile infra --profile tax build --no-cache tax-service; \
+	$(COMPOSE_LOCAL) --profile infra --profile tax build --no-cache \
+		--build-arg DOCKER_USERNAME=$(D_USER) --build-arg DOCKER_PASSWORD=$(D_PASS) \
+		tax-service; \
 	echo "   [5/5] Construyendo api-gateway..."; \
-	$(COMPOSE_LOCAL) --profile infra --profile gateway build --no-cache api-gateway; \
-	echo "✅ Construcción de todas las imágenes completada en SERIAL."
+	$(COMPOSE_LOCAL) --profile infra --profile gateway build --no-cache \
+		--build-arg DOCKER_USERNAME=$(D_USER) --build-arg DOCKER_PASSWORD=$(D_PASS) \
+		api-gateway; \
+	echo "✅ Construcción de todas las imágenes completada en SERIAL." [cite: 12, 13, 14, 15, 16, 17, 18]
 #------------------------------------------------------------------------
 
 #🧪 TESTING
@@ -132,6 +149,35 @@ logs: podman-ready ## 📜 Logs de todos los servicios
 
 health: health-check-extended ## 💚 Verificación de salud completa
 
+# --- Autenticación Automática ---
+podman-auth2:
+	@echo "🔑 Configurando autenticación automática para Podman..."
+	@# Extraemos las credenciales directamente del archivo .env.local
+	$(eval DOCKER_USER := $(shell grep DOCKER_USERNAME $(ENV_FILE_LOCAL) | cut -d'=' -f2))
+	$(eval DOCKER_PASS := $(shell grep DOCKER_PASSWORD $(ENV_FILE_LOCAL) | cut -d'=' -f2))
+	@echo "Iniciando sesión en docker.io como $(DOCKER_USER)..."
+	@echo "$(DOCKER_PASS)" | podman login docker.io -u "$(DOCKER_USER)" --password-stdin
+
+podman-auth1: ## 🔑 Autenticar en Docker Hub usando .env.local
+	@echo "🔑 Configurando autenticación automática para Podman..."
+	-podman logout docker.io > /dev/null 2>&1
+	$(eval DOCKER_USER := $(shell grep "^DOCKER_USERNAME=" $(ENV_FILE_LOCAL) | cut -d'=' -f2 | tr -d '\r' | xargs))
+	$(eval DOCKER_PASS := $(shell grep "^DOCKER_PASSWORD=" $(ENV_FILE_LOCAL) | cut -d'=' -f2 | tr -d '\r' | xargs))
+	@if [ -z "$(DOCKER_USER)" ] || [ -z "$(DOCKER_PASS)" ]; then \
+		echo "❌ Error: Credenciales no encontradas en $(ENV_FILE_LOCAL)"; \
+		exit 1; \
+	fi
+	@echo "Iniciando sesión en docker.io como $(DOCKER_USER)..."
+	@echo "$(DOCKER_PASS)" | podman login docker.io -u "$(DOCKER_USER)" --password-stdin || (echo "❌ Error de login"; exit 1)
+
+podman-auth: ## 🔑 Autenticar y asegurar imagen base
+	@echo "🔑 Configurando autenticación automática para Podman..."
+	$(eval D_USER := $(shell grep "^DOCKER_USERNAME=" $(ENV_FILE_LOCAL) | cut -d'=' -f2 | tr -d '\r' | xargs))
+	$(eval D_PASS := $(shell grep "^DOCKER_PASSWORD=" $(ENV_FILE_LOCAL) | cut -d'=' -f2 | tr -d '\r' | xargs))
+	@echo "Iniciando sesión en docker.io como $(D_USER)..."
+	@echo "$(D_PASS)" | podman login docker.io -u "$(D_USER)" --password-stdin || (echo "❌ Error de login"; exit 1)
+	@echo "📥 Asegurando imagen base Java 21..."
+	podman pull eclipse-temurin:21-jdk-jammy || (echo "❌ Error al descargar imagen base"; exit 1)
 # ------------------------------------------------------------------------
 # 🚀 TARGETS DE UP (INICIO)
 # ------------------------------------------------------------------------
@@ -149,59 +195,104 @@ up-local-all: podman-ready fix-line-endings fix-container-orphans
 	$(Q) sleep 30
 	$(Q) $(MAKE) health-check-extended
 
-up-local-all-ordered: podman-ready fix-line-endings fix-container-orphans ## 🚀 Stack completo en orden correcto
-	@echo "🚀 INICIANDO STACK COMPLETO (ORDENADO Y SIN CACHÉ)..."
-	#=========================================================
-	#⏱️ INICIO DEL REGISTRO DE TIEMPO
-	#=========================================================
+up-local-all-ordered2: podman-ready fix-line-endings ## 🚀 Stack completo sin duplicados y con métricas
+	# =========================================================
+	# 🔑 PASO 0: AUTENTICACIÓN Y LIMPIEZA PREVENTIVA
+    # =========================================================
+	@echo "🔑 Configurando credenciales de Podman..."
+	$(Q) D_USER=$$(grep "^DOCKER_USERNAME=" $(ENV_FILE_LOCAL) | cut -d'=' -f2); \
+	D_PASS=$$(grep "^DOCKER_PASSWORD=" $(ENV_FILE_LOCAL) | cut -d'=' -f2); \
+	if [ -n "$$D_USER" ]; then \
+		echo "$$D_PASS" | podman login docker.io -u "$$D_USER" --password-stdin; \
+	fi
+
+	@echo "🧹 Limpiando procesos antiguos y huérfanos..."
+	$(Q) $(COMPOSE_LOCAL) --profile infra --profile product --profile supplier --profile tax --profile gateway down --remove-orphans 2>/dev/null || true
+
+	# =========================================================
+	# ⏱️ INICIO DEL REGISTRO DE TIEMPO
+	# =========================================================
 	@START_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
 	START_SECONDS=$$(date +%s); \
-	echo "========================================================="
+	echo "================================================================================="; \
 	echo "⏱️ INICIO DEL PROCESO: $$START_TIME"; \
-	echo "========================================================="
-	$(Q) echo "🧹 Limpieza previa y forzando construcción de imágenes..."
-	$(Q) $(MAKE) fix-container-orphans
+	echo "=================================================================================";
+
 	$(Q) cp $(ENV_FILE_LOCAL) .env.override
-	$(Q) $(MAKE) build-images-all-nocache # ⭐ Usar target nocache
+	$(Q) $(MAKE) build-images-all-nocache
+
+	# Definimos los perfiles una sola vez para evitar duplicados por contexto
+	$(eval PROFILES := --profile infra --profile product --profile supplier --profile tax --profile gateway)
 
 	@echo "🔧 1/4: Discovery y Config Services..."
-	$(Q) $(COMPOSE_LOCAL) --profile infra up -d --no-recreate discovery-service config-service
+	$(Q) $(COMPOSE_LOCAL) $(PROFILES) up -d discovery-service config-service
 	$(Q) sleep 40
 
-	@echo "🗄️ 2/4: Bases de datos (Levantando por perfiles)..."
-	$(Q) $(COMPOSE_LOCAL) --profile infra up -d --no-recreate db_product db_supplier db_tax # Solo levantar los servicios de DB
+	@echo "🗄️ 2/4: Bases de datos..."
+	$(Q) $(COMPOSE_LOCAL) $(PROFILES) up -d db_product db_supplier db_tax
 	$(Q) sleep 55
 
 	@echo "🛠️ 3/4: Microservicios (Product, Supplier, Tax)..."
-	# ✅ CORRECCIÓN DE DEPENDENCIA (Perfiles: infra, product, supplier, tax)
-	$(Q) $(COMPOSE_LOCAL) --profile infra --profile product --profile supplier --profile tax up -d --no-recreate product-service supplier-service tax-service
+	$(Q) $(COMPOSE_LOCAL) $(PROFILES) up -d product-service supplier-service tax-service
 	$(Q) sleep 120
 
 	@echo "🌐 4/4: API Gateway..."
-	#$(Q) $(COMPOSE_LOCAL) --profile gateway up -d --no-recreate api-gateway
-	$(Q) $(COMPOSE_LOCAL) --profile infra --profile gateway up -d --no-recreate api-gateway
+	$(Q) $(COMPOSE_LOCAL) $(PROFILES) up -d api-gateway
+	#$(Q) sleep 120
 
-	@echo "🔍 Verificación final (espera 15s)..."
+	@echo "🔍 Verificación final (espera 120s)..."
 	$(Q) sleep 120
 	$(Q) $(MAKE) health-check-extended
+
 	@echo "🎉 STACK COMPLETO LEVANTADO!"
-	#=========================================================
-	#⏱️ FINAL DEL REGISTRO DE TIEMPO Y CÁLCULO
- 	#=========================================================
-	#=========================================================
-    #⏱️ FINAL DEL REGISTRO DE TIEMPO Y CÁLCULO
-    #=========================================================
-    @END_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
+
+	# =========================================================
+	# ⏱️ FINAL DEL REGISTRO DE TIEMPO
+	# =========================================================
+	@END_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
+	END_SECONDS=$$(date +%s); \
+	DURATION_SECONDS=$$((END_SECONDS - START_SECONDS)); \
+	HOURS=$((DURATION_SECONDS / 3600)); \
+    MINUTES=$(( (DURATION_SECONDS % 3600) / 60 )); \
+    SECONDS=$((DURATION_SECONDS % 60)); \
+   	echo "================================================================================="; \
+    echo "⏱️ FIN DEL PROCESO: $END_TIME"; \
+    printf "⏳ TIEMPO TOTAL DEMORADO: %02d:%02d:%02d\n" $HOURS $MINUTES $SECONDS; \
+    echo "================================================================================="; \
+
+
+up-local-all-ordered: podman-ready fix-line-endings
+	@START_SECONDS=$$(date +%s); \
+	START_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
+	echo "================================================================================="; \
+	echo "⏱️ PROCESO INICIO: $$START_TIME"; \
+	echo "================================================================================="; \
+	$(MAKE) build-images-all-nocache; \
+	PROFILES="--profile infra --profile product --profile supplier --profile tax --profile gateway"; \
+	echo "🔧 1/4: Discovery y Config..."; $(COMPOSE_LOCAL) $$PROFILES up -d discovery-service config-service && sleep 40; \
+	echo "🗄️ 2/4: Bases de datos..."; $(COMPOSE_LOCAL) $$PROFILES up -d db_product db_supplier db_tax && sleep 55; \
+	echo "🛠️ 3/4: Microservicios..."; $(COMPOSE_LOCAL) $$PROFILES up -d product-service supplier-service tax-service && sleep 120; \
+	echo "🌐 4/4: API Gateway..."; $(COMPOSE_LOCAL) $$PROFILES up -d api-gateway && sleep 120; \
+	echo "================================================================================="; \
+    echo "📊 ESTADO FINAL DE LOS CONTENEDORES"; \
+    echo "================================================================================="; \
+    podman ps --format "{{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "service|db|discovery|config|gateway" | awk -F'\t' '{ \
+    		status_icon = "❌"; \
+    		if ($$2 ~ /healthy/) status_icon = "✅"; \
+    		else if ($$2 ~ /running/) status_icon = "🟡"; \
+    		printf "%s %-20s %-25s %s\n", status_icon, $$1, $$2, $$3; \
+    }'; \
     END_SECONDS=$$(date +%s); \
     DURATION_SECONDS=$$((END_SECONDS - START_SECONDS)); \
-    echo "========================================================="; \
-    echo "⏱️ FIN DEL PROCESO: $$END_TIME"; \
-    echo "⏳ TIEMPO TOTAL DEMORADO: $$DURATION_SECONDS segundos"; \
-    echo "========================================================="
-
-# ------------------------------------------------------------------------
-# ✅ SOLUCIÓN AL ERROR DE SINTAXIS: Mover lógica a script y garantizar permisos.
-# ------------------------------------------------------------------------
+    HOURS=$$((DURATION_SECONDS / 3600)); \
+    MINUTES=$$(( (DURATION_SECONDS % 3600) / 60 )); \
+    SECONDS=$$((DURATION_SECONDS % 60)); \
+    END_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
+    echo "================================================================================="; \
+    echo "⏱️ PROCESO INICIO...: $$START_TIME"; \
+    echo "⏱️ PROCESO CULMINADO: $$END_TIME"; \
+    printf "⏳ TIEMPO TOTAL: %02d:%02d:%02d\n" $$HOURS $$MINUTES $$SECONDS; \
+    echo "================================================================================="
 .PHONY: ensure-script-exec
 ensure-script-exec:
 	# 🚨 Comando crítico: Garantizar permisos de ejecución al script antes de usarlo.
@@ -489,22 +580,26 @@ check-container-status: ## 🔍 Ver estado detallado de contenedores
 	$(Q) podman ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}\t{{.Image}}"
 
 #🚑 COMANDOS DE EMERGENCIA
-emergency-clean: ## 🚑 Limpieza de emergencia (cuando nada funciona)
-	@echo "🚑 EJECUTANDO LIMPIEZA DE EMERGENCIA..."
-	@echo "⛔️ ¡ADVERTENCIA! Esto eliminará todos los contenedores, imágenes y volúmenes!"
-	@read -p "¿Estás seguro? (solo escribe 'SI' para continuar): " confirm; \
+# --- 🧨 SUPER LIMPIEZA DE EMERGENCIA (UNIFICADA) ---
+emergency-clean: podman-ready ## 🧨 Borrado total y profundo (Contenedores, Imágenes, Volúmenes y Redes)
+	@echo "🧨 ADVERTENCIA: Se eliminarán TODOS los contenedores, imágenes y volúmenes de Podman."
+	@read -p "⚠️ ¿Estás seguro de realizar esta limpieza profunda? (Escribe 'SI' para continuar): " confirm; \
 	if [ "$$confirm" = "SI" ]; then \
-		echo "🧹 Eliminando todos los contenedores..."; \
+		echo "🧹 Iniciando limpieza total..."; \
+		podman compose -f docker-compose-podman.yml down --volumes --remove-orphans 2>/dev/null || true; \
+		echo "🛑 Deteniendo y eliminando contenedores..."; \
+		podman stop $$(podman ps -aq) 2>/dev/null || true; \
 		podman rm -f $$(podman ps -aq) 2>/dev/null || true; \
-		echo "🧹 Eliminando todas las imágenes..."; \
+		echo "🖼️ Eliminando imágenes..."; \
 		podman rmi -f $$(podman images -aq) 2>/dev/null || true; \
-		echo "🧹 Eliminando todos los volúmenes..."; \
-		podman volume rm -f $$(podman volume ls -q) 2>/dev/null || true; \
-		echo "🧹 Limpiando sistema..."; \
+		echo "📜 Limpiando redes y volúmenes..."; \
+		podman network prune -f; \
+		podman volume prune -f; \
 		podman system prune -a -f --volumes; \
-		echo "✅ Limpieza de emergencia completada"; \
+		echo "✅ Sistema totalmente limpio."; \
+		$(MAKE) podman-auth; \
 	else \
-		echo "❌ Limpieza cancelada"; \
+		echo "❌ Limpieza cancelada por el usuario."; \
 	fi
 restart-podman-vm: ## 🔄 Reiniciar la máquina virtual de Podman
 	@echo "🔄 Reiniciando Podman Machine..."
@@ -634,6 +729,54 @@ help-troubleshoot: ## 📖 Ayuda de solución de problemas
 	@echo "💡 CONSEJOS:"
 	@echo "	• Si un servicio falla al iniciar, usa 'make service-logs' para ver el error."
 	@echo "	• Los errores de 'exec format error' suelen ser problemas de permisos. Usa 'make diagnose-chmod' y 'make fix-discovery-chmod'."
+
+.PHONY: up-local-all-ordered up-local-all-optimized
+up-local-all-optimized: podman-ready fix-line-endings podman-auth ## 🚀 Iniciar stack optimizado
+	@START_SECONDS=$$(date +%s); \
+	START_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
+	echo "================================================================================="; \
+	echo "🚀 INICIO OPTIMIZADO: $$START_TIME"; \
+	echo "================================================================================="; \
+	\
+	$(MAKE) build-jars-all; \
+	ALL_PROFILES="--profile infra --profile product --profile supplier --profile tax --profile gateway"; \
+	\
+	echo "🔧 1/4: Levantando Infraestructura (Discovery & Config)..."; \
+	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d discovery-service config-service; \
+	echo "⏱️ Esperando 20s..."; \
+	sleep 20; \
+	\
+	echo "🗄️ 2/4: Levantando Bases de Datos..."; \
+	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d db_product db_supplier db_tax; \
+	sleep 10; \
+	\
+	echo "🛠️ 3/4: Levantando Microservicios en paralelo..."; \
+	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d product-service supplier-service tax-service || (echo "❌ Error en MS"; exit 1); \
+	echo "⏱️ Cargando contextos de Spring (35s)..."; \
+	sleep 35; \
+	\
+	echo "🌐 4/4: Levantando API Gateway..."; \
+	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d api-gateway; \
+	\
+	echo "========================================================="; \
+	echo "📊 ESTADO FINAL DE LOS CONTENEDORES"; \
+	echo "========================================================="; \
+	podman ps --format "{{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "service|db|discovery|config|gateway" | awk -F'\t' '{ \
+		status_icon = "❌"; \
+		if ($$2 ~ /healthy/) status_icon = "✅"; \
+		else if ($$2 ~ /running/) status_icon = "🟡"; \
+		printf "%s %-20s %-25s %s\n", status_icon, $$1, $$2, $$3; \
+	}'; \
+	\
+	END_SECONDS=$$(date +%s); \
+	DURATION_SECONDS=$$((END_SECONDS - START_SECONDS)); \
+	MINUTES=$$(( (DURATION_SECONDS % 3600) / 60 )); \
+	SECONDS=$$((DURATION_SECONDS % 60)); \
+	echo "================================================================================="; \
+	printf "⏳ TIEMPO TOTAL OPTIMIZADO: %02d:%02d\n" $$MINUTES $$SECONDS; \
+	echo "================================================================================="; \
+	$(MAKE) health-check-extended
+
 .PHONY: help help-services help-db help-troubleshoot start start-all start-parallel \
 	stop restart restart-all dev dev-full dev-supplier dev-tax build-all build-jars \
 	build-jars-all test-all test-quick status status-all logs health podman-ready ensure-script-exec \
@@ -643,4 +786,5 @@ help-troubleshoot: ## 📖 Ayuda de solución de problemas
 	test-supplier run-supplier-local rebuild-supplier-local test-tax run-tax-local rebuild-tax-local \
 	up-db reset-db tax-db-reset diagnose check-ports \
 	sync-podman-desktop debug-discovery fix-discovery check-discovery-health check-resources \
-	service-logs check-container-status emergency-clean restart-podman-vm fix-discovery-chmod diagnose-chmod build-images-all-nocache fix-line-endings con tabulacion
+	service-logs check-container-status emergency-clean restart-podman-vm fix-discovery-chmod \
+	diagnose-chmod build-images-all-nocache fix-line-endings podman-auth

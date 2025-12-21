@@ -143,7 +143,7 @@ services:
       - WAIT_FOR_DISCOVERY=true
       # AJUSTE: Reemplazamos JAVA_OPTS=${JAVA_OPTS:-} por la versión de desarrollo
       - JAVA_OPTS=-Xmx512m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
       - EUREKA_INSTANCE_PREFER-IP-ADDRESS=true
       - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=${SPRING_CLOUD_CONFIG_SERVER_GIT_URI}
       - SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL=${SPRING_CLOUD_CONFIG_SERVER_GIT_DEFAULT_LABEL}
@@ -222,7 +222,7 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       - SERVER_PORT=8080
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:-http://discovery-service:8761/eureka/}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:-http://discovery-service:8761/eureka/}
       - EUREKA_INSTANCE_PREFER-IP-ADDRESS=true
       - WAIT_FOR=discovery-service:8761,config-service:7777
       - WAIT_TIMEOUT=120
@@ -275,7 +275,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=${PRODUCT_DB_USERNAME:-product}
       - SPRING_DATASOURCE_PASSWORD=${PRODUCT_DB_PASSWORD:-product123}
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
       - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=10
       - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=10
       - EUREKA_INSTANCE_PREFER-IP-ADDRESS=true
@@ -343,15 +343,12 @@ services:
       - SPRING_CLOUD_CONFIG_FAILFAST=false
       - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=6
       - SPRING_CLOUD_CONFIG_RETRY_INITIALINTERVAL=3000
-      - SPRING_CLOUD_CONFIG_IMPORT=optional:configserver:http://config-service:7777
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db_supplier:5432/${SUPPLIER_DB_NAME:-db_supplier}
       - SPRING_DATASOURCE_USERNAME=${SUPPLIER_DB_USERNAME:-supplier}
       - SPRING_DATASOURCE_PASSWORD=${SUPPLIER_DB_PASSWORD:-supplier123}
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
-      - SPRING_APPLICATION_JSON={"eureka":{"client":{"serviceUrl":{"defaultZone":"http://discovery-service:8761/eureka/"}}}}
-      - EUREKA_INSTANCE_HOSTNAME=supplier-service
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
       - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=10
       - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=10
       - EUREKA_INSTANCE_PREFER-IP-ADDRESS=true
@@ -369,9 +366,9 @@ services:
       db_supplier:
         condition: service_healthy
       discovery-service:
-        condition: service_healthy
+        condition: service_started
       config-service:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:9091/actuator/health || exit 1" ]
       interval: 15s
@@ -468,7 +465,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=${TAX_DB_USERNAME:-tax}
       - SPRING_DATASOURCE_PASSWORD=${TAX_DB_PASSWORD:-tax123}
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
       - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=10
       - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=10
       - EUREKA_INSTANCE_PREFER-IP-ADDRESS=true
@@ -489,9 +486,9 @@ services:
       db_tax:
         condition: service_healthy
       discovery-service:
-        condition: service_healthy
+        condition: service_started
       config-service:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:9092/actuator/health || exit 1" ]
       interval: 15s
@@ -525,7 +522,7 @@ services:
       - SPRING_APPLICATION_NAME=api-gateway
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
       - JAVA_OPTS=${JAVA_PERF_OPTS}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
       - EUREKA_INSTANCE_PREFER-IP-ADDRESS=true
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:${CONFIG_PORT:-7777}
       - SPRING_CLOUD_GATEWAY_DISCOVERY_LOCATOR_ENABLED=true
@@ -552,7 +549,7 @@ services:
       discovery-service:
         condition: service_healthy
       config-service:
-        condition: service_healthy
+        condition: service_started
 
     networks:
       - inventory-net

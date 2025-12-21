@@ -18,9 +18,14 @@ spring:
     import: "optional:configserver:"
 
   cloud:
+    cloud:
+    # --- CONFIG SERVER ---
     config:
-      enabled: ${SPRING_CLOUD_CONFIG_ENABLED:false}   # En contenedor puedes habilitarlo por env
+      enabled: ${SPRING_CLOUD_CONFIG_ENABLED:false} # Habilitado vía ENV en Podman
       fail-fast: false
+      uri: http://config-service:7777
+      discovery:
+        enabled: false
     # Evita re-cargar propiedades en caliente que tocan el pool Hikari (problema “sealed once started”)
     refresh:
       enabled: false
@@ -56,6 +61,7 @@ app:
 
 eureka:
   client:
+    enabled: true
     service-url:
       defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
     register-with-eureka: true
@@ -73,7 +79,7 @@ management:
     health:
       probes:
         enabled: true
-      show-details: "never"
+      show-details: "always"
 
 # ------------------------------------------
 # Perfil LOCAL: para correr en tu Mac (fuera de contenedor)

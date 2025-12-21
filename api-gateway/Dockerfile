@@ -54,7 +54,7 @@ ENV no_proxy=$no_proxy
 
 
 # =====================================================================
-# CORRECCIÓN DE MEMORIA DE GRADLE: AUMENTO DEL HEAP A 2GB
+# CORRECCIÓN DE MEMORIA DE GRADLE: AUMENTO DEL HEAP A 3GB
 # =====================================================================
 ENV GRADLE_OPTS="-Xmx3072m -Xms1536m -XX:MaxMetaspaceSize=1536m"
 
@@ -65,10 +65,12 @@ RUN apt-get update && apt-get install -y curl
 RUN curl -s -I http://google.com | grep "HTTP"
 
 # Paso 1: Resolver y cachear dependencias (Ahora usará el proxy)
-RUN ./gradlew :api-gateway:dependencies -x test --console=plain --no-daemon
+# ⭐ CRÍTICO: Forzar GRADLE_OPTS para aplicar 3GB de heap.
+RUN GRADLE_OPTS="-Xmx3072m -Xms1536m" ./gradlew :api-gateway:dependencies -x test --console=plain --no-daemon
 
 # Paso 2: Ejecutar la compilación y generar el JAR
-RUN ./gradlew :api-gateway:bootJar -x test --console=plain --no-daemon
+# ⭐ CRÍTICO: Forzar GRADLE_OPTS para aplicar 3GB de heap.
+RUN GRADLE_OPTS="-Xmx3072m -Xms1536m" ./gradlew :api-gateway:bootJar -x test --console=plain --no-daemon
 
 # Verificar que el JAR se generó correctamente
 RUN ls -lh api-gateway/build/libs/ && \

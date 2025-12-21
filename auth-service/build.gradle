@@ -1,6 +1,8 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.5'
+    // ⚠️ CORRECCIÓN 1: Eliminar la versión explícita (3.4.5) aquí.
+    // La versión será forzada a 3.5.0 por el bloque 'resolutionStrategy'.
+    id 'org.springframework.boot'
     id 'io.spring.dependency-management'
     id 'jacoco'
 }
@@ -29,7 +31,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
-
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
@@ -40,7 +41,12 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-    runtimeOnly 'com.h2database:h2'
+    // ⭐ CORRECCIÓN 2: Agregar el driver de PostgreSQL
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // Opcional: Si H2 no se usa para pruebas, puedes comentar o eliminar esta línea
+    // runtimeOnly 'com.h2database:h2'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -53,19 +59,17 @@ dependencyManagement {
 }
 
 
+// BLOQUE AÑADIDO PARA FORZAR EXPLÍCITAMENTE LAS VERSIONES COMPATIBLES
+configurations.configureEach {
+    resolutionStrategy {
+        // Mantenemos las fuerzas para compatibilidad con Spring Cloud 2025.0.0
+        force 'org.springframework.boot:spring-boot:3.5.0'
+        force 'org.springframework.boot:spring-boot-autoconfigure:3.5.0'
+        force 'org.springframework.boot:spring-boot-starter:3.5.0'
 
-// ⭐ BLOQUE AÑADIDO PARA FORZAR EXPLÍCITAMENTE LAS VERSIONES COMPATIBLES
-        configurations.configureEach {
-            resolutionStrategy {
-                // Forzamos Spring Boot 3.5.0, anulando la degradación causada por Spring Cloud BOM.
-                force 'org.springframework.boot:spring-boot:3.5.0'
-                force 'org.springframework.boot:spring-boot-autoconfigure:3.5.0'
-                force 'org.springframework.boot:spring-boot-starter:3.5.0'
-
-                // Forzamos Spring Security 6.5.0, compatible con Spring Boot 3.5.0.
-                force 'org.springframework.security:spring-security-core:6.5.0'
-                force 'org.springframework.security:spring-security-web:6.5.0'
-                force 'org.springframework.security:spring-security-config:6.5.0'
-                force 'org.springframework.security:spring-security-crypto:6.5.0'
-            }
-        }
+        force 'org.springframework.security:spring-security-core:6.5.0'
+        force 'org.springframework.security:spring-security-web:6.5.0'
+        force 'org.springframework.security:spring-security-config:6.5.0'
+        force 'org.springframework.security:spring-security-crypto:6.5.0'
+    }
+}

@@ -22,12 +22,16 @@ spring:
 server:
   port: 9090
 
-# 🚫 DESACTIVAR Eureka para desarrollo standalone
 eureka:
   client:
-    enabled: false               # ← CLAVE: Desactivar Eureka
-    register-with-eureka: false
-    fetch-registry: false
+    enabled: true
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
 
 # Configuración de paginación
 app:
@@ -43,7 +47,12 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: "*" # Expones todo para debug local
+  endpoint:
+    health:
+      show-details: always # Muestra qué base de datos o servicio externo falló
+      probes:
+        enabled: true
 
 logging:
   level:

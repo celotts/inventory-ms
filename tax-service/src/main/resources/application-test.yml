@@ -20,6 +20,9 @@ spring:
 eureka:
   client:
     enabled: false
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
 
 # Logging detallado
 logging:
@@ -36,11 +39,14 @@ app:
     use-case:
       enabled: true
 
+
 management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: "*" # Expones todo para debug local
   endpoint:
     health:
-      show-details: always
+      show-details: always # Muestra qué base de datos o servicio externo falló
+      probes:
+        enabled: true

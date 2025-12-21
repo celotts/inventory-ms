@@ -51,7 +51,7 @@ ENV https_proxy=$https_proxy
 ENV no_proxy=$no_proxy
 
 # =====================================================================
-# ✅ MODIFICACIÓN APLICADA: AUMENTO DE MEMORIA DE GRADLE A 2GB (2048m)
+# ✅ CORRECCIÓN DE MEMORIA: APLICACIÓN FORZADA EN RUN
 # Esto corrige el error "Gradle build daemon disappeared unexpectedly" (OOM Kill).
 # =====================================================================
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Xmx2048m -Xms1024m -XX:MaxMetaspaceSize=1024m -Dorg.gradle.internal.http.connectionTimeout=600000 -Dorg.gradle.internal.http.socketTimeout=600000"
@@ -62,13 +62,13 @@ RUN apt-get update && apt-get install -y curl
 # Si el proxy está configurado correctamente, este curl ya no debería fallar.
 RUN curl -s -I http://google.com | grep "HTTP"
 
-# Paso 1: Resolver y cachear dependencias (Ahora usará las variables ENV)
-# Se elimina --no-daemon
-RUN ./gradlew :tax-service:dependencies -x test --console=plain
+# Paso 1: Resolver y cachear dependencias
+# ⭐ CRÍTICO: Forzar GRADLE_OPTS y reintroducir --no-daemon
+RUN GRADLE_OPTS="-Xmx2048m -Xms1024m" ./gradlew :tax-service:dependencies -x test --console=plain --no-daemon
 
 # Paso 2: Ejecutar la compilación y generar el JAR
-# Se elimina --no-daemon
-RUN ./gradlew :tax-service:bootJar -x test --console=plain
+# ⭐ CRÍTICO: Forzar GRADLE_OPTS y reintroducir --no-daemon
+RUN GRADLE_OPTS="-Xmx2048m -Xms1024m" ./gradlew :tax-service:bootJar -x test --console=plain --no-daemon
 
 # Verificar que el JAR se generó correctamente
 RUN ls -lh tax-service/build/libs/ && \

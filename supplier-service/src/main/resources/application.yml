@@ -37,9 +37,12 @@ spring:
     client:
       enabled: true
       service-url:
-        # 🚨 DEBE SER discovery-service
-        defaultZone: http://discovery-service:8761/eureka/
-
+        defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+      register-with-eureka: true
+      fetch-registry: true
+    instance:
+      prefer-ip-address: true
+      instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
   # ✅ Gestión de Endpoints
   management:
     endpoint:

@@ -46,28 +46,33 @@ RUN ls -lh supplier-service/build/libs/ && \
     (echo "ERROR: JAR no fue generado" && exit 1)
 
 # ---------------------------------------------------------------------
-# ETAPA 2: EJECUCIÓN (Imagen final mínima) - SIN CAMBIOS
+# ETAPA 2: EJECUCIÓN (Imagen final mínima)
 # ---------------------------------------------------------------------
 FROM eclipse-temurin:21-jre-jammy AS runner
 LABEL maintainer="Inventory MS Team"
 
 EXPOSE 9091
-
-# Crear usuario spring sin privilegios
-RUN addgroup --system spring && adduser --system --ingroup spring spring
-USER spring:spring
-
 WORKDIR /app
 
-# Copiar JAR compilado desde builder
-COPY --from=builder /app/supplier-service/build/libs/supplier-service-*.jar /app/app.jar
+# 1. Instalar dependencias necesarias (curl/wget para healthchecks)
+# Se hace como root por defecto
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 
-# Copiar scripts de startup
+# 2. Copiar archivos (Asegúrate de que wait-for-it.sh esté en el contexto de construcción)
+COPY --from=builder /app/supplier-service/build/libs/supplier-service-*.jar /app/app.jar
 COPY supplier-service/entrypoint.sh ./
 COPY wait-for-it.sh ./
 
-# Hacer ejecutables
+# 3. Dar permisos como root
 RUN chmod +x entrypoint.sh wait-for-it.sh
 
-# Punto de entrada
+# 4. Crear usuario y cambiar dueño de la carpeta /app
+RUN addgroup --system spring && adduser --system --ingroup spring spring && \
+    chown -R spring:spring /app
+
+# 5. Cambiar al usuario seguro
+USER spring:spring
+
+# 6. Punto de entrada pasando "app.jar" como el argumento $1
 ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["app.jar"]

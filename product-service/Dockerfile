@@ -20,9 +20,10 @@ RUN chmod +x ./gradlew
 RUN apt-get update && apt-get install -y dos2unix && rm -rf /var/lib/apt/lists/*
 
 # =====================================================================
-# CORRECCIÓN DE MEMORIA DE GRADLE: AUMENTO DEL HEAP A 1GB
+# CORRECCIÓN DE MEMORIA DE GRADLE: AUMENTO DEL HEAP A 3GB
 # Esto corrige el error "Gradle build daemon disappeared unexpectedly" (OOM Kill).
 # =====================================================================
+# Mantenemos el ENV, pero es el RUN el que tiene la prioridad.
 ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Xmx3072m -Xms1536m -XX:MaxMetaspaceSize=1536m -Dorg.gradle.internal.http.connectionTimeout=600000 -Dorg.gradle.internal.http.socketTimeout=600000"
 
 # 2. COPIA DEL SERVICIO Y SCRIPTS RELACIONADOS
@@ -40,13 +41,13 @@ RUN chmod +x /app/product-service/entrypoint.sh /app/product-service/wait-for-it
 
 
 # 3. DESCARGA Y CACHÉ DE DEPENDENCIAS
-# Se elimina --no-daemon
-RUN ./gradlew :product-service:dependencies -x test --console=plain
+# ⭐ CRÍTICO: Forzar GRADLE_OPTS en el comando RUN para aplicar 3GB de heap.
+RUN GRADLE_OPTS="-Xmx3072m -Xms1536m" ./gradlew :product-service:dependencies -x test --console=plain --no-daemon
 
 
 # 4. COMPILA EL JAR
-# Se elimina --no-daemon
-RUN ./gradlew :product-service:bootJar -x test --console=plain
+# ⭐ CRÍTICO: Forzar GRADLE_OPTS en el comando RUN para aplicar 3GB de heap.
+RUN GRADLE_OPTS="-Xmx3072m -Xms1536m" ./gradlew :product-service:bootJar -x test --console=plain --no-daemon
 
 # ---------------------------------------------------------------------
 # ETAPA 2: EJECUCIÓN (Crea la imagen final mínima)

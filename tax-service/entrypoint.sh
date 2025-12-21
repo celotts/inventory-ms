@@ -20,12 +20,11 @@ echo "======================================================"
 
 # 1. Esperar al Servidor de Descubrimiento (Eureka)
 echo "-> 1/2 Esperando a Discovery Service en $DISCOVERY_HOST..."
-$WAIT_FOR_IT $DISCOVERY_HOST -t 60 -- echo "Discovery Service OK."
+$WAIT_FOR_IT $DISCOVERY_HOST --timeout=60 -- echo "Discovery Service OK."
 
 # 2. Esperar al Servidor de Configuración (Config Server)
 echo "-> 2/2 Esperando a Config Service en $CONFIG_HOST..."
-$WAIT_FOR_IT $CONFIG_HOST -t 60 -- echo "Config Service OK. Procediendo..."
-
+$WAIT_FOR_IT $CONFIG_HOST --timeout=60 -- echo "Config Service OK. Procediendo..."
 
 # 3. Lanzar la aplicación principal
 echo "-> Lanzando la aplicación $JAR_NAME..."

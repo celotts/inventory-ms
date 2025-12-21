@@ -21,11 +21,9 @@ spring:
 
   eureka:
     client:
-      # CAMBIO 3: Habilitar Eureka Client
       enabled: true
       service-url:
-        # Usar el nombre de servicio de la red de contenedores
-        defaultZone: http://discovery-service:8761/eureka/
+        defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
       register-with-eureka: true
       fetch-registry: true
     instance:

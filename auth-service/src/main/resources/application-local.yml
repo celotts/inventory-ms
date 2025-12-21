@@ -1,13 +1,18 @@
+# Archivo de configuración para Auth Service (ej. application-docker.yml)
+
 server:
-  port: 9090
+  # El Auth Service suele correr en un puerto diferente al Product Service (9090).
+  # Usaremos un puerto estándar para Auth, por ejemplo, 8081, o el que esté definido en tu Compose.
+  port: 8081  # CORRECCIÓN 1: Ajustar el puerto para Auth Service (cambiado de 9090)
 
 spring:
   application:
-    name: product-service
+    name: auth-service # CORRECCIÓN 2: Cambiar el nombre de la aplicación
 
-  # Base de datos PostgreSQL
+  # Base de datos PostgreSQL para el Auth Service
   datasource:
-    url: jdbc:postgresql://product-db:5432/product
+    # CORRECCIÓN 3: Cambiar el host y el nombre de la base de datos
+    url: jdbc:postgresql://auth-db:5432/auth
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
@@ -15,13 +20,18 @@ spring:
   # Configuración JPA para PostgreSQL
   jpa:
     hibernate:
-      ddl-auto: update  # o create-drop si quieres recrear en cada reinicio
+      ddl-auto: update
     show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     defer-datasource-initialization: true
     properties:
       hibernate:
         format_sql: true
+
+  # CORRECCIÓN 4: Solución al error de compatibilidad de Spring Cloud
+  cloud:
+    compatibility-verifier:
+      enabled: false
 
 eureka:
   client:
@@ -31,9 +41,10 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
+    # Asegúrate de que el ID de instancia se resuelve correctamente con el nombre de Auth Service y el puerto 8081
     instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
 
-# Configuración de paginación
+# Configuración de paginación (Mantengo esto si Auth también lo usa, aunque es menos común)
 app:
   pagination:
     default-page: 0
@@ -54,6 +65,7 @@ management:
 # Logging para debug
 logging:
   level:
-    com.celotts.productservice: DEBUG
+    # CORRECCIÓN 5: Ajustar el logging al paquete del Auth Service
+    com.celotts.authservice: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE

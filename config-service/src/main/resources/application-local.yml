@@ -33,9 +33,8 @@ eureka:
 
   instance:
     prefer-ip-address: true
-    # Simplificación: Usar solo el nombre de la aplicación y el puerto.
-    # Es más robusto que depender de la resolución de IP en entornos de contenedor.
-    instance-id: ${spring.application.name}:${server.port}
+    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+
 
 management:
   endpoints:
