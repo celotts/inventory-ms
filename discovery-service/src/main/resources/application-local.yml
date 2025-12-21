@@ -18,6 +18,13 @@ management:
     web:
       exposure:
         include: "*"
+
 logging:
   level:
     com.netflix.discovery.shared.transport.jersey3.EurekaJersey3ClientImpl: OFF
+
+# 🛑 PROPIEDAD DE CORRECCIÓN: Deshabilita el verificador que causa el fallo.
+spring:
+  cloud:
+    compatibility-verifier:
+      enabled: false

@@ -46,8 +46,9 @@ app:
 # Eureka para microservicios
 eureka:
   client:
+    enabled: true
     service-url:
-      defaultZone: http://discovery-service:8761/eureka/
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
   instance:
@@ -60,6 +61,11 @@ management:
     web:
       exposure:
         include: "*"
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
 
 # Logging
 logging:

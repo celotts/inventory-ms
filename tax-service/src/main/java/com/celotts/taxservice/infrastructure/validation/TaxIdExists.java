@@ -1,4 +1,4 @@
-package com.celotts.taxservice.infrastructure.common.validation;
+package com.celotts.taxservice.infrastructure.validation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

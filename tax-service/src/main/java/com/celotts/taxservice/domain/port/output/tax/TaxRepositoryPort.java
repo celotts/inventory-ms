@@ -1,6 +1,6 @@
-package com.celotts.taxservice.domain.port.output;
+package com.celotts.taxservice.domain.port.output.tax;
 
-import com.celotts.taxservice.domain.model.TaxModel;
+import com.celotts.taxservice.domain.model.tax.TaxModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -55,4 +55,6 @@ public interface TaxRepositoryPort {
     long count();
 
     long countByActive(boolean active);
+
+    List<TaxModel> findByDescriptionContaining(String name);
 }

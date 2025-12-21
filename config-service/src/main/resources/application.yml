@@ -1,12 +1,16 @@
+
 server:
   port: ${CONFIG_PORT:7777}
 
 spring:
   application:
-    name: config-service
+    name: config-service # Lowercase name is better practice for naming conventions
+
+  lifecycle:
+    timeout-per-shutdown-phase: 15s # Recommended for microservices shutdown resilience
 
   cloud:
-    config:
+    config: # Configuration required for Spring Cloud Config Server
       server:
         git:
           uri: ${SPRING_CLOUD_CONFIG_SERVER_GIT_URI}
@@ -16,26 +20,24 @@ spring:
           default-label: main
           search-paths: config
       fail-fast: true
-
-    #gateway:
-      #routes:
-        #- id: product-service
-         # uri: lb://product-service
-         # predicates:
-         #   - Path=/product/**
-         # filters:
-         #   - RewritePath=/product/(?<path>.*), /${path}
+    compatibility-verifier:
+      enabled: false
 
 eureka:
   client:
-    service-url:
+    serviceUrl:
       defaultZone: http://discovery-service:8761/eureka/
+
     register-with-eureka: true
-    fetch-registry: false
+    fetch-registry: true
+
+    healthcheck:
+      enabled: true
+    instance-info-replication-interval-seconds: 5 # Reduce replication interval for faster registration
 
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+    instance-id: ${spring.application.name}:${server.port} # Simpler, more reliable instance ID
 
 management:
   endpoints:

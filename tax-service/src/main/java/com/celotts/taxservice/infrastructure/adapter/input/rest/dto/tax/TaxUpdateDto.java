@@ -20,6 +20,9 @@ public class TaxUpdateDto {
     @Size(min = 2, max = 120, message = "{tax.name.size}")
     private String name;
 
+    @Size(min = 2, max = 120, message = "{tax.description.size}")
+    private String description;
+
     @DecimalMin(value = "0.00", inclusive = true, message = "{tax.rate.min}")
     @DecimalMax(value = "100.00", inclusive = true, message = "{tax.rate.max}")
     @Digits(integer = 3, fraction = 2, message = "{tax.rate.digits}")

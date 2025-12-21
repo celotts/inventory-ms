@@ -1,35 +1,31 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/sh
+# entrypoint.sh - Lógica de arranque para Tax Service
 
-WAIT_FOR="${WAIT_FOR:-}"
-WAIT_TIMEOUT="${WAIT_TIMEOUT:-30}"
-JAVA_OPTS="${JAVA_OPTS:-}"
+# ----------------------------------------------------------------
+# CONFIGURACIÓN Y RUTAS
+# ----------------------------------------------------------------
+WAIT_FOR_IT=/app/wait-for-it.sh
+JAR_NAME=${1:-app.jar}
 
-wait_for_service() {
-  local name="$1"
-  local host_port="$2"
-  local timeout="${3:-30}"
+# DEPENDENCIAS DE INFRAESTRUCTURA (Nombres de servicio del docker-compose)
+DISCOVERY_HOST=discovery-service:8761
+CONFIG_HOST=config-service:7777
 
-  echo "🕒 Esperando $name en $host_port (timeout ${timeout}s)..."
-  ./wait-for-it.sh "$host_port" --timeout="$timeout" --strict -- \
-    echo "✅ $name disponible."
-}
+DB_USER=${PRODUCT_DB_USERNAME}  # <-- Usar la variable de entorno
+DB_PASS=${PRODUCT_DB_PASSWORD}  # <-- Usar la variable de entorno
 
-if [[ -n "$WAIT_FOR" ]]; then
-  IFS=',' read -ra targets <<< "$WAIT_FOR"
-  for t in "${targets[@]}"; do
-    if [[ "$t" == *"@"* ]]; then
-      name="${t%@*}"
-      host_port="${t#*@}"
-    else
-      name="$t"
-      host_port="$t"
-    fi
-    wait_for_service "$name" "$host_port" "$WAIT_TIMEOUT"
-  done
-else
-  echo "ℹ️  No hay dependencias (WAIT_FOR vacío)."
-fi
+echo "======================================================"
+echo " INICIANDO ENTRYPOINT ESTÁNDAR (Tax) para $JAR_NAME"
+echo "======================================================"
 
-echo "🚀 Iniciando app.jar..."
-exec java $JAVA_OPTS -jar app.jar
+# 1. Esperar al Servidor de Descubrimiento (Eureka)
+echo "-> 1/2 Esperando a Discovery Service en $DISCOVERY_HOST..."
+$WAIT_FOR_IT $DISCOVERY_HOST --timeout=60 -- echo "Discovery Service OK."
+
+# 2. Esperar al Servidor de Configuración (Config Server)
+echo "-> 2/2 Esperando a Config Service en $CONFIG_HOST..."
+$WAIT_FOR_IT $CONFIG_HOST --timeout=60 -- echo "Config Service OK. Procediendo..."
+
+# 3. Lanzar la aplicación principal
+echo "-> Lanzando la aplicación $JAR_NAME..."
+exec java -jar /app/$JAR_NAME

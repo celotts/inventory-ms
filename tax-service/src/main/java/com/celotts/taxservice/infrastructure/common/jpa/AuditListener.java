@@ -21,6 +21,8 @@ public class AuditListener {
 
         log.debug("PrePersist: Setting audit fields for entity: {}", entity.getClass().getSimpleName());
 
+        // Es crucial que la clase que use este Listener (tu entidad)
+        // implemente Auditable y tenga los campos @Column correspondientes.
         auditable.setCreatedAt(now);
         auditable.setCreatedBy(currentUser);
         auditable.setUpdatedAt(null);

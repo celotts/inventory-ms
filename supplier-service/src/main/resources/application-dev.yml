@@ -1,7 +1,65 @@
+# application-dev.yml (Product Service - Perfil DEV/Integración)
 server:
   port: 9090
 
 spring:
+  # --- Configuración de Activación ---
+  config:
+    activate:
+      # CAMBIO 1: Activar con el perfil 'dev'
+      on-profile: dev
+
+  # --- Cloud y Eureka (Habilitados para DEV) ---
+  cloud:
+    config:
+      # CAMBIO 2: Habilitar Config Server
+      enabled: true
+      # Usar URI directa si el proyecto no tiene Netflix Eureka Client (como se asumió previamente)
+      uri: http://config-service:7777
+      discovery:
+        enabled: false # Deshabilitar discovery para evitar errores de classpath
+
+  eureka:
+    client:
+      enabled: true
+      service-url:
+        defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+      register-with-eureka: true
+      fetch-registry: true
+    instance:
+      prefer-ip-address: true
+      instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+
+  # --- Base de Datos (Conexión por nombre de servicio) ---
+  datasource:
+    # CAMBIO 4: Conexión por nombre de servicio (product-db) y puerto estándar (5432)
+    url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:${PRODUCT_DB_PORT:5432}/${PRODUCT_DB_NAME:product}
+    username: ${DB_USERNAME:product}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+    # ... (resto de configuraciones de Hikari)
+    hikari:
+      pool-name: HikariPool-ProductServiceDev
+      maximum-pool-size: 10
+      minimum-idle: 2
+      auto-commit: false
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # --- JPA/Hibernate ---
+  jpa:
+    hibernate:
+      ddl-auto: update
+    # CAMBIO 5: Deshabilitar show-sql, no es necesario en un ambiente de integración/despliegue
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        format_sql: true
+
+  # --- Configuración General de Spring ---
   messages:
     basename: messages
     encoding: UTF-8
@@ -9,34 +67,27 @@ spring:
   application:
     name: product-service
 
-  # ✅ PostgreSQL para producción/Docker
-  datasource:
-    url: jdbc:postgresql://product-db:5432/product
-    username: ${DB_USERNAME:product}
-    password: ${DB_PASSWORD:password}
-    driver-class-name: org.postgresql.Driver
+# --- Management Endpoints ---
+management:
+  endpoints:
+    health:
+      show-details: always
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
 
-    hikari:
-      pool-name: HikariPool-ProductService
-      maximum-pool-size: 10                         # -> "Maximum pool size"
-      minimum-idle: 2                               # Hikari no tiene "min pool size" como tal; usa minimumIdle
-      auto-commit: false                            # -> "Autocommit mode"
-      transaction-isolation: TRANSACTION_READ_COMMITTED  # -> "Isolation level"
-      # Opcionales útiles:
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
+# --- Logging ---
+logging:
+  level:
+    # CAMBIO 6: Usar INFO para logs de aplicación más limpios en un entorno integrado
+    com.celotts.productservice: INFO
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
 
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: false
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    properties:
-      hibernate:
-        format_sql: true
-
-# Configuración de paginación
+# --- Configuraciones Propias de la Aplicación (Pag. y CORS) ---
 app:
   cors:
     allowed-origin: "*"
@@ -46,28 +97,3 @@ app:
     max-size: 100
     default-sort: createdAt
     default-direction: desc
-
-# Eureka para microservicios
-eureka:
-  client:
-    service-url:
-      defaultZone: http://discovery-service:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
-
-# Management endpoints
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-
-# Logging
-logging:
-  level:
-    com.celotts.productservice: INFO
-    com.netflix.eureka: WARN
-    com.netflix.discovery: WARN

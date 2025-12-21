@@ -1,20 +1,19 @@
-package com.celotts.taxservice.infrastructure.common.validation;
+package com.celotts.taxservice.infrastructure.validation;
 
 import com.celotts.taxservice.infrastructure.adapter.output.postgres.repository.tax.TaxJpaRepository;
+
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 public class TaxIdExistsValidator implements ConstraintValidator<TaxIdExists, UUID> {
 
     private final TaxJpaRepository taxJpaRepository;
-
-    public TaxIdExistsValidator(TaxJpaRepository taxJpaRepository) {
-        this.taxJpaRepository = taxJpaRepository;
-    }
 
     @Override
     public void initialize(TaxIdExists constraintAnnotation) {

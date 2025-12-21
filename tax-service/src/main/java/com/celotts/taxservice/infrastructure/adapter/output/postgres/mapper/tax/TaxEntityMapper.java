@@ -1,7 +1,7 @@
 package com.celotts.taxservice.infrastructure.adapter.output.postgres.mapper.tax;
 
-import com.celotts.taxservice.domain.model.TaxModel;
-import com.celotts.taxservice.infrastructure.adapter.output.postgres.entity.TaxEntity;
+import com.celotts.taxservice.domain.model.tax.TaxModel;
+import com.celotts.taxservice.infrastructure.adapter.output.postgres.entity.tax.TaxEntity;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -20,6 +20,7 @@ public class TaxEntityMapper {
                 .id(entity.getId())
                 .code(entity.getCode())
                 .name(entity.getName())
+                .name(entity.getDescription())
                 .rate(entity.getRate())
                 .validFrom(entity.getValidFrom())
                 .validTo(entity.getValidTo())
@@ -42,6 +43,7 @@ public class TaxEntityMapper {
                 .id(model.getId())
                 .code(model.getCode())
                 .name(model.getName())
+                .description(model.getDescription())
                 .rate(model.getRate())
                 .validFrom(model.getValidFrom())
                 .validTo(model.getValidTo())

@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
  * Global exception handler for tax-service.
  * Uses MessageSource for i18n messages.
  */
+@SuppressWarnings("unused")
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -143,6 +144,7 @@ public class GlobalExceptionHandler {
                 "ERR_NOT_FOUND"
         );
     }
+
 
 
     // ----------------- Helpers -----------------
