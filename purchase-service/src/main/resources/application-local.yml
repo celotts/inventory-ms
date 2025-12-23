@@ -1,0 +1,99 @@
+# application-local.yml (Supplier Service - Perfil Local/Host)
+server:
+  port: 9091 # Usar 9091 para Supplier Service si 9090 ya es usado por Product
+
+spring:
+  # --- Configuración de Activación ---
+  config:
+    activate:
+      # CRÍTICO: Debe ser 'local' para coincidir con el nombre del archivo/intención
+      on-profile: local
+
+  application:
+    name: supplier-service
+
+  # --- Dependencias de la Nube (DEBEN ESTAR DESHABILITADAS EN LOCAL) ---
+  cloud:
+    config:
+      enabled: false # 🛑 DESHABILITADO: No se necesita Config Server en ejecución local
+
+  eureka:
+    client:
+      enabled: true
+      service-url:
+        defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+      register-with-eureka: true
+      fetch-registry: true
+    instance:
+      prefer-ip-address: true
+      instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+
+  # --- Base de Datos (Conexión al localhost/Host Mapeado) ---
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${SUPPLIER_DB_NAME:supplier}
+    username: ${SUPPLIER_DB_USERNAME:supplier}
+    password: ${SUPPLIER_DB_PASSWORD:supplier123}
+    driver-class-name: org.postgresql.Driver
+
+    hikari:
+      pool-name: HikariPool-SupplierServiceLocal # Renombrado para claridad
+      maximum-pool-size: 10
+      minimum-idle: 2
+      auto-commit: false
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # --- JPA/Hibernate ---
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  # --- Exclusiones ---
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+
+  # --- Configuración General de Spring ---
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+# --- Documentación/Swagger ---
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    display-request-duration: true
+
+# --- Configuraciones Propias de la Aplicación (Pag. y CORS) ---
+app:
+  pagination:
+    default-page: 0
+    default-size: 10
+    max-size: 100
+    default-sort: createdAt
+    default-direction: desc
+  cors:
+    allowed-origin: "*"
+
+# --- Management Endpoints ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+# --- Logging ---
+logging:
+  level:
+    # Usar el nombre correcto del paquete de la aplicación
+    com.celotts.supplierservice: DEBUG
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
