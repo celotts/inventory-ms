@@ -48,3 +48,13 @@ spring:
     endpoint:
       health:
         show-details: always
+
+app:
+  cors:
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:*}
+  pagination:
+    default-page: ${PAGINATION_DEFAULT_PAGE:0}
+    default-size: ${PAGINATION_DEFAULT_SIZE:10}
+    max-size: ${PAGINATION_MAX_SIZE:100}
+    default-sort: ${PAGINATION_DEFAULT_SORT:createdAt}
+    default-direction: ${PAGINATION_DEFAULT_DIRECTION:desc}

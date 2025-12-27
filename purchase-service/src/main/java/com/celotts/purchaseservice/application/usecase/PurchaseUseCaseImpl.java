@@ -30,7 +30,7 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
     @Transactional(readOnly = true)
     public PurchaseModel findById(UUID id) {
         return repositoryPort.findById(id)
-                .orElseThrow(() -> new PurchaseNotFoundException("Purchase not found with ID: " + id));
+                .orElseThrow(() -> new PurchaseNotFoundException("purchase.not-found-with-id" + id));
     }
 
     @Override
@@ -48,14 +48,14 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
                     purchase.normalize();
                     return repositoryPort.save(purchase);
                 })
-                .orElseThrow(() -> new PurchaseNotFoundException("Cannot update, purchase not found with ID: " + id));
+                .orElseThrow(() -> new PurchaseNotFoundException("purchase.cannot-update-not-found" + id));
     }
 
     @Override
     @Transactional
     public void delete(UUID id) {
         PurchaseModel purchase = repositoryPort.findById(id)
-                .orElseThrow(() -> new PurchaseNotFoundException("Cannot delete, purchase not found with ID: " + id));
+                .orElseThrow(() -> new PurchaseNotFoundException("purchase.cannot-delete-not-found" + id));
 
         repositoryPort.deleteById(purchase.getId());
     }
