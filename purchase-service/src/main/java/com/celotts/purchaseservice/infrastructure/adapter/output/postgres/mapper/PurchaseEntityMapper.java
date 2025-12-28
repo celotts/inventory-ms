@@ -1,4 +1,4 @@
-package com.celotts.purchaseservice.infrastructure.adapter.output.postgres.mapper.purchase; // 👈 Cambiado 'purchese' por 'purchase'
+package com.celotts.purchaseservice.infrastructure.adapter.output.postgres.mapper; // 👈 Cambiado 'purchese' por 'purchase'
 
 import com.celotts.purchaseservice.domain.model.purchase.PurchaseModel;
 import com.celotts.purchaseservice.infrastructure.adapter.output.postgres.entity.PurchaseEntity; // 👈 Import corregido a la subcarpeta purchase

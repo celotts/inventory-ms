@@ -1,6 +1,6 @@
 package com.celotts.purchaseservice.infrastructure.common.validation;
 
-import com.celotts.purchaseservice.infrastructure.adapter.output.postgres.repository.purchese.PurchaseJpaRepository;
+import com.celotts.purchaseservice.infrastructure.adapter.output.postgres.repository.PurchaseJpaRepository;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.RequiredArgsConstructor;

@@ -11,10 +11,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 
-/**
- * Base de auditoría + soft-delete, alineada con product-init.sql
- * (todas las tablas tienen enabled y deleted_*).
- */
 @MappedSuperclass
 @Getter @Setter
 public abstract class BaseEntity {
@@ -35,7 +31,6 @@ public abstract class BaseEntity {
     @Column(name = "updated_by", length = 100)
     private String updatedBy;
 
-    // Soft delete (todas las tablas menos "category" del script lo tienen)
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 

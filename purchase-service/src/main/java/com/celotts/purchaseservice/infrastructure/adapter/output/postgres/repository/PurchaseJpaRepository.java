@@ -1,4 +1,4 @@
-package com.celotts.purchaseservice.infrastructure.adapter.output.postgres.repository.purchese;
+package com.celotts.purchaseservice.infrastructure.adapter.output.postgres.repository;
 
 import com.celotts.purchaseservice.infrastructure.adapter.output.postgres.entity.PurchaseEntity;
 import org.springframework.data.domain.Page;
@@ -24,7 +24,6 @@ public interface PurchaseJpaRepository extends JpaRepository<PurchaseEntity, UUI
     // Soporte para paginación en búsqueda por nombre
     Page<PurchaseEntity> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
-    // Retorna lista simple para el filtro de activos
     List<PurchaseEntity> findByEnabled(Boolean enabled);
 
     // Búsqueda personalizada para sugerencias/autocomplete

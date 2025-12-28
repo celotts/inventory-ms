@@ -6,7 +6,6 @@ import org.springframework.data.domain.Pageable;
 
 public class PageableUtils {
     public static Pageable toPageable(PageableRequestDto req) {
-        // Usa los métodos helper que ya creaste en el DTO
         return PageRequest.of(
                 req.getPageOrDefault(),
                 req.getSizeOrDefault(),

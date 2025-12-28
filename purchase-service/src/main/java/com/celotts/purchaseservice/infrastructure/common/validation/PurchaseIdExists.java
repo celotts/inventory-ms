@@ -11,7 +11,6 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PurchaseIdExists {
 
-    // Clave internacionalizada (ya no texto duro)
     String message() default "{validation.supplier.id.not-found}";
 
     Class<?>[] groups() default {};

@@ -11,7 +11,6 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CodeFormat {
 
-    // Clave del mensaje internacionalizado
     String message() default "{validation.code-format.invalid}";
 
     Class<?>[] groups() default {};

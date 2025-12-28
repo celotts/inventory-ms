@@ -38,7 +38,7 @@ public class PageableRequestDto {
 
     public int getSizeOrDefault() {
         if (size == null) return 20;
-        return Math.max(1, size); // nunca < 1
+        return Math.max(1, size);
     }
 
     public Sort toSort() {

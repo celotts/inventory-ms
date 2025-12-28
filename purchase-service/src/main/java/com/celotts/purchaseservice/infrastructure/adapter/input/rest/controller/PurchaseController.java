@@ -23,7 +23,6 @@ public class PurchaseController {
 
     @PostMapping
     public ResponseEntity<PurchaseModel> create(@RequestBody PurchaseModel purchase) {
-        // En Java 21/Spring Boot 3.4, ResponseEntity.status() es la forma preferida
         return ResponseEntity.status(HttpStatus.CREATED).body(purchaseUseCase.create(purchase));
     }
 

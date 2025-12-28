@@ -21,7 +21,7 @@ public class PurchaseModel {
     private BigDecimal subtotal;
     private BigDecimal taxTotal;
     private BigDecimal discountTotal;
-    private BigDecimal grandTotal; // Corregido: granTotal -> grandTotal
+    private BigDecimal grandTotal;
     private LocalDate expectedAt;
     private LocalDateTime receivedAt;
     private String notes;
@@ -32,10 +32,10 @@ public class PurchaseModel {
     private LocalDateTime updatedAt;
     private String updatedBy;
     private LocalDateTime deletedAt;
-    private String deletedBy; // Corregido: deletdBy -> deletedBy
-    private String deletedReason; // Corregido: deleteReason -> deletedReason
+    private String deletedBy;
+    private String deletedReason;
 
-    public void normalize() { // Sugerencia: normalize (en inglés como tus variables)
+    public void normalize() {
         if (orderNumber != null) orderNumber = orderNumber.trim().toUpperCase();
         if (currency != null) currency = currency.trim().toUpperCase();
         if (notes != null) notes = notes.trim();

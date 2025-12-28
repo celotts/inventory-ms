@@ -3,7 +3,7 @@ package com.celotts.purchaseservice.infrastructure.common.util;
 import java.util.function.Consumer;
 
 public class MapperUtils {
-    private MapperUtils() {} // Evita instanciación
+    private MapperUtils() {}
 
     public static <T> void updateFieldIfNotNull(T value, Consumer<T> setter) {
         if (value != null) {

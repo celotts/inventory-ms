@@ -11,7 +11,6 @@ public interface PurchaseUseCase {
     PurchaseModel create(PurchaseModel purchase);
     Optional<PurchaseModel> findById(UUID id);
 
-    // CAMBIO: Se agrega Pageable y se cambia el retorno a Page
     Page<PurchaseModel> findAll(Pageable pageable);
 
     PurchaseModel update(UUID id, PurchaseModel purchase);

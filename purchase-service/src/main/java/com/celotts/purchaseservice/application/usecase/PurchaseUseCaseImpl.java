@@ -23,22 +23,18 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
     @Override
     @Transactional
     public PurchaseModel create(PurchaseModel purchase) {
-        // Si tienes lógica de normalización en el modelo, actívala aquí
-        // purchase.normalize();
         return repositoryPort.save(purchase);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<PurchaseModel> findById(UUID id) {
-        // Coincide con el tipo Optional<PurchaseModel> de la interfaz
         return repositoryPort.findById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<PurchaseModel> findAll(Pageable pageable) {
-        // CORRECCIÓN: Se pasa el argumento 'pageable' al puerto
         return repositoryPort.findAll(pageable);
     }
 
@@ -56,7 +52,6 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
     @Override
     @Transactional
     public void delete(UUID id) {
-        // Verificación de existencia antes de eliminar
         if (!repositoryPort.existsById(id)) {
             throw new PurchaseNotFoundException("purchase.cannot-delete-not-found: " + id);
         }

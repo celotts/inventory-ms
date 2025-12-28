@@ -1,10 +1,15 @@
 package com.celotts.purchaseservice.domain.exception;
 
+import lombok.Getter;
+
+import java.io.Serial;
 import java.io.Serializable;
 
+@Getter
 public abstract class BaseDomainException extends RuntimeException implements Serializable {
 
     // Eliminamos @Serial porque tu entorno no reconoce el símbolo
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final String messageKey;
@@ -38,6 +43,4 @@ public abstract class BaseDomainException extends RuntimeException implements Se
         return messageKey != null;
     }
 
-    public String getMessageKey() { return messageKey; }
-    public Object[] getMessageArgs() { return messageArgs; }
 }

@@ -1,10 +1,10 @@
-package com.celotts.purchaseservice.infrastructure.adapter.output.postgres.adapter.purchese;
+package com.celotts.purchaseservice.infrastructure.adapter.output.postgres.adapter;
 
 import com.celotts.purchaseservice.domain.model.purchase.PurchaseModel;
 import com.celotts.purchaseservice.domain.port.output.PurchaseRepositoryPort;
 import com.celotts.purchaseservice.infrastructure.adapter.output.postgres.entity.PurchaseEntity;
-import com.celotts.purchaseservice.infrastructure.adapter.output.postgres.mapper.purchase.PurchaseEntityMapper;
-import com.celotts.purchaseservice.infrastructure.adapter.output.postgres.repository.purchese.PurchaseJpaRepository;
+import com.celotts.purchaseservice.infrastructure.adapter.output.postgres.mapper.PurchaseEntityMapper;
+import com.celotts.purchaseservice.infrastructure.adapter.output.postgres.repository.PurchaseJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -91,7 +91,6 @@ public class PurchaseRepositoryAdapter implements PurchaseRepositoryPort {
 
     @Override
     public List<PurchaseModel> findByNameDescription(String query, int limit) {
-        // Implementación según necesidad de negocio
         return List.of();
     }
 
