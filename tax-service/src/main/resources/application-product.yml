@@ -56,6 +56,10 @@ management:
 
 logging:
   level:
-    com.celotts.productservice: DEBUG
-    com.netflix.eureka: OFF      # ← Silenciar logs de Eureka
-    com.netflix.discovery: OFF
+    org.springframework.web: DEBUG
+    com.celotts.taxservice: INFO
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    org.hibernate: DEBUG
+    org.springframework.security: DEBUG
+    root: INFO

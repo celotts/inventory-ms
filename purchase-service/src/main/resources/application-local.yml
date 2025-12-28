@@ -1,6 +1,6 @@
 # application-local.yml (Supplier Service - Perfil Local/Host)
 server:
-  port: 9091 # Usar 9091 para Supplier Service si 9090 ya es usado por Product
+  port: 9103
 
 spring:
   # --- Configuración de Activación ---
@@ -93,7 +93,10 @@ management:
 # --- Logging ---
 logging:
   level:
-    # Usar el nombre correcto del paquete de la aplicación
-    com.celotts.supplierservice: DEBUG
+    org.springframework.web: DEBUG
+    com.celotts.purchaseservice: INFO
     com.netflix.eureka: WARN
     com.netflix.discovery: WARN
+    org.hibernate: DEBUG
+    org.springframework.security: DEBUG
+    root: INFO

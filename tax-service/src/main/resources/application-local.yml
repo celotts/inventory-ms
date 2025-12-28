@@ -73,6 +73,10 @@ management:
 
 logging:
   level:
-    com.celotts.productservice: DEBUG
+    org.springframework.web: DEBUG
+    com.celotts.taxservice: INFO
     com.netflix.eureka: WARN
     com.netflix.discovery: WARN
+    org.hibernate: DEBUG
+    org.springframework.security: DEBUG
+    root: INFO

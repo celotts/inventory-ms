@@ -1,5 +1,5 @@
-# application-test.yml (Product Service - Perfil Test)
-# Ubicación: src/test/resources/application-test.yml
+server:
+  port: 9111
 
 spring:
   # --- Configuración de Activación ---
@@ -9,12 +9,12 @@ spring:
       on-profile: test
 
   application:
-    name: product-service
+    name: purchase-service
 
   # --- Dependencias de la Nube (DEBEN ESTAR DESHABILITADAS EN TESTS) ---
   cloud:
     config:
-      enabled: false # 🛑 DESHABILITADO: No se usa Config Server en tests.
+      enabled: false
 
   eureka:
     client:

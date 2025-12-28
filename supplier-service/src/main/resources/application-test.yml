@@ -1,5 +1,3 @@
-# application-test.yml (Product Service - Perfil Test)
-# Ubicación: src/test/resources/application-test.yml
 
 spring:
   # --- Configuración de Activación ---
@@ -56,12 +54,12 @@ spring:
 logging:
   level:
     org.springframework.web: DEBUG
+    com.celotts.supplierservice: INFO
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
     org.hibernate: DEBUG
-    # Ajustar al nombre correcto del paquete del producto
-    com.celotts.productservice: DEBUG
     org.springframework.security: DEBUG
     root: INFO
-
 # --- Configuraciones Propias de la Aplicación ---
 app:
   product-type:

@@ -6,15 +6,16 @@ import com.celotts.purchaseservice.domain.port.input.PurchaseUseCase;
 import com.celotts.purchaseservice.domain.port.output.PurchaseRepositoryPort;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Importante para readOnly
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List; // Faltaba este import
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-// CAMBIO: Se usa 'implements' porque PurchaseUseCase es una interface
 public class PurchaseUseCaseImpl implements PurchaseUseCase {
 
     private final PurchaseRepositoryPort repositoryPort;
@@ -22,21 +23,23 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
     @Override
     @Transactional
     public PurchaseModel create(PurchaseModel purchase) {
-        purchase.normalize();
+        // Si tienes lógica de normalización en el modelo, actívala aquí
+        // purchase.normalize();
         return repositoryPort.save(purchase);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PurchaseModel findById(UUID id) {
-        return repositoryPort.findById(id)
-                .orElseThrow(() -> new PurchaseNotFoundException("purchase.not-found-with-id" + id));
+    public Optional<PurchaseModel> findById(UUID id) {
+        // Coincide con el tipo Optional<PurchaseModel> de la interfaz
+        return repositoryPort.findById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<PurchaseModel> findAll() {
-        return repositoryPort.findAll();
+    public Page<PurchaseModel> findAll(Pageable pageable) {
+        // CORRECCIÓN: Se pasa el argumento 'pageable' al puerto
+        return repositoryPort.findAll(pageable);
     }
 
     @Override
@@ -45,18 +48,18 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
         return repositoryPort.findById(id)
                 .map(existingPurchase -> {
                     purchase.setId(id);
-                    purchase.normalize();
                     return repositoryPort.save(purchase);
                 })
-                .orElseThrow(() -> new PurchaseNotFoundException("purchase.cannot-update-not-found" + id));
+                .orElseThrow(() -> new PurchaseNotFoundException("purchase.cannot-update-not-found: " + id));
     }
 
     @Override
     @Transactional
     public void delete(UUID id) {
-        PurchaseModel purchase = repositoryPort.findById(id)
-                .orElseThrow(() -> new PurchaseNotFoundException("purchase.cannot-delete-not-found" + id));
-
-        repositoryPort.deleteById(purchase.getId());
+        // Verificación de existencia antes de eliminar
+        if (!repositoryPort.existsById(id)) {
+            throw new PurchaseNotFoundException("purchase.cannot-delete-not-found: " + id);
+        }
+        repositoryPort.deleteById(id);
     }
 }

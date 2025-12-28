@@ -82,11 +82,13 @@ management:
 # --- Logging ---
 logging:
   level:
-    # CAMBIO 6: Usar INFO para logs de aplicación más limpios en un entorno integrado
-    com.celotts.productservice: INFO
+    org.springframework.web: DEBUG
+    com.celotts.supplierservice: INFO
     com.netflix.eureka: WARN
     com.netflix.discovery: WARN
-
+    org.hibernate: DEBUG
+    org.springframework.security: DEBUG
+    root: INFO
 # --- Configuraciones Propias de la Aplicación (Pag. y CORS) ---
 
 

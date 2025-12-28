@@ -1,4 +1,4 @@
-package com.celotts.supplierservice.domain.port.output.supplier;
+package com.celotts.supplierservice.domain.port.output;
 
 import com.celotts.supplierservice.domain.model.supplier.SupplierModel;
 import org.springframework.data.domain.Page;

@@ -1,7 +1,7 @@
 package com.celotts.supplierservice.application.usecase;
 
-import com.celotts.supplierservice.domain.port.input.supplier.SupplierUseCase; // <-- ESTE
-import com.celotts.supplierservice.domain.port.output.supplier.SupplierRepositoryPort;
+import com.celotts.supplierservice.domain.port.input.SupplierUseCase; // <-- ESTE
+import com.celotts.supplierservice.domain.port.output.SupplierRepositoryPort;
 
 import com.celotts.supplierservice.domain.exception.SupplierAlreadyExistsException;
 import com.celotts.supplierservice.domain.exception.SupplierNotFoundException;

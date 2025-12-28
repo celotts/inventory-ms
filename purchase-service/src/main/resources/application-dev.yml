@@ -1,6 +1,6 @@
 # application-dev.yml (Product Service - Perfil DEV/Integración)
 server:
-  port: 9090
+  port: 9101
 
 spring:
   # --- Configuración de Activación ---
@@ -19,14 +19,14 @@ spring:
       discovery:
         enabled: false # Deshabilitar discovery para evitar errores de classpath
 
-  eureka:
-    client:
-      enabled: true
-      service-url:
-        defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
-      register-with-eureka: true
-      fetch-registry: true
-    instance:
+eureka:
+  client:
+    enabled: true
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
       prefer-ip-address: true
       instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
 
@@ -68,24 +68,27 @@ spring:
     name: product-service
 
 # --- Management Endpoints ---
-management:
-  endpoints:
-    health:
-      show-details: always
-    web:
-      exposure:
-        include: "*"
-  endpoint:
-    health:
-      show-details: always
+  management:
+    endpoints:
+      health:
+        show-details: always
+      web:
+        exposure:
+          include: "*"
+    endpoint:
+      health:
+        show-details: always
 
 # --- Logging ---
 logging:
   level:
-    # CAMBIO 6: Usar INFO para logs de aplicación más limpios en un entorno integrado
-    com.celotts.productservice: INFO
+    org.springframework.web: DEBUG
+    com.celotts.purchaseservice: INFO
     com.netflix.eureka: WARN
     com.netflix.discovery: WARN
+    org.hibernate: DEBUG
+    org.springframework.security: DEBUG
+    root: INFO
 
 # --- Configuraciones Propias de la Aplicación (Pag. y CORS) ---
 app:

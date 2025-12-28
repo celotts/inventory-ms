@@ -1,7 +1,5 @@
-# =======================================================
-# PERFIL: docker (Ejecución DENTRO del Contenedor)
-# =======================================================
----
+server:
+  port: 9100
 spring:
   config:
     activate:
@@ -48,3 +46,13 @@ spring:
     endpoint:
       health:
         show-details: always
+
+  logging:
+    level:
+      org.springframework.web: DEBUG
+      com.celotts.purchaseservice: INFO
+      com.netflix.eureka: WARN
+      com.netflix.discovery: WARN
+      org.hibernate: DEBUG
+      org.springframework.security: DEBUG
+      root: INFO

@@ -1,15 +1,19 @@
 package com.celotts.purchaseservice.domain.port.input;
 
-import com.celotts.purchaseservice.domain.model.purchase.PurchaseModel; // Se agregó el punto y coma faltante
+import com.celotts.purchaseservice.domain.model.purchase.PurchaseModel;
+import org.springframework.data.domain.Page; // Necesario para paginación
+import org.springframework.data.domain.Pageable; // Necesario para parámetros
 
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
-// CAMBIO: Se cambió 'public class' por 'public interface'
 public interface PurchaseUseCase {
     PurchaseModel create(PurchaseModel purchase);
-    PurchaseModel findById(UUID id);
-    List<PurchaseModel> findAll();
+    Optional<PurchaseModel> findById(UUID id);
+
+    // CAMBIO: Se agrega Pageable y se cambia el retorno a Page
+    Page<PurchaseModel> findAll(Pageable pageable);
+
     PurchaseModel update(UUID id, PurchaseModel purchase);
     void delete(UUID id);
 }

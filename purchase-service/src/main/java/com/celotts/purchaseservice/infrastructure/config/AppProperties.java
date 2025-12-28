@@ -13,10 +13,10 @@ public record AppProperties(
     ) {}
 
     public record Pagination(
-            @DefaultValue("0") int defaultPage, // Corregido: defaultPage
+            @DefaultValue("0") int defaultPage,
             @DefaultValue("10") int defaultSize,
             @DefaultValue("100") int maxSize,
-            @DefaultValue("createdAt") String defaultSort, // Corregido: createdAt
+            @DefaultValue("createdAt") String defaultSort,
             @DefaultValue("desc") String defaultDirection
     ) {}
 }

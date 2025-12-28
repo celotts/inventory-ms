@@ -1,4 +1,4 @@
-package com.celotts.purchaseservice.domain.model.purchase; // Agregado .purchase al final
+package com.celotts.purchaseservice.domain.model.purchase;
 
 import lombok.Builder;
 import lombok.Getter;

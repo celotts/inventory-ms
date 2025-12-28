@@ -94,8 +94,10 @@ management:
 # --- Logging ---
 logging:
   level:
-    # Usar el nombre correcto del paquete de la aplicación
-    com.celotts.supplierservice: DEBUG
+    org.springframework.web: DEBUG
+    com.celotts.supplierservice: INFO
     com.netflix.eureka: WARN
     com.netflix.discovery: WARN
-
+    org.hibernate: DEBUG
+    org.springframework.security: DEBUG
+    root: INFO

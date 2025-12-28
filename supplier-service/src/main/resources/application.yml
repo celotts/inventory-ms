@@ -58,3 +58,13 @@ app:
     max-size: ${PAGINATION_MAX_SIZE:100}
     default-sort: ${PAGINATION_DEFAULT_SORT:createdAt}
     default-direction: ${PAGINATION_DEFAULT_DIRECTION:desc}
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    com.celotts.supplierservice: INFO
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    org.hibernate: DEBUG
+    org.springframework.security: DEBUG
+    root: INFO

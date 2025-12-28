@@ -24,12 +24,14 @@ eureka:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
 
-# Logging detallado
 logging:
   level:
     org.springframework.web: DEBUG
+    com.celotts.taxservice: INFO
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
     org.hibernate: DEBUG
-    com.celotts.productservice: DEBUG
+    org.springframework.security: DEBUG
     root: INFO
 
 app:
