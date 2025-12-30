@@ -12,6 +12,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -21,6 +24,7 @@ import java.util.UUID;
 public class SupplierUseCaseImpl implements SupplierUseCase {
 
     private final SupplierRepositoryPort repo;
+    private final MessageSource messageSource;
 
     // ---------------- Commands ----------------
 
@@ -28,7 +32,7 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
     public SupplierModel create(SupplierModel supplier) {
         // Unicidad por code
         if (supplier.getCode() != null && repo.existsByCode(supplier.getCode())) {
-            throw new SupplierAlreadyExistsException("code", supplier.getCode());
+            throw new SupplierAlreadyExistsException("field.code", supplier.getCode());
         }
         return repo.save(supplier);
     }
@@ -45,7 +49,7 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
             if (codeChanged) {
 
                 if (repo.existsByCode(partial.getCode())) {
-                    throw new SupplierAlreadyExistsException("code", partial.getCode());
+                    throw new SupplierAlreadyExistsException("field.code", partial.getCode());
                 }
             }
         }
@@ -117,13 +121,17 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
     @Transactional(readOnly = true)
     public SupplierModel getByCode(String code) {
         return repo.findByCode(code)
-                .orElseThrow(() -> new SupplierNotFoundException("code", code));
+                .orElseThrow(() -> new SupplierNotFoundException("field.code", code));
     }
 
     @Override
     @Transactional(readOnly = true)
     public boolean existsByCode(String code) {
         return repo.existsByCode(code);
+    }
+
+    private String translateField(String key) {
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
 
 

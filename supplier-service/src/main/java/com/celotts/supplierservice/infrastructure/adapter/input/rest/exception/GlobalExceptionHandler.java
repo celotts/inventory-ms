@@ -35,7 +35,12 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     @Autowired
-    private MessageSource messageSource;
+    private final MessageSource messageSource;
+
+    public GlobalExceptionHandler(MessageSource messageSource) {
+        this.messageSource = messageSource;
+    }
+
 
     // helper i18n
     private String msg(String code, Object... args) {

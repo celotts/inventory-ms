@@ -9,9 +9,7 @@ plugins {
 
 group = 'com.celotts'
 version = '0.0.1-SNAPSHOT'
-tasks.named('bootJar') {
-    enabled = false
-}
+
 jacoco { toolVersion = "0.8.11" }
 
 java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
@@ -98,11 +96,16 @@ dependencyManagement {
 }
 
 springBoot {
-    mainClass = 'com.celotts.taxservice.TaxServiceApplication'
+    mainClass = 'com.celotts.purchaseservice.PurchaseServiceApplication'
 }
 
 bootJar {
-    archiveFileName = 'tax-service-0.0.1-SNAPSHOT.jar'
+    enabled = true
+    archiveFileName = 'app.jar'
+}
+
+jar {
+    enabled = false
 }
 
 compileJava {

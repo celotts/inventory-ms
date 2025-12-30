@@ -8,10 +8,7 @@ public record AppProperties(
         Cors cors,
         Pagination pagination
 ) {
-    public record Cors(
-            @DefaultValue("*") String allowedOrigin
-    ) {}
-
+    public record Cors(@DefaultValue("*") String allowedOrigin) {}
     public record Pagination(
             @DefaultValue("0") int defaultPage,
             @DefaultValue("10") int defaultSize,
@@ -20,3 +17,4 @@ public record AppProperties(
             @DefaultValue("desc") String defaultDirection
     ) {}
 }
+

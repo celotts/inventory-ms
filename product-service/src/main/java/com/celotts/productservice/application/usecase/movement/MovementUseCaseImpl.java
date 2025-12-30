@@ -12,6 +12,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
@@ -23,11 +24,15 @@ public class MovementUseCaseImpl implements MovementUseCase {
     private final JdbcTemplate jdbc;
     private final MessageSource messageSource;
 
+    private String getLocalizedMessage(String key, Object... args) {
+        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
+    }
+
     @Override
     public InventoryMovementModel registerIn(UUID productId, UUID lotId, BigDecimal qty, String reference, String user) {
         InventoryMovementModel m = new InventoryMovementModel(
                 null, productId, lotId, MovementType.IN, MovementPurpose.PURCHASE,
-                qty, reference, "Entrada manual", null, null
+                qty, reference, getLocalizedMessage("inventory.movement.manual-entry"), null, null
         );
         return movRepo.save(m);
     }

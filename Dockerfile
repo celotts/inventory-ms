@@ -1,6 +1,9 @@
 # ---------------------------------------------------------------------
 # ETAPA 1: CONSTRUCTOR (Compila la aplicación) - OPTIMIZADO
 # ---------------------------------------------------------------------
+ARG DOCKER_USERNAME
+ARG DOCKER_PASSWORD
+
 FROM eclipse-temurin:21-jdk-jammy AS builder
 LABEL maintainer="Inventory MS Team"
 WORKDIR /app

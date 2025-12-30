@@ -1,11 +1,11 @@
 # ---------------------------------------------------------------------
 # ETAPA 1: CONSTRUCTOR (Compila la aplicación)
 # ---------------------------------------------------------------------
-FROM eclipse-temurin:21-jdk-jammy AS builder
-LABEL maintainer="Inventory MS Team"
-
 ARG DOCKER_USERNAME
 ARG DOCKER_PASSWORD
+
+FROM eclipse-temurin:21-jdk-jammy AS builder
+LABEL maintainer="Inventory MS Team"
 
 # ⭐ PASO CRÍTICO 1: Definir los argumentos de construcción (ARG) para el Proxy
 ARG http_proxy

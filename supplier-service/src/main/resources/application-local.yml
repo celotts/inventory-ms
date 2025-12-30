@@ -12,6 +12,7 @@ spring:
   application:
     name: supplier-service
 
+
   # --- Dependencias de la Nube (DEBEN ESTAR DESHABILITADAS EN LOCAL) ---
   cloud:
     config:

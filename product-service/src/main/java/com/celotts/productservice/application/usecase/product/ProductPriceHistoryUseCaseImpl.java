@@ -20,6 +20,11 @@ public class ProductPriceHistoryUseCaseImpl implements ProductPriceHistoryUseCas
     private final ProductPriceHistoryRepositoryPort repo;
     private final MessageSource messageSource; // ✅ inyección para i18n
 
+    private String getLocalizedMessage(String key, Object... args) {
+        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
+    }
+
+
     @Override
     public ProductPriceHistoryModel create(ProductPriceHistoryModel model) {
         var toSave = model.toBuilder()
@@ -40,11 +45,8 @@ public class ProductPriceHistoryUseCaseImpl implements ProductPriceHistoryUseCas
     public ProductPriceHistoryModel getLatestPrice(UUID productId) {
         return repo.findTopByProductIdOrderByChangedAtDesc(productId)
                 .orElseThrow(() -> {
-                    String msg = messageSource.getMessage(
-                            "product.price.history.not-found",  // 🔑 clave del archivo messages_*.properties
-                            new Object[]{productId},            // parámetro {0} → UUID del producto
-                            LocaleContextHolder.getLocale()     // idioma detectado (es/en)
-                    );
+                    // Usamos tu método de utilidad
+                    String msg = getLocalizedMessage("product.price.history.not-found", productId);
                     return new IllegalArgumentException(msg);
                 });
     }

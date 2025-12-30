@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.config;
+package com.celotts.purchaseservice.infrastructure.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;

@@ -6,7 +6,11 @@ spring:
   config:
     activate:
       on-profile: docker
-
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+    
   # 🚨 HABILITAR CLOUD Y CONFIG SERVER
   cloud:
     config:

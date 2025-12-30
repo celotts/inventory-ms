@@ -7,7 +7,7 @@ services:
     profiles: [ "product" ]
     image: ${IMAGE_DB:-postgres:16}
     container_name: db_product
-    env_file: [ ./.env.override ]
+    env_file: [ ./.env.local  ]
     environment:
       POSTGRES_DB: ${PRODUCT_DB_NAME:-db_product}
       POSTGRES_USER: ${PRODUCT_DB_USERNAME:-product}
@@ -39,6 +39,7 @@ services:
     profiles: [ "supplier" ]
     image: ${IMAGE_DB:-postgres:16}
     container_name: db_supplier
+    env_file: [ ./.env.local ]
     environment:
       POSTGRES_DB: ${SUPPLIER_DB_NAME:-db_supplier}
       POSTGRES_USER: ${SUPPLIER_DB_USERNAME:-supplier}
@@ -69,12 +70,13 @@ services:
     profiles: [ "purchase" ]
     image: ${IMAGE_DB:-postgres:16}
     container_name: db_purchase
+    env_file: [ ./.env.local ]
     environment:
       POSTGRES_DB: ${PURCHASE_DB_NAME:-db_purchase}
       POSTGRES_USER: ${PURCHASE_DB_USERNAME:-purchase}
       POSTGRES_PASSWORD: ${PURCHASE_DB_PASSWORD:-purchase123}
     ports:
-      - "${PURCHASE_DB_PORT_HOST:-5434}:5432"
+      - "${PURCHASE_DB_PORT_HOST:-5436}:5432"
     deploy:
       resources:
         limits:
@@ -82,14 +84,15 @@ services:
           cpus: '1.0'
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${PURCHASE_DB_USERNAME:-purchase} -d ${PURCHASE_DB_NAME:-db_purchase}" ]
-      interval: 5s
+      interval: 15s
       timeout: 10s
-      retries: 10
-      start_period: 20s
+      retries: 5
+      start_period: 150s
     networks:
       inventory-net:
         aliases:
           - purchase-db
+          - db_purchase
     volumes:
       - db_purchase_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -98,6 +101,7 @@ services:
     profiles: [ "tax" ]
     image: ${IMAGE_DB:-postgres:16}
     container_name: db_tax
+    env_file: [ ./.env.local ]
     environment:
       POSTGRES_DB: ${TAX_DB_NAME:-db_tax}
       POSTGRES_USER: ${TAX_DB_USERNAME:-tax}
@@ -127,6 +131,7 @@ services:
   config-service:
     profiles: [ "infra" ]
     container_name: config-service
+    env_file: [ ./.env.local ]
     build:
       context: ..
       dockerfile: ./config-service/Dockerfile
@@ -141,7 +146,7 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       - SERVER_PORT=7777
       - WAIT_FOR_DISCOVERY=true
-      # AJUSTE: Reemplazamos JAVA_OPTS=${JAVA_OPTS:-} por la versión de desarrollo
+      - SPRING_CLOUD_CONFIG_ENABLED=false
       - JAVA_OPTS=-Xmx512m -XX:+TieredCompilation -XX:TieredStopAtLevel=1
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
       - EUREKA_INSTANCE_PREFER-IP-ADDRESS=true
@@ -166,6 +171,7 @@ services:
   discovery-service:
     profiles: [ "infra" ]
     container_name: discovery-service
+    env_file: [ ./.env.local ]
     build:
       context: ..
       dockerfile: ./discovery-service/Dockerfile
@@ -202,8 +208,7 @@ services:
   auth-service:
     profiles: [ "auth" ]
     container_name: auth-service
-    env_file:
-      - ./.env.override
+    env_file: [ ./.env.local ]
     build:
       context: ..
       dockerfile: ./auth-service/Dockerfile
@@ -245,6 +250,7 @@ services:
   product-service:
     profiles: [ "product" ]
     container_name: product-service
+    env_file: [ ./.env.local ]
     build:
       context: ..
       dockerfile: ./product-service/Dockerfile
@@ -315,6 +321,7 @@ services:
   supplier-service:
     profiles: [ "supplier" ]
     container_name: supplier-service
+    env_file: [ ./.env.local ]
     build:
       context: ..
       dockerfile: ./supplier-service/Dockerfile
@@ -382,66 +389,69 @@ services:
       - inventory-net
     restart: unless-stopped
 
-  #purchase-service:
-  #  profiles: [ "purchase" ]
-  #  container_name: purchase-service
-  #  build:
-  #    context: ..
-  #    dockerfile: ./purchase-service/Dockerfile
-  #    args:
-  #      - http_proxy
-  #      - https_proxy
-  #      - no_proxy
-  #  ports:
-  #    - "${PURCHASE_PORT:-9092}:9094" # <-- Variable USADA (Host: 9092 / Contenedor: 9094)
-  #  environment:
-  #    - DB_HOST=db_purchase
-  #    - SPRING_APPLICATION_NAME=purchase-service
-  #    - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-  #    - JAVA_OPTS=${JAVA_OPTS:-}
-  #    - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
-  #    - SPRING_DATASOURCE_URL=jdbc:postgresql://db_purchase:5432/${PURCHASE_DB_NAME:-db_purchase}
-  #    - SPRING_DATASOURCE_USERNAME=${PURCHASE_DB_USERNAME:-purchase}
-  #    - SPRING_DATASOURCE_PASSWORD=${PURCHASE_DB_PASSWORD:-purchase123}
-  #    - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
-  #    - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-  #    - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=10
-  #    - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=10
-  #    - WAIT_FOR=db_purchase:5432,discovery-service:8761,config-service:7777
-  #    - WAIT_TIMEOUT=300
-  #    - SPRING_CLOUD_CONFIG_FAILFAST=false
-  #    - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=6
-  #    - SPRING_CLOUD_CONFIG_RETRY_INITIALINTERVAL=3000
-  #    - PAGINATION_DEFAULT_PAGE=${PAGINATION_DEFAULT_PAGE:-0}
-  #    - PAGINATION_DEFAULT_SIZE=${PAGINATION_DEFAULT_SIZE:-10}
-  #    - PAGINATION_MAX_SIZE=${PAGINATION_MAX_SIZE:-100}
-  #    - PAGINATION_DEFAULT_SORT_BY=${PAGINATION_DEFAULT_SORT_BY:-createdAt}
-  #    - PAGINATION_DEFAULT_SORT_DIR=${PAGINATION_DEFAULT_SORT_DIR:-desc}
-  #    - PAGINATION_ALLOWED_SORT_FIELDS=${PAGINATION_ALLOWED_SORT_FIELDS:-createdAt,updatedAt,purchaseNumber,date}
-  #    - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,env,configprops,beans
-  #    - MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED=true
-  #    - SPRING_CLOUD_REFRESH_ENABLED=false
-  #    - SERVER_PORT=9094
-  #  depends_on:
-  #    db_purchase:
-  #      condition: service_healthy
-  #    discovery-service:
-  #      condition: service_healthy
-  #    config-service:
-  #      condition: service_healthy
-  #  healthcheck:
-  #    test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9094/actuator/health || exit 1"]
-  #    interval: 15s
-  #    timeout: 15s
-  #    retries: 10
-  #    start_period: 60s
-  #  networks:
-  #    - inventory-net
-  #  restart: unless-stopped
+  purchase-service:
+    profiles: [ "purchase" ]
+    container_name: purchase-service
+    env_file: [ ./.env.local ]
+    build:
+      context: ..
+      dockerfile: ./purchase-service/Dockerfile
+      args:
+        - http_proxy
+        - https_proxy
+        - no_proxy
+    ports:
+      - "${PURCHASE_PORT:-9094}:9094"
+    environment:
+      - DB_HOST=db_purchase
+      - JAVA_OPTS=${JAVA_OPTS:-}
+      - SPRING_APPLICATION_NAME=purchase-service
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+      - SPRING_MAIN_ALLOW-BEAN-DEFINITION-OVERRIDING=true
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_purchase:5432/${PURCHASE_DB_NAME:-db_purchase}
+      - SPRING_DATASOURCE_USERNAME=${PURCHASE_DB_USERNAME:-purchase}
+      - SPRING_DATASOURCE_PASSWORD=${PURCHASE_DB_PASSWORD:-purchase123}
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - EUREKA_CLIENT_REGISTRYFETCHINTERVALSECONDS=10
+      - EUREKA_CLIENT_INSTANCEINFOREPLICATIONINTERVALSECONDS=10
+      - WAIT_FOR=db_purchase:5432,discovery-service:8761,config-service:7777
+      - WAIT_TIMEOUT=300
+      - SPRING_CLOUD_CONFIG_FAILFAST=false
+      - SPRING_CLOUD_CONFIG_RETRY_MAXATTEMPTS=6
+      - SPRING_CLOUD_CONFIG_RETRY_INITIALINTERVAL=3000
+      - PAGINATION_DEFAULT_PAGE=${PAGINATION_DEFAULT_PAGE:-0}
+      - PAGINATION_DEFAULT_SIZE=${PAGINATION_DEFAULT_SIZE:-10}
+      - PAGINATION_MAX_SIZE=${PAGINATION_MAX_SIZE:-100}
+      - PAGINATION_DEFAULT_SORT_BY=${PAGINATION_DEFAULT_SORT_BY:-createdAt}
+      - PAGINATION_DEFAULT_SORT_DIR=${PAGINATION_DEFAULT_SORT_DIR:-desc}
+      - PAGINATION_ALLOWED_SORT_FIELDS=${PAGINATION_ALLOWED_SORT_FIELDS:-createdAt,updatedAt,purchaseNumber,date}
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,env,configprops,beans
+      - MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED=true
+      - SPRING_CLOUD_REFRESH_ENABLED=false
+      - SERVER_PORT=9094
+    depends_on:
+      db_purchase:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9094/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 15s
+      retries: 10
+      start_period: 60s
+    networks:
+      - inventory-net
+    restart: unless-stopped
 
   tax-service:
     profiles: [ "tax" ]
     container_name: tax-service
+    env_file: [ ./.env.local ]
     build:
       context: ..
       dockerfile: ./tax-service/Dockerfile
@@ -505,6 +515,7 @@ services:
   api-gateway:
     profiles: [ "gateway" ]
     container_name: api-gateway
+    env_file: [ ./.env.local ]
     build:
       context: ..
       dockerfile: ./api-gateway/Dockerfile

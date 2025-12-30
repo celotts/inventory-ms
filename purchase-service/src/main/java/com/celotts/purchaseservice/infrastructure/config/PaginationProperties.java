@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.config;
+package com.celotts.purchaseservice.infrastructure.config;
 
 import lombok.Getter;
 import lombok.Setter;

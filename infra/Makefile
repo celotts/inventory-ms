@@ -11,11 +11,14 @@ CURDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 ROOT_DIR := $(abspath $(CURDIR)/..)
 GRADLEW := $(ROOT_DIR)/gradlew
 
-# Variables de utilidad para salida limpia
-Q := @
-ifndef VERBOSE
-.SILENT:
-endif
+IF_ENV_EXISTS := $(wildcard $(CURDIR)/.env.local)
+
+DOCKER_COMPOSE_BIN := /opt/homebrew/bin/docker-compose
+COMPOSE_FILE := docker-compose-podman.yml
+ENV_FILE_PATH := $(CURDIR)/.env.local
+
+# Esta forma es más segura para que Make no rompa los argumentos
+DOCKER_COMPOSE := $(DOCKER_COMPOSE_BIN) -f $(COMPOSE_FILE) --env-file $(ENV_FILE_PATH)
 
 # Archivos de entorno
 ENV_FILE_LOCAL ?= $(CURDIR)/.env.local
@@ -39,21 +42,22 @@ export DOCKER_BUILDKIT := 1
 export COMPOSE_DOCKER_CLI_BUILD ?= 1 # Habilitar BuildKit
 
 # Perfiles y servicios (PURCHASE/purchase-service excluidos)
-PROFILES_BUILD_ORDER := infra gateway product supplier tax
+PROFILES_BUILD_ORDER := infra gateway product supplier tax purchase
 # Servicios que necesitan construcción de imágenes (ordenados)
-SERVICES_TO_BUILD := discovery-service config-service api-gateway product-service supplier-service tax-service
+SERVICES_TO_BUILD := discovery-service config-service api-gateway product-service supplier-service tax-service purchase-service
 
 # Puertos de servicios
 PRODUCT_PORT ?= 9090
 SUPPLIER_PORT ?= 9091
+PURCHASE_PORT ?= 9092
 TAX_PORT ?= 9093
 GATEWAY_PORT ?= 8090
 DISCOVERY_PORT ?= 8761
 CONFIG_PORT ?= 7777
 
 # Perfiles y servicios (PURCHASE/purchase-service excluidos)
-PROFILES_ALL := infra gateway product supplier tax
-SERVICES_ALL := discovery-service config-service api-gateway product-service supplier-service tax-service
+PROFILES_ALL := infra gateway product supplier tax purchase
+SERVICES_ALL := discovery-service config-service api-gateway product-service supplier-service tax-service purchase-service
 
 # Comandos base
 RUN := COMPOSE_PROVIDER=$(COMPOSE_PROVIDER) COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME)
@@ -65,12 +69,29 @@ COMPOSE_LOCAL_SUPPLIER := $(COMPOSE_BASE) --env-file $(ENV_FILE_LOCAL_SUPPLIER_R
 COMPOSE_DEV := $(COMPOSE_BASE) --env-file $(ENV_FILE_DEV)
 COMPOSE_PROD := $(COMPOSE_BASE) --env-file $(ENV_FILE_PROD)
 
+PURCHASE_SERVICE_NAME := purchase-service
+
 # Extraer valores de tu .env.local
 #D_USER := $(shell grep "^DOCKER_USERNAME=" .env.local | cut -d'=' -f2)
 #D_PASS := $(shell grep "^DOCKER_PASSWORD=" .env.local | cut -d'=' -f2)
 
 D_USER := $(shell grep "^DOCKER_USERNAME=" .env.local | cut -d'=' -f2 | tr -d '\r' | xargs)
 D_PASS := $(shell grep "^DOCKER_PASSWORD=" .env.local | cut -d'=' -f2 | tr -d '\r' | xargs)
+#------------------------------------------------------------------------
+# 📦 Carga de variables de entorno para Make
+#------------------------------------------------------------------------
+ifneq ("$(wildcard .env.local)","")
+    include .env.local
+    export $(shell sed 's/=.*//' .env.local)
+endif
+
+# Variables de utilidad para salida limpia
+Q := @
+ifndef VERBOSE
+.SILENT:
+endif
+
+
 #------------------------------------------------------------------------
 
 # 💡 MACROS DE UTILIDAD
@@ -106,32 +127,36 @@ build-jars: fix-line-endings ## 🔨 Construir JARs base
 
 build-jars-all: fix-line-endings ## 🔨 Construir TODOS los JARs
 	@echo "🔨 Construyendo todos los JARs..."
-	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar :supplier-service:bootJar :tax-service:bootJar
+	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar :supplier-service:bootJar :tax-service:bootJar :purchase-service:bootJar
 
 build-images-all-nocache: build-jars-all ## 🔨 Construye TODAS las imágenes sin caché (SERIAL)
 	@echo "🔨 Construyendo imágenes SIN caché para todos los servicios (SERIAL)..."
 	export DOCKER_CONFIG=$(BUILD_DIR); \
-  	echo "   [1/5] Construyendo discovery-service y config-service..."; \
+	echo "   [1/6] Construyendo discovery-service y config-service..."; \
 	$(COMPOSE_LOCAL) --profile infra build --no-cache \
 		--build-arg DOCKER_USERNAME=$(D_USER) --build-arg DOCKER_PASSWORD=$(D_PASS) \
 		discovery-service config-service; \
-	echo "   [2/5] Construyendo product-service..."; \
+	echo "   [2/6] Construyendo product-service..."; \
 	$(COMPOSE_LOCAL) --profile infra --profile product build --no-cache \
 		--build-arg DOCKER_USERNAME=$(D_USER) --build-arg DOCKER_PASSWORD=$(D_PASS) \
 		product-service; \
-	echo "   [3/5] Construyendo supplier-service..."; \
+	echo "   [3/6] Construyendo supplier-service..."; \
 	$(COMPOSE_LOCAL) --profile infra --profile supplier build --no-cache \
 		--build-arg DOCKER_USERNAME=$(D_USER) --build-arg DOCKER_PASSWORD=$(D_PASS) \
 		supplier-service; \
-	echo "   [4/5] Construyendo tax-service..."; \
+	echo "   [4/6] Construyendo tax-service..."; \
 	$(COMPOSE_LOCAL) --profile infra --profile tax build --no-cache \
 		--build-arg DOCKER_USERNAME=$(D_USER) --build-arg DOCKER_PASSWORD=$(D_PASS) \
 		tax-service; \
-	echo "   [5/5] Construyendo api-gateway..."; \
-	$(COMPOSE_LOCAL) --profile infra --profile gateway build --no-cache \
+	echo "   [5/6] Construyendo purchase-service..."; \
+        $(COMPOSE_LOCAL) --profile infra --profile purchase build --no-cache \
+           --build-arg DOCKER_USERNAME=$(D_USER) --build-arg DOCKER_PASSWORD=$(D_PASS) \
+           purchase-service; \
+	echo "   [6/6] Construyendo api-gateway..."; \
+        $(COMPOSE_LOCAL) --profile infra --profile gateway build --no-cache \
 		--build-arg DOCKER_USERNAME=$(D_USER) --build-arg DOCKER_PASSWORD=$(D_PASS) \
 		api-gateway; \
-	echo "✅ Construcción de todas las imágenes completada en SERIAL." [cite: 12, 13, 14, 15, 16, 17, 18]
+	echo "✅ Construcción de todas las imágenes completada en SERIAL."
 #------------------------------------------------------------------------
 
 #🧪 TESTING
@@ -260,43 +285,79 @@ up-local-all-ordered2: podman-ready fix-line-endings ## 🚀 Stack completo sin 
     printf "⏳ TIEMPO TOTAL DEMORADO: %02d:%02d:%02d\n" $HOURS $MINUTES $SECONDS; \
     echo "================================================================================="; \
 
-
-up-local-all-ordered: podman-ready fix-line-endings
+.PHONY: test-purchase run-purchase-local rebuild-purchase-local purchase-db-reset
+up-local-all-ordered: podman-ready fix-line-endings ## 🚀 Iniciar stack completo de forma secuencial
 	@START_SECONDS=$$(date +%s); \
 	START_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
 	echo "================================================================================="; \
 	echo "⏱️ PROCESO INICIO: $$START_TIME"; \
 	echo "================================================================================="; \
 	$(MAKE) build-images-all-nocache; \
-	PROFILES="--profile infra --profile product --profile supplier --profile tax --profile gateway"; \
-	echo "🔧 1/4: Discovery y Config..."; $(COMPOSE_LOCAL) $$PROFILES up -d discovery-service config-service && sleep 40; \
-	echo "🗄️ 2/4: Bases de datos..."; $(COMPOSE_LOCAL) $$PROFILES up -d db_product db_supplier db_tax && sleep 55; \
-	echo "🛠️ 3/4: Microservicios..."; $(COMPOSE_LOCAL) $$PROFILES up -d product-service supplier-service tax-service && sleep 120; \
-	echo "🌐 4/4: API Gateway..."; $(COMPOSE_LOCAL) $$PROFILES up -d api-gateway && sleep 120; \
+	\
+	# 1. Definimos los perfiles incluyendo 'purchase'
+	PROFILES="--profile infra --profile product --profile supplier --profile tax --profile purchase --profile gateway"; \
+	\
+	echo "🔧 1/4: Discovery y Config (Infraestructura)..."; \
+	$(COMPOSE_LOCAL) $$PROFILES up -d discovery-service config-service && sleep 40; \
+	\
+	echo "🗄️ 2/4: Bases de Datos (incluyendo db_purchase)..."; \
+	$(COMPOSE_LOCAL) $$PROFILES up -d db_product db_supplier db_tax db_purchase && sleep 55; \
+	\
+	echo "🛠️ 3/4: Microservicios (incluyendo purchase-service)..."; \
+	$(COMPOSE_LOCAL) $$PROFILES up -d product-service supplier-service tax-service purchase-service && sleep 120; \
+	\
+	echo "🌐 4/4: API Gateway (Puerta de enlace)..."; \
+	$(COMPOSE_LOCAL) $$PROFILES up -d api-gateway && sleep 120; \
+	\
 	echo "================================================================================="; \
-    echo "📊 ESTADO FINAL DE LOS CONTENEDORES"; \
-    echo "================================================================================="; \
-    podman ps --format "{{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "service|db|discovery|config|gateway" | awk -F'\t' '{ \
+	echo "📊 ESTADO FINAL DE LOS CONTENEDORES"; \
+	echo "================================================================================="; \
+	podman ps --format "{{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "service|db|discovery|config|gateway" | awk -F'\t' '{ \
     		status_icon = "❌"; \
     		if ($$2 ~ /healthy/) status_icon = "✅"; \
     		else if ($$2 ~ /running/) status_icon = "🟡"; \
     		printf "%s %-20s %-25s %s\n", status_icon, $$1, $$2, $$3; \
     }'; \
-    END_SECONDS=$$(date +%s); \
-    DURATION_SECONDS=$$((END_SECONDS - START_SECONDS)); \
-    HOURS=$$((DURATION_SECONDS / 3600)); \
-    MINUTES=$$(( (DURATION_SECONDS % 3600) / 60 )); \
-    SECONDS=$$((DURATION_SECONDS % 60)); \
-    END_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
-    echo "================================================================================="; \
-    echo "⏱️ PROCESO INICIO...: $$START_TIME"; \
-    echo "⏱️ PROCESO CULMINADO: $$END_TIME"; \
-    printf "⏳ TIEMPO TOTAL: %02d:%02d:%02d\n" $$HOURS $$MINUTES $$SECONDS; \
-    echo "================================================================================="
+	END_SECONDS=$$(date +%s); \
+	DURATION_SECONDS=$$((END_SECONDS - START_SECONDS)); \
+	HOURS=$$((DURATION_SECONDS / 3600)); \
+	MINUTES=$$(( (DURATION_SECONDS % 3600) / 60 )); \
+	SECONDS=$$((DURATION_SECONDS % 60)); \
+	END_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
+	echo "================================================================================="; \
+	echo "⏱️ PROCESO INICIO...: $$START_TIME"; \
+	echo "⏱️ PROCESO CULMINADO: $$END_TIME"; \
+	printf "⏳ TIEMPO TOTAL: %02d:%02d:%02d\n" $$HOURS $$MINUTES $$SECONDS; \
+	echo "================================================================================="
+
+.PHONY: build-purchase
+build-purchase:
+	@echo "🚀 Construyendo $(PURCHASE_SERVICE_NAME)..."
+	# DOCKER_BUILDKIT=0 desactiva el motor que está fallando
+	# COMPOSE_DOCKER_CLI_BUILD=0 asegura el uso del constructor clásico
+	DOCKER_BUILDKIT=0 COMPOSE_DOCKER_CLI_BUILD=0 $(DOCKER_COMPOSE) --profile infra --profile purchase build --no-cache \
+		--build-arg DOCKER_USERNAME=$(DOCKER_USERNAME) \
+		--build-arg DOCKER_PASSWORD=$(DOCKER_PASSWORD) \
+		$(PURCHASE_SERVICE_NAME)
+
 .PHONY: ensure-script-exec
 ensure-script-exec:
 	# 🚨 Comando crítico: Garantizar permisos de ejecución al script antes de usarlo.
 	$(Q) chmod +x ensure_podman_ready.sh 2>/dev/null || true
+
+.PHONY: up-purchase
+up-purchase:
+	@echo "✅ Levantando $(PURCHASE_SERVICE_NAME)..."
+	$(DOCKER_COMPOSE) --profile infra --profile purchase up -d $(PURCHASE_SERVICE_NAME)
+
+.PHONY: down-purchase
+down-purchase:
+	@echo "Deteniendo $(PURCHASE_SERVICE_NAME)..."
+	$(DOCKER_COMPOSE) --profile purchase stop $(PURCHASE_SERVICE_NAME)
+
+.PHONY: logs-purchase
+logs-purchase:
+	$(DOCKER_COMPOSE) logs -f $(PURCHASE_SERVICE_NAME)
 
 # ------------------------------------------------------------------------
 # Targets de Herramientas y Diagnóstico (Versión FINAL que NO se Bloquea ni Causa Sintaxis)
