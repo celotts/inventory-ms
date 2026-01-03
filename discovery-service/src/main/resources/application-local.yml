@@ -11,7 +11,7 @@ eureka:
   instance:
     hostname: discovery-service
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
 
 management:
   endpoints:

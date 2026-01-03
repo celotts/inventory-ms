@@ -25,7 +25,7 @@ spring:
       fetch-registry: true
     instance:
       prefer-ip-address: true
-      instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+      instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
 
   # --- Base de Datos: H2 en Memoria (Estándar para Tests de Integración) ---
   datasource:

@@ -7,10 +7,10 @@ spring:
   config:
     activate:
       # CRÍTICO: Debe ser 'local' para coincidir con el nombre del archivo/intención
-      on-profile: local
+      on-profile: docker
 
   application:
-    name: supplier-service
+    name: purchase-service
 
   # --- Dependencias de la Nube (DEBEN ESTAR DESHABILITADAS EN LOCAL) ---
   cloud:
@@ -26,11 +26,11 @@ spring:
       fetch-registry: true
     instance:
       prefer-ip-address: true
-      instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+      instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
 
   # --- Base de Datos (Conexión al localhost/Host Mapeado) ---
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${SUPPLIER_DB_NAME:supplier}
+    url: jdbc:postgresql://localhost:5432/purchase_db
     username: ${SUPPLIER_DB_USERNAME:supplier}
     password: ${SUPPLIER_DB_PASSWORD:supplier123}
     driver-class-name: org.postgresql.Driver

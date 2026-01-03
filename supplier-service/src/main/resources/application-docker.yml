@@ -6,7 +6,6 @@ spring:
   # --- Configuración de Activación ---
   config:
     activate:
-      # CRÍTICO: Debe ser 'local' para coincidir con el nombre del archivo/intención
       on-profile: local
 
   application:
@@ -22,7 +21,7 @@ spring:
     client:
       enabled: true
       service-url:
-        defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+        defaultZone: http://discovery-service:8761/eureka/
       register-with-eureka: true
       fetch-registry: true
     instance:

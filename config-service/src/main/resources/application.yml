@@ -37,8 +37,7 @@ eureka:
 
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${server.port} # Simpler, more reliable instance ID
-
+    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
 management:
   endpoints:
     web:

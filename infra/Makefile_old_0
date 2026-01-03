@@ -11,18 +11,17 @@ CURDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 ROOT_DIR := $(abspath $(CURDIR)/..)
 GRADLEW := $(ROOT_DIR)/gradlew
 
-
+IF_ENV_EXISTS := $(wildcard $(CURDIR)/.env.local)
 
 DOCKER_COMPOSE_BIN := /opt/homebrew/bin/docker-compose
 COMPOSE_FILE := docker-compose-podman.yml
+ENV_FILE_PATH := $(CURDIR)/.env.local
 
 # Esta forma es más segura para que Make no rompa los argumentos
-COMPOSE_PODMAN = docker-compose-podman.yml
-COMPOSE_DEBUG  = docker-compose-debug.yml
+DOCKER_COMPOSE := $(DOCKER_COMPOSE_BIN) -f $(COMPOSE_FILE) --env-file $(ENV_FILE_PATH)
 
 # Archivos de entorno
-
-ENV_FILE_LOCAL := $(abspath $(CURDIR)/.env.local)
+ENV_FILE_LOCAL ?= $(CURDIR)/.env.local
 ENV_FILE_LOCAL_SUPPLIER ?= $(CURDIR)/.env.local-supplier
 ENV_FILE_LOCAL_SUPPLIER_TAX ?= $(CURDIR)/.env.local-supplier-tax
 ENV_FILE_DEV ?= $(CURDIR)/.env.dev
@@ -63,13 +62,7 @@ SERVICES_ALL := discovery-service config-service api-gateway product-service sup
 # Comandos base
 RUN := COMPOSE_PROVIDER=$(COMPOSE_PROVIDER) COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME)
 COMPOSE_BASE := $(RUN) podman compose -f $(COMPOSE_FILE)
-# ✅ Forzamos el directorio del proyecto a ROOT_DIR
-
-#COMPOSE_OPTIMIZED := $(RUN) podman compose -f $(CURDIR)/$(COMPOSE_FILE_OPTIMIZED) --env-file $(ENV_FILE_LOCAL) --project-directory $(ROOT_DIR)
-COMPOSE_OPTIMIZED := $(RUN) podman compose \
-    -f $(abspath $(CURDIR)/$(COMPOSE_FILE_OPTIMIZED)) \
-    --env-file $(abspath $(ENV_FILE_LOCAL)) \
-    --project-directory $(abspath $(ROOT_DIR))
+COMPOSE_OPTIMIZED := $(RUN) podman compose -f $(COMPOSE_FILE_OPTIMIZED) --env-file $(ENV_FILE_LOCAL) # <--- Comando para el archivo optimizado
 # Comandos específicos por entorno
 COMPOSE_LOCAL := $(COMPOSE_BASE) --env-file $(ENV_FILE_LOCAL)
 COMPOSE_LOCAL_SUPPLIER := $(COMPOSE_BASE) --env-file $(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)
@@ -88,13 +81,10 @@ D_PASS := $(shell grep "^DOCKER_PASSWORD=" .env.local | cut -d'=' -f2 | tr -d '\
 # 📦 Carga de variables de entorno para Make
 #------------------------------------------------------------------------
 ifneq ("$(wildcard .env.local)","")
-	include .env.local
-	export $(shell sed 's/=.*//' .env.local)
+    include .env.local
+    export $(shell sed 's/=.*//' .env.local)
 endif
 
-ifeq ($(wildcard $(ENV_FILE_LOCAL)),)
-	$(error ERROR: El archivo .env.local NO existe en $(CURDIR))
-endif
 # Variables de utilidad para salida limpia
 Q := @
 ifndef VERBOSE
@@ -135,17 +125,9 @@ build-all: fix-line-endings build-jars-all ## 🔨 Construir todos los servicios
 build-jars: fix-line-endings ## 🔨 Construir JARs base
 	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar
 
-#build-jars-all: fix-line-endings ## 🔨 Construir TODOS los JARs
-	#@echo "🔨 Construyendo todos los JARs..."
-	# $(Q) cd $(ROOT_DIR) && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar :supplier-service:bootJar :tax-service:bootJar :purchase-service:bootJar
-build-jars-all: fix-line-endings
+build-jars-all: fix-line-endings ## 🔨 Construir TODOS los JARs
 	@echo "🔨 Construyendo todos los JARs..."
-	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar \
-	:api-gateway:bootJar :product-service:bootJar :supplier-service:bootJar \
-		:tax-service:bootJar :purchase-service:bootJar
-	@echo "✅ Verificando archivos generados..."
-	$(Q) ls -l $(ROOT_DIR)/discovery-service/build/libs/*.jar || (echo "❌ Error: JAR de Discovery no encontrado"; exit 1)
-
+	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar :supplier-service:bootJar :tax-service:bootJar :purchase-service:bootJar
 
 build-images-all-nocache: build-jars-all ## 🔨 Construye TODAS las imágenes sin caché (SERIAL)
 	@echo "🔨 Construyendo imágenes SIN caché para todos los servicios (SERIAL)..."
@@ -186,27 +168,6 @@ test-quick: test-product test-supplier test-tax ## 🧪 Tests rápidos de servic
 status: podman-ready ## 📊 Estado de todos los servicios
 	$(COMPOSE_LOCAL) ps
 status-all: status ## 📊 Alias para status
-
-# 1. Levanta solo lo que no cambia (Bases de datos + Discovery + Config)
-# Se hace una sola vez al iniciar el día
-up-infra:
-	$(DOCKER_COMPOSE) up -d db_product db_supplier db_tax db_purchase discovery-service config-service
-	@echo "Esperando que la infra esté lista..."
-	@sleep 15
-
-up-debug:
-	$(DOCKER_COMPOSE_BASE) -f $(FILE_DEBUG) up -d
-
-# 2. Levanta un MS específico instantáneamente (sin reconstruir todo)
-# Uso: make up-ms s=product-service
-up-ms:
-	$(DOCKER_COMPOSE) up -d $(s)
-
-# 3. Re-compila y levanta solo UN microservicio (lo que usarás el 90% del tiempo)
-# Uso: make dev-ms s=product-service
-dev-ms:
-	./gradlew :$(s):build -x test
-	$(DOCKER_COMPOSE) up -d --build $(s)
 
 logs: podman-ready ## 📜 Logs de todos los servicios
 	$(COMPOSE_LOCAL) logs -f
@@ -325,28 +286,19 @@ up-local-all-ordered2: podman-ready fix-line-endings ## 🚀 Stack completo sin 
     echo "================================================================================="; \
 
 .PHONY: test-purchase run-purchase-local rebuild-purchase-local purchase-db-reset
-up-local-all-ordered: podman-auth podman-ready fix-line-endings ## 🚀 Iniciar stack completo de forma secuencial
+up-local-all-ordered: podman-ready fix-line-endings ## 🚀 Iniciar stack completo de forma secuencial
 	@START_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
     START_SECONDS=$$(date +%s); \
 	echo "================================================================================="; \
 	echo "⏱️ PROCESO INICIO: $$START_TIME"; \
 	echo "================================================================================="; \
-	# =========================================================
-    # 🔑 PASO 0: AUTENTICACIÓN Y LIMPIEZA PREVENTIVA
-    # =========================================================
-	@echo "🔑 Configurando credenciales de Podman..."
-	$(Q) D_USER=$$(grep "^DOCKER_USERNAME=" $(ENV_FILE_LOCAL) | cut -d'=' -f2); \
-	D_PASS=$$(grep "^DOCKER_PASSWORD=" $(ENV_FILE_LOCAL) | cut -d'=' -f2); \
-	if [ -n "$$D_USER" ]; then \
-		echo "$$D_PASS" | podman login docker.io -u "$$D_USER" --password-stdin; \
-	fi
 	$(MAKE) build-images-all-nocache; \
 	\
 	# 1. Definimos los perfiles incluyendo 'purchase'
 	PROFILES="--profile infra --profile product --profile supplier --profile tax --profile purchase --profile gateway"; \
 	\
 	echo "🔧 1/4: Discovery y Config (Infraestructura)..."; \
-	$(COMPOSE_LOCAL) $$PROFILES up -d discovery-service config-service && sleep 50; \
+	$(COMPOSE_LOCAL) $$PROFILES up -d discovery-service config-service && sleep 40; \
 	\
 	echo "🗄️ 2/4: Bases de Datos (incluyendo db_purchase)..."; \
 	$(COMPOSE_LOCAL) $$PROFILES up -d db_product db_supplier db_tax db_purchase && sleep 55; \
@@ -864,68 +816,42 @@ help-troubleshoot: ## 📖 Ayuda de solución de problemas
 	@echo "	• Los errores de 'exec format error' suelen ser problemas de permisos. Usa 'make diagnose-chmod' y 'make fix-discovery-chmod'."
 
 .PHONY: up-local-all-ordered up-local-all-optimized
-.PHONY: up-local-all-optimized
-up-local-all-optimized: podman-auth podman-ready fix-line-endings ## 🚀 Iniciar stack optimizado
-	@echo "🔍 Verificando rutas de construcción..."
-	@echo "ROOT_DIR: $(ROOT_DIR)"
-	@echo "CURDIR: $(CURDIR)"
-	@cp $(ENV_FILE_LOCAL) $(ROOT_DIR)/.env.local 2>/dev/null || true
-	@cp $(ENV_FILE_LOCAL) $(CURDIR)/.env.local 2>/dev/null || true
+up-local-all-optimized: podman-ready fix-line-endings podman-auth ## 🚀 Iniciar stack optimizado
 	@START_SECONDS=$$(date +%s); \
 	START_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
 	echo "================================================================================="; \
 	echo "🚀 INICIO OPTIMIZADO: $$START_TIME"; \
 	echo "================================================================================="; \
 	\
-	echo "🔨 Paso 1: Compilando JARs en el Mac (Red local)..."; \
 	$(MAKE) build-jars-all; \
+	ALL_PROFILES="--profile infra --profile product --profile supplier --profile tax --profile gateway"; \
 	\
-	ALL_PROFILES="--profile infra --profile product --profile supplier --profile tax --profile purchase --profile gateway"; \
-	\
-	#echo "🔧 Paso 2: Levantando Infraestructura (Discovery & Config)..."; \
-	#cd $(ROOT_DIR) && podman build -t discovery-service:latest -f discovery-service/Dockerfile . ; \
-	#cd $(ROOT_DIR) && podman build -t config-service:latest -f config-service/Dockerfile . ; \
-	#\
-	#$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d discovery-service config-service; \
-	#echo "⏱️ Esperando 40s (Config Server necesita tiempo para clonar Git)..."; \
-	#sleep 40; \
-	#\
-	#echo "🗄️ Paso 3: Levantando Bases de Datos..."; \
-
-	echo "🔧 Paso 2: Levantando Infraestructura (Discovery & Config)..."; \
-	podman build -t discovery-service:latest -f $(ROOT_DIR)/discovery-service/Dockerfile $(ROOT_DIR); \
-	podman build -t config-service:latest -f $(ROOT_DIR)/config-service/Dockerfile $(ROOT_DIR); \
-	\
+	echo "🔧 1/4: Levantando Infraestructura (Discovery & Config)..."; \
 	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d discovery-service config-service; \
-	echo "⏱️ Esperando 40s (Config Server necesita tiempo para clonar Git)..."; \
-	sleep 40; \
+	echo "⏱️ Esperando 20s..."; \
+	sleep 20; \
 	\
-	echo "🗄️ Paso 3: Levantando Bases de Datos..."; \
-	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d db_product db_supplier db_tax db_purchase; \
+	echo "🗄️ 2/4: Levantando Bases de Datos..."; \
+	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d db_product db_supplier db_tax; \
 	sleep 10; \
 	\
-	#echo "🛠️ Paso 4: Levantando Microservicios..."; \
-	#cd $(ROOT_DIR) && podman build -t product-service:latest -f product-service/Dockerfile . ; \
-	#cd $(ROOT_DIR) && podman build -t supplier-service:latest -f supplier-service/Dockerfile . ; \
-	#cd $(ROOT_DIR) && podman build -t tax-service:latest -f tax-service/Dockerfile . ; \
-	#cd $(ROOT_DIR) && podman build -t purchase-service:latest -f purchase-service/Dockerfile . ; \
-	#$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d product-service supplier-service tax-service purchase-service || (echo "❌ Error en MS"; exit 1); \
-	#\
-	echo "🛠️ Paso 4: Levantando Microservicios..."; \
-	podman build -t product-service:latest -f $(ROOT_DIR)/product-service/Dockerfile $(ROOT_DIR); \
-	podman build -t supplier-service:latest -f $(ROOT_DIR)/supplier-service/Dockerfile $(ROOT_DIR); \
-	podman build -t tax-service:latest -f $(ROOT_DIR)/tax-service/Dockerfile $(ROOT_DIR); \
-	podman build -t purchase-service:latest -f $(ROOT_DIR)/purchase-service/Dockerfile $(ROOT_DIR); \
+	echo "🛠️ 3/4: Levantando Microservicios en paralelo..."; \
+	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d product-service supplier-service tax-service || (echo "❌ Error en MS"; exit 1); \
+	echo "⏱️ Cargando contextos de Spring (35s)..."; \
+	sleep 35; \
 	\
-	echo "🌐 Paso 5: Levantando API Gateway..."; \
-	cd $(ROOT_DIR) && podman build -t api-gateway:latest -f api-gateway/Dockerfile . ; \
-	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d --no-build product-service supplier-service tax-service purchase-service;
-	#$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d api-gateway; \
+	echo "🌐 4/4: Levantando API Gateway..."; \
+	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d api-gateway; \
 	\
 	echo "========================================================="; \
 	echo "📊 ESTADO FINAL DE LOS CONTENEDORES"; \
 	echo "========================================================="; \
-	podman ps --format "{{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "service|db|discovery|config|gateway"; \
+	podman ps --format "{{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "service|db|discovery|config|gateway" | awk -F'\t' '{ \
+		status_icon = "❌"; \
+		if ($$2 ~ /healthy/) status_icon = "✅"; \
+		else if ($$2 ~ /running/) status_icon = "🟡"; \
+		printf "%s %-20s %-25s %s\n", status_icon, $$1, $$2, $$3; \
+	}'; \
 	\
 	END_SECONDS=$$(date +%s); \
 	DURATION_SECONDS=$$((END_SECONDS - START_SECONDS)); \
@@ -935,6 +861,7 @@ up-local-all-optimized: podman-auth podman-ready fix-line-endings ## 🚀 Inicia
 	printf "⏳ TIEMPO TOTAL OPTIMIZADO: %02d:%02d\n" $$MINUTES $$SECONDS; \
 	echo "================================================================================="; \
 	$(MAKE) health-check-extended
+
 .PHONY: help help-services help-db help-troubleshoot start start-all start-parallel \
 	stop restart restart-all dev dev-full dev-supplier dev-tax build-all build-jars \
 	build-jars-all test-all test-quick status status-all logs health podman-ready ensure-script-exec \

@@ -1,17 +1,16 @@
 # application-local.yml (Supplier Service - Perfil Local/Host)
 server:
-  port: 9091 # Usar 9091 para Supplier Service si 9090 ya es usado por Product
+  port: 9103
 
 spring:
   # --- Configuración de Activación ---
   config:
     activate:
       # CRÍTICO: Debe ser 'local' para coincidir con el nombre del archivo/intención
-      on-profile: local
+      on-profile: docker
 
   application:
-    name: supplier-service
-
+    name: purchase-service
 
   # --- Dependencias de la Nube (DEBEN ESTAR DESHABILITADAS EN LOCAL) ---
   cloud:
@@ -22,7 +21,7 @@ spring:
     client:
       enabled: true
       service-url:
-        defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+        defaultZone: http://discovery-service:8761/eureka/
       register-with-eureka: true
       fetch-registry: true
     instance:
@@ -31,8 +30,7 @@ spring:
 
   # --- Base de Datos (Conexión al localhost/Host Mapeado) ---
   datasource:
-    url: jdbc:postgresql://purchase-db:5432/purchase
-    #url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${SUPPLIER_DB_NAME:supplier}
+    url: jdbc:postgresql://purchase-db:5432/purchase_db
     username: ${SUPPLIER_DB_USERNAME:supplier}
     password: ${SUPPLIER_DB_PASSWORD:supplier123}
     driver-class-name: org.postgresql.Driver
@@ -75,16 +73,15 @@ springdoc:
     display-request-duration: true
 
 # --- Configuraciones Propias de la Aplicación (Pag. y CORS) ---
-
 app:
-  cors:
-    allowed-origin: ${CORS_ALLOWED_ORIGIN:*}
   pagination:
-    default-page: ${PAGINATION_DEFAULT_PAGE:0}
-    default-size: ${PAGINATION_DEFAULT_SIZE:10}
-    max-size: ${PAGINATION_MAX_SIZE:100}
-    default-sort: ${PAGINATION_DEFAULT_SORT:createdAt}
-    default-direction: ${PAGINATION_DEFAULT_DIRECTION:desc}
+    default-page: 0
+    default-size: 10
+    max-size: 100
+    default-sort: createdAt
+    default-direction: desc
+  cors:
+    allowed-origin: "*"
 
 # --- Management Endpoints ---
 management:
@@ -97,7 +94,7 @@ management:
 logging:
   level:
     org.springframework.web: DEBUG
-    com.celotts.supplierservice: INFO
+    com.celotts.purchaseservice: INFO
     com.netflix.eureka: WARN
     com.netflix.discovery: WARN
     org.hibernate: DEBUG

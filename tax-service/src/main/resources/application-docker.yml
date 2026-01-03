@@ -2,12 +2,15 @@ server:
   port: 9090
 
 spring:
+  config:
+    activate:
+      on-profile: docker
   application:
     name: product-service
 
   # ✅ PostgreSQL para producción/Docker
   datasource:
-    url: jdbc:postgresql://product-db:5432/product
+    url: jdbc:postgresql://product-db:5432/product_db
     username: ${DB_USERNAME:product}
     password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
@@ -48,7 +51,7 @@ eureka:
   client:
     enabled: true
     service-url:
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+      defaultZone: http://discovery-service:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
   instance:

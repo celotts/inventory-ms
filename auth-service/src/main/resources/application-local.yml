@@ -41,8 +41,7 @@ eureka:
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    # Asegúrate de que el ID de instancia se resuelve correctamente con el nombre de Auth Service y el puerto 8081
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
 
 # Configuración de paginación (Mantengo esto si Auth también lo usa, aunque es menos común)
 app:

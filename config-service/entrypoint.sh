@@ -1,33 +1,19 @@
 #!/bin/bash
-# Script de entrada para el config-service.
-# Ejecuta 'wait-for-it.sh' para esperar por el Discovery Service (Eureka).
+# Script de entrada corregido para config-service.
 
-# ------------------------------------------------------------------------------------------------
-# 1. ESPERAR DEPENDENCIA CRÍTICA (DISCOVERY SERVICE)
-# ------------------------------------------------------------------------------------------------
-# Asumimos que la URL de Eureka es 'discovery-service:8761', que es el nombre del servicio
-# y puerto predeterminados en Docker Compose.
-WAIT_HOST="discovery-service:8761"
-WAIT_TIMEOUT=45
+# 1. Variables
+WAIT_HOST="discovery-service"
+WAIT_PORT="8761"
+WAIT_TIMEOUT=60
 
-echo "Esperando a que Discovery Service (Eureka) esté disponible en $WAIT_HOST (Timeout: $WAIT_TIMEOUTs)..."
+echo "⏳ Esperando a que Eureka esté disponible en $WAIT_HOST:$WAIT_PORT..."
 
-# Sintaxis: ./wait-for-it.sh <host>:<port> -t <timeout> -- <comando a ejecutar después>
-# La ruta a wait-for-it.sh es /app/wait-for-it.sh, según la configuración de tu Dockerfile
-/app/wait-for-it.sh $WAIT_HOST -t $WAIT_TIMEOUT -- \
-    echo "Discovery Service listo. Procediendo a iniciar el Config Server..."
+# 2. EJECUCIÓN CON FORMATO DESGLOSADO
+# Usamos los flags explícitos -h y -p para que el script no se confunda
+/app/wait-for-it.sh -h "$WAIT_HOST" -p "$WAIT_PORT" -t "$WAIT_TIMEOUT" -- java -Djava.security.egd=file:/dev/./urandom -jar /app/app.jar
 
-# Comprobación del resultado de wait-for-it.sh
+# 3. Manejo de error
 if [ $? -ne 0 ]; then
-    echo "ERROR: El tiempo de espera para $WAIT_HOST ha expirado. El Config Server no se iniciará."
+    echo "❌ ERROR: El tiempo de espera para $WAIT_HOST ha expirado."
     exit 1
 fi
-
-# ------------------------------------------------------------------------------------------------
-# 2. INICIAR LA APLICACIÓN SPRING BOOT
-# ------------------------------------------------------------------------------------------------
-# Ejecuta el JAR principal de Spring Boot. El 'exec' asegura que el proceso Java reemplace
-# el proceso del script shell como PID 1.
-
-echo "Iniciando Config Server: java -jar /app/app.jar"
-exec java -Djava.security.egd=file:/dev/./urandom -jar /app/app.jar
