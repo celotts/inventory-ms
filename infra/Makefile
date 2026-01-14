@@ -38,8 +38,8 @@ ENV_FILE_PROD               := $(abspath $(CURDIR)/.env.prod)
 COMPOSE_FILE_OPTIMIZED := docker-compose-optimizado-podman.yml  # <--- Definir el nuevo archivo
 
 COMPOSE_PROVIDER ?= podman
-export DOCKER_BUILDKIT := 1
-export COMPOSE_DOCKER_CLI_BUILD ?= 1 # Habilitar BuildKit
+export DOCKER_BUILDKIT := 0
+export COMPOSE_DOCKER_CLI_BUILD ?= 0 # Habilitar BuildKit
 
 # Perfiles y servicios (PURCHASE/purchase-service excluidos)
 PROFILES_BUILD_ORDER := infra gateway product supplier tax purchase
@@ -157,15 +157,12 @@ build-all: fix-line-endings build-jars-all ## 🔨 Construir todos los servicios
 build-jars: fix-line-endings ## 🔨 Construir JARs base
 	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar
 
-#build-jars-all: fix-line-endings ## 🔨 Construir TODOS los JARs
-	#@echo "🔨 Construyendo todos los JARs..."
-	# $(Q) cd $(ROOT_DIR) && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar :supplier-service:bootJar :tax-service:bootJar :purchase-service:bootJar
 build-jars-all: fix-line-endings
-	@echo "🔨 Construyendo todos los JARs..."
-	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar \
-	:api-gateway:bootJar :product-service:bootJar :supplier-service:bootJar \
-		:tax-service:bootJar :purchase-service:bootJar
-	@echo "✅ Verificando archivos generados..."
+	@echo "🔨 Construyendo todos los JARs desde la raíz del proyecto..."
+	$(Q) cd $(ROOT_DIR) && ./gradlew clean :config-service:bootJar :discovery-service:bootJar \
+		:api-gateway:bootJar :product-service:bootJar :supplier-service:bootJar \
+		:tax-service:bootJar :purchase-service:bootJar [cite: 16]
+	@echo "✅ JARs generados exitosamente."
 	$(Q) ls -l $(ROOT_DIR)/discovery-service/build/libs/*.jar || (echo "❌ Error: JAR de Discovery no encontrado"; exit 1)
 
 build-images: podman-auth ## 🏗️ Construir imágenes
@@ -177,7 +174,7 @@ build-images: podman-auth ## 🏗️ Construir imágenes
 	$(DOCKER_COMPOSE_BIN) -f $(COMPOSE_FILE) build \
 		--build-arg DOCKER_USERNAME=$(DOCKER_USERNAME) \
 		--build-arg DOCKER_PASSWORD=$(DOCKER_PASSWORD) \
-		$(SERVICES_TO_BUILD)
+	$(SERVICES_TO_BUILD)
 
 build-images-all-nocache: build-jars-all ## 🔨 Construye TODAS las imágenes sin caché (SERIAL)
 	@echo "🔨 Construyendo imágenes SIN caché para todos los servicios (SERIAL)..."
@@ -329,7 +326,6 @@ up-local-all-ordered: podman-auth podman-ready fix-line-endings
 	@echo "⏱️  INICIANDO DESPLIEGUE DINÁMICO"
 	@echo "======================================================================================"
 	@$(MAKE) build-jars-all
-	@# Inyectar DOCKER_CONFIG para que Compose vea el login de Podman
 	@export DOCKER_CONFIG=$(BUILD_DIR); \
 	export COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME); \
 	COMPOSE_OPTS="--env-file $(ENV_FILE_LOCAL) -f $(COMPOSE_FILE) -p $(COMPOSE_PROJECT_NAME) --profile infra --profile product --profile supplier --profile tax --profile purchase --profile gateway"; \
@@ -843,7 +839,7 @@ help-troubleshoot: ## 📖 Ayuda de solución de problemas
 	@echo "	• Si un servicio falla al iniciar, usa 'make service-logs' para ver el error."
 	@echo "	• Los errores de 'exec format error' suelen ser problemas de permisos. Usa 'make diagnose-chmod' y 'make fix-discovery-chmod'."
 
-.PHONY: up-local-all-ordered up-local-all-optimized
+
 .PHONY: up-local-all-optimized
 up-local-all-optimized: podman-auth podman-ready fix-line-endings ## 🚀 Iniciar stack optimizado
 	@cp $(ENV_FILE_LOCAL) $(ROOT_DIR)/.env.local 2>/dev/null || true
