@@ -1,0 +1,16 @@
+ARG DOCKER_USERNAME
+ARG DOCKER_PASSWORD
+
+FROM eclipse-temurin:21-jre-jammy
+WORKDIR /app
+RUN apt-get update && apt-get install -y dos2unix curl && rm -rf /var/lib/apt/lists/*
+
+# Copia el JAR generado por tu Mac
+COPY build/libs/*.jar app.jar
+COPY entrypoint.sh .
+COPY wait-for-it.sh .
+
+RUN dos2unix entrypoint.sh wait-for-it.sh && \
+    chmod +x entrypoint.sh wait-for-it.sh
+
+ENTRYPOINT ["./entrypoint.sh"]
