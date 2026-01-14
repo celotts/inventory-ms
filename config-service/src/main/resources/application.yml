@@ -19,22 +19,19 @@ spring:
           timeout: 10
           default-label: main
           search-paths: config
-      fail-fast: true
+      fail-fast: false
     compatibility-verifier:
       enabled: false
 
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://discovery-service:8761/eureka/
-
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://discovery-service:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
-
     healthcheck:
       enabled: true
     instance-info-replication-interval-seconds: 5 # Reduce replication interval for faster registration
-
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}

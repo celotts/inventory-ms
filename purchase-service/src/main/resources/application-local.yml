@@ -15,8 +15,10 @@ spring:
   # --- Dependencias de la Nube (DEBEN ESTAR DESHABILITADAS EN LOCAL) ---
   cloud:
     config:
-      enabled: false # 🛑 DESHABILITADO: No se necesita Config Server en ejecución local
-
+      enabled: true
+      discovery:
+        enabled: true
+        service-id: config-service
   eureka:
     client:
       enabled: true
@@ -30,9 +32,9 @@ spring:
 
   # --- Base de Datos (Conexión al localhost/Host Mapeado) ---
   datasource:
-    url: jdbc:postgresql://localhost:5432/purchase_db
-    username: ${SUPPLIER_DB_USERNAME:supplier}
-    password: ${SUPPLIER_DB_PASSWORD:supplier123}
+    url: jdbc:postgresql://${PURCHASE_DB_HOST:localhost}:${PURCHASE_DB_PORT_HOST:5435}/${PURCHASE_DB_NAME:purchase}
+    username: ${PURCHASE_DB_USERNAME:purchase}
+    password: ${PURCHASE_DB_PASSWORD:purchase123}
     driver-class-name: org.postgresql.Driver
 
     hikari:
