@@ -1,44 +1,45 @@
 # application-local.yml (Supplier Service - Perfil Local/Host)
 server:
-  port: 9103
+  port: ${SUPPLIER_PORT:9091}
 
 spring:
   # --- Configuración de Activación ---
   config:
     activate:
-      # CRÍTICO: Debe ser 'local' para coincidir con el nombre del archivo/intención
-      on-profile: docker
+      on-profile: ${ONPROFILE:docker}
 
   application:
-    name: purchase-service
+    name: supplier-service
 
-  # --- Dependencias de la Nube (DEBEN ESTAR DESHABILITADAS EN LOCAL) ---
+  # --- Dependencias de la Nube ---
   cloud:
     config:
-      enabled: true
-      discovery:
-        enabled: true
-        service-id: config-service
+      # Corregido: Coincide con CLOUD_CONFIG_ENABLED del .env
+      enabled: ${CLOUD_CONFIG_ENABLED:false}
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://localhost:7777}
+
   eureka:
     client:
-      enabled: true
+      # Coincide con EUREKA_CLIENT_ENABLED del .env
+      enabled: ${EUREKA_CLIENT_ENABLED:true}
       service-url:
         defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
       register-with-eureka: true
       fetch-registry: true
     instance:
       prefer-ip-address: true
-      instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
+      instance-id: ${spring.application.name}:${random.value}
 
-  # --- Base de Datos (Conexión al localhost/Host Mapeado) ---
+  # --- Base de Datos (Específica para Supplier) ---
   datasource:
-    url: jdbc:postgresql://${PURCHASE_DB_HOST:localhost}:${PURCHASE_DB_PORT_HOST:5435}/${PURCHASE_DB_NAME:purchase}
-    username: ${PURCHASE_DB_USERNAME:purchase}
-    password: ${PURCHASE_DB_PASSWORD:purchase123}
-    driver-class-name: org.postgresql.Driver
+    # Usamos la URL segmentada para mayor control
+    url: jdbc:${DB_PROTOCOL:postgresql}://${SUPPLIER_DB_HOST:localhost}:${SUPPLIER_DB_PORT:5434}/${SUPPLIER_DB_NAME:supplier}
+    username: ${SUPPLIER_DB_USERNAME:supplier}
+    password: ${SUPPLIER_DB_PASSWORD:supplier123}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
 
     hikari:
-      pool-name: HikariPool-SupplierServiceLocal # Renombrado para claridad
+      pool-name: HikariPool-SupplierServiceLocal
       maximum-pool-size: 10
       minimum-idle: 2
       auto-commit: false
@@ -50,11 +51,11 @@ spring:
   # --- JPA/Hibernate ---
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${DDL_AUTO:update}
     show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
-  # --- Exclusiones ---
+  # --- Exclusiones de Seguridad para desarrollo ---
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
@@ -76,14 +77,14 @@ springdoc:
 
 # --- Configuraciones Propias de la Aplicación (Pag. y CORS) ---
 app:
-  pagination:
-    default-page: 0
-    default-size: 10
-    max-size: 100
-    default-sort: createdAt
-    default-direction: desc
   cors:
-    allowed-origin: "*"
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:*}
+  pagination:
+    default-page: ${PAGINATION_DEFAULT_PAGE:0}
+    default-size: ${PAGINATION_DEFAULT_SIZE:10}
+    max-size: ${PAGINATION_MAX_SIZE:100}
+    default-sort: ${PAGINATION_DEFAULT_SORT:createdAt}
+    default-direction: ${PAGINATION_DEFAULT_DIRECTION:desc}
 
 # --- Management Endpoints ---
 management:
@@ -96,9 +97,10 @@ management:
 logging:
   level:
     org.springframework.web: DEBUG
-    com.celotts.purchaseservice: INFO
+    org.hibernate: INFO
+    org.hibernate.SQL: DEBUG
+    com.celotts.supplierservice: INFO
     com.netflix.eureka: WARN
     com.netflix.discovery: WARN
-    org.hibernate: DEBUG
     org.springframework.security: DEBUG
-    root: INFO
+    root: ${LOGGING_LEVEL_ROOT:INFO}

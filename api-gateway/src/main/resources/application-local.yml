@@ -36,12 +36,11 @@ management:
       show-details: always
     env:
       show-values: ALWAYS
-
 # ✅ FORZAR configuración sin variables (para debug)
 eureka:
   client:
     service-url:
-      defaultZone: http://discovery-service:8761/eureka/
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
     initial-instance-info-replication-interval-seconds: 30

@@ -29,7 +29,7 @@ eureka:
     # registrados en Eureka. Esto es necesario para que sea un cliente completo.
     fetch-registry: true
     service-url:
-      defaultZone: http://discovery-service:8761/eureka/
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
 
   instance:
     prefer-ip-address: true

@@ -1,16 +1,39 @@
 ARG DOCKER_USERNAME
 ARG DOCKER_PASSWORD
 
+# 1. EL FROM SIEMPRE PRIMERO (Después de los ARGs globales)
 FROM eclipse-temurin:21-jre-jammy
+LABEL maintainer="Inventory MS Team"
+
+# 2. AHORA SÍ EL EXPOSE
+EXPOSE 9094
+
+USER root
 WORKDIR /app
-RUN apt-get update && apt-get install -y dos2unix curl && rm -rf /var/lib/apt/lists/*
 
-# Copia el JAR generado por tu Mac
-COPY build/libs/*.jar app.jar
-COPY entrypoint.sh .
-COPY wait-for-it.sh .
+# 3. INSTALACIÓN
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends dos2unix && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN dos2unix entrypoint.sh wait-for-it.sh && \
-    chmod +x entrypoint.sh wait-for-it.sh
+# 2. Creación de usuario
+RUN addgroup --system spring && adduser --system --ingroup spring spring
 
-ENTRYPOINT ["./entrypoint.sh"]
+# 3. Copia de archivos (Corregido el nombre a purchase-service sin la "n")
+COPY ./purchase-service/build/libs/app.jar /app/app.jar
+COPY ./purchase-service/entrypoint.sh /app/entrypoint.sh
+COPY ./infra/wait-for-it.sh /app/wait-for-it.sh
+
+# 4. Limpieza de formato y permisos
+# Ejecutamos esto ANTES de cambiar al usuario spring
+RUN dos2unix /app/entrypoint.sh /app/wait-for-it.sh && \
+    chmod +x /app/entrypoint.sh /app/wait-for-it.sh && \
+    chown -R spring:spring /app
+
+# 5. Cambio de usuario para ejecución segura
+USER spring:spring
+
+
+
+ENTRYPOINT ["/app/entrypoint.sh"]
+

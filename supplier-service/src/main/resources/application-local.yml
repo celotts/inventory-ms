@@ -23,7 +23,7 @@ spring:
       # Coincide con EUREKA_CLIENT_ENABLED del .env
       enabled: ${EUREKA_CLIENT_ENABLED:true}
       service-url:
-        defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+        defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
       register-with-eureka: true
       fetch-registry: true
     instance:

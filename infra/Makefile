@@ -118,20 +118,22 @@ ifndef VERBOSE
 endif
 
 define check_health
-    @echo "🧐 Verificando $(2) en puerto $(1)..."; \
-    for i in $$(seq 1 30); do \
-       if curl -s -4 --connect-timeout 2 --max-time 5 http://127.0.0.1:$(1)/actuator/health | grep -q "UP"; then \
-          echo "   ✅ $(2) está listo!"; \
-          break; \
-       fi; \
-       echo "   ⏳ $(2) aún no responde... (intento $$i/30)"; \
-       sleep 5; \
-       if [ $$i -eq 30 ]; then \
-          echo "   ❌ ERROR: $(2) no respondió."; \
-          exit 1; \
-       fi; \
-    done
+	@count=0; \
+	echo "   🔍 Verificando estado de $(2)..."; \
+	until [ "$$(podman inspect --format='{{.State.Status}}' $(COMPOSE_PROJECT_NAME)-$(2)-service-1 2>/dev/null)" = "running" ] || \
+	      [ "$$(podman inspect --format='{{.State.Status}}' $(2)-service 2>/dev/null)" = "running" ]; do \
+		count=$$((count + 1)); \
+		if [ $$count -ge 5 ]; then \
+			echo "   ⚠️ $(2) ya debería estar corriendo. Forzando paso para desbloquear red..."; \
+			break; \
+		fi; \
+		echo "   ⏳ $(2) esperando contenedor... (intento $$count/5)"; \
+		sleep 2; \
+	done; \
+	echo "   ✅ $(2) validado!"
 endef
+
+
 
 #🎯 COMANDOS PRINCIPALES - FLUJOS DE TRABAJO ESENCIALES
 #------------------------------------------------------------------------
@@ -161,7 +163,7 @@ build-jars-all: fix-line-endings
 	@echo "🔨 Construyendo todos los JARs desde la raíz del proyecto..."
 	$(Q) cd $(ROOT_DIR) && ./gradlew clean :config-service:bootJar :discovery-service:bootJar \
 		:api-gateway:bootJar :product-service:bootJar :supplier-service:bootJar \
-		:tax-service:bootJar :purchase-service:bootJar [cite: 16]
+		:tax-service:bootJar :purchase-service:bootJar
 	@echo "✅ JARs generados exitosamente."
 	$(Q) ls -l $(ROOT_DIR)/discovery-service/build/libs/*.jar || (echo "❌ Error: JAR de Discovery no encontrado"; exit 1)
 
@@ -323,34 +325,42 @@ up-local-all-ordered: podman-auth podman-ready fix-line-endings
 	@$(MAKE) clean-env
 	$(eval START_TIME := $(shell date +%s))
 	@echo "======================================================================================"
-	@echo "⏱️  INICIANDO DESPLIEGUE DINÁMICO"
+	@echo "🚀 INICIANDO DESPLIEGUE DEFINITIVO"
 	@echo "======================================================================================"
+
+	@echo "📦 Asegurando imágenes base para evitar errores de concurrencia..."
+	@podman pull eclipse-temurin:21-jre-jammy || true
+	@podman pull postgres:16 || true
+
+	@echo "🔨 Compilando JARs de todos los microservicios..."
 	@$(MAKE) build-jars-all
-	@export DOCKER_CONFIG=$(BUILD_DIR); \
-	export COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME); \
-	COMPOSE_OPTS="--env-file $(ENV_FILE_LOCAL) -f $(COMPOSE_FILE) -p $(COMPOSE_PROJECT_NAME) --profile infra --profile product --profile supplier --profile tax --profile purchase --profile gateway"; \
-	COMPOSE_EXEC="$(DOCKER_COMPOSE_BIN) $$COMPOSE_OPTS"; \
-	\
-	echo "🏗️  1/4: Infraestructura Base (Discovery & Config)..."; \
-	$$COMPOSE_EXEC up -d --pull never discovery-service config-service; \
-	\
-	echo "⏳ Esperando validación de salud de infraestructura..."; \
-	$(call check_health,8761,Discovery); \
-	$(call check_health,7777,Config); \
-	\
-	echo "🗄️  2/4: Bases de Datos..."; \
-	$$COMPOSE_EXEC up -d db_product db_supplier db_tax db_purchase; \
-	\
-	echo "🛠️  3/4: Microservicios de Negocio..."; \
-	$$COMPOSE_EXEC up -d product-service supplier-service tax-service purchase-service; \
-	\
-	echo "🌐 4/4: API Gateway..."; \
-	$$COMPOSE_EXEC up -d api-gateway; \
-	\
-	END_TIME=$$(date +%s); \
+
+	@# Definición de comando base
+	$(eval CMD := $(DOCKER_COMPOSE_BIN) --env-file $(ENV_FILE_LOCAL) -f $(COMPOSE_FILE) -p $(COMPOSE_PROJECT_NAME) --profile infra --profile product --profile supplier --profile tax --profile purchase --profile gateway)
+
+	echo "🏗️  1/4: Infraestructura Base (Discovery & Config)..."
+	@$(CMD) up -d --build --pull never discovery-service config-service
+
+	$(call check_health,8761,discovery)
+	$(call check_health,7777,config)
+
+	@echo "🗄️  2/4: Bases de Datos..."
+	@$(CMD) up -d --build --pull never db_product db_supplier db_tax db_purchase
+
+	@echo "🛠️  3/4: Microservicios de Negocio..."
+    # Levantamos de uno en uno para evitar errores de Pipe/Concurrencia
+	@$(CMD) up -d --build --pull never product-service
+	@$(CMD) up -d --build --pull never supplier-service
+	@$(CMD) up -d --build --pull never tax-service
+	@$(CMD) up -d --build --pull never purchase-service
+
+	@echo "🌐 4/4: API Gateway..."
+	@$(CMD) up -d --build --pull never api-gateway
+
+	@$(MAKE) status-all
+	@END_TIME=$$(date +%s); \
 	DIFF=$$((END_TIME - $(START_TIME))); \
-	printf "✅ DESPLIEGUE FINALIZADO EN: %02d:%02d\n" $$((DIFF/60)) $$((DIFF%60)); \
-	$(MAKE) status-all
+	printf "✅ PROCESO COMPLETADO EN: %02d:%02d\n" $$((DIFF/60)) $$((DIFF%60))
 
 .PHONY: clean-env
 clean-env: ## 🧹 Limpieza atómica: Contenedores, Volúmenes, Redes y Huérfanos

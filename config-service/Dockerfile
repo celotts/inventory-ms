@@ -1,3 +1,6 @@
+ARG DOCKER_USERNAME
+ARG DOCKER_PASSWORD
+
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 EXPOSE 8888

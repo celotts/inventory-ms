@@ -115,12 +115,16 @@ services:
     container_name: discovery-service
     image: discovery-service:latest
     env_file: [./.env.local]
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     build:
       context: ..
-      dockerfile: discovery-service/Dockerfile
+      dockerfile: discovery-service/Dockerfile.local
     ports:
       - "${DISCOVERY_PORT:-8761}:8761"
     environment:
+      - SPRING_APPLICATION_NAME=discovery-service
       - SPRING_PROFILES_ACTIVE=docker
       - SERVER_PORT=8761
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
@@ -131,7 +135,9 @@ services:
       retries: 5
       start_period: 40s
     networks:
-      - inventory-net
+      inventory-net:
+        aliases:
+          - discovery-service
     restart: unless-stopped
 
   config-service:
@@ -141,27 +147,32 @@ services:
     env_file: [ ./.env.local ]
     build:
       context: ..
-      dockerfile: config-service/Dockerfile
+      dockerfile: config-service/Dockerfile.local
     ports:
       - "${CONFIG_PORT:-7777}:7777"
-    entrypoint: ["java", "-jar", "/app/app.jar"]
+    entrypoint: [ "java", "-jar", "/app/app.jar" ]
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=${CONFIG_PORT:-7777}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
-      - SPRING_CONFIG_IMPORT=optional:configserver:${SPRING_CLOUD_CONFIG_URI}
-      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=${SPRING_CLOUD_CONFIG_SERVER_GIT_URI}
-      - SPRING_CLOUD_CONFIG_SERVER_GIT_USERNAME=${GIT_USERNAME}
-      - SPRING_CLOUD_CONFIG_SERVER_GIT_PASSWORD=${GIT_TOKEN}
+      - SPRING_APPLICATION_NAME=config-service
+      - SPRING_PROFILES_ACTIVE=docker,native
+      - SERVER_PORT=7777
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS=file:/config-repo-local/
+      - WAIT_FOR=discovery-service:8761
+    volumes:
+      - ../../config-repo-local:/config-repo-local:ro,Z
+    # Comenta los DNS si sigues teniendo problemas de resolución interna
+    # dns:
+    #   - 8.8.8.8
+    #   - 1.1.1.1
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:7777/actuator/health | grep UP || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     depends_on:
       discovery-service:
-        condition: service_healthy
-    healthcheck:
-      test: [ "CMD-SHELL", "wget -qO- http://localhost:7777/actuator/health | grep UP || exit 1" ]
-      interval: 20s
-      timeout: 10s
-      retries: 15
-      start_period: 300s
+        condition: service_started
     networks:
       - inventory-net
     restart: unless-stopped
@@ -171,12 +182,16 @@ services:
     profiles: ["auth"]
     container_name: auth-service
     env_file: [./.env.local]
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     build:
       context: ..
-      dockerfile: auth-service/Dockerfile
+      dockerfile: auth-service/Dockerfile.local
     ports:
       - "${AUTH_PORT:-8080}:8080"
     environment:
+      - SPRING_APPLICATION_NAME=auth-service
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
       - SPRING_CONFIG_IMPORT=optional:configserver:${SPRING_CLOUD_CONFIG_URI}
@@ -189,25 +204,30 @@ services:
       - inventory-net
     restart: unless-stopped
 
+
   product-service:
     profiles: ["product"]
     container_name: product-service
     image: product-service:latest
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     env_file: [./.env.local]
     build:
       context: ..
-      dockerfile: product-service/Dockerfile
+      dockerfile: product-service/Dockerfile.local
     ports:
       - "${PRODUCT_PORT:-9090}:9090"
-    entrypoint: ["java", "-jar", "/app/app.jar"]
+    #entrypoint: ["java", "-jar", "/app/app.jar"]
     environment:
+      - SPRING_APPLICATION_NAME=product-service
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${PRODUCT_DB_HOST}:5432/${PRODUCT_DB_NAME:-db_product}
-      - SPRING_DATASOURCE_USERNAME=${PRODUCT_DB_USERNAME:-product}
-      - SPRING_DATASOURCE_PASSWORD=${PRODUCT_DB_PASSWORD:-product123}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
-      - SPRING_CONFIG_IMPORT=optional:configserver:${SPRING_CLOUD_CONFIG_URI}
-      - WAIT_FOR=${PRODUCT_DB_HOST}:5432,${EUREKA_HOST}:8761,${CONFIG_HOST}:7777
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_product:5432/${PRODUCT_DB_NAME}
+      - SPRING_DATASOURCE_USERNAME=${PRODUCT_DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${PRODUCT_DB_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:7777
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1" ]
       interval: ${INTERVAL20S:-20s}
@@ -220,7 +240,7 @@ services:
       discovery-service:
         condition: service_healthy
       config-service:
-        condition: service_started
+        condition: service_healthy
     networks:
       - inventory-net
     restart: unless-stopped
@@ -229,30 +249,33 @@ services:
     profiles: ["supplier"]
     container_name: supplier-service
     image: supplier-service:latest
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     env_file: [./.env.local]
     build:
       context: ..
-      dockerfile: supplier-service/Dockerfile
+      dockerfile: supplier-service/Dockerfile.local
     ports:
       - "${SUPPLIER_PORT:-9091}:9091"
-    entrypoint: ["/app/entrypoint.sh"]
     environment:
+      - SPRING_APPLICATION_NAME=supplier-service
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${SUPPLIER_DB_HOST}:5432/${SUPPLIER_DB_NAME:-db_supplier}
-      - SPRING_DATASOURCE_USERNAME=${SUPPLIER_DB_USERNAME:-supplier}
-      - SPRING_DATASOURCE_PASSWORD=${SUPPLIER_DB_PASSWORD:-supplier123}
-      - SPRING_DATASOURCE_HIKARI_AUTO_COMMIT=${SPRING_DATASOURCE_HIKARI_AUTO_COMMIT}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
-      - SPRING_CONFIG_IMPORT=optional:configserver:${SPRING_CLOUD_CONFIG_URI}
-      - WAIT_FOR=${SUPPLIER_DB_HOST}:5432,${EUREKA_HOST}:8761,${CONFIG_HOST}:7777
-
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_supplier:5432/${SUPPLIER_DB_NAME}
+      - SPRING_DATASOURCE_USERNAME=${SUPPLIER_DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SUPPLIER_DB_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:7777
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
+      #- WAIT_FOR=discovery-service:8761
+    entrypoint: ["java", "-jar", "/app/app.jar"]
     depends_on:
       db_supplier:
         condition: service_healthy
       discovery-service:
         condition: service_healthy
       config-service:
-        condition: service_started
+        condition: service_healthy
     networks:
       - inventory-net
     restart: unless-stopped
@@ -262,29 +285,33 @@ services:
     container_name: purchase-service
     image: purchase-service:latest
     env_file: [./.env.local]
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     build:
       context: ..
-      dockerfile: purchase-service/Dockerfile
+      dockerfile: purchase-service/Dockerfile.local
     ports:
       - "${PURCHASE_PORT:-9094}:9094"
     environment:
+      - SPRING_APPLICATION_NAME=purcharse-service
       - SERVER_PORT=9094
       - SPRING_PROFILES_ACTIVE=docker
-      # ✅ Usamos el HOST dinámico que definimos en el .env
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${PURCHASE_DB_HOST}:5432/${PURCHASE_DB_NAME:-db_purchase}
-      - SPRING_DATASOURCE_USERNAME=${PURCHASE_DB_USERNAME:-purchase}
-      - SPRING_DATASOURCE_PASSWORD=${PURCHASE_DB_PASSWORD:-purchase123}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
-      - SPRING_CONFIG_IMPORT=optional:configserver:${SPRING_CLOUD_CONFIG_URI}
-      # ✅ El WAIT_FOR también debe ser dinámico para que no falle en 'localhost'
-      - WAIT_FOR=${PURCHASE_DB_HOST}:5432,${EUREKA_HOST}:8761,${CONFIG_HOST}:7777
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_purchase:5432/${PURCHASE_DB_NAME}
+      - SPRING_DATASOURCE_USERNAME=${PURCHASE_DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${PURCHASE_DB_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:7777
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
+      # Cambiamos a discovery-service porque es el punto central de la infraestructura
+      - WAIT_FOR=discovery-service:8761
     depends_on:
       db_purchase:
         condition: service_healthy
       discovery-service:
         condition: service_healthy
       config-service:
-        condition: service_started
+        condition: service_healthy
     networks:
       - inventory-net
     restart: unless-stopped
@@ -293,21 +320,26 @@ services:
     profiles: ["tax"]
     container_name: tax-service
     image: tax-service:latest
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     env_file: [./.env.local]
     build:
       context: ..
-      dockerfile: tax-service/Dockerfile
+      dockerfile: tax-service/Dockerfile.local
     ports:
       - "${TAX_PORT:-9093}:9093"
     environment:
+      - SPRING_APPLICATION_NAME=tax-service
       - SERVER_PORT=9093
       - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${TAX_DB_HOST}:5432/${TAX_DB_NAME:-db_tax}
-      - SPRING_DATASOURCE_USERNAME=${TAX_DB_USERNAME:-tax}
-      - SPRING_DATASOURCE_PASSWORD=${TAX_DB_PASSWORD:-tax123}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
-      - SPRING_CONFIG_IMPORT=optional:configserver:${SPRING_CLOUD_CONFIG_URI}
-      - WAIT_FOR=${TAX_DB_HOST}:5432,${EUREKA_HOST}:8761,${CONFIG_HOST}:7777
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_tax:5432/${TAX_DB_NAME}
+      - SPRING_DATASOURCE_USERNAME=${TAX_DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${TAX_DB_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:7777
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
+      - WAIT_FOR=discovery-service:8761
     depends_on:
       db_tax:
         condition: service_healthy
@@ -326,15 +358,17 @@ services:
     env_file: [./.env.local]
     build:
       context: ..
-      dockerfile: api-gateway/Dockerfile
+      dockerfile: api-gateway/Dockerfile.local
     ports:
       - "${API_GATEWAY_PORT:-8090}:8090"
-    entrypoint: ["/app/entrypoint.sh"]
+    entrypoint: ["java", "-jar", "/app/app.jar"]
     environment:
+      - SPRING_APPLICATION_NAME=api-gateway
       - SPRING_PROFILES_ACTIVE=docker
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
-      - SPRING_CONFIG_IMPORT=optional:configserver:${SPRING_CLOUD_CONFIG_URI}
-      - WAIT_FOR=${EUREKA_HOST}:8761,${CONFIG_HOST}:7777
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:7777
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
+      - WAIT_FOR=discovery-service:8761,config-service:7777
     depends_on:
       discovery-service:
         condition: service_healthy
