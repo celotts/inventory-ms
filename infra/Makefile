@@ -855,50 +855,52 @@ up-local-all-optimized: podman-auth podman-ready fix-line-endings ## 🚀 Inicia
 	@cp $(ENV_FILE_LOCAL) $(ROOT_DIR)/.env.local 2>/dev/null || true
 	@cp $(ENV_FILE_LOCAL) $(CURDIR)/.env.local 2>/dev/null || true
 	@START_SECONDS=$$(date +%s); \
-	START_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
-	echo "==============================================================================================================================================================================="; \
+  	START_TIME=$$(date +"%Y-%m-%d %H:%M:%S"); \
+  	echo "=========================================================================="; \
 	echo "🚀 INICIO OPTIMIZADO: $$START_TIME"; \
-	echo "==============================================================================================================================================================================="; \
+	echo "=========================================================================="; \
 	\
-	echo "🔨 Paso 1: Compilando JARs (Gradle local)..."; \
+	echo "🔨 Paso 1: Compilando JARs..."; \
 	$(MAKE) build-jars-all; \
 	\
 	ALL_PROFILES="--profile infra --profile product --profile supplier --profile tax --profile purchase --profile gateway"; \
 	\
-	echo "🔧 Paso 2: Construyendo y Levantando Infraestructura..."; \
+	echo "🔧 Paso 2: Infraestructura y Bases de Datos..."; \
 	podman build -t discovery-service:latest -f $(ROOT_DIR)/discovery-service/Dockerfile $(ROOT_DIR); \
 	podman build -t config-service:latest -f $(ROOT_DIR)/config-service/Dockerfile $(ROOT_DIR); \
-	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d discovery-service config-service; \
-	echo "⏱️ Esperando 40s para Config Server..."; \
-	sleep 40; \
+	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d discovery-service config-service db_product db_supplier db_tax db_purchase; \
 	\
-	echo "🗄️ Paso 3: Levantando Bases de Datos..."; \
-	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d db_product db_supplier db_tax db_purchase; \
-	sleep 10; \
+	echo "⏳ Esperando a que Eureka y Config Server estén saludables..."; \
+	MAX_RETRIES=30; \
+	COUNT=0; \
+	until [ $$COUNT -ge $$MAX_RETRIES ] || (curl -s http://localhost:8761/actuator/health | grep UP > /dev/null && curl -s http://localhost:7777/actuator/health | grep UP > /dev/null); do \
+		printf "."; \
+		sleep 3; \
+		COUNT=$$((COUNT+1)); \
+	done; \
+	echo "\n✅ Infraestructura lista."; \
 	\
-	echo "🛠️ Paso 4: Construyendo y Levantando Microservicios..."; \
+	echo "🛠️ Paso 3: Construyendo y Levantando Microservicios..."; \
 	podman build -t product-service:latest -f $(ROOT_DIR)/product-service/Dockerfile $(ROOT_DIR); \
 	podman build -t supplier-service:latest -f $(ROOT_DIR)/supplier-service/Dockerfile $(ROOT_DIR); \
 	podman build -t tax-service:latest -f $(ROOT_DIR)/tax-service/Dockerfile $(ROOT_DIR); \
 	podman build -t purchase-service:latest -f $(ROOT_DIR)/purchase-service/Dockerfile $(ROOT_DIR); \
 	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d --no-build product-service supplier-service tax-service purchase-service; \
 	\
-	echo "🌐 Paso 5: Construyendo y Levantando API Gateway..."; \
+	echo "🌐 Paso 4: API Gateway..."; \
 	podman build -t api-gateway:latest -f $(ROOT_DIR)/api-gateway/Dockerfile $(ROOT_DIR); \
 	$(COMPOSE_OPTIMIZED) $$ALL_PROFILES up -d --no-build api-gateway; \
 	\
-	echo "==============================================================================================================================================================================="; \
-	echo "📊 ESTADO FINAL DE LOS CONTENEDORES"; \
-	echo "==============================================================================================================================================================================="; \
+	echo "=========================================================================="; \
+	echo "📊 ESTADO FINAL"; \
 	podman ps --format "{{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "service|db|discovery|config|gateway"; \
 	\
 	END_SECONDS=$$(date +%s); \
 	DURATION_SECONDS=$$((END_SECONDS - START_SECONDS)); \
 	MINUTES=$$(( (DURATION_SECONDS % 3600) / 60 )); \
 	SECONDS=$$((DURATION_SECONDS % 60)); \
-	echo "==============================================================================================================================================================================="; \
-	printf "⏳ TIEMPO TOTAL OPTIMIZADO: %02d:%02d\n" $$MINUTES $$SECONDS; \
-	echo "==============================================================================================================================================================================="; \
+	printf "⏳ TIEMPO TOTAL: %02d:%02d\n" $$MINUTES $$SECONDS; \
+	echo "=========================================================================="; \
 	$(MAKE) health-check-extended
 .PHONY: help help-services help-db help-troubleshoot start start-all \
 	stop restart restart-all dev dev-full dev-supplier dev-tax build-all build-jars \

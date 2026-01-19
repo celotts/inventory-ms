@@ -1,0 +1,70 @@
+# Archivo de configuración para Auth Service (ej. application-docker.yml)
+
+server:
+  # El Auth Service suele correr en un puerto diferente al Product Service (9090).
+  # Usaremos un puerto estándar para Auth, por ejemplo, 8081, o el que esté definido en tu Compose.
+  port: 8081  # CORRECCIÓN 1: Ajustar el puerto para Auth Service (cambiado de 9090)
+
+spring:
+  application:
+    name: auth-service # CORRECCIÓN 2: Cambiar el nombre de la aplicación
+
+  # Base de datos PostgreSQL para el Auth Service
+  datasource:
+    # CORRECCIÓN 3: Cambiar el host y el nombre de la base de datos
+    url: jdbc:postgresql://auth-db:5432/auth
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+
+  # Configuración JPA para PostgreSQL
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    defer-datasource-initialization: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  # CORRECCIÓN 4: Solución al error de compatibilidad de Spring Cloud
+  cloud:
+    compatibility-verifier:
+      enabled: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
+
+# Configuración de paginación (Mantengo esto si Auth también lo usa, aunque es menos común)
+app:
+  pagination:
+    default-page: 0
+    default-size: 10
+    max-size: 100
+    default-sort: createdAt
+    default-direction: desc
+  cors:
+    allowed-origin: "*"
+
+# Endpoints de management
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+# Logging para debug
+logging:
+  level:
+    # CORRECCIÓN 5: Ajustar el logging al paquete del Auth Service
+    com.celotts.authservice: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

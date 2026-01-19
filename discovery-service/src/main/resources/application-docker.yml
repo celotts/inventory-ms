@@ -1,0 +1,33 @@
+server:
+  port: ${DISCOVERY_PORT:8761}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+    register-with-eureka: false
+    fetch-registry: false
+    retryable: true
+
+  instance:
+    # Si estás en Docker, usará 'discovery-service'.
+    # Si estás en el IDE, usará 'localhost'.
+    hostname: ${EUREKA_HOST:localhost}
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging:
+  level:
+    com.netflix.discovery.shared.transport.jersey3.EurekaJersey3ClientImpl: OFF
+
+# 🛑 PROPIEDAD DE CORRECCIÓN: Deshabilita el verificador que causa el fallo.
+spring:
+  cloud:
+    compatibility-verifier:
+      enabled: false

@@ -1,0 +1,41 @@
+# --- CONFIGURACIÓN LOCAL (application-local.yml) ---
+
+server:
+  port: ${CONFIG_PORT:7777}
+
+spring:
+  application:
+    name: config-service
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
+    config:
+      server: # Configura esta aplicación como un Config Server
+        git:
+          uri: ${SPRING_CLOUD_CONFIG_SERVER_GIT_URI}
+          username: ${GIT_USERNAME}
+          password: ${GIT_TOKEN}
+          timeout: 10
+          default-label: main
+          search-paths: config
+      fail-fast: true
+
+eureka:
+  client:
+    enabled: ${EUREKA_CLIENT_ENABLED:true}
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

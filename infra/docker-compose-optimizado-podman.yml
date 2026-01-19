@@ -105,224 +105,99 @@ services:
       - ./init-scripts/tax/04-tax-init.sql:/docker-entrypoint-initdb.d/04-tax-init.sql:ro
     restart: unless-stopped
 
-  # --- SERVICIOS DE INFRAESTRUCTURA ---
+  # --- INFRAESTRUCTURA ---
   discovery-service:
-    profiles: [ "infra" ]
+    profiles: ["infra"]
     container_name: discovery-service
-    # ✅ AÑADE ESTA LÍNEA:
     image: discovery-service:latest
-    env_file: [ ./.env.local ]
-    # ⚠️ OPCIONAL: Puedes comentar o dejar el build,
-    # pero la clave es la línea 'image' y el flag que usaremos en el Makefile.
-    build:
-      context: ../discovery-service
-      dockerfile: Dockerfile
+    env_file: [./.env.local]
     ports:
       - "${DISCOVERY_PORT:-8761}:8761"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=8761
+    networks:
+      - inventory-net
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
       interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 40s
-    networks:
-      - inventory-net
-    restart: unless-stopped
+      start_period: 30s
 
   config-service:
-    profiles: [ "infra" ]
+    profiles: ["infra"]
     container_name: config-service
     image: config-service:latest
-    env_file: [ ./.env.local ]
-    build:
-      context: ./config-service
-      dockerfile: Dockerfile
+    env_file: [./.env.local]
     ports:
       - "${CONFIG_PORT:-7777}:7777"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SERVER_PORT=7777
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      # AJUSTE CRÍTICO: Evita que el servicio se bloquee esperando su propia config al arrancar
-      - SPRING_CLOUD_CONFIG_FAIL_FAST=false
-      - SPRING_CLOUD_CONFIG_SERVER_GIT_TIMEOUT=30
     depends_on:
       discovery-service:
         condition: service_healthy
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:7777/actuator/health || exit 1" ]
-      interval: 30s        # Más espacio entre pruebas
-      timeout: 15s        # Más tiempo para responder
-      retries: 10         # Más intentos antes de fallar
-      start_period: 240s  # <--- CLAVE: 4 minutos de gracia para evitar el error 'unhealthy'
     networks:
       - inventory-net
-    restart: unless-stopped
 
-  # --- SERVICIOS DE NEGOCIO ---
-  auth-service:
-    profiles: ["auth"]
-    container_name: auth-service
-    env_file: [./.env.local]
-    build:
-      context: ..
-      dockerfile: ./auth-service/Dockerfile
-    ports:
-      - "8080:8080"
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-    depends_on:
-      discovery-service:
-        condition: service_healthy
-      config-service:
-        condition: service_healthy
-    networks:
-      - inventory-net
-    restart: unless-stopped
-
+  # --- NEGOCIO ---
   product-service:
     profiles: ["product"]
     container_name: product-service
+    image: product-service:latest
     env_file: [./.env.local]
-    build:
-      context: ..
-      dockerfile: ./product-service/Dockerfile
     ports:
       - "${PRODUCT_PORT:-9090}:9090"
-    entrypoint: ["/app/entrypoint.sh"]
-    environment:
-      - DB_HOST=db_product
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_product:5432/${PRODUCT_DB_NAME:-db_product}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      - WAIT_FOR=db_product:5432,discovery-service:8761,config-service:7777
     depends_on:
       db_product:
         condition: service_healthy
-      discovery-service:
-        condition: service_healthy
-      config-service:
-        condition: service_healthy
     networks:
       - inventory-net
-    restart: unless-stopped
 
   supplier-service:
     profiles: ["supplier"]
     container_name: supplier-service
+    image: supplier-service:latest
     env_file: [./.env.local]
-    build:
-      context: ..
-      dockerfile: ./supplier-service/Dockerfile
     ports:
       - "${SUPPLIER_PORT:-9091}:9091"
-    entrypoint: ["/app/entrypoint.sh"]
-    environment:
-      - DB_HOST=db_supplier
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_supplier:5432/${SUPPLIER_DB_NAME:-db_supplier}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      - WAIT_FOR=db_supplier:5432,discovery-service:8761,config-service:7777
     depends_on:
       db_supplier:
         condition: service_healthy
-      discovery-service:
-        condition: service_healthy
-      config-service:
-        condition: service_healthy
     networks:
       - inventory-net
-    restart: unless-stopped
-
-  purchase-service:
-    profiles: ["purchase"]
-    container_name: purchase-service
-    env_file: [./.env.local]
-    build:
-      context: ..
-      dockerfile: ./purchase-service/Dockerfile
-    ports:
-      - "${PURCHASE_PORT:-9094}:9094"
-    environment:
-      - DB_HOST=db_purchase
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_purchase:5432/${PURCHASE_DB_NAME:-db_purchase}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      - WAIT_FOR=db_purchase:5432,discovery-service:8761,config-service:7777
-    depends_on:
-      db_purchase:
-        condition: service_healthy
-      discovery-service:
-        condition: service_healthy
-      config-service:
-        condition: service_healthy
-    networks:
-      - inventory-net
-    restart: unless-stopped
 
   tax-service:
     profiles: ["tax"]
     container_name: tax-service
+    image: tax-service:latest
     env_file: [./.env.local]
-    build:
-      context: ..
-      dockerfile: ./tax-service/Dockerfile
     ports:
       - "${TAX_PORT:-9093}:9092"
-    environment:
-      - SERVER_PORT=9092
-      - DB_HOST=db_tax
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_tax:5432/${TAX_DB_NAME:-db_tax}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      - WAIT_FOR=db_tax:5432,discovery-service:8761,config-service:7777
     depends_on:
       db_tax:
         condition: service_healthy
-      discovery-service:
-        condition: service_healthy
-      config-service:
+    networks:
+      - inventory-net
+
+  purchase-service:
+    profiles: ["purchase"]
+    container_name: purchase-service
+    image: purchase-service:latest
+    env_file: [./.env.local]
+    ports:
+      - "${PURCHASE_PORT:-9094}:9094"
+    depends_on:
+      db_purchase:
         condition: service_healthy
     networks:
       - inventory-net
-    restart: unless-stopped
 
   api-gateway:
     profiles: ["gateway"]
     container_name: api-gateway
+    image: api-gateway:latest
     env_file: [./.env.local]
-    build:
-      context: ..
-      dockerfile: ./api-gateway/Dockerfile
     ports:
       - "${API_GATEWAY_PORT:-8090}:8090"
-    entrypoint: ["/app/entrypoint.sh"]
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
-      - WAIT_FOR=discovery-service:8761,config-service:7777
-    depends_on:
-      discovery-service:
-        condition: service_healthy
-      config-service:
-        condition: service_healthy
     networks:
       - inventory-net
-    restart: unless-stopped
 
 volumes:
   db_product_data:
   db_supplier_data:
   db_purchase_data:
   db_tax_data:
-  db_auth_data:
