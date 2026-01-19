@@ -88,7 +88,7 @@ spring:
     password: ${SUPPLIER_DB_PASSWORD:supplier123}
     driver-class-name: org.postgresql.Driver
     hikari:
-      pool-name: HikariPool-ProductServiceDocker
+      pool-name: HikariPool-SupplierServiceDocker
       maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
       minimum-idle: ${MINIMUM_IDLE:5}
       auto-commit: ${AUTO_COMMIT:true}

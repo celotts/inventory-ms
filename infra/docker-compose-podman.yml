@@ -17,7 +17,7 @@ services:
     ports:
       - "${PRODUCT_DB_PORT_HOST:-5433}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${PRODUCT_DB_USERNAME:-product} -d ${PRODUCT_DB_NAME:-db_product}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -43,7 +43,7 @@ services:
     ports:
       - "${SUPPLIER_DB_PORT_HOST:-5434}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${SUPPLIER_DB_USERNAME:-supplier} -d ${SUPPLIER_DB_NAME:-db_supplier}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -56,12 +56,11 @@ services:
       - db_supplier_data:/var/lib/postgresql/data
       - ./init-scripts/supplier/02-supplier-init.sql:/docker-entrypoint-initdb.d/02-supplier-init.sql:ro
     restart: unless-stopped
-
   db_purchase:
-    profiles: ["purchase"]
+    profiles: [ "purchase" ]
     image: ${IMAGE_DB:-postgres:16}
     container_name: db_purchase
-    env_file: [./.env.local]
+    env_file: [ ./.env.local ]
     environment:
       POSTGRES_DB: ${PURCHASE_DB_NAME:-db_purchase}
       POSTGRES_USER: ${PURCHASE_DB_USERNAME:-purchase}
@@ -69,7 +68,7 @@ services:
     ports:
       - "${PURCHASE_DB_PORT_HOST:-5436}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -84,10 +83,10 @@ services:
     restart: unless-stopped
 
   db_tax:
-    profiles: ["tax"]
+    profiles: [ "tax" ]
     image: ${IMAGE_DB:-postgres:16}
     container_name: db_tax
-    env_file: [./.env.local]
+    env_file: [ ./.env.local ]
     environment:
       POSTGRES_DB: ${TAX_DB_NAME:-db_tax}
       POSTGRES_USER: ${TAX_DB_USERNAME:-tax}
@@ -95,7 +94,7 @@ services:
     ports:
       - "${TAX_DB_PORT_HOST:-5435}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -108,7 +107,6 @@ services:
       - db_tax_data:/var/lib/postgresql/data
       - ./init-scripts/tax/04-tax-init.sql:/docker-entrypoint-initdb.d/04-tax-init.sql:ro
     restart: unless-stopped
-
   # --- SERVICIOS DE INFRAESTRUCTURA ---
   discovery-service:
     profiles: ["infra"]
@@ -120,135 +118,52 @@ services:
       dockerfile: discovery-service/Dockerfile.local
     ports:
       - "${DISCOVERY_PORT:-8761}:8761"
-    entrypoint: [ "java", "-jar", "/app/app.jar" ]
     environment:
-      - SPRING_APPLICATION_NAME=discovery-service
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SERVER_PORT=${DISCOVERY_PORT:-8761}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:- http://discovery-service:8761/eureka/}
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8761
+      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=false
+      - EUREKA_CLIENT_FETCH_REGISTRY=false
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
-      retries: 10
-      start_period: 20s
+      retries: 5
     networks:
-      inventory-net:
-        aliases:
-          - discovery-service
+      - inventory-net
     restart: unless-stopped
 
   config-service:
-    profiles: [ "infra" ]
+    profiles: ["infra"]
     container_name: config-service
     image: config-service:latest
-    env_file: [ ./.env.local ]
+    user: root
+    env_file: [./.env.local]
     build:
       context: ..
       dockerfile: config-service/Dockerfile.local
     ports:
       - "${CONFIG_PORT:-7777}:7777"
-    entrypoint: [ "java", "-jar", "/app/app.jar" ]
     environment:
-      - SPRING_APPLICATION_NAME=config-service
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker},native
-      - SERVER_PORT=${CONFIG_PORT:-777}
+      - SPRING_PROFILES_ACTIVE=docker,native
+      - SERVER_PORT=7777
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - WAIT_FOR=discovery-service:8761
       - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS=file:/config-repo-local/
-      - WAIT_FOR=${EUREKA_HOST:-discovery-service}:8761
     volumes:
       - ../../config-repo-local:/config-repo-local:ro,Z
     healthcheck:
-      # ✅ Ahora el healthcheck cambia automáticamente si cambias el puerto en el .env
-      test: [ "CMD-SHELL", "curl -f http://localhost:${CONFIG_PORT:-7777}/actuator/health | grep UP || exit 1" ]
-      interval: ${INTERVAL20S}
-      timeout: ${TIMEOUT10S}
-      retries: ${RETRIES10}
-      start_period: ${START_PERIOD60S}
+      test: ["CMD-SHELL", "curl -f http://localhost:7777/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
     depends_on:
       discovery-service:
         condition: service_healthy
     networks:
       - inventory-net
 
-  #-----------------------------
   # --- SERVICIOS DE NEGOCIO ---
-  #-----------------------------
-  auth-service:
-    profiles: ["auth"]
-    container_name: auth-service
-    image: auth-service:latest
-    env_file: [./.env.local]
-    build:
-      context: ..
-      dockerfile: auth-service/Dockerfile.local
-    ports:
-      - "${AUTH_PORT:-8080}:${AUTH_PORT:-8080}"
-    entrypoint: [ "java", "-jar", "/app/app.jar" ]
-    environment:
-      - SPRING_APPLICATION_NAME=${AUTH_SERVICE_NAME:-auth-service}
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SERVER_PORT=${AUTH_PORT:-8080}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:- http://discovery-service:8761/eureka/}
-      - SPRING_CLOUD_CONFIG_URI=${SPRING_CLOUD_CONFIG_URI:-http://${CONFIG_HOST:-config-service}:7777}
-      - SPRING_CONFIG_IMPORT=optional:configserver:${SPRING_CLOUD_CONFIG_URI:-http://config-service:7777}
-      - WAIT_FOR=${EUREKA_HOST:-discovery-service}:8761,${CONFIG_HOST:-config-service}:${CONFIG_PORT:-7777}
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1" ]
-      interval: ${INTERVAL20S:-20s}
-      timeout: ${TIMEOUT10S:-10s}
-      retries: ${RETRIES10:-10}
-      start_period: ${START_PERIOD60S:-60s}
-    depends_on:
-      discovery-service:
-        condition: service_healthy
-      config-service:
-        condition: service_healthy
-    networks:
-      - inventory-net
-    restart: unless-stopped
-
-  product-service:
-    profiles: [ "product" ]
-    container_name: product-service
-    image: product-service:latest
-    env_file:
-      - ./.env.local
-    build:
-      context: ..
-      dockerfile: product-service/Dockerfile.local
-    ports:
-      - "${PRODUCT_PORT:-9090}:${PRODUCT_PORT:-9090}"
-    environment:
-      - SPRING_APPLICATION_NAME=${PRODUCT_SERVICE_NAME:-product-service}
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SERVER_PORT=${PRODUCT_PORT:-9090}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${PRODUCT_DB_HOST:-db_product}:5432/${PRODUCT_DB_NAME:-product}
-      - SPRING_DATASOURCE_USERNAME=${PRODUCT_DB_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${PRODUCT_DB_PASSWORD}
-      - DISCOVERY_SERVICE_EUREKA=http://discovery-service:8761/eureka/
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:- http://discovery-service:8761/eureka/}
-      - SPRING_CLOUD_CONFIG_URI=${SPRING_CLOUD_CONFIG_URI:-http://${CONFIG_HOST:-config-service}:7777}
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
-      - WAIT_FOR=${PRODUCT_DB_HOST}:${DB_PORT_INTERNAL},${EUREKA_HOST}:${DISCOVERY_PORT},${CONFIG_HOST}:${CONFIG_PORT}
-    healthcheck:
-      # ✅ Ahora el healthcheck cambia automáticamente si cambias el puerto en el .env
-      test: [ "CMD-SHELL", "curl -f http://localhost:${PRODUCT_PORT}/actuator/health | grep UP || exit 1" ]
-      interval: ${INTERVAL20S}
-      timeout: ${TIMEOUT10S}
-      retries: ${RETRIES10}
-      start_period: ${START_PERIOD60S}
-    depends_on:
-      db_product:
-        condition: service_healthy
-      discovery-service:
-        condition: service_healthy
-      config-service:
-        condition: service_healthy
-    networks:
-      - inventory-net
-    restart: unless-stopped
-
   supplier-service:
     profiles: ["supplier"]
     container_name: supplier-service
@@ -258,114 +173,26 @@ services:
       context: ..
       dockerfile: supplier-service/Dockerfile.local
     ports:
-      - "${SUPPLIER_PORT:-9091}:${SUPPLIER_PORT:-9091}"
+      - "${SUPPLIER_PORT:-9091}:9091"
     environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SPRING_APPLICATION_NAME=${SUPPLIER_SERVICE_NAME:-supplier-service}
-      - SERVER_PORT=${SUPPLIER_PORT:-9091}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${SUPPLIER_DB_HOST:-db_supplier}:${DB_PORT_INTERNAL:-5432}/${SUPPLIER_DB_NAME:-supplier}
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_APPLICATION_NAME=supplier-service
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_supplier:5432/${SUPPLIER_DB_NAME:-supplier}
       - SPRING_DATASOURCE_USERNAME=${SUPPLIER_DB_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SUPPLIER_DB_PASSWORD}
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:-http://discovery-service:8761/eureka/
-      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
-      - DISCOVERY_SERVICE_EUREKA=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:-http://discovery-service:8761/eureka/}
-      - SPRING_CLOUD_CONFIG_URI=${SPRING_CLOUD_CONFIG_URI:-http://${CONFIG_HOST:-config-service}:7777}
-      - SPRING_CONFIG_IMPORT=optional:configserver:${SPRING_CLOUD_CONFIG_URI}
-      - WAIT_FOR=${EUREKA_HOST:-discovery-service}:8761,${CONFIG_HOST:-config-service}:7777
-      - SPRING_CLOUD_CONFIG_ALLOW_OVERRIDE=true
-      - SPRING_CLOUD_CONFIG_OVERRIDE_NONE=false
+      # CORRECCIÓN DE EUREKA: Usamos la propiedad estándar de Spring Cloud
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
+      # AÑADIMOS ESTO PARA MEJORAR LA CONECTIVIDAD EN PODMAN
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
     healthcheck:
-      # ✅ Ahora el healthcheck cambia automáticamente si cambias el puerto en el .env
-      test: [ "CMD-SHELL", "curl -f http://localhost:${PRODUCT_PORT}/actuator/health | grep UP || exit 1" ]
-      interval: ${INTERVAL20S}
-      timeout: ${TIMEOUT10S}
-      retries: ${RETRIES10}
-      start_period: ${START_PERIOD60S}
+      test: [ "CMD-SHELL", "curl -f http://localhost:9091/actuator/health || exit 1" ]
+      interval: 20s      # Más tiempo entre pruebas
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     depends_on:
-      db_product:
-        condition: service_healthy
-      discovery-service:
-        condition: service_healthy
-      config-service:
-        condition: service_healthy
-    networks:
-      - inventory-net
-    restart: unless-stopped
-
-  purchase-service:
-    profiles: [ "purchase" ]
-    container_name: purchase-service
-    image: purchase-service:latest
-    env_file: [ ./.env.local ]
-    build:
-      context: ..
-      dockerfile: purchase-service/Dockerfile.local
-    ports:
-      - "${PURCHASE_PORT:-9094}:9094"
-    environment:
-      - SPRING_APPLICATION_NAME=${PURCHASE_SERVICE_NAME:-purchase-service}
-      - SERVER_PORT=${PURCHASE_PORT:-9094}
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${PURCHASE_DB_HOST:-db_purchase}:5432/${PURCHASE_DB_NAME:-purchase}
-      - SPRING_DATASOURCE_USERNAME=${PURCHASE_DB_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${PURCHASE_DB_PASSWORD}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:- http://discovery-service:8761/eureka/}
-      - SPRING_CLOUD_CONFIG_URI=${SPRING_CLOUD_CONFIG_URI:-http://${CONFIG_HOST:-config-service}:7777}
-      - SPRING_CONFIG_IMPORT=optional:configserver:${SPRING_CLOUD_CONFIG_URI}
-      - WAIT_FOR=${EUREKA_HOST:-discovery-service}:8761,${CONFIG_HOST:-config-service}:7777
-      - SPRING_CLOUD_CONFIG_ALLOW_OVERRIDE=true
-      - SPRING_CLOUD_CONFIG_OVERRIDE_NONE=false
-    healthcheck:
-      # ✅ Ahora el healthcheck cambia automáticamente si cambias el puerto en el .env
-      test: [ "CMD-SHELL", "curl -f http://localhost:${PRODUCT_PORT}/actuator/health | grep UP || exit 1" ]
-      interval: ${INTERVAL20S}
-      timeout: ${TIMEOUT10S}
-      retries: ${RETRIES10}
-      start_period: ${START_PERIOD60S}
-    depends_on:
-      db_product:
-        condition: service_healthy
-      discovery-service:
-        condition: service_healthy
-      config-service:
-        condition: service_healthy
-    networks:
-      - inventory-net
-
-  tax-service:
-    profiles: ["tax"]
-    container_name: tax-service
-    image: tax-service:latest
-    env_file: [ ./.env.local ]
-    build:
-      context: ..
-      dockerfile: tax-service/Dockerfile.local
-    ports:
-      - "${TAX_PORT:-9093}:9093"
-    environment:
-      - SPRING_APPLICATION_NAME=${TAX_SERVICE_NAME:-tax-service}
-      - SERVER_PORT=${TAX_PORT:-9093}
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${TAX_DB_HOST:-db_tax}:5432/${TAX_DB_NAME:-tax}
-      - SPRING_DATASOURCE_USERNAME=${TAX_DB_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${TAX_DB_PASSWORD}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:- http://discovery-service:8761/eureka/}
-      - SPRING_CLOUD_CONFIG_URI=${SPRING_CLOUD_CONFIG_URI:-http://${CONFIG_HOST:-config-service}:7777}
-      - SPRING_CONFIG_IMPORT=optional:configserver:${SPRING_CLOUD_CONFIG_URI}
-      - WAIT_FOR=${EUREKA_HOST:-discovery-service}:8761,${CONFIG_HOST:-config-service}:7777
-      - SPRING_CLOUD_CONFIG_ALLOW_OVERRIDE=true
-      - SPRING_CLOUD_CONFIG_OVERRIDE_NONE=false
-    healthcheck:
-      # ✅ Ahora el healthcheck cambia automáticamente si cambias el puerto en el .env
-      test: [ "CMD-SHELL", "curl -f http://localhost:${PRODUCT_PORT}/actuator/health | grep UP || exit 1" ]
-      interval: ${INTERVAL20S}
-      timeout: ${TIMEOUT10S}
-      retries: ${RETRIES10}
-      start_period: ${START_PERIOD60S}
-    depends_on:
-      db_product:
+      db_supplier:
         condition: service_healthy
       discovery-service:
         condition: service_healthy
@@ -375,16 +202,16 @@ services:
       - inventory-net
 
   api-gateway:
-    profiles: ["gateway"]
+    profiles: [ "gateway" ]
     container_name: api-gateway
     image: api-gateway:latest
-    env_file: [./.env.local]
+    env_file: [ ./.env.local ]
     build:
       context: ..
       dockerfile: api-gateway/Dockerfile.local
     ports:
       - "${API_GATEWAY_PORT:-8090}:8090"
-    entrypoint: ["java", "-jar", "/app/app.jar"]
+    entrypoint: [ "java", "-jar", "/app/app.jar" ]
     environment:
       - SPRING_APPLICATION_NAME=api-gateway
       - SPRING_PROFILES_ACTIVE=docker
@@ -401,9 +228,109 @@ services:
       - inventory-net
     restart: unless-stopped
 
+  product-service:
+    profiles: ["product"]
+    container_name: product-service
+    image: product-service:latest
+    env_file: [./.env.local]
+    build:
+      context: ..
+      dockerfile: product-service/Dockerfile.local
+    ports:
+      - "${PRODUCT_PORT:-9090}:9090"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_product:5432/${PRODUCT_DB_NAME:-product}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - DISCOVERY_SERVICE_EUREKA=http://discovery-service:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:7777
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      db_product:
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+    networks:
+      - inventory-net
+  tax-service:
+    profiles: [ "tax" ]
+    container_name: tax-service
+    image: tax-service:latest
+    env_file: [ ./.env.local ]
+    build:
+      context: ..
+      dockerfile: tax-service/Dockerfile.local
+    ports:
+      - "${TAX_PORT:-9093}:9093"
+    environment:
+      - SPRING_APPLICATION_NAME=tax-service
+      - SERVER_PORT=9093
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_tax:5432/${TAX_DB_NAME:-tax}
+      - SPRING_DATASOURCE_USERNAME=${TAX_DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${TAX_DB_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:7777
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9093/actuator/health | grep UP || exit 1" ]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    depends_on:
+      db_tax: # <--- CAMBIADO: Antes decía db_product
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+    networks:
+      - inventory-net
+  purchase-service:
+    profiles: [ "purchase" ]
+    container_name: purchase-service
+    image: purchase-service:latest
+    env_file: [ ./.env.local ]
+    build:
+      context: ..
+      dockerfile: purchase-service/Dockerfile.local
+    ports:
+      - "${PURCHASE_PORT:-9094}:9094"
+    environment:
+      - SPRING_APPLICATION_NAME=purchase-service
+      - SERVER_PORT=9094
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_purchase:5432/${PURCHASE_DB_NAME:-purchase}
+      - SPRING_DATASOURCE_USERNAME=${PURCHASE_DB_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${PURCHASE_DB_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:7777
+      - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
+    healthcheck:
+      # CAMBIADO: Antes usaba el puerto de producto (9090)
+      test: [ "CMD-SHELL", "curl -f http://localhost:9094/actuator/health | grep UP || exit 1" ]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    depends_on:
+      db_purchase: # <--- CAMBIADO: Antes decía db_product
+        condition: service_healthy
+      discovery-service:
+        condition: service_healthy
+      config-service:
+        condition: service_healthy
+    networks:
+      - inventory-net
 volumes:
   db_product_data:
   db_supplier_data:
   db_purchase_data:
   db_tax_data:
-  db_auth_data:

@@ -1,19 +1,27 @@
 #!/bin/bash
-# Script de entrada corregido para config-service.
+# Script de entrada corregido y simplificado
 
-# 1. Variables
-WAIT_HOST="discovery-service"
+WAIT_FOR_SERVICE="discovery-service"
 WAIT_PORT="8761"
-WAIT_TIMEOUT=60
+TIMEOUT=60
 
-echo "⏳ Esperando a que Eureka esté disponible en $WAIT_HOST:$WAIT_PORT..."
+echo "🔍 Verificando conexión con $WAIT_FOR_SERVICE:$WAIT_PORT..."
 
-# 2. EJECUCIÓN CON FORMATO DESGLOSADO
-# Usamos los flags explícitos -h y -p para que el script no se confunda
-/app/wait-for-it.sh -h "$WAIT_HOST" -p "$WAIT_PORT" -t "$WAIT_TIMEOUT" -- java -Djava.security.egd=file:/dev/./urandom -jar /app/app.jar
+# Usamos un bucle nativo de Bash para verificar el puerto
+# Esto no requiere scripts externos como wait-for-it.sh
+COUNTER=0
+until (echo > /dev/tcp/$WAIT_FOR_SERVICE/$WAIT_PORT) >/dev/null 2>&1; do
+    if [ $COUNTER -ge $TIMEOUT ]; then
+        echo "❌ ERROR: Tiempo de espera agotado para $WAIT_FOR_SERVICE"
+        exit 1
+    fi
+    echo "⏳ Esperando a Eureka... ($COUNTER/$TIMEOUT)"
+    sleep 2
+    COUNTER=$((COUNTER + 2))
+done
 
-# 3. Manejo de error
-if [ $? -ne 0 ]; then
-    echo "❌ ERROR: El tiempo de espera para $WAIT_HOST ha expirado."
-    exit 1
-fi
+echo "✅ Eureka detectado y respondiendo!"
+echo "🚀 Iniciando aplicación Java..."
+
+# Iniciamos Java usando exec para manejar señales de cierre (SIGTERM)
+exec java -Djava.security.egd=file:/dev/./urandom -jar /app/app.jar

@@ -24,12 +24,12 @@ eureka:
   client:
     enabled: true
     service-url:
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${random.value}
+    instance-id: ${spring.application.name}:${random.uuid}
 
 # Swagger / OpenAPI
 springdoc:

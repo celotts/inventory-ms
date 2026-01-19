@@ -92,4 +92,5 @@ RUN chmod +x entrypoint.sh wait-for-it.sh
 USER spring:spring
 
 # Aquí debería ir el ENTRYPOINT
-ENTRYPOINT ["/app/entrypoint.sh"]
+#ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/app/entrypoint.sh"]

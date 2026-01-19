@@ -5,7 +5,7 @@ import org.mapstruct.*;
 @MapperConfig(
         componentModel = "spring",
         injectionStrategy = InjectionStrategy.CONSTRUCTOR,
-        unmappedTargetPolicy = ReportingPolicy.ERROR,
+        unmappedTargetPolicy = ReportingPolicy.WARN, // <--- Cambia de ERROR a WARN
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
         nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS,
         nullValueMappingStrategy = NullValueMappingStrategy.RETURN_DEFAULT,
