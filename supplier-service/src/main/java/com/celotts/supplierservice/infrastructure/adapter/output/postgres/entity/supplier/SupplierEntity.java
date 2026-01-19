@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import lombok.experimental.SuperBuilder; // <--- IMPORTANTE
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -23,7 +24,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder // <--- CAMBIAR @Builder por @SuperBuilder
 @ToString(onlyExplicitlyIncluded = true)
 public class SupplierEntity extends AuditableEntity {
 
@@ -60,6 +61,9 @@ public class SupplierEntity extends AuditableEntity {
     @Column(columnDefinition = "text")
     private String address;
 
+    // Nota: El campo 'enabled' ya existe en AuditableEntity.
+    // Si quieres sobreescribirlo aquí, está bien, pero asegúrate
+    // de usar @Builder.Default con @SuperBuilder también.
     @Column(nullable = false)
     @Builder.Default
     private Boolean enabled = Boolean.TRUE;

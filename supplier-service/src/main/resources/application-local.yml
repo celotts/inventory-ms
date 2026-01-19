@@ -1,42 +1,40 @@
-# application-local.yml (Supplier Service - Perfil Local/Host)
+# =======================================================
+# CONFIGURACIÓN GLOBAL / PERFIL LOCAL (Por defecto)
+# =======================================================
 server:
-  port: 9091 # Usar 9091 para Supplier Service si 9090 ya es usado por Product
+  port: ${SUPPLIER_PORT:9091}
 
 spring:
-  # --- Configuración de Activación ---
   config:
     activate:
-      # CRÍTICO: Debe ser 'local' para coincidir con el nombre del archivo/intención
-      on-profile: local
-
+      on-profile: ${ONPROFILE:local}
+    import: "optional:configserver:"
   application:
     name: supplier-service
 
-  # --- Dependencias de la Nube (DEBEN ESTAR DESHABILITADAS EN LOCAL) ---
   cloud:
     config:
-      enabled: false # 🛑 DESHABILITADO: No se necesita Config Server en ejecución local
+      enabled: ${CLOUD_CONFIG_ENABLED:false}
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://localhost:7777}
 
   eureka:
     client:
-      enabled: true
+      enabled: ${EUREKA_CLIENT_ENABLED:true}
       service-url:
         defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
       register-with-eureka: true
       fetch-registry: true
     instance:
       prefer-ip-address: true
-      instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
-
-  # --- Base de Datos (Conexión al localhost/Host Mapeado) ---
+      instance-id: ${spring.application.name}:${random.value}
+  # Configuración de Base de Datos para Local
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${SUPPLIER_DB_NAME:supplier}
+    url: jdbc:postgresql://${SUPPLIER_DB_HOST:localhost}:${SUPPLIER_DB_PORT:5434}/${SUPPLIER_DB_NAME:supplier}
     username: ${SUPPLIER_DB_USERNAME:supplier}
     password: ${SUPPLIER_DB_PASSWORD:supplier123}
     driver-class-name: org.postgresql.Driver
-
     hikari:
-      pool-name: HikariPool-SupplierServiceLocal # Renombrado para claridad
+      pool-name: HikariPool-SupplierServiceLocal
       maximum-pool-size: 10
       minimum-idle: 2
       auto-commit: false
@@ -45,55 +43,99 @@ spring:
       idle-timeout: 600000
       max-lifetime: 1800000
 
-  # --- JPA/Hibernate ---
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${DDL_AUTO:update}
     show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
-  # --- Exclusiones ---
+
+
+  # Seguridad: Exclusiones para desarrollo
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
       - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
 
-  # --- Configuración General de Spring ---
   messages:
     basename: messages
     encoding: UTF-8
     fallback-to-system-locale: false
-
-# --- Documentación/Swagger ---
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    display-request-duration: true
-
-# --- Configuraciones Propias de la Aplicación (Pag. y CORS) ---
+# Configuración de App, Logging y Swagger (Común)
 app:
-  pagination:
-    default-page: 0
-    default-size: 10
-    max-size: 100
-    default-sort: createdAt
-    default-direction: desc
   cors:
-    allowed-origin: "*"
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:*}
+  pagination:
+    default-page: ${PAGINATION_DEFAULT_PAGE:0}
+    default-size: ${PAGINATION_DEFAULT_SIZE:10}
+    max-size: ${PAGINATION_MAX_SIZE:100}
+    default-sort: ${PAGINATION_DEFAULT_SORT:createdAt}
+    default-direction: ${PAGINATION_DEFAULT_DIRECTION:desc}
 
-# --- Management Endpoints ---
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.hibernate: INFO
+    org.hibernate.SQL: DEBUG
+    com.celotts.supplierservice: INFO
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    org.springframework.security: DEBUG
+    root: ${LOGGING_LEVEL_ROOT:INFO}
+
 management:
   endpoints:
     web:
       exposure:
         include: "*"
 
-# --- Logging ---
-logging:
-  level:
-    # Usar el nombre correcto del paquete de la aplicación
-    com.celotts.supplierservice: DEBUG
-    com.netflix.eureka: WARN
-    com.netflix.discovery: WARN
+---
+# =======================================================
+# 🐳 PERFIL DOCKER (Ejecución DENTRO del Contenedor)
+# =======================================================
+spring:
+  config:
+    activate:
+      on-profile: docker
+    import: "optional:configserver:"
+
+  cloud:
+    config:
+      enabled: ${DOCKER_CONFIG_SERVER_ENABLED:false}
+      uri: http://config-service:7777
+
+  # Database: Conexión interna a la red de Docker
+  datasource:
+    # 🚨 CORREGIDO: Usamos el host del contenedor y puerto interno 5432
+    url: jdbc:postgresql://supplier-db:5432/${SUPPLIER_DB_NAME:supplier}
+    username: ${SUPPLIER_DB_USERNAME:supplier}
+    password: ${SUPPLIER_DB_PASSWORD:supplier123}
+    hikari:
+      pool-name: HikariPool-ProductServiceDocker
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${MINIMUM_IDLE:5}
+      auto-commit: ${AUTO_COMMIT:true}
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      connection-timeout: ${VALIDATION_TIMEOUT:3000}
+      idle-timeout: ${ILDETIMEOUT:600000}
+      max-lifetime: ${MAXLIFETIME:1800000}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  # Eureka: Conexión interna
+eureka:
+  client:
+    enabled: true
+    service-url:
+      # 🚨 CLAVE: No usar localhost, usar el nombre del servicio discovery-service
+      defaultZone: http://discovery-service:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    # ID único para que Eureka no confunda instancias
+    instance-id: ${spring.application.name}:${random.uuid}

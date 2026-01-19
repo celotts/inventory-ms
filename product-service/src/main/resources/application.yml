@@ -7,6 +7,8 @@ spring:
 
   config:
     import: "optional:configserver:"
+    activate:
+      on-profile: docker
 
   cloud:
     config:
@@ -44,16 +46,26 @@ app:
 eureka:
   client:
     service-url:
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
 
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
 
 management:
   endpoints:
     web:
       exposure:
         include: "*"
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    com.celotts.purchaseservice: INFO
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    org.hibernate: DEBUG
+    org.springframework.security: DEBUG
+    root: INFO

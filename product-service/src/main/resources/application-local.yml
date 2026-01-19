@@ -1,48 +1,39 @@
 server:
-  port: 9090
+  port: ${PRODUCT_PORT:9090}
 
 spring:
   application:
     name: product-service
+  cloud:
+    config:
+      enabled: ${CONFIG_SERVER_ENABLED:true}
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://localhost:7777}
 
+  # Mensajes e internacionalización
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+  # Seguridad: Excluir auto-configuración si es necesario
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
       - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
 
-  datasource:
-    url: jdbc:postgresql://product-db:5432/product
-    username: product
-    password: product123
-    driver-class-name: org.postgresql.Driver
-
-    hikari:
-      pool-name: HikariPool-ProductService
-      maximum-pool-size: 10
-      minimum-idle: 2
-      auto-commit: true
-      transaction-isolation: TRANSACTION_READ_COMMITTED
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-
+# Configuración de Eureka común para todos los entornos
 eureka:
   client:
     enabled: true
     service-url:
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+    instance-id: ${spring.application.name}:${random.value}
 
+# Swagger / OpenAPI
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -50,6 +41,7 @@ springdoc:
     path: /swagger-ui.html
     display-request-duration: true
 
+# Configuración personalizada de la App
 app:
   pagination:
     default-page: 0
@@ -60,14 +52,56 @@ app:
   cors:
     allowed-origin: "*"
 
+# Gestión de Endpoints (Actuator)
 management:
   endpoints:
     web:
       exposure:
         include: "*"
 
+# Logging
 logging:
   level:
     com.celotts.productservice: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate: INFO
     com.netflix.eureka: WARN
     com.netflix.discovery: WARN
+    root: INFO
+
+---
+# ==========================================
+# 2. PERFIL DOCKER (LOCAL O NUBE BASADA EN CONTENEDORES)
+# ==========================================
+spring:
+  config:
+    activate:
+      on-profile: docker
+    import: "optional:configserver:"
+
+  cloud:
+    config:
+      enabled: ${DOCKER_CONFIG_SERVER_ENABLED:false}
+
+  datasource:
+    url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:5432/${PRODUCT_DB_NAME:product}
+    username: ${PRODUCT_DB_USERNAME:product}
+    password: ${PRODUCT_DB_PASSWORD:product123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: HikariPool-ProductServiceDocker
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${MINIMUM_IDLE:5}
+      auto-commit: ${AUTO_COMMIT:true}
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      connection-timeout: ${VALIDATION_TIMEOUT:3000}
+      idle-timeout: ${ILDETIMEOUT:600000}
+      max-lifetime: ${MAXLIFETIME:1800000}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect

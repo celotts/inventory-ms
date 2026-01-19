@@ -1,7 +1,7 @@
 package com.celotts.supplierservice.infrastructure.adapter.output.postgres.adapter.supplier;
 
 import com.celotts.supplierservice.domain.model.supplier.SupplierModel;
-import com.celotts.supplierservice.domain.port.output.supplier.SupplierRepositoryPort;
+import com.celotts.supplierservice.domain.port.output.SupplierRepositoryPort;
 import com.celotts.supplierservice.infrastructure.adapter.output.postgres.entity.supplier.SupplierEntity;
 import com.celotts.supplierservice.infrastructure.adapter.output.postgres.mapper.supplier.SupplierEntityMapper;
 import com.celotts.supplierservice.infrastructure.adapter.output.postgres.repository.supplier.SupplierJpaRepository;

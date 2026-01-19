@@ -36,13 +36,12 @@ spring:
 eureka:
   client:
     service-url:
-      # Asegúrate de que este valor coincida con el host de tu Discovery Service
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
 
 # Configuración de paginación (si aplica al servicio de autenticación)
 app:

@@ -1,0 +1,36 @@
+ARG DOCKER_USERNAME
+ARG DOCKER_PASSWORD
+
+# El FROM debe ser lo primero después de los ARGs globales
+FROM eclipse-temurin:21-jre-jammy
+LABEL maintainer="Inventory MS Team"
+
+# El EXPOSE va AQUÍ (después del FROM)
+EXPOSE 9093
+
+# Aseguramos que las operaciones de sistema se hagan como root
+USER root
+WORKDIR /app
+
+# 1. Instalación de utilidades
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends dos2unix && \
+    rm -rf /var/lib/apt/lists/*
+
+# 2. Creación de usuario
+RUN addgroup --system spring && adduser --system --ingroup spring spring
+
+# 3. Copia de archivos
+COPY ./tax-service/build/libs/tax-service-*.jar /app/app.jar
+COPY ./tax-service/entrypoint.sh /app/entrypoint.sh
+COPY ./infra/wait-for-it.sh /app/wait-for-it.sh
+
+# 4. Limpieza de formato y permisos
+RUN dos2unix /app/entrypoint.sh /app/wait-for-it.sh && \
+    chmod +x /app/entrypoint.sh /app/wait-for-it.sh && \
+    chown -R spring:spring /app
+
+# 5. Cambio de usuario
+USER spring:spring
+
+ENTRYPOINT ["/app/entrypoint.sh"]

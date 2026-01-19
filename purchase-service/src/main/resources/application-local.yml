@@ -1,0 +1,104 @@
+server:
+  port: ${PURCHASE_PORT:9094}
+
+spring:
+  application:
+    name: purchase-service
+
+  cloud:
+    config:
+      enabled: ${CONFIG_SERVER_ENABLED:false}
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://localhost:7777}
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+      -
+      # Configuración de Eureka común para todos los entornos
+eureka:
+  client:
+    enabled: true
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+
+# Swagger / OpenAPI
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    display-request-duration: true
+
+
+# Configuración personalizada de la App
+app:
+  pagination:
+    default-page: 0
+    default-size: 10
+    max-size: 100
+    default-sort: createdAt
+    default-direction: desc
+  cors:
+    allowed-origin: "*"
+
+
+# Gestión de Endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+# Logging
+logging:
+  level:
+    org.springframework.web: DEBUG
+    com.celotts.purchaseservice: INFO
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    org.hibernate: DEBUG
+    org.springframework.security: DEBUG
+    root: INFO
+
+---
+# 🐳 CONFIGURACIÓN EXCLUSIVA PARA DOCKER
+spring:
+  config:
+    activate:
+      on-profile: docker
+    import: "optional:configserver:"
+
+  cloud:
+    config:
+      enabled: false
+
+  datasource:
+    url: jdbc:postgresql://${SUPPLIER_DB_HOST:supplier-db}:${SUPPLIER_DB_PORT:5432}/${SUPPLIER_DB_NAME:supplier}
+    username: ${SUPPLIER_DB_USERNAME:supplier}
+    password: ${SUPPLIER_DB_PASSWORD:supplier123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: HikariPool-ProductServiceDocker
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${MINIMUM_IDLE:5}
+      auto-commit: ${AUTO_COMMIT:true}
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      connection-timeout: ${VALIDATION_TIMEOUT:3000}
+      idle-timeout: ${ILDETIMEOUT:600000}
+      max-lifetime: ${MAXLIFETIME:1800000}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect

@@ -1,6 +1,6 @@
 package com.celotts.supplierservice.infrastructure.adapter.input.rest.controller;
 
-import com.celotts.supplierservice.domain.port.input.supplier.SupplierUseCase;
+import com.celotts.supplierservice.domain.port.input.SupplierUseCase;
 
 import com.celotts.supplierservice.domain.model.supplier.SupplierModel;
 import com.celotts.supplierservice.infrastructure.adapter.input.rest.dto.response.ApiErrorResponse;

@@ -19,17 +19,24 @@ spring:
 # Desactivar servicios externos
 eureka:
   client:
-    enabled: false
+    enabled: true
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
 
-# Logging detallado
+
 logging:
   level:
     org.springframework.web: DEBUG
+    com.celotts.taxservice: INFO
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
     org.hibernate: DEBUG
-    com.celotts.productservice: DEBUG
+    org.springframework.security: DEBUG
     root: INFO
 
 app:

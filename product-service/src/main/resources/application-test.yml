@@ -19,10 +19,13 @@ spring:
 # Desactivar servicios externos
 eureka:
   client:
-    enabled: false
-  instance:
+    enabled: true
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
 # Logging detallado
 logging:
   level:

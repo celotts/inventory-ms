@@ -63,12 +63,12 @@ eureka:
   client:
     enabled: true
     service-url:
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
 
 management:
   endpoints:
@@ -96,3 +96,18 @@ spring:
 
 server:
   port: ${PORT9092:9092}   # puedes usar 9092 también localmente
+
+logging:
+  level:
+    # Usar el nombre correcto del paquete de la aplicación
+    org.springframework.web: DEBUG
+    org.hibernate: DEBUG
+    com.celotts.supplierservice: DEBUG
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    com.celotts.productservice: DEBUG
+    com.celotts.purchaseservice: DEBUG
+    com.celotts.taxservice: DEBUG
+    com.celotts.discoveryservice: DEBUG
+    org.springframework.security: DEBUG
+    root: INFO
