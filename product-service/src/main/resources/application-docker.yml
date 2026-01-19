@@ -6,7 +6,7 @@ spring:
     name: product-service
   cloud:
     config:
-      enabled: ${CONFIG_SERVER_ENABLED:true}
+      enabled: ${CONFIG_SERVER_ENABLED:false}
       uri: ${SPRING_CLOUD_CONFIG_URI:http://localhost:7777}
 
   # Mensajes e internacionalización
@@ -26,7 +26,7 @@ eureka:
   client:
     enabled: true
     service-url:
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-server:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
   instance:

@@ -1,58 +1,104 @@
 server:
-  port: 9100
+  port: ${PURCHASE_PORT:9094}
+
+spring:
+  application:
+    name: purchase-service
+
+  cloud:
+    config:
+      enabled: ${CONFIG_SERVER_ENABLED:false}
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://localhost:7777}
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+      -
+# Configuración de Eureka común para todos los entornos
+eureka:
+  client:
+    enabled: true
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+
+# Swagger / OpenAPI
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    display-request-duration: true
+
+
+# Configuración personalizada de la App
+app:
+  pagination:
+    default-page: 0
+    default-size: 10
+    max-size: 100
+    default-sort: createdAt
+    default-direction: desc
+  cors:
+    allowed-origin: "*"
+
+
+# Gestión de Endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+# Logging
+logging:
+  level:
+    org.springframework.web: DEBUG
+    com.celotts.purchaseservice: INFO
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    org.hibernate: DEBUG
+    org.springframework.security: DEBUG
+    root: INFO
+
+---
+# 🐳 CONFIGURACIÓN EXCLUSIVA PARA DOCKER
 spring:
   config:
     activate:
       on-profile: docker
+    import: "optional:configserver:"
 
-  # 🚨 HABILITAR CLOUD Y CONFIG SERVER
   cloud:
     config:
-      enabled: true
-      # 🛑 CRÍTICO: DESHABILITAR DISCOVERY porque no tienes la dependencia de Eureka Client
-      uri: http://config-service:7777 # Establecer la URI de forma directa
-      discovery:
-        enabled: false # 🛑 ESTO DEBE SER 'false' para evitar el error 'IllegalStateException'
-        service-id: config-service # Esta línea ya no se usa, pero la dejamos deshabilitada.
+      enabled: false
 
-  # Database: Conexión por nombre de servicio a supplier-db dentro de la red
   datasource:
     url: jdbc:postgresql://${SUPPLIER_DB_HOST:supplier-db}:${SUPPLIER_DB_PORT:5432}/${SUPPLIER_DB_NAME:supplier}
     username: ${SUPPLIER_DB_USERNAME:supplier}
     password: ${SUPPLIER_DB_PASSWORD:supplier123}
     driver-class-name: org.postgresql.Driver
-    # ... (resto de configuraciones de Hikari)
     hikari:
-      minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:2}
-      maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:10}
-      auto-commit: ${SPRING_DATASOURCE_HIKARI_AUTO_COMMIT:false}
-      validation-timeout: ${SPRING_DATASOURCE_HIKARI_VALIDATION_TIMEOUT:30000}
-      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:60000}
-      transaction-isolation: ${SPRING_DATASOURCE_HIKARI_TRANSACTION_ISOLATION:TRANSACTION_READ_COMMITTED}
+      pool-name: HikariPool-ProductServiceDocker
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${MINIMUM_IDLE:5}
+      auto-commit: ${AUTO_COMMIT:true}
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      connection-timeout: ${VALIDATION_TIMEOUT:3000}
+      idle-timeout: ${ILDETIMEOUT:600000}
+      max-lifetime: ${MAXLIFETIME:1800000}
 
-  # 🚨 CONFIGURACIÓN DE EUREKA (Permanece, ya que solo necesitas el Config Client para fallar)
-  eureka:
-    client:
-      enabled: true
-      service-url:
-        defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
-      register-with-eureka: true
-      fetch-registry: true
-    instance:
-      prefer-ip-address: true
-      instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
-  # ✅ Gestión de Endpoints
-  management:
-    endpoint:
-      health:
-        show-details: always
-
-  logging:
-    level:
-      org.springframework.web: DEBUG
-      com.celotts.purchaseservice: INFO
-      com.netflix.eureka: WARN
-      com.netflix.discovery: WARN
-      org.hibernate: DEBUG
-      org.springframework.security: DEBUG
-      root: INFO
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect

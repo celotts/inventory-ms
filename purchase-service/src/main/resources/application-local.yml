@@ -1,72 +1,37 @@
-# application-local.yml (Supplier Service - Perfil Local/Host)
 server:
-  port: 9103
+  port: ${PURCHASE_PORT:9094}
 
 spring:
-  # --- Configuración de Activación ---
-  config:
-    activate:
-      # CRÍTICO: Debe ser 'local' para coincidir con el nombre del archivo/intención
-      on-profile: docker
-
   application:
     name: purchase-service
 
-  # --- Dependencias de la Nube (DEBEN ESTAR DESHABILITADAS EN LOCAL) ---
   cloud:
     config:
-      enabled: true
-      discovery:
-        enabled: true
-        service-id: config-service
-  eureka:
-    client:
-      enabled: true
-      service-url:
-        defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
-      register-with-eureka: true
-      fetch-registry: true
-    instance:
-      prefer-ip-address: true
-      instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
-
-  # --- Base de Datos (Conexión al localhost/Host Mapeado) ---
-  datasource:
-    url: jdbc:postgresql://${PURCHASE_DB_HOST:localhost}:${PURCHASE_DB_PORT_HOST:5435}/${PURCHASE_DB_NAME:purchase}
-    username: ${PURCHASE_DB_USERNAME:purchase}
-    password: ${PURCHASE_DB_PASSWORD:purchase123}
-    driver-class-name: org.postgresql.Driver
-
-    hikari:
-      pool-name: HikariPool-SupplierServiceLocal # Renombrado para claridad
-      maximum-pool-size: 10
-      minimum-idle: 2
-      auto-commit: false
-      transaction-isolation: TRANSACTION_READ_COMMITTED
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-
-  # --- JPA/Hibernate ---
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-
-  # --- Exclusiones ---
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
-      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
-
-  # --- Configuración General de Spring ---
+      enabled: ${CONFIG_SERVER_ENABLED:false}
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://localhost:7777}
   messages:
     basename: messages
     encoding: UTF-8
     fallback-to-system-locale: false
 
-# --- Documentación/Swagger ---
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+      -
+      # Configuración de Eureka común para todos los entornos
+eureka:
+  client:
+    enabled: true
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+
+# Swagger / OpenAPI
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -74,7 +39,8 @@ springdoc:
     path: /swagger-ui.html
     display-request-duration: true
 
-# --- Configuraciones Propias de la Aplicación (Pag. y CORS) ---
+
+# Configuración personalizada de la App
 app:
   pagination:
     default-page: 0
@@ -85,14 +51,15 @@ app:
   cors:
     allowed-origin: "*"
 
-# --- Management Endpoints ---
+
+# Gestión de Endpoints
 management:
   endpoints:
     web:
       exposure:
         include: "*"
 
-# --- Logging ---
+# Logging
 logging:
   level:
     org.springframework.web: DEBUG
@@ -102,3 +69,36 @@ logging:
     org.hibernate: DEBUG
     org.springframework.security: DEBUG
     root: INFO
+
+---
+# 🐳 CONFIGURACIÓN EXCLUSIVA PARA DOCKER
+spring:
+  config:
+    activate:
+      on-profile: docker
+    import: "optional:configserver:"
+
+  cloud:
+    config:
+      enabled: false
+
+  datasource:
+    url: jdbc:postgresql://${SUPPLIER_DB_HOST:supplier-db}:${SUPPLIER_DB_PORT:5432}/${SUPPLIER_DB_NAME:supplier}
+    username: ${SUPPLIER_DB_USERNAME:supplier}
+    password: ${SUPPLIER_DB_PASSWORD:supplier123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: HikariPool-ProductServiceDocker
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${MINIMUM_IDLE:5}
+      auto-commit: ${AUTO_COMMIT:true}
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      connection-timeout: ${VALIDATION_TIMEOUT:3000}
+      idle-timeout: ${ILDETIMEOUT:600000}
+      max-lifetime: ${MAXLIFETIME:1800000}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect

@@ -30,7 +30,9 @@ eureka:
     fetch-registry: false
 
   instance:
-    hostname: discovery-service
+    # Si estás en Docker, usará 'discovery-service'.
+    # Si estás en el IDE, usará 'localhost'.
+    hostname: ${EUREKA_HOST:localhost}
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
 

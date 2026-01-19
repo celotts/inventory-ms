@@ -25,8 +25,6 @@ eureka:
   client:
     enabled: ${EUREKA_CLIENT_ENABLED:true}
     register-with-eureka: true
-    # CAMBIO CLAVE: Permite que el servicio obtenga (fetch) la lista de otros servicios
-    # registrados en Eureka. Esto es necesario para que sea un cliente completo.
     fetch-registry: true
     service-url:
       defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}

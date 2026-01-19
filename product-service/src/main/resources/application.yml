@@ -7,6 +7,8 @@ spring:
 
   config:
     import: "optional:configserver:"
+    activate:
+      on-profile: docker
 
   cloud:
     config:
@@ -51,8 +53,19 @@ eureka:
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
+
 management:
   endpoints:
     web:
       exposure:
         include: "*"
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    com.celotts.purchaseservice: INFO
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    org.hibernate: DEBUG
+    org.springframework.security: DEBUG
+    root: INFO
