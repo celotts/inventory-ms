@@ -1,5 +1,5 @@
 server:
-  port: 8090
+  port: ${API_GATEWAY_PORT:8090}
 
 spring:
   application:
@@ -20,12 +20,22 @@ spring:
           predicates:
             - Path=/api/v1/products/**
 
+        - id: supplier-service
+          uri: lb://supplier-service
+          predicates:
+            - Path=/supplier-service/**
+          filters:
+            - StripPrefix=1
+        - id: supplier-direct
+          uri: lb://supplier-service
+          predicates:
+            - Path=/api/v1/suppliers/**
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
 
-# ✅ DEBUG: Agregar endpoint para verificar configuración
+
 management:
   endpoints:
     web:
@@ -36,7 +46,7 @@ management:
       show-details: always
     env:
       show-values: ALWAYS
-# ✅ FORZAR configuración sin variables (para debug)
+
 eureka:
   client:
     service-url:

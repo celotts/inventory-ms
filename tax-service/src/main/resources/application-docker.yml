@@ -1,5 +1,5 @@
 server:
-  port: 9090
+  port: ${TAX_PORT:9090}
 
 spring:
   application:

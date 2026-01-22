@@ -11,7 +11,7 @@ services:
     container_name: db_product
     env_file: [./.env.local]
     environment:
-      POSTGRES_DB: ${PRODUCT_DB_NAME:-db_product}
+      POSTGRES_DB: ${PRODUCT_DB_NAME:-product}
       POSTGRES_USER: ${PRODUCT_DB_USERNAME:-product}
       POSTGRES_PASSWORD: ${PRODUCT_DB_PASSWORD:-product123}
     ports:
@@ -37,7 +37,7 @@ services:
     container_name: db_supplier
     env_file: [./.env.local]
     environment:
-      POSTGRES_DB: ${SUPPLIER_DB_NAME:-db_supplier}
+      POSTGRES_DB: ${SUPPLIER_DB_NAME:-supplier}
       POSTGRES_USER: ${SUPPLIER_DB_USERNAME:-supplier}
       POSTGRES_PASSWORD: ${SUPPLIER_DB_PASSWORD:-supplier123}
     ports:
@@ -62,7 +62,7 @@ services:
     container_name: db_purchase
     env_file: [ ./.env.local ]
     environment:
-      POSTGRES_DB: ${PURCHASE_DB_NAME:-db_purchase}
+      POSTGRES_DB: ${PURCHASE_DB_NAME:-purchase}
       POSTGRES_USER: ${PURCHASE_DB_USERNAME:-purchase}
       POSTGRES_PASSWORD: ${PURCHASE_DB_PASSWORD:-purchase123}
     ports:
@@ -76,7 +76,7 @@ services:
       inventory-net:
         aliases:
           - db_purchase
-          - purchase-db
+          - purchase-dba
     volumes:
       - db_purchase_data:/var/lib/postgresql/data
       - ./init-scripts/purchase/03-purchase-init.sql:/docker-entrypoint-initdb.d/03-purchase-init.sql:ro
@@ -88,7 +88,7 @@ services:
     container_name: db_tax
     env_file: [ ./.env.local ]
     environment:
-      POSTGRES_DB: ${TAX_DB_NAME:-db_tax}
+      POSTGRES_DB: ${TAX_DB_NAME:-tax}
       POSTGRES_USER: ${TAX_DB_USERNAME:-tax}
       POSTGRES_PASSWORD: ${TAX_DB_PASSWORD:-tax123}
     ports:
@@ -150,7 +150,7 @@ services:
       - WAIT_FOR=discovery-service:8761
       - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS=file:/config-repo-local/
     volumes:
-      - ../../config-repo-local:/config-repo-local:ro,Z
+      - ${LOCAL_CONFIG_REPO_PATH:-../../config-repo-local}:/config-repo-local:ro,Z
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:7777/actuator/health || exit 1"]
       interval: 10s
@@ -165,10 +165,10 @@ services:
 
   # --- SERVICIOS DE NEGOCIO ---
   supplier-service:
-    profiles: ["supplier"]
+    profiles: [ "supplier" ]
     container_name: supplier-service
     image: supplier-service:latest
-    env_file: [./.env.local]
+    env_file: [ ./.env.local ]
     build:
       context: ..
       dockerfile: supplier-service/Dockerfile.local
@@ -177,24 +177,9 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_APPLICATION_NAME=supplier-service
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_supplier:5432/${SUPPLIER_DB_NAME:-supplier}
-      - SPRING_DATASOURCE_USERNAME=${SUPPLIER_DB_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${SUPPLIER_DB_PASSWORD}
-      # CORRECCIÓN DE EUREKA: Usamos la propiedad estándar de Spring Cloud
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
-      # AÑADIMOS ESTO PARA MEJORAR LA CONECTIVIDAD EN PODMAN
-      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:9091/actuator/health || exit 1" ]
-      interval: 20s      # Más tiempo entre pruebas
-      timeout: 10s
-      retries: 5
-      start_period: 60s
     depends_on:
       db_supplier:
-        condition: service_healthy
-      discovery-service:
         condition: service_healthy
       config-service:
         condition: service_healthy
@@ -226,6 +211,7 @@ services:
         condition: service_healthy
     networks:
       - inventory-net
+
     restart: unless-stopped
 
   product-service:

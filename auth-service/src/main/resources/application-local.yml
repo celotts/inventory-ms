@@ -1,9 +1,7 @@
 # Archivo de configuración para Auth Service (ej. application-docker.yml)
 
 server:
-  # El Auth Service suele correr en un puerto diferente al Product Service (9090).
-  # Usaremos un puerto estándar para Auth, por ejemplo, 8081, o el que esté definido en tu Compose.
-  port: 8081  # CORRECCIÓN 1: Ajustar el puerto para Auth Service (cambiado de 9090)
+  port: ${AUTH_PORT:8081}
 
 spring:
   application:
@@ -16,6 +14,15 @@ spring:
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: HikariPool-AuthServiceDocker
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${MINIMUM_IDLE:5}
+      auto-commit: ${AUTO_COMMIT:true}
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      connection-timeout: ${VALIDATION_TIMEOUT:3000}
+      idle-timeout: ${ILDETIMEOUT:600000}
+      max-lifetime: ${MAXLIFETIME:1800000}
 
   # Configuración JPA para PostgreSQL
   jpa:

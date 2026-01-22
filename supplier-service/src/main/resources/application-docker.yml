@@ -36,16 +36,15 @@ spring:
     username: ${SUPPLIER_DB_USERNAME:supplier}
     password: ${SUPPLIER_DB_PASSWORD:supplier123}
     driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
-
     hikari:
-      pool-name: HikariPool-SupplierServiceLocal
-      maximum-pool-size: 10
-      minimum-idle: 2
-      auto-commit: false
+      pool-name: HikariPool-SupplierServiceDocker
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${MINIMUM_IDLE:5}
+      auto-commit: ${AUTO_COMMIT:true}
       transaction-isolation: TRANSACTION_READ_COMMITTED
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
+      connection-timeout: ${VALIDATION_TIMEOUT:3000}
+      idle-timeout: ${ILDETIMEOUT:600000}
+      max-lifetime: ${MAXLIFETIME:1800000}
 
   # --- JPA/Hibernate ---
   jpa:
@@ -74,7 +73,6 @@ springdoc:
     path: /swagger-ui.html
     display-request-duration: true
 
-# --- Configuraciones Propias de la Aplicación (Pag. y CORS) ---
 app:
   cors:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:*}

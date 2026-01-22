@@ -4,7 +4,16 @@ server:
 spring:
   application:
     name: purchase-service
-
+  datasource:
+    hikari:
+      pool-name: HikariPool-PurchaseServiceDocker
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${MINIMUM_IDLE:5}
+      auto-commit: ${AUTO_COMMIT:true}
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      connection-timeout: ${VALIDATION_TIMEOUT:3000}
+      idle-timeout: ${ILDETIMEOUT:600000}
+      max-lifetime: ${MAXLIFETIME:1800000}
   cloud:
     config:
       enabled: ${CONFIG_SERVER_ENABLED:false}

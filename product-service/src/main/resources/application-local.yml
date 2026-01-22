@@ -4,89 +4,17 @@ server:
 spring:
   application:
     name: product-service
-  cloud:
-    config:
-      enabled: ${CONFIG_SERVER_ENABLED:true}
-      uri: ${SPRING_CLOUD_CONFIG_URI:http://localhost:7777}
 
-  # Mensajes e internacionalización
-  messages:
-    basename: messages
-    encoding: UTF-8
-    fallback-to-system-locale: false
-
-  # Seguridad: Excluir auto-configuración si es necesario
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
-      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
-
-# Configuración de Eureka común para todos los entornos
-eureka:
-  client:
-    enabled: true
-    service-url:
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    prefer-ip-address: true
-    instance-id: ${spring.application.name}:${random.value}
-
-# Swagger / OpenAPI
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    display-request-duration: true
-
-# Configuración personalizada de la App
-app:
-  pagination:
-    default-page: 0
-    default-size: 10
-    max-size: 100
-    default-sort: createdAt
-    default-direction: desc
-  cors:
-    allowed-origin: "*"
-
-# Gestión de Endpoints (Actuator)
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-
-# Logging
-logging:
-  level:
-    com.celotts.productservice: DEBUG
-    org.springframework.web: INFO
-    org.springframework.security: INFO
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.hibernate: INFO
-    com.netflix.eureka: WARN
-    com.netflix.discovery: WARN
-    root: INFO
-
----
-# ==========================================
-# 2. PERFIL DOCKER (LOCAL O NUBE BASADA EN CONTENEDORES)
-# ==========================================
-spring:
   config:
+    import: "optional:configserver:http://config-service:7777"
     activate:
-      on-profile: docker
-    import: "optional:configserver:"
 
   cloud:
     config:
-      enabled: ${DOCKER_CONFIG_SERVER_ENABLED:false}
+      enabled: false
 
   datasource:
-    url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:5432/${PRODUCT_DB_NAME:product}
+    url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:${PRODUCT_DB_PORT:5432}/${PRODUCT_DB_NAME:product}
     username: ${PRODUCT_DB_USERNAME:product}
     password: ${PRODUCT_DB_PASSWORD:product123}
     driver-class-name: org.postgresql.Driver
@@ -105,3 +33,42 @@ spring:
       ddl-auto: update
     show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+app:
+  cors:
+    allowed-origin: "*"
+  pagination:
+    default-page: ${PAGINATION_DEFAULT_PAGE:0}
+    default-size: ${PAGINATION_DEFAULT_SIZE:10}
+    max-size: ${PAGINATION_MAX_SIZE:100}
+    default-sort: ${PAGINATION_DEFAULT_SORT_BY:createdAt}
+    default-direction: ${PAGINATION_DEFAULT_SORT_DIR:desc}
+
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-server:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    com.celotts.purchaseservice: INFO
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    org.hibernate: DEBUG
+    org.springframework.security: DEBUG
+    root: INFO

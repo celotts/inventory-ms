@@ -26,27 +26,26 @@ public interface ProductJpaRepository extends JpaRepository<ProductEntity, UUID>
     Page<ProductEntity> findByBrandId(UUID brandId, Pageable pageable);
 
     // ---------- Categoría (JOIN con tabla puente) ----------
-    @Query("""
-        SELECT p
-        FROM ProductEntity p
-        JOIN ProductCategoryEntity pc ON pc.productId = p.id
-        WHERE pc.categoryId = :categoryId
-    """)
+    // ---------- Categoría (Corregido con subconsulta para evitar errores de JOIN) ----------
+    @Query(value = """
+        SELECT p FROM ProductEntity p
+        WHERE p.id IN (SELECT pc.productId FROM ProductCategoryEntity pc WHERE pc.categoryId = :categoryId)
+        """,
+            countQuery = """
+        SELECT COUNT(p) FROM ProductEntity p
+        WHERE p.id IN (SELECT pc.productId FROM ProductCategoryEntity pc WHERE pc.categoryId = :categoryId)
+        """)
     Page<ProductEntity> findByCategoryId(@Param("categoryId") UUID categoryId, Pageable pageable);
 
-    // Categoría + stock <= max
+    // Categoría + stock <= max (Corregido)
     @Query(value = """
-            SELECT p
-            FROM ProductEntity p
-            JOIN ProductCategoryEntity pc ON pc.productId = p.id
-            WHERE pc.categoryId = :categoryId
+            SELECT p FROM ProductEntity p
+            WHERE p.id IN (SELECT pc.productId FROM ProductCategoryEntity pc WHERE pc.categoryId = :categoryId)
               AND (p.currentStock IS NOT NULL AND p.currentStock <= :maxStock)
             """,
             countQuery = """
-            SELECT COUNT(p)
-            FROM ProductEntity p
-            JOIN ProductCategoryEntity pc ON pc.productId = p.id
-            WHERE pc.categoryId = :categoryId
+            SELECT COUNT(p) FROM ProductEntity p
+            WHERE p.id IN (SELECT pc.productId FROM ProductCategoryEntity pc WHERE pc.categoryId = :categoryId)
               AND (p.currentStock IS NOT NULL AND p.currentStock <= :maxStock)
             """)
     Page<ProductEntity> findByCategoryAndMaxStock(@Param("categoryId") UUID categoryId,

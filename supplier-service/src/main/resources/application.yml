@@ -1,90 +1,11 @@
-# =======================================================
-# PERFIL: docker (Ejecución DENTRO del Contenedor)
-# =======================================================
----
-server:
-  port: ${SUPPLIER_PORT:9091}
-
 spring:
+  application:
+    name: supplier-service
   config:
     activate:
       on-profile: docker
-
-  application:
-    name: supplier-service
-
-  messages:
-    basename: messages
-    encoding: UTF-8
-    fallback-to-system-locale: false
-
-  # --- CONFIGURACIÓN DE LA NUBE (SPRING CLOUD) ---
+    # Esta línea le dice: "Busca todo lo demás en el servidor"
+    import: "optional:configserver:http://config-service:7777"
   cloud:
     config:
       enabled: true
-      uri: http://config-service:7777
-      discovery:
-        enabled: false # Se usa la URI directa para evitar ciclos de dependencia
-
-  # --- CONFIGURACIÓN DE BASE DE DATOS (POSTGRESQL) ---
-  datasource:
-    url: jdbc:${DB_PROTOCOL:postgresql}://${SUPPLIER_DB_HOST:supplier-db}:${SUPPLIER_DB_PORT:5432}/${SUPPLIER_DB_NAME:supplier}
-    username: ${SUPPLIER_DB_USERNAME:supplier}
-    password: ${SUPPLIER_DB_PASSWORD:supplier123}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      pool-name: HikariPool-SupplierServiceDocker
-      minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:2}
-      maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:10}
-      auto-commit: ${SPRING_DATASOURCE_HIKARI_AUTO_COMMIT:false}
-      validation-timeout: ${SPRING_DATASOURCE_HIKARI_VALIDATION_TIMEOUT:30000}
-      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:60000}
-      transaction-isolation: ${SPRING_DATASOURCE_HIKARI_TRANSACTION_ISOLATION:TRANSACTION_READ_COMMITTED}
-
-  # --- REGISTRO EN EUREKA ---
-  eureka:
-    client:
-      enabled: true
-      service-url:
-        defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
-      register-with-eureka: true
-      fetch-registry: true
-    instance:
-      prefer-ip-address: true
-      instance-id: ${spring.application.name}:${random.uuid}
-
-# --- CONFIGURACIÓN DEL SERVIDOR Y ENDPOINTS ---
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-  endpoint:
-    health:
-      show-details: always
-
-# --- CONFIGURACIÓN PERSONALIZADA DE LA APP ---
-app:
-  cors:
-    allowed-origin: ${CORS_ALLOWED_ORIGIN:*}
-  pagination:
-    default-page: ${PAGINATION_DEFAULT_PAGE:0}
-    default-size: ${PAGINATION_DEFAULT_SIZE:10}
-    max-size: ${PAGINATION_MAX_SIZE:100}
-    default-sort: ${PAGINATION_DEFAULT_SORT:createdAt}
-    default-direction: ${PAGINATION_DEFAULT_DIRECTION:desc}
-
-# --- LOGGING OPTIMIZADO PARA PRODUCCIÓN/DOCKER ---
-logging:
-  level:
-    root: INFO
-    com.celotts.supplierservice: INFO
-    org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
-    com.netflix.eureka: WARN
-    com.netflix.discovery: WARN
-    org.hibernate: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.orm.results: INFO
-    org.hibernate.resource.transaction: INFO
