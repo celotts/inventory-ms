@@ -88,6 +88,8 @@ logging:
     com.netflix.discovery: WARN
     org.hibernate: INFO
     root: INFO
+    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
+    org.hibernate.internal.AbstractSharedSessionContract: INFO
 
 ---
 # ==========================================

@@ -71,3 +71,5 @@ logging:
     com.netflix.eureka: INFO
     com.netflix.discovery: INFO
     org.springframework.core.env: INFO
+    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
+    org.hibernate.internal.AbstractSharedSessionContract: INFO

@@ -82,6 +82,8 @@ logging:
     com.netflix.discovery: WARN
     org.springframework.security: DEBUG
     root: ${LOGGING_LEVEL_ROOT:INFO}
+    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
+    org.hibernate.internal.AbstractSharedSessionContract: INFO
 
 management:
   endpoints:

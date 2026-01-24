@@ -108,6 +108,8 @@ logging:
     org.hibernate: DEBUG
     org.springframework.security: DEBUG
     root: INFO
+    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
+    org.hibernate.internal.AbstractSharedSessionContract: INFO
 
 ---
 # 🐳 CONFIGURACIÓN EXCLUSIVA PARA DOCKER

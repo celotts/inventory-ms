@@ -72,3 +72,5 @@ logging:
     com.celotts.authservice: DEBUG
     org.hibernate.SQL: INFO
     root: INFO
+    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
+    org.hibernate.internal.AbstractSharedSessionContract: INFO

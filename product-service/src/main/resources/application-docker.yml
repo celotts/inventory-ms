@@ -57,3 +57,5 @@ logging:
   level:
     root: INFO
     com.celotts.productservice: DEBUG
+    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
+    org.hibernate.internal.AbstractSharedSessionContract: INFO
