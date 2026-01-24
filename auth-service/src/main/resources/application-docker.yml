@@ -1,20 +1,22 @@
-
 server:
   port: ${AUTH_PORT:8081}
 
 spring:
   application:
-    name: auth-service # CORRECCIÓN 2: Cambiar el nombre de la aplicación
+    name: auth-service
 
-  # Base de datos PostgreSQL para el Auth Service
+  # Base de datos PostgreSQL
   datasource:
-    # CORRECCIÓN 3: Cambiar el host y el nombre de la base de datos
-    url: jdbc:postgresql://auth-db:5432/auth
+    url: jdbc:postgresql://${AUTH_DB_HOST:auth-db}:5432/${AUTH_DB_NAME:auth}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
+    # Se recomienda añadir Hikari para consistencia con tus otros servicios
+    hikari:
+      pool-name: HikariPool-AuthService
+      maximum-pool-size: 10
+      transaction-isolation: TRANSACTION_READ_COMMITTED
 
-  # Configuración JPA para PostgreSQL
   jpa:
     hibernate:
       ddl-auto: update
@@ -25,22 +27,23 @@ spring:
       hibernate:
         format_sql: true
 
-  # CORRECCIÓN 4: Solución al error de compatibilidad de Spring Cloud
   cloud:
     compatibility-verifier:
       enabled: false
 
+# EUREKA debe estar en la columna 0
 eureka:
   client:
+    enabled: ${EUREKA_CLIENT_ENABLED:true}
     service-url:
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+      # CORRECCIÓN CLAVE: de localhost a discovery-service
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
+    instance-id: ${spring.application.name}:${random.value}
 
-# Configuración de paginación (Mantengo esto si Auth también lo usa, aunque es menos común)
 app:
   pagination:
     default-page: 0
@@ -51,17 +54,14 @@ app:
   cors:
     allowed-origin: "*"
 
-# Endpoints de management
 management:
   endpoints:
     web:
       exposure:
         include: "*"
 
-# Logging para debug
 logging:
   level:
-    # CORRECCIÓN 5: Ajustar el logging al paquete del Auth Service
     com.celotts.authservice: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.SQL: INFO
+    root: INFO

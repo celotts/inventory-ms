@@ -21,18 +21,19 @@ spring:
           search-paths: config
       fail-fast: true
 
+# EUREKA debe estar en la columna 0, al mismo nivel que 'spring'
 eureka:
   client:
     enabled: ${EUREKA_CLIENT_ENABLED:true}
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+      # CAMBIO: discovery-service en lugar de localhost
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
 
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
-
+    instance-id: ${spring.application.name}:${random.value}
 
 management:
   endpoints:

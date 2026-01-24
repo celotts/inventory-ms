@@ -1,0 +1,7 @@
+**/.gradle
+**/build
+**/.git
+**/.idea
+**/.vscode
+**/node_modules
+*.log

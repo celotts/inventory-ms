@@ -1,22 +1,21 @@
 server:
-  port: ${PRODUCT_PORT:9090}
+  port: 9090
 
 spring:
   application:
     name: product-service
 
-  # Perfil Docker Activado
   config:
     activate:
       on-profile: docker
-    import: "optional:configserver:"
+    # Eliminamos el import del config server aquí si no es estrictamente necesario
+    # para evitar que la app se quede colgada esperando al config-service
+    import: "optional:configserver:http://config-service:7777"
 
   cloud:
     config:
-      enabled: ${DOCKER_CONFIG_SERVER_ENABLED:false}
-      uri: ${SPRING_CLOUD_CONFIG_URI:http://localhost:7777}
+      enabled: false # Cámbialo a true solo si tu config-service ya funciona bien
 
-  # Base de Datos (Movido aquí para evitar duplicar la llave 'spring')
   datasource:
     url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:5432/${PRODUCT_DB_NAME:product}
     username: ${PRODUCT_DB_USERNAME:product}
@@ -24,24 +23,13 @@ spring:
     driver-class-name: org.postgresql.Driver
     hikari:
       pool-name: HikariPool-ProductServiceDocker
-      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
-      minimum-idle: ${MINIMUM_IDLE:5}
-      auto-commit: ${AUTO_COMMIT:true}
-      transaction-isolation: TRANSACTION_READ_COMMITTED
-      connection-timeout: ${VALIDATION_TIMEOUT:3000}
-      idle-timeout: ${ILDETIMEOUT:600000}
-      max-lifetime: ${MAXLIFETIME:1800000}
+      maximum-pool-size: 10
 
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-
-  messages:
-    basename: messages
-    encoding: UTF-8
-    fallback-to-system-locale: false
 
   autoconfigure:
     exclude:
@@ -50,31 +38,14 @@ spring:
 
 eureka:
   client:
-    enabled: true
     service-url:
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-server:8761/eureka/}
+      # IMPORTANTE: Aquí usabas localhost en los logs, debe ser el nombre del servicio
+      defaultZone: http://discovery-service:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${random.value}
-
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    display-request-duration: true
-
-app:
-  pagination:
-    default-page: 0
-    default-size: 10
-    max-size: 100
-    default-sort: createdAt
-    default-direction: desc
-  cors:
-    allowed-origin: "*"
 
 management:
   endpoints:
@@ -84,10 +55,5 @@ management:
 
 logging:
   level:
-    org.springframework.web: DEBUG
+    root: INFO
     com.celotts.productservice: DEBUG
-    com.netflix.eureka: WARN
-    com.netflix.discovery: WARN
-    org.hibernate: DEBUG
-    org.springframework.security: DEBUG
-    root: ${LOGGING_LEVEL_ROOT:INFO}

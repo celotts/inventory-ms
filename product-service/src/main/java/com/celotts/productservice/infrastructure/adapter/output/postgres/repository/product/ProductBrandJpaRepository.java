@@ -79,8 +79,9 @@ public interface ProductBrandJpaRepository extends JpaRepository<ProductBrandEnt
     // ===== (opc) legacy sin filtro de deletedAt =====
     boolean existsByNameIgnoreCase(String name);
 
-    // OJO: nombre correcto es findByNameIgnoreCase (no "findNameIgnoreCase")
-    Optional<ProductBrandEntity> findByNameIgnoreCase(String name);
+
+    @Query("SELECT b FROM ProductBrandEntity b WHERE LOWER(b.name) = LOWER(:name)")
+    Optional<ProductBrandEntity> findByNameIgnoreCase(@Param("name") String name);
 
     @Query("SELECT b.id FROM ProductBrandEntity b")
     List<UUID> findAllIds();

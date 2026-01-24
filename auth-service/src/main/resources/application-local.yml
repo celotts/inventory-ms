@@ -5,12 +5,12 @@ server:
 
 spring:
   application:
-    name: auth-service # CORRECCIÓN 2: Cambiar el nombre de la aplicación
+    name: auth-service
 
   # Base de datos PostgreSQL para el Auth Service
   datasource:
-    # CORRECCIÓN 3: Cambiar el host y el nombre de la base de datos
-    url: jdbc:postgresql://auth-db:5432/auth
+    # Se recomienda parametrizar el host para mayor flexibilidad
+    url: jdbc:postgresql://${AUTH_DB_HOST:auth-db}:5432/${AUTH_DB_NAME:auth}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
@@ -24,7 +24,6 @@ spring:
       idle-timeout: ${ILDETIMEOUT:600000}
       max-lifetime: ${MAXLIFETIME:1800000}
 
-  # Configuración JPA para PostgreSQL
   jpa:
     hibernate:
       ddl-auto: update
@@ -35,22 +34,23 @@ spring:
       hibernate:
         format_sql: true
 
-  # CORRECCIÓN 4: Solución al error de compatibilidad de Spring Cloud
   cloud:
     compatibility-verifier:
       enabled: false
 
+# EUREKA: Debe estar a nivel raíz (columna 0)
 eureka:
   client:
     service-url:
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+      # CAMBIO CLAVE: Se usa 'discovery-service' en lugar de 'localhost'
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
+    # Limpieza de instance-id para evitar errores de lineage
+    instance-id: ${spring.application.name}:${random.value}
 
-# Configuración de paginación (Mantengo esto si Auth también lo usa, aunque es menos común)
 app:
   pagination:
     default-page: 0
@@ -61,17 +61,14 @@ app:
   cors:
     allowed-origin: "*"
 
-# Endpoints de management
 management:
   endpoints:
     web:
       exposure:
         include: "*"
 
-# Logging para debug
 logging:
   level:
-    # CORRECCIÓN 5: Ajustar el logging al paquete del Auth Service
     com.celotts.authservice: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.SQL: INFO
+    root: INFO
