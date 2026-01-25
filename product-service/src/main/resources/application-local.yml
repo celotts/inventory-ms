@@ -6,7 +6,6 @@ spring:
     name: product-service
 
   config:
-    # Cambiado a 'config-service' para que lo encuentre en la red de Docker
     import: "optional:configserver:http://config-service:7777"
     activate:
       on-profile: docker
@@ -42,7 +41,6 @@ spring:
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
       - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
 
-# EUREKA: Asegúrate de que el nombre coincida con tu docker-compose
 eureka:
   client:
     service-url:

@@ -25,7 +25,7 @@ spring:
   config:
     activate:
       on-profile: ${ONPROFILE:local}
-    import: "optional:configserver:"
+    import: ${OPTIONAL_CONFIG_SERVER:"optional:configserver:http://config-service:7777"}
 
 
   cloud:
@@ -38,19 +38,19 @@ spring:
       enabled: ${EUREKA_CLIENT_ENABLED:true}
       service-url:
         defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
-      register-with-eureka: true
-      fetch-registry: true
+      register-with-eureka: ${VAR_TRUE:true}
+      fetch-registry: ${VAR_TRUE:true}
     instance:
-      prefer-ip-address: true
+      prefer-ip-address: ${VAR_TRUE:true}
       instance-id: ${spring.application.name}:${random.value}
-  # Configuración de Base de Datos para Local
+
 
 
   jpa:
     hibernate:
       ddl-auto: ${DDL_AUTO:update}
-    show-sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: ${VAR_TRUE:true}
+    database-platform: ${ORG_HIBERNATE_DIALECT_POSTGRE_SQL_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
 
   autoconfigure:
     exclude:
@@ -60,7 +60,14 @@ spring:
   messages:
     basename: messages
     encoding: UTF-8
-    fallback-to-system-locale: false
+    fallback-to-system-locale: ${VAR_FALSE:false}
+
+springdoc:
+  api-docs:
+    path: ${PATHAPI_DOCS:/v3/api-docs}
+  swagger-ui:
+    path: ${PATH_SPRING_DOC:/swagger-ui.html}
+    display-request-duration: ${VAR_TRUE:true}
 
 app:
   cors:
@@ -74,16 +81,16 @@ app:
 
 logging:
   level:
-    org.springframework.web: DEBUG
-    org.hibernate: INFO
-    org.hibernate.SQL: DEBUG
-    com.celotts.supplierservice: INFO
-    com.netflix.eureka: WARN
-    com.netflix.discovery: WARN
-    org.springframework.security: DEBUG
+    org.springframework.web: ${VAR_DEBUG:DEBUG}
+    org.hibernate: ${VAR_INFO:INFO}
+    org.hibernate.SQL: ${VAR_DEBUG:DEBUG}
+    com.celotts.supplierservice: ${VAR_INFO:INFO}
+    com.netflix.eureka: ${VAR_WARN:WARN}
+    com.netflix.discovery: ${VAR_WARN:WARN}
+    org.springframework.security: ${VAR_DEBUG:DEBUG}
     root: ${LOGGING_LEVEL_ROOT:INFO}
-    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
-    org.hibernate.internal.AbstractSharedSessionContract: INFO
+    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: ${VAR_INFO:INFO}
+    org.hibernate.internal.AbstractSharedSessionContract: ${VAR_INFO:INFO}
 
 management:
   endpoints:
@@ -98,20 +105,21 @@ management:
 spring:
   config:
     activate:
-      on-profile: docker
-    import: "optional:configserver:"
+      on-profile: ${ON_PROFILE:docker}
+    import: ${OPTIONAL_CONFIG_SERVER:"optional:configserver:"}
 
   cloud:
     config:
       enabled: ${DOCKER_CONFIG_SERVER_ENABLED:false}
-      uri: http://config-service:7777
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://config-service:7777}
 
   # Database: Conexión interna a la red de Docker
   datasource:
     # 🚨 CORREGIDO: Usamos el host del contenedor y puerto interno 5432
-    url: jdbc:postgresql://supplier-db:5432/${SUPPLIER_DB_NAME:supplier}
+    url: jdbc:${DB_PROTOCOL:postgresql}://${SUPPLIER_DB_HOST:localhost}:${SUPPLIER_DB_PORT:5434}/${SUPPLIER_DB_NAME:supplier}
     username: ${SUPPLIER_DB_USERNAME:supplier}
     password: ${SUPPLIER_DB_PASSWORD:supplier123}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
     hikari:
       pool-name: HikariPool-ProductServiceDocker
       maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
@@ -124,20 +132,18 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: ${VAR_TRUE:true}
+    database-platform: ${ORG_HIBERNATE_DIALECT_POSTGRE_SQL_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
 
   # Eureka: Conexión interna
 eureka:
   client:
-    enabled: true
+    enabled: ${EUREKA_CLIENT_ENABLED:true}
     service-url:
-      # 🚨 CLAVE: No usar localhost, usar el nombre del servicio discovery-service
-      defaultZone: http://discovery-service:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: true
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+    register-with-eureka: ${VAR_TRUE:true}
+    fetch-registry: ${VAR_TRUE:true}
   instance:
-    prefer-ip-address: true
-    # ID único para que Eureka no confunda instancias
+    prefer-ip-address: ${VAR_TRUE:true}
     instance-id: ${spring.application.name}:${random.uuid}

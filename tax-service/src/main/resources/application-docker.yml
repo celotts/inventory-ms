@@ -4,7 +4,6 @@ server:
 spring:
   application:
     name: tax-service
-
   datasource:
     url: jdbc:${DB_PROTOCOL:postgresql}://${TAX_DB_HOST:localhost}:${TAX_DB_PORT:5434}/${TAX_DB_NAME:tax}
     username: ${TAX_DB_USERNAME:tax}
@@ -23,7 +22,7 @@ spring:
   config:
     activate:
       on-profile: ${ONPROFILE:docker}
-    import: "optional:configserver:http://config-service:7777"
+    import: ${OPTIONAL_CONFIG_SERVER:"optional:configserver:http://config-service:7777"}
 
   cloud:
     config:
@@ -33,8 +32,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: ${DDL_AUTO:update}
-    show-sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: ${VAR_TRUE:true}
+    database-platform: ${ORG_HIBERNATE_DIALECT_POSTGRE_SQL_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
+
 
   autoconfigure:
     exclude:
@@ -44,25 +44,25 @@ spring:
   messages:
     basename: messages
     encoding: UTF-8
-    fallback-to-system-locale: false
+    fallback-to-system-locale: ${VAR_FALSE:false}
 
 eureka:
   client:
     enabled: ${EUREKA_CLIENT_ENABLED:true}
     service-url:
       defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
-    register-with-eureka: true
-    fetch-registry: true
+    register-with-eureka: ${VAR_TRUE:true}
+    fetch-registry: ${VAR_TRUE:true}
   instance:
-    prefer-ip-address: true
+    prefer-ip-address: ${VAR_TRUE:true}
     instance-id: ${spring.application.name}:${random.value}
 
 springdoc:
   api-docs:
-    path: /v3/api-docs
+    path: ${PATHAPI_DOCS:/v3/api-docs}
   swagger-ui:
-    path: /swagger-ui.html
-    display-request-duration: true
+    path: ${PATH_SPRING_DOC:/swagger-ui.html}
+    display-request-duration: ${VAR_TRUE:true}
 
 app:
   cors:
@@ -82,14 +82,14 @@ management:
 
 logging:
   level:
-    org.springframework.web: DEBUG
-    com.celotts.taxservice: INFO
-    com.netflix.eureka: WARN
-    com.netflix.discovery: WARN
-    org.hibernate: INFO
-    root: INFO
-    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
-    org.hibernate.internal.AbstractSharedSessionContract: INFO
+    org.springframework.web: ${VAR_DEBUG:DEBUG}
+    com.celotts.taxservice: ${VAR_INFO:INFO}
+    com.netflix.eureka: ${VAR_WARN:WARN}
+    com.netflix.discovery: ${VAR_WARN:WARN}
+    org.hibernate: ${VAR_INFO:INFO}
+    root: ${VAR_INFO:INFO}
+    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: ${VAR_INFO:INFO}
+    org.hibernate.internal.AbstractSharedSessionContract: ${VAR_INFO:INFO}
 
 ---
 # ==========================================
@@ -98,11 +98,13 @@ logging:
 spring:
   config:
     activate:
-      on-profile: docker
+      profile: ${ONPROFILE:docker}
+    import: ${OPTIONAL_CONFIG_SERVER:"optional:configserver:http://config-service:7777"}
 
   cloud:
     config:
       enabled: ${DOCKER_CONFIG_SERVER_ENABLED:false}
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://config-service:7777}
 
   datasource:
     url: jdbc:postgresql://${TAX_DB_HOST:tax-db}:5432/${TAX_DB_NAME:tax}
