@@ -31,6 +31,19 @@ spring:
           uri: lb://supplier-service
           predicates:
             - Path=/api/v1/suppliers/**
+
+        - id: purchase-service
+          uri: lb://purchase-service
+          predicates:
+            - Path=/purchase-service/**
+          filters:
+            - StripPrefix=1
+
+            # 2. Agrega la ruta directa
+        - id: purchase-direct
+          uri: lb://purchase-service
+          predicates:
+            - Path=/api/v1/purchases/**
       discovery:
         locator:
           enabled: true

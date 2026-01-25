@@ -13,7 +13,9 @@ public interface PurchaseEntityMapper {
 
     PurchaseModel toModel(PurchaseEntity entity);
 
-    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "createdAt", ignore = true) // La DB se encarga en @PrePersist
+    @Mapping(target = "updatedAt", ignore = true) // La DB se encarga en @PreUpdate
+    @Mapping(target = "createdBy", source = "createdBy") // Forzamos el mapeo por claridad
     PurchaseEntity toEntity(PurchaseModel model);
 
     // AGREGADO: Necesario para que el findAll con paginación funcione sin errores

@@ -8,11 +8,12 @@ import java.time.LocalDate;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "purchase_orders") // Usa plural para evitar errores con SQL "ORDER BY"
+@Table(name = "purchase_orders")
 @Getter @Setter
 @AllArgsConstructor @NoArgsConstructor
 @Builder
 public class PurchaseEntity {
+
     @Id
     @GeneratedValue
     private UUID id;
@@ -50,12 +51,32 @@ public class PurchaseEntity {
     @Column(length = 255)
     private String notes;
 
+    // --- CAMPOS DE AUDITORÍA ---
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "created_by", length = 120)
+    private String createdBy;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+
+        // Mantenemos tu lógica: prioriza lo que viene del JSON ("clott")
+        if (this.createdBy == null) {
+            this.createdBy = "SYSTEM";
+        }
+
         if (this.status == null) this.status = "DRAFT";
+        if (this.currency == null) this.currency = "MXN";
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 }

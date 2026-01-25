@@ -23,6 +23,15 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
     @Override
     @Transactional
     public PurchaseModel create(PurchaseModel purchase) {
+        purchase.normalize();
+
+        if(purchase.getCreatedBy() == null || purchase.getCreatedBy().isBlank()){
+            purchase.setCreatedBy("ANONYMOUS");
+        }
+
+        if(repositoryPort.existsByOrderNumber(purchase.getOrderNumber())) {
+            throw new RuntimeException("Order number already exists: " + purchase.getOrderNumber());
+        }
         return repositoryPort.save(purchase);
     }
 
