@@ -1,8 +1,6 @@
 package com.celotts.purchaseservice.domain.model.purchase;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -12,6 +10,10 @@ import java.util.UUID;
 @Getter
 @Setter
 @Builder
+@AllArgsConstructor
+// <-- Indispensable para @Builder
+@NoArgsConstructor
+// <-- Indispensable para frameworks y mappers
 public class PurchaseModel {
     private UUID id;
     private UUID supplierId;

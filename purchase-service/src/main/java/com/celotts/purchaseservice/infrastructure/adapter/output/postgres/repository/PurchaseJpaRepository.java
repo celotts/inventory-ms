@@ -7,28 +7,22 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface PurchaseJpaRepository extends JpaRepository<PurchaseEntity, UUID> {
 
-    Optional<PurchaseEntity> findByCodeIgnoreCase(String code);
+    Optional<PurchaseEntity> findByOrderNumberIgnoreCase(String orderNumber);
 
-    boolean existsByCodeIgnoreCase(String code);
+    boolean existsByOrderNumberIgnoreCase(String orderNumber);
 
-    boolean existsByNameIgnoreCase(String name);
+    Page<PurchaseEntity> findBySupplierId(UUID supplierId, Pageable pageable);
 
-    // Soporte para paginación en búsqueda por nombre
-    Page<PurchaseEntity> findByNameContainingIgnoreCase(String name, Pageable pageable);
+    Page<PurchaseEntity> findByStatus(String status, Pageable pageable);
 
-    List<PurchaseEntity> findByEnabled(Boolean enabled);
-
-    // Búsqueda personalizada para sugerencias/autocomplete
     @Query("SELECT p FROM PurchaseEntity p WHERE " +
-            "LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-            "LOWER(p.code) LIKE LOWER(CONCAT('%', :query, '%'))")
+            "LOWER(p.orderNumber) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+            "LOWER(p.notes) LIKE LOWER(CONCAT('%', :query, '%'))")
     Page<PurchaseEntity> searchByLooseQuery(@Param("query") String query, Pageable pageable);
 }
