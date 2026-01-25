@@ -31,6 +31,31 @@ spring:
           uri: lb://supplier-service
           predicates:
             - Path=/api/v1/suppliers/**
+
+        - id: purchase-service
+          uri: lb://purchase-service
+          predicates:
+            - Path=/purchase-service/**
+          filters:
+            - StripPrefix=1
+
+        - id: purchase-direct
+          uri: lb://purchase-service
+          predicates:
+            - Path=/api/v1/purchases/**
+
+        # --- LAS DEMÁS RUTAS ---
+        - id: supplier-service
+          uri: lb://supplier-service
+          predicates:
+            - Path=/supplier-service/**
+          filters:
+            - StripPrefix=1
+
+        - id: supplier-direct
+          uri: lb://supplier-service
+          predicates:
+            - Path=/api/v1/suppliers/**
       discovery:
         locator:
           enabled: true
@@ -62,6 +87,19 @@ management:
       show-details: always
     env:
       show-values: ALWAYS
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    urls:
+      - name: "Purchase Service"
+        url: "/purchase-service/v3/api-docs"
+      - name: "Product Service"
+        url: "/product-service/v3/api-docs"
+      - name: "Supplier Service"
+        url: "/supplier-service/v3/api-docs"
+  use-fqn: true
 
 logging:
   level:

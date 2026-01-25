@@ -1,41 +1,54 @@
 package com.celotts.purchaseservice.infrastructure.adapter.output.postgres.entity;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Entity
-@Table(name = "purchases")
+@Table(name = "purchase_orders") // Usa plural para evitar errores con SQL "ORDER BY"
 @Getter @Setter
 @AllArgsConstructor @NoArgsConstructor
 @Builder
 public class PurchaseEntity {
-
     @Id
+    @GeneratedValue
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 40)
-    private String code;
+    @Column(name = "supplier_id", nullable = false)
+    private UUID supplierId;
 
-    @Column(nullable = false, length = 150)
-    private String name;
+    @Column(name = "order_number", nullable = false, unique = true, length = 50)
+    private String orderNumber;
 
-    @Column(name = "tax_id", length = 30)
-    private String taxId;
+    @Column(nullable = false, length = 50)
+    private String status;
 
-    @Column(length = 120)
-    private String email;
+    @Column(length = 3)
+    private String currency;
 
-    @Column(length = 40)
-    private String phone;
+    @Column(precision = 14, scale = 2)
+    private BigDecimal subtotal;
+
+    @Column(name = "tax_total", precision = 14, scale = 2)
+    private BigDecimal taxTotal;
+
+    @Column(name = "discount_total", precision = 14, scale = 2)
+    private BigDecimal discountTotal;
+
+    @Column(name = "grand_total", precision = 14, scale = 2)
+    private BigDecimal grandTotal;
+
+    @Column(name = "expected_at")
+    private LocalDate expectedAt;
+
+    @Column(name = "received_at")
+    private LocalDateTime receivedAt;
 
     @Column(length = 255)
-    private String address;
-
-    @Column(nullable = false)
-    private Boolean enabled;
+    private String notes;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -43,6 +56,6 @@ public class PurchaseEntity {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
-        if (this.enabled == null) this.enabled = true;
+        if (this.status == null) this.status = "DRAFT";
     }
 }

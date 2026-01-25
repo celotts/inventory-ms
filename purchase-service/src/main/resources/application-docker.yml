@@ -124,7 +124,7 @@ spring:
       enabled: false
 
   datasource:
-    url: jdbc:postgresql://${PRUCHASE_DB_HOST:purchase-db}:${PURCHASE_DB_PORT:5432}/${PRUCHASE_DB_NAME:purchase}
+    url: jdbc:postgresql://${PURCHASE_DB_HOST:purchase-db}:${PURCHASE_DB_PORT:5432}/${PURCHASE_DB_NAME:purchase}
     username: ${PURCHASE_DB_USERNAME:purchase}
     password: ${PURCHASE_DB_PASSWORD:purchase123}
     driver-class-name: org.postgresql.Driver
