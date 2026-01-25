@@ -117,6 +117,21 @@ ifndef VERBOSE
 .SILENT:
 endif
 
+define check_health_url
+	@count=0; \
+	echo "   🔍 Verificando salud en $(1)..."; \
+	until curl -s -f $(1) > /dev/null; do \
+		count=$$((count + 1)); \
+		if [ $$count -ge 20 ]; then \
+			echo "   ❌ ERROR: $(2) nunca arrancó en la URL $(1)"; \
+			exit 1; \
+		fi; \
+		echo "   ⏳ $(2) está iniciando... (intento $$count/20)"; \
+		sleep 3; \
+		done; \
+		echo "   ✅ $(2) está UP y respondiendo!"
+endef
+
 define check_health
 	@count=0; \
 	echo "   🔍 Verificando estado de $(2)..."; \
@@ -325,37 +340,39 @@ up-local-all-ordered: podman-auth podman-ready fix-line-endings
 	@$(MAKE) clean-env
 	$(eval START_TIME := $(shell date +%s))
 	@echo "======================================================================================"
-	@echo "🚀 INICIANDO DESPLIEGUE DEFINITIVO"
+	@echo "🚀 INICIANDO DESPLIEGUE DEFINITIVO (ORDENADO POR SALUD DE API)"
 	@echo "======================================================================================"
 
-	@echo "📦 Asegurando imágenes base para evitar errores de concurrencia..."
+	@echo "📦 Asegurando imágenes base..."
 	@podman pull eclipse-temurin:21-jre-jammy || true
 	@podman pull postgres:16 || true
 
-	@echo "🔨 Compilando JARs de todos los microservicios..."
+	@echo "🔨 Compilando JARs..."
 	@$(MAKE) build-jars-all
 
-	@# Definición de comando base
 	$(eval CMD := $(DOCKER_COMPOSE_BIN) --env-file $(ENV_FILE_LOCAL) -f $(COMPOSE_FILE) -p $(COMPOSE_PROJECT_NAME) --profile infra --profile product --profile supplier --profile tax --profile purchase --profile gateway)
 
-	echo "🏗️  1/4: Infraestructura Base (Discovery & Config)..."
+	@echo "🏗️  1/4: Infraestructura Base..."
 	@$(CMD) up -d --build --pull never discovery-service config-service
-
-	$(call check_health,8761,discovery)
-	$(call check_health,7777,config)
+	# Verificamos que Discovery y Config respondan antes de seguir
+	$(call check_health_url,http://localhost:$(DISCOVERY_PORT)/actuator/health,Discovery)
+	$(call check_health_url,http://localhost:$(CONFIG_PORT)/actuator/health,Config)
 
 	@echo "🗄️  2/4: Bases de Datos..."
 	@$(CMD) up -d --build --pull never db_product db_supplier db_tax db_purchase
+	@sleep 5
 
 	@echo "🛠️  3/4: Microservicios de Negocio..."
-    # Levantamos de uno en uno para evitar errores de Pipe/Concurrencia
 	@$(CMD) up -d --build --pull never product-service
+	$(call check_health_url,http://localhost:$(PRODUCT_PORT)/actuator/health,Product)
+
 	@$(CMD) up -d --build --pull never supplier-service
 	@$(CMD) up -d --build --pull never tax-service
 	@$(CMD) up -d --build --pull never purchase-service
 
 	@echo "🌐 4/4: API Gateway..."
 	@$(CMD) up -d --build --pull never api-gateway
+	$(call check_health_url,http://localhost:$(API_GATEWAY_PORT)/actuator/health,Gateway)
 
 	@$(MAKE) status-all
 	@END_TIME=$$(date +%s); \

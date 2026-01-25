@@ -1,80 +1,69 @@
-# application-local.yml (Supplier Service - Perfil Local/Host)
 server:
   port: ${SUPPLIER_PORT:9091}
 
 spring:
-  # --- Configuración de Activación ---
-  config:
-    activate:
-      on-profile: ${ONPROFILE:docker}
-    import: "optional:configserver:"
   application:
     name: supplier-service
 
-  # --- Dependencias de la Nube ---
-  cloud:
-    config:
-      # Corregido: Coincide con CLOUD_CONFIG_ENABLED del .env
-      enabled: ${CLOUD_CONFIG_ENABLED:false}
-      uri: ${SPRING_CLOUD_CONFIG_URI:http://config-service:7777}
-
-  eureka:
-    client:
-      enabled: ${EUREKA_CLIENT_ENABLED:true}
-      service-url:
-        defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
-      register-with-eureka: true
-      fetch-registry: true
-    instance:
-      prefer-ip-address: true
-      instance-id: ${spring.application.name}:${random.value}
-
-  # --- Base de Datos (Específica para Supplier) ---
   datasource:
-    # Usamos la URL segmentada para mayor control
     url: jdbc:${DB_PROTOCOL:postgresql}://${SUPPLIER_DB_HOST:localhost}:${SUPPLIER_DB_PORT:5434}/${SUPPLIER_DB_NAME:supplier}
     username: ${SUPPLIER_DB_USERNAME:supplier}
     password: ${SUPPLIER_DB_PASSWORD:supplier123}
     driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
-
     hikari:
-      pool-name: HikariPool-SupplierServiceLocal
-      maximum-pool-size: 10
-      minimum-idle: 2
-      auto-commit: false
+      pool-name: HikariPool-SupplierServiceDocker
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${MINIMUM_IDLE:5}
+      auto-commit: ${AUTO_COMMIT:true}
       transaction-isolation: TRANSACTION_READ_COMMITTED
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
+      connection-timeout: ${VALIDATION_TIMEOUT:3000}
+      idle-timeout: ${ILDETIMEOUT:600000}
+      max-lifetime: ${MAXLIFETIME:1800000}
 
-  # --- JPA/Hibernate ---
+  config:
+    activate:
+      on-profile: ${ONPROFILE:docker}
+    import: ${OPTIONAL_CONFIG_SERVER:"optional:configserver:http://config-service:7777"}
+
+  cloud:
+    config:
+      enabled: ${CLOUD_CONFIG_ENABLED:false}
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://config-service:7777}
+
   jpa:
     hibernate:
       ddl-auto: ${DDL_AUTO:update}
-    show-sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: ${VAR_TRUE:true}
+    database-platform: ${ORG_HIBERNATE_DIALECT_POSTGRE_SQL_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
 
-  # --- Exclusiones de Seguridad para desarrollo ---
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
       - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
 
-  # --- Configuración General de Spring ---
   messages:
     basename: messages
     encoding: UTF-8
-    fallback-to-system-locale: false
+    fallback-to-system-locale: ${VAR_FALSE:false}
 
-# --- Documentación/Swagger ---
+eureka:
+  client:
+    enabled: ${EUREKA_CLIENT_ENABLED:true}
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+    register-with-eureka: ${VAR_TRUE:true}
+    fetch-registry: ${VAR_TRUE:true}
+  instance:
+    prefer-ip-address: ${VAR_TRUE:true}
+    instance-id: ${spring.application.name}:${random.value}
+
 springdoc:
   api-docs:
-    path: /v3/api-docs
+    path: ${PATHAPI_DOCS:/v3/api-docs}
   swagger-ui:
-    path: /swagger-ui.html
-    display-request-duration: true
+    path: ${PATH_SPRING_DOC:/swagger-ui.html}
+    display-request-duration: ${VAR_TRUE:true}
 
-# --- Configuraciones Propias de la Aplicación (Pag. y CORS) ---
 app:
   cors:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:*}
@@ -85,69 +74,37 @@ app:
     default-sort: ${PAGINATION_DEFAULT_SORT:createdAt}
     default-direction: ${PAGINATION_DEFAULT_DIRECTION:desc}
 
-# --- Management Endpoints ---
 management:
   endpoints:
     web:
       exposure:
         include: "*"
 
-# --- Logging ---
 logging:
   level:
-    org.springframework.web: DEBUG
-    org.hibernate: INFO
-    org.hibernate.SQL: DEBUG
-    com.celotts.supplierservice: INFO
-    com.netflix.eureka: WARN
-    com.netflix.discovery: WARN
-    org.springframework.security: DEBUG
-    root: ${LOGGING_LEVEL_ROOT:INFO}
+    org.springframework.web: ${VAR_DEBUG:DEBUG}
+    com.celotts.supplierservice: ${VAR_INFO:INFO}
+    com.netflix.eureka: ${VAR_WARN:WARN}
+    com.netflix.discovery: ${VAR_WARN:WARN}
+    org.hibernate: ${VAR_INFO:INFO}
+    root: ${VAR_INFO:INFO}
 
 ---
-# ==========================================
-# 2. PERFIL DOCKER (LOCAL O NUBE BASADA EN CONTENEDORES)
-# ==========================================
+# SECCIÓN DOCKER (Solo lo que cambia)
 spring:
   config:
     activate:
-      on-profile: docker
-    import: "optional:configserver:"
-
+      on-profile: ${ON_PROFILE:docker}
   cloud:
     config:
       enabled: ${DOCKER_CONFIG_SERVER_ENABLED:false}
 
   datasource:
-    url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:5432/${PRODUCT_DB_NAME:product}
-    username: ${PRODUCT_DB_USERNAME:product}
-    password: ${PRODUCT_DB_PASSWORD:product123}
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${SUPPLIER_DB_HOST:supplier-db}:5432/${SUPPLIER_DB_NAME:supplier}
     hikari:
-      pool-name: HikariPool-ProductServiceDocker
-      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
-      minimum-idle: ${MINIMUM_IDLE:5}
-      auto-commit: ${AUTO_COMMIT:true}
-      transaction-isolation: TRANSACTION_READ_COMMITTED
-      connection-timeout: ${VALIDATION_TIMEOUT:3000}
-      idle-timeout: ${ILDETIMEOUT:600000}
-      max-lifetime: ${MAXLIFETIME:1800000}
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+      pool-name: HikariPool-TaxServiceDocker
 
 eureka:
   client:
-    enabled: true
     service-url:
-      # 🚨 CLAVE: No usar localhost, usar el nombre del servicio discovery-service
-      defaultZone: http://discovery-service:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    prefer-ip-address: true
-    # ID único para que Eureka no confunda instancias
-    instance-id: ${spring.application.name}:${random.uuid}
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}

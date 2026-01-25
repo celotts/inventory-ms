@@ -4,11 +4,50 @@ server:
 spring:
   application:
     name: purchase-service
+  datasource:
+    url: jdbc:postgresql://${PURCHASE_DB_HOST:purchase-db}:5432/${PURCHASE_DB_NAME:purchase}
+    username: ${PURCHASE_DB_USERNAME:purchase}
+    password: ${PURCHASE_DB_PASSWORD:purchase123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: HikariPool-PurchaseServiceDocker
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${MINIMUM_IDLE:5}
+      auto-commit: ${AUTO_COMMIT:true}
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      connection-timeout: ${VALIDATION_TIMEOUT:3000}
+      idle-timeout: ${ILDETIMEOUT:600000}
+      max-lifetime: ${MAXLIFETIME:1800000}
+  config:
+    activate:
+      on-profile: docker
+    import: "optional:configserver:"
 
   cloud:
     config:
       enabled: ${CONFIG_SERVER_ENABLED:false}
       uri: ${SPRING_CLOUD_CONFIG_URI:http://localhost:7777}
+
+  data:
+    jpa:
+      repositories:
+        query-lookup-strategy: create
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        connection:
+          provider_disables_autocommit: false
+        temp:
+          use_jdbc_metadata_defaults: false
+
+      repositories:
+        query-lookup-strategy: create
+
   messages:
     basename: messages
     encoding: UTF-8
@@ -69,6 +108,8 @@ logging:
     org.hibernate: DEBUG
     org.springframework.security: DEBUG
     root: INFO
+    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
+    org.hibernate.internal.AbstractSharedSessionContract: INFO
 
 ---
 # 🐳 CONFIGURACIÓN EXCLUSIVA PARA DOCKER
@@ -83,9 +124,9 @@ spring:
       enabled: false
 
   datasource:
-    url: jdbc:postgresql://${SUPPLIER_DB_HOST:supplier-db}:${SUPPLIER_DB_PORT:5432}/${SUPPLIER_DB_NAME:supplier}
-    username: ${SUPPLIER_DB_USERNAME:supplier}
-    password: ${SUPPLIER_DB_PASSWORD:supplier123}
+    url: jdbc:postgresql://${PRUCHASE_DB_HOST:purchase-db}:${PURCHASE_DB_PORT:5432}/${PRUCHASE_DB_NAME:purchase}
+    username: ${PURCHASE_DB_USERNAME:purchase}
+    password: ${PURCHASE_DB_PASSWORD:purchase123}
     driver-class-name: org.postgresql.Driver
     hikari:
       pool-name: HikariPool-ProductServiceDocker

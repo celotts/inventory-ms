@@ -11,7 +11,7 @@ spring:
     compatibility-verifier:
       enabled: false
     config:
-      server: # Configura esta aplicación como un Config Server
+      server:
         git:
           uri: ${SPRING_CLOUD_CONFIG_SERVER_GIT_URI}
           username: ${GIT_USERNAME}
@@ -21,18 +21,19 @@ spring:
           search-paths: config
       fail-fast: true
 
+# EUREKA debe estar a la misma altura que 'spring'
 eureka:
   client:
     enabled: ${EUREKA_CLIENT_ENABLED:true}
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+      # CAMBIO: Se usa discovery-service en lugar de localhost para entorno Docker
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
 
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
-
+    instance-id: ${spring.application.name}:${random.value}
 
 management:
   endpoints:

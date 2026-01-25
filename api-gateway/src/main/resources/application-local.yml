@@ -1,5 +1,5 @@
 server:
-  port: 8090
+  port: ${API_GATEWAY_PORT:8090}
 
 spring:
   application:
@@ -20,12 +20,23 @@ spring:
           predicates:
             - Path=/api/v1/products/**
 
+        - id: supplier-service
+          uri: lb://supplier-service
+          predicates:
+            - Path=/supplier-service/**
+          filters:
+            - StripPrefix=1
+
+        - id: supplier-direct
+          uri: lb://supplier-service
+          predicates:
+            - Path=/api/v1/suppliers/**
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
 
-# ✅ DEBUG: Agregar endpoint para verificar configuración
+# ✅ Management fuera del bloque spring
 management:
   endpoints:
     web:
@@ -36,24 +47,29 @@ management:
       show-details: always
     env:
       show-values: ALWAYS
-# ✅ FORZAR configuración sin variables (para debug)
+
+# ✅ Configuración de Eureka corregida para red Docker
 eureka:
   client:
     service-url:
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+      # CAMBIO: discovery-service en lugar de localhost
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
-    initial-instance-info-replication-interval-seconds: 30
-    instance-info-replication-interval-seconds: 30
+    initial-instance-info-replication-interval-seconds: 5
+    instance-info-replication-interval-seconds: 5
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.boot.lineage:}${random.value}
-    lease-renewal-interval-in-seconds: 30
-    lease-expiration-duration-in-seconds: 90
+    # Limpieza de instance-id para evitar errores si lineage no está definido
+    instance-id: ${spring.application.name}:${random.value}
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
 
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
-    com.netflix.eureka: DEBUG  # ✅ Cambiar a DEBUG para ver qué está pasando
-    com.netflix.discovery: DEBUG
-    org.springframework.core.env: DEBUG  # ✅ Ver cómo se cargan las propiedades
+    com.netflix.eureka: INFO
+    com.netflix.discovery: INFO
+    org.springframework.core.env: INFO
+    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
+    org.hibernate.internal.AbstractSharedSessionContract: INFO
