@@ -28,9 +28,17 @@ public class PurchaseController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PurchaseModel> getById(@PathVariable UUID id) {
+        System.out.println(">>> Solicitando compra con ID: " + id);
+
         return purchaseUseCase.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(purchase -> {
+                    System.out.println(">>> Compra encontrada: " + purchase.getOrderNumber());
+                    return ResponseEntity.ok(purchase);
+                })
+                .orElseGet(() -> {
+                    System.out.println(">>> ERROR: No se encontró el ID en la DB");
+                    return ResponseEntity.notFound().build();
+                });
     }
 
     @GetMapping
