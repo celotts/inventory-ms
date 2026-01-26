@@ -15,7 +15,8 @@ import java.math.BigDecimal;
 public class PurchaseEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
     @Column(name = "supplier_id", nullable = false)
