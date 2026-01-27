@@ -11,18 +11,24 @@ import java.util.List;
 public interface SupplierEntityMapper {
 
     // Model -> Entity
+    // Añadimos los ignores aquí para que MapStruct no se queje de los campos técnicos
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "deletedBy", ignore = true)
+    @Mapping(target = "deletedReason", ignore = true)
     SupplierEntity toEntity(SupplierModel model);
 
-    // Entity -> Model   << NECESARIO para mapper::toModel
+    // Entity -> Model
     SupplierModel toModel(SupplierEntity entity);
 
-    // List<Entity> -> List<Model>
+    // Listas
     List<SupplierModel> toModelList(List<SupplierEntity> entities);
-
-    // List<Model> -> List<Entity>
     List<SupplierEntity> toEntityList(List<SupplierModel> models);
 
-    // PATCH: no tocar ID, auditoría ni soft-delete
+    // PATCH
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

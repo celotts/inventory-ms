@@ -1,58 +1,73 @@
 server:
-  port: 9090
+  port: ${TAX_PORT:9090}
 
 spring:
   application:
-    name: product-service
+    name: tax-service
+  datasource:
+    url: jdbc:${DB_PROTOCOL:postgresql}://${TAX_DB_HOST:localhost}:${TAX_DB_PORT:5434}/${TAX_DB_NAME:tax}
+    username: ${TAX_DB_USERNAME:tax}
+    password: ${TAX_DB_PASSWORD:tax123}
+    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
+    hikari:
+      pool-name: HikariPool-TaxServiceLocal
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${MINIMUM_IDLE:5}
+      auto-commit: ${AUTO_COMMIT:true}
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      connection-timeout: ${VALIDATION_TIMEOUT:3000}
+      idle-timeout: ${ILDETIMEOUT:600000}
+      max-lifetime: ${MAXLIFETIME:1800000}
+
+  config:
+    activate:
+      on-profile: ${ONPROFILE:local}
+    import: ${OPTIONAL_CONFIG_SERVER:"optional:configserver:http://config-service:7777"}
+
+  cloud:
+    config:
+      enabled: ${CLOUD_CONFIG_ENABLED:false}
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://config-service:7777}
+
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: true
+    database-platform: ${ORG_HIBERNATE_DIALECT_POSTGRE_SQL_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
+
 
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
       - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
 
-  datasource:
-    url: jdbc:postgresql://localhost:5432/product
-    username: product
-    password: product123
-    driver-class-name: org.postgresql.Driver
-
-    hikari:
-      pool-name: HikariPool-ProductService
-      maximum-pool-size: 10
-      minimum-idle: 2
-      auto-commit: true
-      transaction-isolation: TRANSACTION_READ_COMMITTED
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
 
 eureka:
   client:
-    enabled: true
+    enabled: ${EUREKA_CLIENT_ENABLED:true}
     service-url:
       defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
-    register-with-eureka: true
-    fetch-registry: true
+    register-with-eureka: ${VAR_TRUE:true}
+    fetch-registry: ${VAR_TRUE:true}
   instance:
-    prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+    prefer-ip-address: ${VAR_TRUE:true}
+    instance-id: ${spring.application.name}:${random.value}
+
 
 springdoc:
   api-docs:
-    path: /v3/api-docs
+    path: ${PATHAPI_DOCS:/v3/api-docs}
   swagger-ui:
-    path: /swagger-ui.html
-    display-request-duration: true
+    path: ${PATH_SPRING_DOC:/swagger-ui.html}
+    display-request-duration: ${VAR_TRUE:true}
 
 app:
   cors:
-    allowed-origin: "*"
+    allowed-origin: ${CORS_ALLOWED_ORIGIN:*}
   pagination:
     default-page: ${PAGINATION_DEFAULT_PAGE:0}
     default-size: ${PAGINATION_DEFAULT_SIZE:10}
@@ -65,14 +80,39 @@ management:
     web:
       exposure:
         include: "*"
-  endpoint:
-    health:
-      show-details: always # Muestra qué base de datos o servicio externo falló
-      probes:
-        enabled: true
 
 logging:
   level:
-    com.celotts.productservice: DEBUG
-    com.netflix.eureka: WARN
-    com.netflix.discovery: WARN
+    org.springframework.web: ${VAR_INFO:INFO}
+    com.celotts.taxservice: ${VAR_INFO:INFO}
+    com.netflix.eureka: ${VAR_WARN:WARN}
+    com.netflix.discovery: ${VAR_WARN:WARN}
+    org.hibernate: ${VAR_INFO:INFO}
+    root: ${VAR_INFO:INFO}
+    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: ${VAR_INFO:INFO}
+    org.hibernate.internal.AbstractSharedSessionContract: ${VAR_INFO:INFO}
+
+---
+# ==========================================
+# 2. PERFIL DOCKER
+# ==========================================
+spring:
+  config:
+    activate:
+      on-profile: ${ONPROFILE:docker}
+    import: ${OPTIONAL_CONFIG_SERVER:"optional:configserver:http://config-service:7777"}
+
+  cloud:
+    config:
+      enabled: ${DOCKER_CONFIG_SERVER_ENABLED:false}
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://config-service:7777}
+
+  datasource:
+    url: jdbc:postgresql://${TAX_DB_HOST:tax-db}:5432/${TAX_DB_NAME:tax}
+    hikari:
+      pool-name: HikariPool-TaxServiceDocker
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}

@@ -1,23 +1,29 @@
 # Archivo de configuración para Auth Service (ej. application-docker.yml)
 
 server:
-  # El Auth Service suele correr en un puerto diferente al Product Service (9090).
-  # Usaremos un puerto estándar para Auth, por ejemplo, 8081, o el que esté definido en tu Compose.
-  port: 8081  # CORRECCIÓN 1: Ajustar el puerto para Auth Service (cambiado de 9090)
+  port: ${AUTH_PORT:8081}
 
 spring:
   application:
-    name: auth-service # CORRECCIÓN 2: Cambiar el nombre de la aplicación
+    name: auth-service
 
   # Base de datos PostgreSQL para el Auth Service
   datasource:
-    # CORRECCIÓN 3: Cambiar el host y el nombre de la base de datos
-    url: jdbc:postgresql://auth-db:5432/auth
+    # Se recomienda parametrizar el host para mayor flexibilidad
+    url: jdbc:postgresql://${AUTH_DB_HOST:auth-db}:5432/${AUTH_DB_NAME:auth}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: HikariPool-AuthServiceDocker
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${MINIMUM_IDLE:5}
+      auto-commit: ${AUTO_COMMIT:true}
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      connection-timeout: ${VALIDATION_TIMEOUT:3000}
+      idle-timeout: ${ILDETIMEOUT:600000}
+      max-lifetime: ${MAXLIFETIME:1800000}
 
-  # Configuración JPA para PostgreSQL
   jpa:
     hibernate:
       ddl-auto: update
@@ -28,23 +34,23 @@ spring:
       hibernate:
         format_sql: true
 
-  # CORRECCIÓN 4: Solución al error de compatibilidad de Spring Cloud
   cloud:
     compatibility-verifier:
       enabled: false
 
+# EUREKA: Debe estar a nivel raíz (columna 0)
 eureka:
   client:
     service-url:
+      # CAMBIO CLAVE: Se usa 'discovery-service' en lugar de 'localhost'
       defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
   instance:
     prefer-ip-address: true
-    # Asegúrate de que el ID de instancia se resuelve correctamente con el nombre de Auth Service y el puerto 8081
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
+    # Limpieza de instance-id para evitar errores de lineage
+    instance-id: ${spring.application.name}:${random.value}
 
-# Configuración de paginación (Mantengo esto si Auth también lo usa, aunque es menos común)
 app:
   pagination:
     default-page: 0
@@ -55,17 +61,16 @@ app:
   cors:
     allowed-origin: "*"
 
-# Endpoints de management
 management:
   endpoints:
     web:
       exposure:
         include: "*"
 
-# Logging para debug
 logging:
   level:
-    # CORRECCIÓN 5: Ajustar el logging al paquete del Auth Service
     com.celotts.authservice: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.SQL: INFO
+    root: INFO
+    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
+    org.hibernate.internal.AbstractSharedSessionContract: INFO

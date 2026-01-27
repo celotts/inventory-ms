@@ -17,3 +17,4 @@ public record AppProperties(
             @DefaultValue("desc") String defaultDirection
     ) {}
 }
+

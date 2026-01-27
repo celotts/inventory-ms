@@ -20,57 +20,53 @@ public interface ProductJpaRepository extends JpaRepository<ProductEntity, UUID>
 
     // ---------- Enabled / conteos ----------
     long countByEnabled(boolean enabled);
-    Page<ProductEntity> findByEnabled(Boolean enabled, Pageable pageable);
 
-    // ---------- Marca ----------
-    Page<ProductEntity> findByBrandId(UUID brandId, Pageable pageable);
+    @Query("SELECT p FROM ProductEntity p WHERE p.enabled = :enabled")
+    Page<ProductEntity> findByEnabled(@Param("enabled") Boolean enabled, Pageable pageable);
 
-    // ---------- Categoría (JOIN con tabla puente) ----------
-    @Query("""
-        SELECT p
-        FROM ProductEntity p
-        JOIN ProductCategoryEntity pc ON pc.productId = p.id
-        WHERE pc.categoryId = :categoryId
-    """)
+    // ---------- Marca (CORREGIDO: Forzado con Query para evitar el error de Named Query) ----------
+    @Query("SELECT p FROM ProductEntity p WHERE p.brandId = :brandId") // <-- Cambia p.brand.id por p.brandId
+    Page<ProductEntity> findByBrandId(@Param("brandId") UUID brandId, Pageable pageable);
+
+    // ---------- Categoría ----------
+    @Query(value = """
+        SELECT p FROM ProductEntity p
+        WHERE p.id IN (SELECT pc.productId FROM ProductCategoryEntity pc WHERE pc.categoryId = :categoryId)
+        """,
+            countQuery = "SELECT COUNT(p) FROM ProductEntity p WHERE p.id IN (SELECT pc.productId FROM ProductCategoryEntity pc WHERE pc.categoryId = :categoryId)")
     Page<ProductEntity> findByCategoryId(@Param("categoryId") UUID categoryId, Pageable pageable);
 
-    // Categoría + stock <= max
     @Query(value = """
-            SELECT p
-            FROM ProductEntity p
-            JOIN ProductCategoryEntity pc ON pc.productId = p.id
-            WHERE pc.categoryId = :categoryId
-              AND (p.currentStock IS NOT NULL AND p.currentStock <= :maxStock)
-            """,
+        SELECT p FROM ProductEntity p
+        WHERE p.id IN (SELECT pc.productId FROM ProductCategoryEntity pc WHERE pc.categoryId = :categoryId)
+          AND (p.currentStock IS NOT NULL AND p.currentStock <= :maxStock)
+        """,
             countQuery = """
-            SELECT COUNT(p)
-            FROM ProductEntity p
-            JOIN ProductCategoryEntity pc ON pc.productId = p.id
-            WHERE pc.categoryId = :categoryId
-              AND (p.currentStock IS NOT NULL AND p.currentStock <= :maxStock)
-            """)
+        SELECT COUNT(p) FROM ProductEntity p 
+        WHERE p.id IN (SELECT pc.productId FROM ProductCategoryEntity pc WHERE pc.categoryId = :categoryId)
+          AND (p.currentStock IS NOT NULL AND p.currentStock <= :maxStock)
+        """)
     Page<ProductEntity> findByCategoryAndMaxStock(@Param("categoryId") UUID categoryId,
                                                   @Param("maxStock") BigDecimal maxStock,
                                                   Pageable pageable);
 
-    // ---------- Stock bajo (sin categoría) ----------
-    Page<ProductEntity> findByCurrentStockLessThanEqual(BigDecimal maxStock, Pageable pageable);
+    // ---------- Stock bajo ----------
+    @Query("SELECT p FROM ProductEntity p WHERE p.currentStock <= :maxStock")
+    Page<ProductEntity> findByCurrentStockLessThanEqual(@Param("maxStock") BigDecimal maxStock, Pageable pageable);
 
-    // ---------- Búsqueda con filtros opcionales ----------
+    // ---------- Filtros ----------
     @Query(value = """
-            SELECT p
-            FROM ProductEntity p
-            WHERE (:code IS NULL OR LOWER(p.code) LIKE LOWER(CONCAT('%', :code, '%')))
-              AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')))
-              AND (:description IS NULL OR LOWER(p.description) LIKE LOWER(CONCAT('%', :description, '%')))
-            """,
+        SELECT p FROM ProductEntity p
+        WHERE (:code IS NULL OR LOWER(p.code) LIKE LOWER(CONCAT('%', :code, '%')))
+          AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')))
+          AND (:description IS NULL OR LOWER(p.description) LIKE LOWER(CONCAT('%', :description, '%')))
+        """,
             countQuery = """
-            SELECT COUNT(p)
-            FROM ProductEntity p
-            WHERE (:code IS NULL OR LOWER(p.code) LIKE LOWER(CONCAT('%', :code, '%')))
-              AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')))
-              AND (:description IS NULL OR LOWER(p.description) LIKE LOWER(CONCAT('%', :description, '%')))
-            """)
+        SELECT COUNT(p) FROM ProductEntity p
+        WHERE (:code IS NULL OR LOWER(p.code) LIKE LOWER(CONCAT('%', :code, '%')))
+          AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')))
+          AND (:description IS NULL OR LOWER(p.description) LIKE LOWER(CONCAT('%', :description, '%')))
+        """)
     Page<ProductEntity> findAllWithFilters(Pageable pageable,
                                            @Param("code") String code,
                                            @Param("name") String name,

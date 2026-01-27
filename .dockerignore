@@ -1,15 +1,12 @@
-# Contenido recomendado para .dockerignore
-# -------------------------------------
-
 # Directorios de compilación de Gradle
-**/build/
+# Quitamos **/build/ porque necesitamos entrar ahí para los JARs
 **/.gradle/
 
 # Directorios de IDE
 **/.idea/
 **/.vscode/
 
-# Dependencias del contenedor (no deberían ser copiadas)
+# Dependencias del contenedor
 **/target/
 **/out/
 
@@ -17,15 +14,13 @@
 **/logs/
 *~
 
-# Directorios de Docker/Podman
-docker-compose-podman.yml
-.env.local
-.env.override
-
-# Excluir archivos comprimidos de build (como el zip que está causando el problema)
+# Excluir archivos comprimidos
 **/*.zip
 **/*.tar
 
-# Excluir TODOS los JARs por defecto, EXCEPTO el JAR del Wrapper
+# --- REGLAS PARA LOS JARS ---
+# Ignoramos todos los JARs por defecto...
 **/*.jar
+# ...PERO permitimos el Wrapper y los JARs compilados que necesitamos
 !gradle/wrapper/gradle-wrapper.jar
+!**/build/libs/*.jar

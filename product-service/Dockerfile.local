@@ -1,0 +1,28 @@
+ARG DOCKER_USERNAME
+ARG DOCKER_PASSWORD
+
+FROM eclipse-temurin:21-jre-jammy
+LABEL maintainer="Inventory MS Team"
+
+EXPOSE 9090
+
+USER root
+WORKDIR /app
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends dos2unix && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN addgroup --system spring && adduser --system --ingroup spring spring
+
+COPY ./product-service/build/libs/product-service-*.jar /app/app.jar
+COPY ./product-service/entrypoint.sh /app/entrypoint.sh
+COPY ./infra/wait-for-it.sh /app/wait-for-it.sh
+
+RUN dos2unix /app/entrypoint.sh /app/wait-for-it.sh && \
+    chmod +x /app/entrypoint.sh /app/wait-for-it.sh && \
+    chown -R spring:spring /app
+
+USER spring:spring
+
+ENTRYPOINT ["/app/entrypoint.sh"]

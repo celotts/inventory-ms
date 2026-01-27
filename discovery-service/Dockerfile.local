@@ -1,0 +1,35 @@
+ARG DOCKER_USERNAME
+ARG DOCKER_PASSWORD
+# El FROM debe ir SIEMPRE antes de cualquier instrucción como EXPOSE o RUN
+FROM eclipse-temurin:21-jre-jammy
+LABEL maintainer="Inventory MS Team"
+
+# Ahora sí podemos definir el puerto
+EXPOSE 8761
+
+USER root
+WORKDIR /app
+
+# 1. Instalación de utilidades
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends dos2unix && \
+    rm -rf /var/lib/apt/lists/*
+
+# 2. Creación de usuario
+RUN addgroup --system spring && adduser --system --ingroup spring spring
+
+# 3. Copia de archivos (Corregido a un solo guion: discovery-service)
+COPY ./discovery-service/build/libs/discovery-service-*.jar /app/app.jar
+COPY ./discovery-service/entrypoint.sh /app/entrypoint.sh
+COPY ./infra/wait-for-it.sh /app/wait-for-it.sh
+
+# 4. Limpieza de formato y permisos
+RUN dos2unix /app/entrypoint.sh /app/wait-for-it.sh && \
+    chmod +x /app/entrypoint.sh /app/wait-for-it.sh && \
+    chown -R spring:spring /app
+
+USER spring:spring
+
+
+ENTRYPOINT ["/app/entrypoint.sh"]
+

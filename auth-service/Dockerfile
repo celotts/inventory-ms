@@ -1,11 +1,12 @@
 # ---------------------------------------------------------------------
 # ETAPA 1: CONSTRUCTOR (Compila la aplicación)
 # ---------------------------------------------------------------------
+ARG DOCKER_USERNAME
+ARG DOCKER_PASSWORD
+
 FROM eclipse-temurin:21-jdk-jammy AS builder
 LABEL maintainer="Inventory MS Team"
 
-ARG DOCKER_USERNAME
-ARG DOCKER_PASSWORD
 
 WORKDIR /app
 

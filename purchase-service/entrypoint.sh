@@ -1,23 +1,30 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -e
 
 log() {
   echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
 }
-DB_USER=${PRODUCT_DB_USERNAME}  # <-- Usar la variable de entorno
-DB_PASS=${PRODUCT_DB_PASSWORD}  # <-- Usar la variable de entorno
+
 wait_for_service() {
   local name="$1"
-  local host_port="$2"
-  local timeout="${3:-30}"
+  local host="${2%:*}"
+  local port="${2#*:}"
+  local timeout="${3:-60}"
 
-  log "🕒 Esperando $name en $host_port (timeout ${timeout}s)..."
-  bash ./wait-for-it.sh "$host_port" --timeout="$timeout" --strict --
-  log "✅ $name está disponible."
+  log "🕒 Esperando $name en $host:$port (timeout ${timeout}s)..."
+
+  # Usamos timeout y bash nativo para verificar el puerto
+  timeout "$timeout" bash -c "until printf '' 2>/dev/null >/dev/tcp/$host/$port; do sleep 2; done"
+
+  if [ $? -eq 0 ]; then
+    log "✅ $name está disponible."
+  else
+    log "❌ Timeout alcanzado para $name. Intentando arrancar de todas formas..."
+  fi
 }
 
-
 # === Espera por servicios externos ===
+# Solo esperamos al discovery-service
 wait_for_service "discovery-service" "discovery-service:8761" 60
 
 # === Validación de archivo JAR ===
@@ -28,4 +35,5 @@ fi
 
 # === Lanzar aplicación ===
 log "🚀 Iniciando app.jar..."
-exec java ${JAVA_OPTS:-} -jar app.jar
+# Aseguramos que JAVA_OPTS se pase correctamente
+exec java $JAVA_OPTS -jar app.jar

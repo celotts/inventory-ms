@@ -1,0 +1,111 @@
+server:
+  port: ${API_GATEWAY_PORT:8090}
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/product-service/**
+          filters:
+            - StripPrefix=1
+
+        - id: products-direct
+          uri: lb://product-service
+          predicates:
+            - Path=/api/v1/products/**
+
+        - id: supplier-service
+          uri: lb://supplier-service
+          predicates:
+            - Path=/supplier-service/**
+          filters:
+            - StripPrefix=1
+
+        - id: supplier-direct
+          uri: lb://supplier-service
+          predicates:
+            - Path=/api/v1/suppliers/**
+
+        - id: purchase-service
+          uri: lb://purchase-service
+          predicates:
+            - Path=/purchase-service/**
+          filters:
+            - StripPrefix=1
+
+        - id: purchase-direct
+          uri: lb://purchase-service
+          predicates:
+            - Path=/api/v1/purchases/**
+
+        # --- LAS DEMÁS RUTAS ---
+        - id: supplier-service
+          uri: lb://supplier-service
+          predicates:
+            - Path=/supplier-service/**
+          filters:
+            - StripPrefix=1
+
+        - id: supplier-direct
+          uri: lb://supplier-service
+          predicates:
+            - Path=/api/v1/suppliers/**
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+# EUREKA: Debe estar fuera del bloque 'spring' (columna 0)
+eureka:
+  client:
+    service-url:
+      # CAMBIO CLAVE: Se usa 'discovery-service' en lugar de 'localhost'
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+    initial-instance-info-replication-interval-seconds: 30
+    instance-info-replication-interval-seconds: 30
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+    env:
+      show-values: ALWAYS
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    urls:
+      - name: "Purchase Service"
+        url: "/purchase-service/v3/api-docs"
+      - name: "Product Service"
+        url: "/product-service/v3/api-docs"
+      - name: "Supplier Service"
+        url: "/supplier-service/v3/api-docs"
+  use-fqn: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.netflix.eureka: INFO # Cambiado a INFO para no saturar, pero mantén DEBUG si hay fallos
+    com.netflix.discovery: INFO
+    org.springframework.core.env: INFO
+    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
+    org.hibernate.internal.AbstractSharedSessionContract: INFO

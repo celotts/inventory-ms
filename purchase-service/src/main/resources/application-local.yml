@@ -1,0 +1,157 @@
+server:
+  port: ${PURCHASE_PORT:9094}
+
+spring:
+  application:
+    name: purchase-service
+  datasource:
+    url: jdbc:postgresql://${purchase_DB_HOST:purchase-db}:${purchase_DB_PORT:5432}/${PURCHASE_DB_NAME:pruchase}
+    username: ${PURCHASE_DB_USERNAME:purchase}
+    password: ${PURCHASE_DB_PASSWORD:purchase123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: HikariPool-PurchaseServiceDocker
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${MINIMUM_IDLE:5}
+      auto-commit: ${AUTO_COMMIT:true}
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      connection-timeout: ${VALIDATION_TIMEOUT:3000}
+      idle-timeout: ${ILDETIMEOUT:600000}
+      max-lifetime: ${MAXLIFETIME:1800000}
+
+  config:
+    activate:
+      on-profile: ${ONPROFILE:docker}
+    import: "optional:configserver:"
+
+  cloud:
+    config:
+      enabled: ${CONFIG_SERVER_ENABLED:false}
+      uri: ${SPRING_CLOUD_CONFIG_URI:http://localhost:7777}
+
+  data:
+    jpa:
+      repositories:
+        query-lookup-strategy: create
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        connection:
+          provider_disables_autocommit: false
+        temp:
+          use_jdbc_metadata_defaults: false
+
+      repositories:
+        query-lookup-strategy: create
+
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+      -
+      # Configuración de Eureka común para todos los entornos
+eureka:
+  client:
+    enabled: true
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+
+# Swagger / OpenAPI
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    display-request-duration: true
+
+
+# Configuración personalizada de la App
+app:
+  pagination:
+    default-page: 0
+    default-size: 10
+    max-size: 100
+    default-sort: createdAt
+    default-direction: desc
+  cors:
+    allowed-origin: "*"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    com.celotts.purchaseservice: INFO
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    org.hibernate: DEBUG
+    org.springframework.security: DEBUG
+    root: INFO
+    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
+    org.hibernate.internal.AbstractSharedSessionContract: INFO
+
+---
+# ==========================================
+# 2. PERFIL DOCKER (LOCAL O NUBE BASADA EN CONTENEDORES)
+# ==========================================
+spring:
+  config:
+    activate:
+      on-profile: docker
+    import: "optional:configserver:"
+
+  cloud:
+    config:
+      enabled: false
+
+  datasource:
+    url: jdbc:postgresql://${PRUCHASEDB_HOST:purchase-db}:${PURCHASE_DB_PORT:5432}/${PURCHASE_DB_NAME:purchase}
+    username: ${PURCHASE_DB_USERNAME:purchase}
+    password: ${PURCHASE_DB_PASSWORD:purchase123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: HikariPool-PurchaseServiceDocker
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${MINIMUM_IDLE:5}
+      auto-commit: ${AUTO_COMMIT:true}
+      transaction-isolation: TRANSACTION_READ_COMMITTED
+      connection-timeout: ${VALIDATION_TIMEOUT:3000}
+      idle-timeout: ${ILDETIMEOUT:600000}
+      max-lifetime: ${MAXLIFETIME:1800000}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+eureka:
+  client:
+    enabled: true
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://localhost:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    # ID único para que Eureka no confunda instancias
+    instance-id: ${spring.application.name}:${random.uuid}

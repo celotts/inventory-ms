@@ -1,12 +1,13 @@
 # ---------------------------------------------------------------------
 # ETAPA 1: CONSTRUCTOR (Compila la aplicación)
 # ---------------------------------------------------------------------
+ARG DOCKER_USERNAME
+ARG DOCKER_PASSWORD
+
 FROM eclipse-temurin:21-jdk-jammy AS builder
 LABEL maintainer="Inventory MS Team"
 WORKDIR /app
 
-ARG DOCKER_USERNAME
-ARG DOCKER_PASSWORD
 
 COPY gradle/ gradle/
 COPY gradlew .
@@ -91,4 +92,5 @@ RUN chmod +x entrypoint.sh wait-for-it.sh
 USER spring:spring
 
 # Aquí debería ir el ENTRYPOINT
-ENTRYPOINT ["/app/entrypoint.sh"]
+#ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/app/entrypoint.sh"]

@@ -1,50 +1,11 @@
-# =======================================================
-# PERFIL: docker (Ejecución DENTRO del Contenedor)
-# =======================================================
----
 spring:
+  application:
+    name: supplier-service
   config:
     activate:
       on-profile: docker
-
-  # 🚨 HABILITAR CLOUD Y CONFIG SERVER
+    # Esta línea le dice: "Busca todo lo demás en el servidor"
+    import: "optional:configserver:http://config-service:7777"
   cloud:
     config:
       enabled: true
-      # 🛑 CRÍTICO: DESHABILITAR DISCOVERY porque no tienes la dependencia de Eureka Client
-      uri: http://config-service:7777 # Establecer la URI de forma directa
-      discovery:
-        enabled: false # 🛑 ESTO DEBE SER 'false' para evitar el error 'IllegalStateException'
-        service-id: config-service # Esta línea ya no se usa, pero la dejamos deshabilitada.
-
-  # Database: Conexión por nombre de servicio a supplier-db dentro de la red
-  datasource:
-    url: jdbc:postgresql://${SUPPLIER_DB_HOST:supplier-db}:${SUPPLIER_DB_PORT:5432}/${SUPPLIER_DB_NAME:supplier}
-    username: ${SUPPLIER_DB_USERNAME:supplier}
-    password: ${SUPPLIER_DB_PASSWORD:supplier123}
-    driver-class-name: org.postgresql.Driver
-    # ... (resto de configuraciones de Hikari)
-    hikari:
-      minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:2}
-      maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:10}
-      auto-commit: ${SPRING_DATASOURCE_HIKARI_AUTO_COMMIT:false}
-      validation-timeout: ${SPRING_DATASOURCE_HIKARI_VALIDATION_TIMEOUT:30000}
-      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:60000}
-      transaction-isolation: ${SPRING_DATASOURCE_HIKARI_TRANSACTION_ISOLATION:TRANSACTION_READ_COMMITTED}
-
-  # 🚨 CONFIGURACIÓN DE EUREKA (Permanece, ya que solo necesitas el Config Client para fallar)
-  eureka:
-    client:
-      enabled: true
-      service-url:
-        defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
-      register-with-eureka: true
-      fetch-registry: true
-    instance:
-      prefer-ip-address: true
-      instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
-  # ✅ Gestión de Endpoints
-  management:
-    endpoint:
-      health:
-        show-details: always

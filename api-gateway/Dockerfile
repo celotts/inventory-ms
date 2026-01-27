@@ -1,11 +1,11 @@
 # ---------------------------------------------------------------------
 # ETAPA 1: CONSTRUCTOR (Compila la aplicación)
 # ---------------------------------------------------------------------
-FROM eclipse-temurin:21-jdk-jammy AS builder
-LABEL maintainer="Inventory MS Team"
-
 ARG DOCKER_USERNAME
 ARG DOCKER_PASSWORD
+
+FROM eclipse-temurin:21-jdk-jammy
+LABEL maintainer="Inventory MS Team"
 
 # ⭐ PASO CRÍTICO 1: Definir los argumentos de construcción (ARG) para el Proxy
 ARG http_proxy
@@ -80,27 +80,29 @@ RUN ls -lh api-gateway/build/libs/ && \
 # ---------------------------------------------------------------------
 # ETAPA 2: EJECUCIÓN (Crea la imagen final mínima)
 # ---------------------------------------------------------------------
-FROM eclipse-temurin:21-jre-jammy AS runner
+FROM eclipse-temurin:21-jre-jammy
 LABEL maintainer="Inventory MS Team"
 
-# ⭐ PUERTO DE API GATEWAY
+# Puerto del servicio
 EXPOSE 8090
 
-RUN addgroup --system spring && adduser --system --ingroup spring spring
-# NOTA: USER se aplica después de la copia de scripts para asegurar permisos
+# Instalar utilidades para sanitizar scripts
+RUN apt-get update && apt-get install -y dos2unix && rm -rf /var/lib/apt/lists/*
 
+# Crear usuario de ejecución
+RUN addgroup --system spring && adduser --system --ingroup spring spring
 WORKDIR /app
 
-# Copiar el JAR compilado desde la etapa 'builder'
-COPY --from=builder /app/api-gateway/build/libs/api-gateway-*.jar /app/app.jar
+# ✅ EL PASO CLAVE PARA PODMAN:
+# El contexto es la raíz del proyecto (inventory-ms), por eso incluimos el nombre de la carpeta
+COPY api-gateway/build/libs/api-gateway-*.jar /app/app.jar
+COPY api-gateway/entrypoint.sh /app/entrypoint.sh
+COPY api-gateway/wait-for-it.sh /app/wait-for-it.sh
 
-# ⭐ COPIAR LOS SCRIPTS DE ARRANQUE Y ESPERA (CORRECCIÓN DEFINITIVA)
-# Usando COPY --from con CHOWN y CHMOD para establecer permisos y propiedad correcta.
-COPY --from=builder --chown=spring:spring --chmod=0755 /app/api-gateway/entrypoint.sh /app/entrypoint.sh
-COPY --from=builder --chown=spring:spring --chmod=0755 /app/api-gateway/wait-for-it.sh /app/wait-for-it.sh
+# Corregir formato y permisos
+RUN dos2unix /app/entrypoint.sh /app/wait-for-it.sh && \
+    chmod +x /app/entrypoint.sh /app/wait-for-it.sh && \
+    chown -R spring:spring /app
 
-# Cambiar al usuario spring después de las operaciones de instalación y corrección
 USER spring:spring
-
-# ⭐ ESTABLECER EL PUNTO DE ENTRADA
 ENTRYPOINT ["/app/entrypoint.sh"]

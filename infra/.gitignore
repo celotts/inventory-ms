@@ -49,3 +49,5 @@ product-service~*
 # === Infraestructura (permitida completamente) ===
 !infra/
 !infra/**
+
+infra/.build/config.json

@@ -1,0 +1,42 @@
+# --- CONFIGURACIÓN LOCAL (application-local.yml) ---
+
+server:
+  port: ${CONFIG_PORT:7777}
+
+spring:
+  application:
+    name: config-service
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
+    config:
+      server:
+        git:
+          uri: ${SPRING_CLOUD_CONFIG_SERVER_GIT_URI}
+          username: ${GIT_USERNAME}
+          password: ${GIT_TOKEN}
+          timeout: 10
+          default-label: main
+          search-paths: config
+      fail-fast: true
+
+# EUREKA debe estar a la misma altura que 'spring'
+eureka:
+  client:
+    enabled: ${EUREKA_CLIENT_ENABLED:true}
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      # CAMBIO: Se usa discovery-service en lugar de localhost para entorno Docker
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.common.config;
+package com.celotts.productservice.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

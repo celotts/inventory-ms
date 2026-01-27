@@ -18,16 +18,19 @@ public interface LotJpaRepository extends JpaRepository<LotEntity, UUID> {
     Page<LotEntity> findByProductIdAndDeletedAtIsNull(UUID productId, Pageable pageable);
 
     // ✅ Nuevo: incluye vencidos y los que expiran hasta 'until', excluye borrados lógicos
-    @Query("""
-           select l
-           from LotEntity l
-           where l.deletedAt is null
-             and (
-                   l.expirationDate <= :now
-                or (l.expirationDate > :now and l.expirationDate <= :until)
-             )
+    // ✅ Corregido: Se agrega countQuery explícito para soportar la paginación
+    @Query(value = """
+           SELECT l
+           FROM LotEntity l
+           WHERE l.deletedAt IS NULL
+             AND (l.expirationDate <= :until)
+           """,
+            countQuery = """
+           SELECT COUNT(l)
+           FROM LotEntity l
+           WHERE l.deletedAt IS NULL
+             AND (l.expirationDate <= :until)
            """)
-    Page<LotEntity> findExpiredOrExpiring(@Param("now") LocalDate now,
-                                          @Param("until") LocalDate until,
-                                          Pageable pageable);
+    Page<LotEntity> findExpiredOrExpiring(@Param("until") LocalDate until,
+                                          LocalDate localDate, Pageable pageable);
 }

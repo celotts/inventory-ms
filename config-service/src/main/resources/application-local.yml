@@ -21,20 +21,19 @@ spring:
           search-paths: config
       fail-fast: true
 
+# EUREKA debe estar en la columna 0, al mismo nivel que 'spring'
 eureka:
   client:
     enabled: ${EUREKA_CLIENT_ENABLED:true}
     register-with-eureka: true
-    # CAMBIO CLAVE: Permite que el servicio obtenga (fetch) la lista de otros servicios
-    # registrados en Eureka. Esto es necesario para que sea un cliente completo.
     fetch-registry: true
     service-url:
-      defaultZone: http://discovery-service:8761/eureka/
+      # CAMBIO: discovery-service en lugar de localhost
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
 
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}:${server.port}
-
+    instance-id: ${spring.application.name}:${random.value}
 
 management:
   endpoints:

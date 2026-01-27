@@ -1,0 +1,61 @@
+server:
+  port: 9090
+
+spring:
+  application:
+    name: product-service
+
+  config:
+    activate:
+      on-profile: docker
+    # Eliminamos el import del config server aquí si no es estrictamente necesario
+    # para evitar que la app se quede colgada esperando al config-service
+    import: "optional:configserver:http://config-service:7777"
+
+  cloud:
+    config:
+      enabled: false # Cámbialo a true solo si tu config-service ya funciona bien
+
+  datasource:
+    url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:5432/${PRODUCT_DB_NAME:product}
+    username: ${PRODUCT_DB_USERNAME:product}
+    password: ${PRODUCT_DB_PASSWORD:product123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      pool-name: HikariPool-ProductServiceDocker
+      maximum-pool-size: 10
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: ${ORG_HIBERNATE_DIALECT_POSTGRE_SQL_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+
+eureka:
+  client:
+    service-url:
+      # IMPORTANTE: Aquí usabas localhost en los logs, debe ser el nombre del servicio
+      defaultZone: http://discovery-service:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+logging:
+  level:
+    root: INFO
+    com.celotts.productservice: DEBUG
+    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
+    org.hibernate.internal.AbstractSharedSessionContract: INFO

@@ -1,8 +1,8 @@
 package com.celotts.supplierservice.infrastructure.adapter.output.postgres.entity.auditable;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder; // <--- Cambio clave
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -13,9 +13,13 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder // <--- Permite que las clases hijas hereden el Builder correctamente
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 public class AuditableEntity {
+
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
@@ -41,6 +45,7 @@ public class AuditableEntity {
     @Column(name = "deleted_reason", length = 255)
     private String deletedReason;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean enabled = Boolean.TRUE;
 
