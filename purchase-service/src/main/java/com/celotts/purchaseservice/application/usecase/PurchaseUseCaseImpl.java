@@ -1,5 +1,6 @@
 package com.celotts.purchaseservice.application.usecase;
 
+import com.celotts.purchaseservice.domain.exception.PurchaseAlreadyExistsException;
 import com.celotts.purchaseservice.domain.exception.PurchaseNotFoundException;
 import com.celotts.purchaseservice.domain.model.purchase.PurchaseModel;
 import com.celotts.purchaseservice.domain.port.input.PurchaseUseCase;
@@ -30,7 +31,11 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
         }
 
         if(repositoryPort.existsByOrderNumber(purchase.getOrderNumber())) {
-            throw new RuntimeException("Order number already exists: " + purchase.getOrderNumber());
+            throw new PurchaseAlreadyExistsException(
+                    "purchase.already-exists",  // Llave
+                    "orderNumber",              // {0}
+                    purchase.getOrderNumber()   // {1}
+            );
         }
         return repositoryPort.save(purchase);
     }
@@ -53,16 +58,17 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
         return repositoryPort.findById(id)
                 .map(existingPurchase -> {
                     purchase.setId(id);
+                    purchase.normalize();
                     return repositoryPort.save(purchase);
                 })
-                .orElseThrow(() -> new PurchaseNotFoundException("purchase.cannot-update-not-found: " + id));
+                .orElseThrow(() -> new PurchaseNotFoundException("purchase.cannot-update-not-found", id));
     }
 
     @Override
     @Transactional
     public void delete(UUID id) {
         if (!repositoryPort.existsById(id)) {
-            throw new PurchaseNotFoundException("purchase.cannot-delete-not-found: " + id);
+            throw new PurchaseNotFoundException("purchase.cannot-delete-not-found", id);
         }
         repositoryPort.deleteById(id);
     }

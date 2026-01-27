@@ -1,11 +1,14 @@
 package com.celotts.purchaseservice.domain.exception;
 
 public class PurchaseAlreadyExistsException extends BaseDomainException {
-    public PurchaseAlreadyExistsException(String field, String value ) {
-        super("purchase.already-exists", field, value);
+
+    // Este constructor permite que el UseCase decida qué llave usar y qué argumentos pasar
+    public PurchaseAlreadyExistsException(String messageKey, Object... args) {
+        super(messageKey, args);
     }
 
-    public PurchaseAlreadyExistsException(String field, String value, Throwable cause) {
-        super("purchase.already-exist", cause, field, value);
+    // Opcional: Por si necesitas pasar una causa técnica (error de base de datos, etc.)
+    public PurchaseAlreadyExistsException(String messageKey, Throwable cause, Object... args) {
+        super(messageKey, cause, args);
     }
 }

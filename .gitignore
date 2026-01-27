@@ -40,3 +40,4 @@ Thumbs.db
 # === Archivos de entorno (locales y secretos) ===
 infra/.env
 infra/.env.*
+infra/.build/
