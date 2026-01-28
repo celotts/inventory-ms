@@ -52,6 +52,17 @@ public class PurchaseEntity {
     @Column(length = 255)
     private String notes;
 
+    // ✅ --- NUEVOS CAMPOS DE BORRADO LÓGICO ---
+    // Agregamos estos campos para que MapStruct pueda mapearlos desde el Model
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by", length = 120)
+    private String deletedBy;
+
+    @Column(name = "deleted_reason", length = 255)
+    private String deletedReason;
+
     // --- CAMPOS DE AUDITORÍA ---
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -67,7 +78,6 @@ public class PurchaseEntity {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
 
-        // Mantenemos tu lógica: prioriza lo que viene del JSON ("clott")
         if (this.createdBy == null) {
             this.createdBy = "SYSTEM";
         }
