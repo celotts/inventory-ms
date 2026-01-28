@@ -11,7 +11,6 @@ public interface PurchaseRepositoryPort {
     Optional<PurchaseModel> findById(UUID id);
     Optional<PurchaseModel> findByOrderNumber(String orderNumber);
 
-    // Este es el que faltaba para que compile el UseCase
     boolean existsById(UUID id);
 
     boolean existsByOrderNumber(String orderNumber);

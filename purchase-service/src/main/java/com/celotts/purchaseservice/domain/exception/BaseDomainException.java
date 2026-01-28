@@ -8,7 +8,6 @@ import java.io.Serializable;
 @Getter
 public abstract class BaseDomainException extends RuntimeException implements Serializable {
 
-    // Eliminamos @Serial porque tu entorno no reconoce el símbolo
     @Serial
     private static final long serialVersionUID = 1L;
 

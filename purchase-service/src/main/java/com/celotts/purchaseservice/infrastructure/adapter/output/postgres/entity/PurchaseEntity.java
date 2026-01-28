@@ -19,7 +19,7 @@ public class PurchaseEntity {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "supplier_id", nullable = false)
+    @Column(name = "supplier_id", nullable = false, updatable = false)
     private UUID supplierId;
 
     @Column(name = "order_number", nullable = false, unique = true, length = 50)
@@ -52,8 +52,6 @@ public class PurchaseEntity {
     @Column(length = 255)
     private String notes;
 
-    // ✅ --- NUEVOS CAMPOS DE BORRADO LÓGICO ---
-    // Agregamos estos campos para que MapStruct pueda mapearlos desde el Model
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
@@ -70,7 +68,7 @@ public class PurchaseEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column(name = "created_by", length = 120)
+    @Column(name = "created_by", length = 120, updatable = false)
     private String createdBy;
 
     @PrePersist
@@ -85,6 +83,9 @@ public class PurchaseEntity {
         if (this.status == null) this.status = "DRAFT";
         if (this.currency == null) this.currency = "MXN";
     }
+
+    @Column(name = "updated_by", length = 120)
+    private String updatedBy;
 
     @PreUpdate
     protected void onUpdate() {

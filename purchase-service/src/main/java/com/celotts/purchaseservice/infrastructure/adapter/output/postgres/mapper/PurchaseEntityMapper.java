@@ -2,25 +2,28 @@ package com.celotts.purchaseservice.infrastructure.adapter.output.postgres.mappe
 
 import com.celotts.purchaseservice.domain.model.purchase.PurchaseModel;
 import com.celotts.purchaseservice.infrastructure.adapter.output.postgres.entity.PurchaseEntity; // 👈 Import corregido a la subcarpeta purchase
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
 import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PurchaseEntityMapper {
 
-    PurchaseModel toModel(PurchaseEntity entity);
-
-    @Mapping(target = "createdAt", ignore = true) // La DB se encarga en @PrePersist
-    @Mapping(target = "updatedAt", ignore = true) // La DB se encarga en @PreUpdate
-    @Mapping(target = "createdBy", source = "createdBy") // Forzamos el mapeo por claridad
-    @Mapping(target = "deletedAt", ignore = true)
-    @Mapping(target = "deletedBy", ignore = true)
-    @Mapping(target = "deletedReason", ignore = true)
+    // Model -> Entity (Creación)
     PurchaseEntity toEntity(PurchaseModel model);
 
-    // AGREGADO: Necesario para que el findAll con paginación funcione sin errores
+    // Entity -> Model (Lectura)
+    PurchaseModel toModel(PurchaseEntity entity);
+
+    // Update parcial (Actualización)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mappings({
+            @Mapping(target = "id", ignore = true),
+            @Mapping(target = "createdAt", ignore = true),
+            @Mapping(target = "createdBy", ignore = true)
+    })
+    void updateEntityFromModel(PurchaseModel model, @MappingTarget PurchaseEntity entity);
+
+    // Mapeo de listas para Paginación
     List<PurchaseModel> toModelList(List<PurchaseEntity> entities);
 }
