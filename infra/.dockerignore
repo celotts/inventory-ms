@@ -1,6 +1,13 @@
-**/.gradle
-**/build
-!**/build/libs/*.jar
-**/.git
-**/*.puml
-**/*.md
+# Bloqueo total de carpetas pesadas
+.gradle/
+.git/
+.idea/
+.vscode/
+
+# Ignorar todo lo que hay en build excepto el JAR de la carpeta libs
+build/*
+!build/libs/
+
+# Documentación (sin asteriscos innecesarios)
+*.puml
+*.md

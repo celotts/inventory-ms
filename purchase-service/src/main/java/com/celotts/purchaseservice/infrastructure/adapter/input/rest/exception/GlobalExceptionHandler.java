@@ -29,18 +29,16 @@ public class GlobalExceptionHandler {
         String message;
         try {
             if (ex.isI18n()) {
-                // Traduce usando la llave (ej: purchase.error.already-exists)
                 message = messageSource.getMessage(ex.getMessageKey(), ex.getMessageArgs(), locale);
             } else {
                 message = ex.getMessage();
             }
         } catch (Exception e) {
-            message = "Error code: " + ex.getMessageKey(); // Fallback si no existe la llave
+            message = "Error code: " + ex.getMessageKey();
         }
 
         response.put("message", message);
 
-        // Determinamos el status dinámicamente
         HttpStatus status = (ex instanceof PurchaseNotFoundException) ? HttpStatus.NOT_FOUND : HttpStatus.CONFLICT;
         response.put("status", status.value());
 

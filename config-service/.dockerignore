@@ -1,7 +1,11 @@
-**/.gradle
-**/build
-**/.git
-**/.idea
-**/.vscode
-**/node_modules
+# Bloqueo directo (sin asteriscos dobles al inicio)
+.gradle/
+build/
+.git/
+.idea/
+.vscode/
+node_modules/
 *.log
+
+# Solo deja pasar el JAR
+!build/libs/*.jar

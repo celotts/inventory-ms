@@ -1,6 +1,14 @@
-.git
-.gradle
-build
-**/build
-**/.gradle
-purchase-service/build
+# Ignorar carpetas pesadas en cualquier profundidad
+**/.gradle/
+**/.idea/
+**/.git/
+**/.vscode/
+
+# Ignorar las carpetas build pero permitir los JARs
+**/build/
+!**/build/libs/
+!**/build/libs/*.jar
+
+# Ignorar otros archivos innecesarios
+*.iml
+.DS_Store

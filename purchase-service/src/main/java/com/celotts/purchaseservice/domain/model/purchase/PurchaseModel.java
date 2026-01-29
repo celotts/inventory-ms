@@ -11,9 +11,7 @@ import java.util.UUID;
 @Setter
 @Builder
 @AllArgsConstructor
-// <-- Indispensable para @Builder
 @NoArgsConstructor
-// <-- Indispensable para frameworks y mappers
 public class PurchaseModel {
     private UUID id;
     private UUID supplierId;

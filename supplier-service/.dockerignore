@@ -1,0 +1,8 @@
+.gradle/
+build/
+.git/
+.idea/
+.vscode/
+
+# Solo deja pasar el JAR final
+!build/libs/*.jar
