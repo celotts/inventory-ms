@@ -8,7 +8,10 @@ import com.celotts.productservice.domain.port.output.category.CategoryRepository
 import com.celotts.productservice.domain.port.output.product.ProductBrandRepositoryPort;
 import com.celotts.productservice.domain.port.output.product.ProductRepositoryPort;
 import com.celotts.productservice.domain.port.output.product.ProductUnitRepositoryPort;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,8 +29,11 @@ public class ProductUseCaseImpl implements ProductUseCase {
     private final ProductUnitRepositoryPort productUnitPort;
     private final ProductBrandRepositoryPort productBrandPort;
     private final CategoryRepositoryPort categoryRepositoryPort;
+    private final MessageSource messageSource; // Inyección para i18n
 
-
+    private String getMessage(String key, Object... args) {
+        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale()); //
+    }
 
     @Override
     public ProductModel createProduct(ProductModel cmd) {
@@ -148,15 +154,15 @@ public class ProductUseCaseImpl implements ProductUseCase {
         return productUnitPort.findNameByCode(code);
     }
 
-    private void validateReferences(@jakarta.validation.Valid ProductModel dto) {
-        if (!productUnitPort.existsByCode(dto.getUnitCode())) {
-            throw new ResourceNotFoundException("Product", "Invalid unit code: " + dto.getUnitCode());
+    private void validateReferences(ProductModel dto) {
+        if (dto.getUnitCode() != null && !productUnitPort.existsByCode(dto.getUnitCode())) {
+            throw new ResourceNotFoundException("Product", getMessage("validation.code-format.invalid") + ": " + dto.getUnitCode()); //
         }
-        if (!productBrandPort.existsById(dto.getBrandId())) {
-            throw new ResourceNotFoundException("Product", "Invalid brand ID: " + dto.getBrandId());
+        if (dto.getBrandId() != null && !productBrandPort.existsById(dto.getBrandId())) {
+            throw new ResourceNotFoundException("Product", getMessage("brand.name.required")); //
         }
-        if (!categoryRepositoryPort.existsById(dto.getCategoryId())) {
-            throw new ResourceNotFoundException("Product", "Invalid category ID: " + dto.getCategoryId());
+        if (dto.getCategoryId() != null && !categoryRepositoryPort.existsById(dto.getCategoryId())) {
+            throw new ResourceNotFoundException("Product", getMessage("category.not.found")); //
         }
     }
 
@@ -172,10 +178,21 @@ public class ProductUseCaseImpl implements ProductUseCase {
     }
 
     @Override
+    @Transactional
+    // Importante: cualquier cambio de estado debe ser transaccional
     public void disableProduct(UUID id) {
         ProductModel product = productRepositoryPort.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "Product with ID not found: " + id));
-        ProductModel updated = product.toBuilder().enabled(false).build();
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Product",
+                        messageSource.getMessage("app.error.not-found", null, LocaleContextHolder.getLocale()) + ": " + id
+                ));
+
+        // Usamos toBuilder para mantener la inmutabilidad y actualizar el estado
+        ProductModel updated = product.toBuilder()
+                .enabled(false)
+                .updatedAt(java.time.LocalDateTime.now()) // Buena práctica registrar cuándo se deshabilitó
+                .build();
+
         productRepositoryPort.save(updated);
     }
 }

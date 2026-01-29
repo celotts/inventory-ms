@@ -7,6 +7,8 @@ import com.celotts.purchaseservice.domain.port.input.PurchaseUseCase;
 import com.celotts.purchaseservice.domain.port.output.PurchaseRepositoryPort;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,21 +22,27 @@ import java.util.UUID;
 public class PurchaseUseCaseImpl implements PurchaseUseCase {
 
     private final PurchaseRepositoryPort repositoryPort;
+    private final MessageSource messageSource; // ✅ Inyectado para i18n
+
+    // Método auxiliar para obtener mensajes del properties
+    private String getMsg(String key, Object... args) {
+        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
+    }
 
     @Override
     @Transactional
     public PurchaseModel create(PurchaseModel purchase) {
         purchase.normalize();
 
-        if(purchase.getCreatedBy() == null || purchase.getCreatedBy().isBlank()){
+        if (purchase.getCreatedBy() == null || purchase.getCreatedBy().isBlank()) {
             purchase.setCreatedBy("ANONYMOUS");
         }
 
-        if(repositoryPort.existsByOrderNumber(purchase.getOrderNumber())) {
+        if (repositoryPort.existsByOrderNumber(purchase.getOrderNumber())) {
             throw new PurchaseAlreadyExistsException(
-                    "purchase.already-exists",  // Llave
-                    "orderNumber",              // {0}
-                    purchase.getOrderNumber()   // {1}
+                    "purchase.already-exists",
+                    "orderNumber",
+                    purchase.getOrderNumber()
             );
         }
         return repositoryPort.save(purchase);
@@ -58,17 +66,25 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
         return repositoryPort.findById(id)
                 .map(existingPurchase -> {
                     purchase.setId(id);
+                    if(purchase.getUpdatedBy() == null) {
+                        purchase.setUpdatedBy("clott");
+                    }
+                    if (purchase.getSupplierId() == null) {
+                        purchase.setSupplierId(existingPurchase.getSupplierId());
+                    }
                     purchase.normalize();
                     return repositoryPort.save(purchase);
                 })
-                .orElseThrow(() -> new PurchaseNotFoundException("purchase.cannot-update-not-found", id));
+                .orElseThrow(() -> new PurchaseNotFoundException(
+                        getMsg("app.error.not-found") + ": " + id, id));
     }
 
     @Override
     @Transactional
     public void delete(UUID id) {
         if (!repositoryPort.existsById(id)) {
-            throw new PurchaseNotFoundException("purchase.cannot-delete-not-found", id);
+            throw new PurchaseNotFoundException(
+                    getMsg("app.error.not-found") + ": " + id, id);
         }
         repositoryPort.deleteById(id);
     }

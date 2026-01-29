@@ -1,10 +1,11 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product;
 
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.CentralMapperConfig;
-
 import com.celotts.productservice.domain.model.product.ProductModel;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductEntity;
 import org.mapstruct.*;
+
+import java.util.List;
 
 @Mapper(config = CentralMapperConfig.class)
 public interface ProductEntityMapper {
@@ -16,7 +17,6 @@ public interface ProductEntityMapper {
     @InheritInverseConfiguration(name = "toEntity")
     ProductModel toModel(ProductEntity entity);
 
-    // Update parcial (ignora nulos; no pisa auditoría/ID)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mappings({
             @Mapping(target = "id", ignore = true),
@@ -29,4 +29,6 @@ public interface ProductEntityMapper {
             @Mapping(target = "deletedReason", ignore = true)
     })
     void updateEntityFromModel(ProductModel src, @MappingTarget ProductEntity target);
+
+    List<ProductModel> toModelList(List<ProductEntity> entities);
 }

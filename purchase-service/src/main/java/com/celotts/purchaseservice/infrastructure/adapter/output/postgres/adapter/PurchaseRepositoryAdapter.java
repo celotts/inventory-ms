@@ -23,6 +23,27 @@ public class PurchaseRepositoryAdapter implements PurchaseRepositoryPort {
     @Override
     @Transactional
     public PurchaseModel save(PurchaseModel purchase) {
+        try {
+            if (purchase.getId() != null) {
+                return jpa.findById(purchase.getId())
+                        .map(existingEntity -> {
+                            mapper.updateEntityFromModel(purchase, existingEntity);
+
+                            return mapper.toModel(jpa.saveAndFlush(existingEntity));
+                        })
+                        .orElseGet(() -> createNew(purchase));
+            }
+            return createNew(purchase);
+        } catch (Exception e) {
+             throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
+                    "ERROR REAL: " + e.getMessage() + " - CAUSA: " + (e.getCause() != null ? e.getCause().getMessage() : "Desconocida")
+            );
+        }
+    }
+
+    // Método privado para manejar la creación desde cero
+    private PurchaseModel createNew(PurchaseModel purchase) {
         PurchaseEntity toSave = mapper.toEntity(purchase);
         return mapper.toModel(jpa.save(toSave));
     }

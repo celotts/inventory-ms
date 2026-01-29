@@ -1,31 +1,29 @@
 #!/usr/bin/env bash
-# Simple “wait for TCP port” helper
-# usage: ./wait-for-it.sh host:port [-t timeout] -- command args...
+# wait-for-it.sh: Esperar por servicios TCP
+
 set -e
 
-HOSTPORT="$1"; shift || true
-TIMEOUT=60
+hostport="$1"
+shift
+timeout=60
 
-# parse -t TIMEOUT opcional
-while getopts "t:" opt; do
-  case "$opt" in
-    t) TIMEOUT="$OPTARG" ;;
-  esac
-done
-shift $((OPTIND -1))
+if [[ "$1" == "--timeout="* ]]; then
+    timeout="${1#*=}"
+    shift
+fi
 
-HOST="${HOSTPORT%:*}"
-PORT="${HOSTPORT#*:}"
+IFS=':' read -r host port <<< "$hostport"
 
-echo "⏳ Esperando a $HOST:$PORT (timeout ${TIMEOUT}s)..."
-for i in $(seq 1 "$TIMEOUT"); do
-  if (echo >"/dev/tcp/$HOST/$PORT") >/dev/null 2>&1; then
-    echo "✅ $HOST:$PORT disponible"
-    exec "$@"
-    exit 0
-  fi
-  sleep 1
+echo "⏳ Esperando $host:$port (timeout: ${timeout}s)"
+
+for i in $(seq 1 $timeout); do
+    if (echo > "/dev/tcp/$host/$port") >/dev/null 2>&1; then
+        echo "✅ $host:$port está disponible"
+        exec "$@"
+        exit 0
+    fi
+    sleep 1
 done
 
-echo "❌ Timeout esperando $HOST:$PORT"
+echo "❌ Timeout esperando $host:$port"
 exit 1

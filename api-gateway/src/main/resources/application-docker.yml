@@ -4,7 +4,6 @@ server:
 spring:
   application:
     name: api-gateway
-
   cloud:
     gateway:
       routes:
@@ -43,39 +42,23 @@ spring:
           uri: lb://purchase-service
           predicates:
             - Path=/api/v1/purchases/**
-
-        # --- LAS DEMÁS RUTAS ---
-        - id: supplier-service
-          uri: lb://supplier-service
-          predicates:
-            - Path=/supplier-service/**
-          filters:
-            - StripPrefix=1
-
-        - id: supplier-direct
-          uri: lb://supplier-service
-          predicates:
-            - Path=/api/v1/suppliers/**
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
 
-# EUREKA: Debe estar fuera del bloque 'spring' (columna 0)
 eureka:
   client:
     service-url:
-      # CAMBIO CLAVE: Se usa 'discovery-service' en lugar de 'localhost'
       defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
-    initial-instance-info-replication-interval-seconds: 30
-    instance-info-replication-interval-seconds: 30
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${random.value}
-    lease-renewal-interval-in-seconds: 30
-    lease-expiration-duration-in-seconds: 90
+    # Tiempos más rápidos para desarrollo local
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 20
 
 management:
   endpoints:
@@ -87,9 +70,8 @@ management:
       show-details: always
     env:
       show-values: ALWAYS
+
 springdoc:
-  api-docs:
-    enabled: true
   swagger-ui:
     enabled: true
     urls:
@@ -99,13 +81,8 @@ springdoc:
         url: "/product-service/v3/api-docs"
       - name: "Supplier Service"
         url: "/supplier-service/v3/api-docs"
-  use-fqn: true
 
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG
-    com.netflix.eureka: INFO # Cambiado a INFO para no saturar, pero mantén DEBUG si hay fallos
     com.netflix.discovery: INFO
-    org.springframework.core.env: INFO
-    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
-    org.hibernate.internal.AbstractSharedSessionContract: INFO

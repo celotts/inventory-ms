@@ -24,47 +24,34 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder // <--- CAMBIAR @Builder por @SuperBuilder
+@SuperBuilder
 @ToString(onlyExplicitlyIncluded = true)
 public class SupplierEntity extends AuditableEntity {
 
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID) // Asegúrate de definir la estrategia
     @ToString.Include
     private UUID id;
 
     @NotBlank(message = "{supplier.code.required}")
-    @Size(min = 3, max = 40, message = "{supplier.code.size}")
-    @Pattern(regexp = "^[A-Z0-9\\-_]{3,40}$", message = "{supplier.code.pattern}")
-    @Column(nullable = false, length = 40)
+    @Column(nullable = false, length = 40, unique = true) // Agregamos UNIQUE
     @ToString.Include
     private String code;
 
     @NotBlank(message = "{supplier.name.required}")
-    @Size(min = 2, max = 150, message = "{supplier.name.size}")
     @Column(nullable = false, length = 150)
     @ToString.Include
     private String name;
 
-    @Size(max = 30, message = "{supplier.taxid.size}")
     @Column(name = "tax_id", length = 30)
     private String taxId;
 
-    @Email(message = "{supplier.email.format}")
-    @Size(max = 120, message = "{supplier.email.size}")
     @Column(name = "email", length = 120)
     private String email;
 
-    @Size(max = 40, message = "{supplier.phone.size}")
     @Column(length = 40)
     private String phone;
 
     @Column(columnDefinition = "text")
     private String address;
-
-    // Nota: El campo 'enabled' ya existe en AuditableEntity.
-    // Si quieres sobreescribirlo aquí, está bien, pero asegúrate
-    // de usar @Builder.Default con @SuperBuilder también.
-    @Column(nullable = false)
-    @Builder.Default
-    private Boolean enabled = Boolean.TRUE;
 }
