@@ -17,7 +17,7 @@ services:
     ports:
       - "${PRODUCT_DB_PORT_HOST:-5433}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PRODUCT_DB_USERNAME:-product} -d ${PRODUCT_DB_NAME:-db_product}"]
+      test: ["CMD-SHELL", "pg_isready -U ${PRODUCT_DB_USERNAME:-product} -d ${PRODUCT_DB_NAME:-product}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -43,7 +43,7 @@ services:
     ports:
       - "${SUPPLIER_DB_PORT_HOST:-5434}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${SUPPLIER_DB_USERNAME:-supplier} -d ${SUPPLIER_DB_NAME:-db_supplier}"]
+      test: ["CMD-SHELL", "pg_isready -U ${SUPPLIER_DB_USERNAME:-supplier} -d ${SUPPLIER_DB_NAME:-supplier}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -56,6 +56,7 @@ services:
       - db_supplier_data:/var/lib/postgresql/data
       - ./init-scripts/supplier/02-supplier-init.sql:/docker-entrypoint-initdb.d/02-supplier-init.sql:ro
     restart: unless-stopped
+
   db_purchase:
     profiles: [ "purchase" ]
     image: ${IMAGE_DB:-postgres:16}
@@ -68,7 +69,7 @@ services:
     ports:
       - "${PURCHASE_DB_PORT_HOST:-5436}:5432"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${PURCHASE_DB_USERNAME:-purchase} -d ${PURCHASE_DB_NAME:-purchase}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -94,7 +95,7 @@ services:
     ports:
       - "${TAX_DB_PORT_HOST:-5435}:5432"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${TAX_DB_USERNAME:-tax} -d ${TAX_DB_NAME:-tax}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -107,6 +108,7 @@ services:
       - db_tax_data:/var/lib/postgresql/data
       - ./init-scripts/tax/04-tax-init.sql:/docker-entrypoint-initdb.d/04-tax-init.sql:ro
     restart: unless-stopped
+
   # --- SERVICIOS DE INFRAESTRUCTURA ---
   discovery-service:
     profiles: ["infra"]
@@ -114,7 +116,7 @@ services:
     image: discovery-service:latest
     env_file: [./.env.local]
     build:
-      context: ..
+      context: ../
       dockerfile: discovery-service/Dockerfile.local
     ports:
       - "${DISCOVERY_PORT:-8761}:8761"
@@ -139,7 +141,7 @@ services:
     user: root
     env_file: [./.env.local]
     build:
-      context: ..
+      context: ../
       dockerfile: config-service/Dockerfile.local
     ports:
       - "${CONFIG_PORT:-7777}:7777"
@@ -170,7 +172,7 @@ services:
     image: supplier-service:latest
     env_file: [ ./.env.local ]
     build:
-      context: ..
+      context: ../
       dockerfile: supplier-service/Dockerfile.local
     ports:
       - "${SUPPLIER_PORT:-9091}:9091"
@@ -192,11 +194,10 @@ services:
     image: api-gateway:latest
     env_file: [ ./.env.local ]
     build:
-      context: ..
+      context: ../
       dockerfile: api-gateway/Dockerfile.local
     ports:
       - "${API_GATEWAY_PORT:-8090}:8090"
-    entrypoint: [ "java", "-jar", "/app/app.jar" ]
     environment:
       - SPRING_APPLICATION_NAME=api-gateway
       - SPRING_PROFILES_ACTIVE=docker
@@ -211,7 +212,6 @@ services:
         condition: service_healthy
     networks:
       - inventory-net
-
     restart: unless-stopped
 
   product-service:
@@ -220,7 +220,7 @@ services:
     image: product-service:latest
     env_file: [./.env.local]
     build:
-      context: ..
+      context: ../
       dockerfile: product-service/Dockerfile.local
     ports:
       - "${PRODUCT_PORT:-9090}:9090"
@@ -244,13 +244,14 @@ services:
         condition: service_healthy
     networks:
       - inventory-net
+
   tax-service:
     profiles: [ "tax" ]
     container_name: tax-service
     image: tax-service:latest
     env_file: [ ./.env.local ]
     build:
-      context: ..
+      context: ../
       dockerfile: tax-service/Dockerfile.local
     ports:
       - "${TAX_PORT:-9093}:9093"
@@ -271,7 +272,7 @@ services:
       retries: 10
       start_period: 60s
     depends_on:
-      db_tax: # <--- CAMBIADO: Antes decía db_product
+      db_tax:
         condition: service_healthy
       discovery-service:
         condition: service_healthy
@@ -279,13 +280,14 @@ services:
         condition: service_healthy
     networks:
       - inventory-net
+
   purchase-service:
     profiles: [ "purchase" ]
     container_name: purchase-service
     image: purchase-service:latest
     env_file: [ ./.env.local ]
     build:
-      context: ..
+      context: ../
       dockerfile: purchase-service/Dockerfile.local
     ports:
       - "${PURCHASE_PORT:-9094}:9094"
@@ -300,14 +302,13 @@ services:
       - SPRING_CLOUD_CONFIG_URI=http://config-service:7777
       - SPRING_CONFIG_IMPORT=optional:configserver:http://config-service:7777
     healthcheck:
-      # CAMBIADO: Antes usaba el puerto de producto (9090)
       test: [ "CMD-SHELL", "curl -f http://localhost:9094/actuator/health | grep UP || exit 1" ]
       interval: 20s
       timeout: 10s
       retries: 10
       start_period: 60s
     depends_on:
-      db_purchase: # <--- CAMBIADO: Antes decía db_product
+      db_purchase:
         condition: service_healthy
       discovery-service:
         condition: service_healthy
@@ -315,6 +316,7 @@ services:
         condition: service_healthy
     networks:
       - inventory-net
+
 volumes:
   db_product_data:
   db_supplier_data:

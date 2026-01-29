@@ -1,6 +1,7 @@
 server:
   port: ${SUPPLIER_PORT:9091}
-
+  servlet:
+    context-path: /supplier-service
 spring:
   application:
     name: supplier-service

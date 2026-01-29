@@ -26,6 +26,12 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
     private final SupplierRepositoryPort repo;
     private final MessageSource messageSource;
 
+    @Override
+    @Transactional(readOnly = true)
+    public Boolean existsById(UUID id) {
+        return repo.existsById(id);
+    }
+
     // ---------------- Commands ----------------
 
     @Override

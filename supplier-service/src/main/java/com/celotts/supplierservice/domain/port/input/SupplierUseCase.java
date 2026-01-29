@@ -23,4 +23,6 @@ public interface SupplierUseCase {
 
     List<SupplierModel> searchByNameDescription(String q, int limit);
     boolean existsByName(String name);
+
+    Boolean existsById(UUID id);
 }

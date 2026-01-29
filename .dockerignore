@@ -1,26 +1,18 @@
-# Directorios de compilación de Gradle
-# Quitamos **/build/ porque necesitamos entrar ahí para los JARs
-**/.gradle/
+# Bloqueo directo de carpetas (sin comodines complejos al inicio)
+.gradle/
+.idea/
+.git/
+.vscode/
 
-# Directorios de IDE
-**/.idea/
-**/.vscode/
+# En lugar de filtrar el interior de build, ignoramos las subcarpetas pesadas
+# de forma explícita. Esto evita que Docker escanee miles de archivos .class
+**/build/classes/
+**/build/generated/
+**/build/tmp/
+**/build/resources/
+**/build/reports/
+**/build/test-results/
 
-# Dependencias del contenedor
-**/target/
-**/out/
-
-# Logs y caché
-**/logs/
-*~
-
-# Excluir archivos comprimidos
-**/*.zip
-**/*.tar
-
-# --- REGLAS PARA LOS JARS ---
-# Ignoramos todos los JARs por defecto...
-**/*.jar
-# ...PERO permitimos el Wrapper y los JARs compilados que necesitamos
-!gradle/wrapper/gradle-wrapper.jar
-!**/build/libs/*.jar
+# Archivos sueltos
+*.log
+.DS_Store
