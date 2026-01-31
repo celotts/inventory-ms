@@ -612,14 +612,17 @@ fix-line-endings: ## 🛠️ Garantizar terminaciones de línea LF para gradlew
 	{ echo "⚠️ Advertencia: 'dos2unix' no está instalado. Asegúrate de que gradlew usa terminaciones LF."; }
 
 clean-all: podman-ready fix-line-endings ## 🧨 Limpieza completa
-	@echo "🛑 Deteniendo y eliminando contenedores de $(COMPOSE_PROJECT_NAME)..."
-	@$(DOCKER_COMPOSE_BIN) -p $(COMPOSE_PROJECT_NAME) down --volumes --remove-orphans
-	@echo "🧹 Forzando eliminación de contenedores residuales..."
+	@echo "🛑 Deteniendo servicios..."
+	@$(DOCKER_COMPOSE_BIN) -p $(COMPOSE_PROJECT_NAME) down --remove-orphans
+	@echo "🧹 Limpiando servicios específicos..."
 	@podman rm -f auth-service db_auth 2>/dev/null || true
-	@echo "🌐 Limpiando red persistente..."
-	@podman network rm inventory-net 2>/dev/null || true
+	@# No elimines la red manualmente; 'down' ya lo intenta.
+	@# Si falla, es porque algo sigue vivo. Usamos 'true' para no romper el Makefile.
+	@echo "🌐 Verificando red..."
+	@podman network rm $(NETWORK_NAME) 2>/dev/null || true
 	@rm -f .start_time
-	@echo "✨ Sistema limpio."
+	@echo "✨ Sistema listo para nuevo despliegue."
+
 clean-podman-prune: podman-ready ## 🧹 Limpiar recursos de Podman (imágenes, volúmenes, cache)
 	# ✅ MODIFICADO: Remover el directorio temporal de autenticación
 	$(Q) rm -rf $(BUILD_DIR) 2>/dev/null || true
