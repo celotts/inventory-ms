@@ -18,6 +18,11 @@ COMPOSE_FILE       := docker-compose-podman.yml
 COMPOSE_PROJECT_NAME := inventoryms
 DOCKERFILE_NAME    := Dockerfile
 
+IMAGE_DB ?= postgres:16
+
+PROFILES_BUILD_ORDER := infra gateway product supplier tax purchase auth
+SERVICES_TO_BUILD    := discovery-service config-service api-gateway product-service supplier-service tax-service purchase-service auth-service
+
 # ✅ SOLUCIÓN PARA MAC: Detectar el socket de Podman automáticamente
 # Esto evita el error "Is the docker daemon running?"
 export DOCKER_HOST ?= unix://$(shell podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')
@@ -46,20 +51,29 @@ PROFILES_BUILD_ORDER := infra gateway product supplier tax purchase
 # Servicios que necesitan construcción de imágenes (ordenados)
 SERVICES_TO_BUILD := discovery-service config-service api-gateway product-service supplier-service tax-service purchase-service
 
-# Puertos de servicios
-PRODUCT_PORT ?= 9090
-SUPPLIER_PORT ?= 9091
-PURCHASE_PORT ?= 9094
-TAX_PORT ?= 9093
-API_GATEWAY_PORT ?= 8090
-DISCOVERY_PORT ?= 8761
-CONFIG_PORT ?= 7777
-
 # --- Carga de variables de entorno para Make ---
 ifneq ("$(wildcard $(ENV_FILE_LOCAL))","")
     include $(ENV_FILE_LOCAL)
     export $(shell sed 's/=.*//' $(ENV_FILE_LOCAL))
 endif
+
+
+# Puertos de servicios
+API_GATEWAY_PORT ?= 8090
+CONFIG_PORT      ?= 7777
+AUTH_PORT        ?= 8080
+DISCOVERY_PORT   ?= 8761
+PRODUCT_PORT     ?= 9090
+SUPPLIER_PORT    ?= 9091
+TAX_PORT         ?= 9092
+PURCHASE_PORT    ?= 9093
+
+# --- Puertos de Bases de Datos (Host) ---
+PRODUCT_DB_PORT_HOST  ?= 5433
+SUPPLIER_DB_PORT_HOST ?= 5434
+PURCHASE_DB_PORT_HOST ?= 5435
+TAX_DB_PORT_HOST      ?= 5436
+AUTH_DB_PORT_HOST     ?= 5437
 
 ifeq ($(ENV), prod)
     DOCKERFILE_NAME := Dockerfile
@@ -145,9 +159,23 @@ define check_health
 		echo "   ⏳ $(2) esperando contenedor... (intento $$count/5)"; \
 		sleep 2; \
 	done; \
-	echo "   ✅ $(2) validado!"
+	echo "   ✅ Mircoservico [$(2)] validado y listo!"
 endef
 
+define print_row
+	NAME=$$(echo $(1) | cut -d':' -f1); \
+	PORT=$$(echo $(1) | cut -d':' -f2); \
+	RAW_STATUS=$$(podman inspect -f '{{.State.Status}}' $${NAME} 2>/dev/null || echo "down"); \
+	RAW_HEALTH=$$(podman inspect -f '{{.State.Health.Status}}' $${NAME} 2>/dev/null || echo "n/a"); \
+	STATUS=$$(echo $$RAW_STATUS | tr '[:lower:]' '[:upper:]'); \
+	HEALTH_VAL=$$(echo $$RAW_HEALTH | tr '[:lower:]' '[:upper:]'); \
+	if [ "$$HEALTH_VAL" = "HEALTHY" ]; then \
+		HEALTH="\033[0;32m$$HEALTH_VAL\033[0m"; \
+	else \
+		HEALTH="\033[0;31m$$HEALTH_VAL\033[0m"; \
+	fi; \
+	printf "| %-20s | %-12s | %-10s | %-24b |\n" "$$NAME" "$$STATUS" "$$PORT" "$$HEALTH"
+endef
 
 
 #🎯 COMANDOS PRINCIPALES - FLUJOS DE TRABAJO ESENCIALES
@@ -172,13 +200,13 @@ dev-tax: up-local-with-tax ## 🧪 Entorno de desarrollo con Tax
 #🏗️ CONSTRUCCIÓN
 build-all: fix-line-endings build-jars-all ## 🔨 Construir todos los servicios
 build-jars: fix-line-endings ## 🔨 Construir JARs base
-	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar
+	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :config-service:bootJar :discovery-service:bootJar :api-gateway:bootJar :product-service:bootJar :auth-service:bootJar :tax-service:bootJar :supplier-service:bootJar :purchase-service:bootJar
 
 build-jars-all: fix-line-endings
 	@echo "🔨 Construyendo todos los JARs desde la raíz del proyecto..."
 	$(Q) cd $(ROOT_DIR) && ./gradlew clean :config-service:bootJar :discovery-service:bootJar \
-		:api-gateway:bootJar :product-service:bootJar :supplier-service:bootJar \
-		:tax-service:bootJar :purchase-service:bootJar
+    	:api-gateway:bootJar :product-service:bootJar :supplier-service:bootJar \
+      	:tax-service:bootJar :purchase-service:bootJar :auth-service:bootJar
 	@echo "✅ JARs generados exitosamente."
 	$(Q) ls -l $(ROOT_DIR)/discovery-service/build/libs/*.jar || (echo "❌ Error: JAR de Discovery no encontrado"; exit 1)
 
@@ -220,7 +248,12 @@ build-images-all-nocache: build-jars-all ## 🔨 Construye TODAS las imágenes s
         $(COMPOSE_LOCAL) --profile infra --profile gateway build --no-cache \
 		--build-arg DOCKER_USERNAME=$(D_USER) --build-arg DOCKER_PASSWORD=$(D_PASS) \
 		api-gateway; \
-	echo "✅ Construcción de todas las imágenes completada en SERIAL."
+	echo "   [7/7] Construyendo auth-service..."; \
+        $(COMPOSE_LOCAL) --profile infra --profile auth build --no-cache \
+           --build-arg DOCKER_USERNAME=$(D_USER) --build-arg DOCKER_PASSWORD=$(D_PASS) \
+           auth-service; \
+    echo "✅ Construcción de todas las imágenes completada."
+
 #------------------------------------------------------------------------
 
 #🧪 TESTING
@@ -336,48 +369,71 @@ up-local: podman-ready fix-line-endings fix-container-orphans ## 🧪 Infra + Pr
 
 
 .PHONY: test-purchase run-purchase-local rebuild-purchase-local purchase-db-reset
-up-local-all-ordered: podman-auth podman-ready fix-line-endings
-	@$(MAKE) clean-env
-	$(eval START_TIME := $(shell date +%s))
-	@echo "======================================================================================"
-	@echo "🚀 INICIANDO DESPLIEGUE DEFINITIVO (ORDENADO POR SALUD DE API)"
-	@echo "======================================================================================"
+.PHONY: test-purchase run-purchase-local rebuild-purchase-local purchase-db-reset
 
-	@echo "📦 Asegurando imágenes base..."
-	@podman pull eclipse-temurin:21-jre-jammy || true
-	@podman pull postgres:16 || true
+up-local-all-ordered: podman-auth podman-ready fix-line-endings
+	@# 1. Guardar inicio en un archivo temporal
+	@date +%s > .deploy_start
+	@date +%s > .start_time
+	@$(MAKE) clean-env
+	@echo "======================================================================================"
+	@echo "🚀 INICIANDO DESPLIEGUE (ESTRATEGIA ANTI-COLAPSO)"
+	@echo "======================================================================================"
 
 	@echo "🔨 Compilando JARs..."
 	@$(MAKE) build-jars-all
 
-	$(eval CMD := $(DOCKER_COMPOSE_BIN) --env-file $(ENV_FILE_LOCAL) -f $(COMPOSE_FILE) -p $(COMPOSE_PROJECT_NAME) --profile infra --profile product --profile supplier --profile tax --profile purchase --profile gateway)
+	$(eval CMD := $(DOCKER_COMPOSE_BIN) --env-file $(ENV_FILE_LOCAL) -f $(COMPOSE_FILE) -p $(COMPOSE_PROJECT_NAME) --profile infra --profile product --profile supplier --profile tax --profile purchase --profile gateway --profile auth)
 
-	@echo "🏗️  1/4: Infraestructura Base..."
-	@$(CMD) up -d --build --pull never discovery-service config-service
-	# Verificamos que Discovery y Config respondan antes de seguir
+	@echo "🏗️  1. Infraestructura..."
+	@$(CMD) up -d --build discovery-service config-service
+	@sleep 10
 	$(call check_health_url,http://localhost:$(DISCOVERY_PORT)/actuator/health,Discovery)
-	$(call check_health_url,http://localhost:$(CONFIG_PORT)/actuator/health,Config)
 
-	@echo "🗄️  2/4: Bases de Datos..."
-	@$(CMD) up -d --build --pull never db_product db_supplier db_tax db_purchase
-	@sleep 5
+	@echo "🗄️  2. Bases de Datos..."
+	@$(CMD) up -d db_product db_supplier db_tax db_purchase db_auth
+	@sleep 15
 
-	@echo "🛠️  3/4: Microservicios de Negocio..."
-	@$(CMD) up -d --build --pull never product-service
-	$(call check_health_url,http://localhost:$(PRODUCT_PORT)/actuator/health,Product)
+	@echo "🚀 3. Servicios de Negocio..."
+	@for service in product-service auth-service supplier-service tax-service purchase-service; do \
+       echo "   -> Iniciando $$service..."; \
+       $(CMD) up -d --build $$service; \
+       sleep 5; \
+    done
 
-	@$(CMD) up -d --build --pull never supplier-service
-	@$(CMD) up -d --build --pull never tax-service
-	@$(CMD) up -d --build --pull never purchase-service
+	@echo "🌐 4. API Gateway..."
+	@$(CMD) up -d --build api-gateway
+	@echo "⏳ Esperando 30s a que el Gateway registre las rutas..."
+	@sleep 30
 
-	@echo "🌐 4/4: API Gateway..."
-	@$(CMD) up -d --build --pull never api-gateway
-	$(call check_health_url,http://localhost:$(API_GATEWAY_PORT)/actuator/health,Gateway)
+	@$(MAKE) health
 
-	@$(MAKE) status-all
-	@END_TIME=$$(date +%s); \
-	DIFF=$$((END_TIME - $(START_TIME))); \
-	printf "✅ PROCESO COMPLETADO EN: %02d:%02d\n" $$((DIFF/60)) $$((DIFF%60))
+	@echo ""
+	@echo "========================================================================"
+	@echo "                RESUMEN FINAL DE DESPLIEGUE"
+	@echo "========================================================================"
+	@printf "| %-20s | %-12s | %-10s | %-15s |\n" "SERVICIO" "ESTADO" "PUERTO" "HEALTH"
+
+	@echo "----------------------- INFRAESTRUCTURA & CORE -------------------------"
+	@$(foreach svc,discovery-service:$(DISCOVERY_PORT) config-service:$(CONFIG_PORT) api-gateway:$(API_GATEWAY_PORT),$(call print_row,$(svc));)
+
+	@echo "--------------------------- BASES DE DATOS -----------------------------"
+	@$(foreach svc,db_product:$(PRODUCT_DB_PORT_HOST) db_supplier:$(SUPPLIER_DB_PORT_HOST) db_tax:$(TAX_DB_PORT_HOST) db_purchase:$(PURCHASE_DB_PORT_HOST) db_auth:$(AUTH_DB_PORT_HOST),$(call print_row,$(svc));)
+
+	@echo "-------------------------- MICROSERVICIOS ------------------------------"
+	@$(foreach svc,product-service:$(PRODUCT_PORT) supplier-service:$(SUPPLIER_PORT) tax-service:$(TAX_PORT) purchase-service:$(PURCHASE_PORT) auth-service:$(AUTH_PORT),$(call print_row,$(svc));)
+
+	@echo "========================================================================"
+	@END_VAL=$$(date +%s); \
+	START_VAL=$$(cat .start_time 2>/dev/null); \
+	if [ -z "$$START_VAL" ]; then START_VAL=$$END_VAL; fi; \
+	DIFF=$$(( END_VAL - START_VAL )); \
+	H=$$(( DIFF / 3600 )); \
+	M=$$(( (DIFF % 3600) / 60 )); \
+	S=$$(( DIFF % 60 )); \
+	printf "⏱️  Tiempo total de despliegue: %02d:%02d:%02d\n" $$H $$M $$S; \
+	rm -f .start_time
+	@echo "✅ Proceso completado exitosamente."
 
 .PHONY: clean-env
 clean-env: ## 🧹 Limpieza atómica: Contenedores, Volúmenes, Redes y Huérfanos
@@ -385,7 +441,7 @@ clean-env: ## 🧹 Limpieza atómica: Contenedores, Volúmenes, Redes y Huérfan
 	@echo "🧹 LIMPIANDO ENTORNO (Proyecto: $(COMPOSE_PROJECT_NAME))"
 	@echo "======================================================================"
 	@# 1. Bajada estándar con borrado de volúmenes (-v)
-	-@$(DOCKER_COMPOSE_BIN) --env-file $(ENV_FILE_LOCAL) -f $(COMPOSE_FILE) -p $(COMPOSE_PROJECT_NAME) down -v --remove-orphans 2>/dev/null || true
+	-@$(DOCKER_COMPOSE_BIN) --env-file $(ENV_FILE_LOCAL) -f $(COMPOSE_FILE) -p $(COMPOSE_PROJECT_NAME) --profile auth down -v --remove-orphans 2>/dev/null || true
 
 	@# 2. Limpieza de contenedores que coincidan con el nombre del proyecto (Fuerza bruta)
 	@echo "🧨 Eliminando residuos por nombre de proyecto..."
@@ -398,6 +454,14 @@ clean-env: ## 🧹 Limpieza atómica: Contenedores, Volúmenes, Redes y Huérfan
 	@echo "💾 Purgando volúmenes no utilizados..."
 	-@podman volume prune -f 2>/dev/null || true
 	@echo "✅ Entorno listo para construcción fresca."
+
+.PHONY: clean-docker
+clean-docker:
+	@echo "Stopping and removing all containers for $(COMPOSE_PROJECT_NAME)..."
+	@$(DOCKER_COMPOSE_BIN) -p $(COMPOSE_PROJECT_NAME) down --volumes --remove-orphans
+	@echo "Removing network if exists..."
+	@podman network rm inventory-net || true
+	@rm -f .deploy_start .start_time
 
 .PHONY: build-purchase
 build-purchase: ## 🏗️ Construir imagen Docker de Purchase Service
@@ -450,11 +514,33 @@ up-local-with-tax: podman-ready fix-line-endings fix-container-orphans ## 🧪 I
 	$(Q) $(COMPOSE_LOCAL) --profile infra --profile gateway --profile product --profile tax up -d --build --remove-orphans
 
 #🔻 DETENER SERVICIOS
-down-local: podman-ready ## 🔻 Detener servicios locales
-	$(COMPOSE_LOCAL) --profile infra --profile product --profile gateway down -v --remove-orphans
-down-all: podman-ready ## 🔻 Detener TODOS los servicios
-	@echo "🧹 Deteniendo todos los servicios..."
-	$(COMPOSE_LOCAL) $(foreach p,$(PROFILES_ALL),--profile $(p)) down -v --remove-orphans
+down-local: podman-ready ## 🔻 Detener servicios locales y limpiar red SIN errores
+	@echo "🧹 Paso 1: Aniquilando contenedores rebeldes (Fuerza bruta)..."
+	@# Primero matamos todo lo que use la red para dejar el camino libre
+	-@podman ps -a --filter "network=inventory-net" --format "{{.ID}}" | xargs -r podman rm -f >/dev/null 2>&1
+
+	@echo "🛑 Paso 2: Ejecutando cleanup de Docker Compose..."
+	@# Ahora Compose no dará error de 'Resource in use' porque ya no hay contenedores
+	-@$(COMPOSE_LOCAL) --profile infra --profile product --profile supplier --profile tax --profile purchase --profile gateway --profile auth down -v --remove-orphans >/dev/null 2>&1
+
+	@echo "🌐 Paso 3: Eliminación final de red y temporales..."
+	-@podman network rm inventory-net 2>/dev/null || true
+	#-@rm -f .start_time .deploy_start
+	-@rm -f .start_time .deploy_start 2>/dev/null || true
+	@echo "✨ Limpieza completada exitosamente. Todo despejado."
+
+down-all: podman-ready ## 🔻 Detener TODOS los servicios y borrar rastro
+	@echo "🧹 Deteniendo todos los perfiles..."
+	@$(COMPOSE_LOCAL) $(foreach p,$(PROFILES_ALL),--profile $(p)) down -v --remove-orphans || true
+	@$(MAKE) force-clean-network
+
+force-clean-network:
+	@echo "🔍 Buscando contenedores huérfanos en la red inventory-net..."
+	@# Elimina cualquier contenedor que use la red del proyecto, sin importar el perfil
+	@podman ps -a --filter "network=inventory-net" --format "{{.ID}}" | xargs -r podman rm -f
+	@echo "🌐 Eliminando red inventory-net..."
+	@podman network rm inventory-net 2>/dev/null || true
+	@echo "✨ Limpieza completada."
 
 supplier-db-reset: podman-ready fix-line-endings ## 🗃️ Reiniciar base de datos de supplier
 	@echo "🔄 Reiniciando supplier-db y supplier-service..."
@@ -491,6 +577,7 @@ health-check-extended2: podman-ready ## 💚 Verificación de salud extendida
 	$(call check_health, http://localhost:$(SUPPLIER_PORT)/actuator/health, Supplier)
 	$(call check_health, http://localhost:$(TAX_PORT)/actuator/health, Tax)
 	$(call check_health, http://localhost:$(PURCHASE_PORT)/actuator/health, Purchase)
+	$(call check_health,$(AUTH_PORT),Auth)
 	$(call check_health, http://localhost:$(GATEWAY_PORT)/actuator/health, Gateway)
 
 health-check-extended: podman-ready ## 💚 Verificación de salud extendida
@@ -506,6 +593,7 @@ health-check-extended: podman-ready ## 💚 Verificación de salud extendida
 	-@podman exec db_supplier pg_isready -U postgres >/dev/null 2>&1 && echo "   ✅ Supplier DB" || echo "   ❌ Supplier DB"
 	-@podman exec db_tax pg_isready -U postgres >/dev/null 2>&1 && echo "   ✅ Tax DB" || echo "   ❌ Tax DB"
 	-@podman exec db_purchase pg_isready -U postgres >/dev/null 2>&1 && echo "   ✅ Purchase DB" || echo "   ❌ Purchase DB"
+	-@podman exec db_auth pg_isready -U postgres >/dev/null 2>&1 && echo "   ✅ Auth DB" || echo "   ❌ Auth DB"
 
 	@echo "🔍 Microservicios (Health Actuator):"
 	$(call check_health,$(PRODUCT_PORT),Product)
@@ -513,6 +601,7 @@ health-check-extended: podman-ready ## 💚 Verificación de salud extendida
 	$(call check_health,$(TAX_PORT),Tax)
 	$(call check_health,$(PURCHASE_PORT),Purchase)
 	$(call check_health,$(API_GATEWAY_PORT),Gateway)
+	$(call check_health,$(AUTH_PORT),Auth)
 
 #------------------------------------------------------------------------
 #🛠️ MANTENIMIENTO Y LIMPIEZA
@@ -523,10 +612,14 @@ fix-line-endings: ## 🛠️ Garantizar terminaciones de línea LF para gradlew
 	{ echo "⚠️ Advertencia: 'dos2unix' no está instalado. Asegúrate de que gradlew usa terminaciones LF."; }
 
 clean-all: podman-ready fix-line-endings ## 🧨 Limpieza completa
-	@echo "🧨 Limpieza completa..."
-	$(Q) $(MAKE) down-all
-	$(Q) $(MAKE) clean-podman-prune
-	$(Q) $(MAKE) clean-gradle
+	@echo "🛑 Deteniendo y eliminando contenedores de $(COMPOSE_PROJECT_NAME)..."
+	@$(DOCKER_COMPOSE_BIN) -p $(COMPOSE_PROJECT_NAME) down --volumes --remove-orphans
+	@echo "🧹 Forzando eliminación de contenedores residuales..."
+	@podman rm -f auth-service db_auth 2>/dev/null || true
+	@echo "🌐 Limpiando red persistente..."
+	@podman network rm inventory-net 2>/dev/null || true
+	@rm -f .start_time
+	@echo "✨ Sistema limpio."
 clean-podman-prune: podman-ready ## 🧹 Limpiar recursos de Podman (imágenes, volúmenes, cache)
 	# ✅ MODIFICADO: Remover el directorio temporal de autenticación
 	$(Q) rm -rf $(BUILD_DIR) 2>/dev/null || true
@@ -608,7 +701,7 @@ rebuild-purchase-local: podman-ready fix-line-endings ## 🔁 Reconstruir Tax Se
 #------------------------------------------------------------------------
 up-db: podman-ready ## 🗃️ Levantar solo bases de datos
 	@echo "🗄️ Levantando bases de datos (solo por perfiles)..."
-	$(Q) $(COMPOSE_LOCAL) --profile infra up -d db_product db_supplier db_tax db_purchase # Solo levantar los servicios de DB
+	$(Q) $(COMPOSE_LOCAL) --profile infra --profile auth up -d db_product db_supplier db_tax db_purchase db_auth
 reset-db: podman-ready ## 🗃️ Reiniciar base de datos principal
 	@echo "🔄 Reiniciando product-db..."
 	$(Q) $(COMPOSE_LOCAL) down -v db_product
@@ -919,14 +1012,35 @@ up-local-all-optimized: podman-auth podman-ready fix-line-endings ## 🚀 Inicia
 	printf "⏳ TIEMPO TOTAL: %02d:%02d\n" $$MINUTES $$SECONDS; \
 	echo "=========================================================================="; \
 	$(MAKE) health-check-extended
+#🏷️ AUTH SERVICE
+test-auth: ## 🧪 Tests de Auth Service
+	$(Q) cd $(ROOT_DIR)/auth-service && $(GRADLEW) test
+
+run-auth-local: fix-line-endings ## 🚀 Ejecutar Auth Service localmente
+	@echo "🚀 Auth Service en http://localhost:$(AUTH_PORT)"
+	$(Q) cd $(ROOT_DIR)/auth-service && $(GRADLEW) bootRun --args='--spring.profiles.active=local'
+
+rebuild-auth-local: podman-ready fix-line-endings ## 🔁 Reconstruir Auth Service
+	$(Q) cp $(ENV_FILE_LOCAL) .env.override
+	$(Q) cd $(ROOT_DIR) && $(GRADLEW) :auth-service:bootJar
+	$(Q) $(COMPOSE_LOCAL) --profile infra --profile auth build auth-service
+	$(Q) $(COMPOSE_LOCAL) --profile infra --profile auth up -d auth-service
+
+auth-db-reset: podman-ready fix-line-endings ## 🗃️ Reiniciar base de datos de auth
+	@echo "🔄 Reiniciando auth-db..."
+	$(Q) $(COMPOSE_LOCAL) --profile auth down -v db_auth
+	$(Q) $(COMPOSE_LOCAL) --profile infra --profile auth up -d db_auth
+
 .PHONY: help help-services help-db help-troubleshoot start start-all \
-	stop restart restart-all dev dev-full dev-supplier dev-tax build-all build-jars \
-	build-jars-all test-all test-quick status status-all logs health podman-ready ensure-script-exec \
-	up-local up-local-all up-local-all-ordered up-local-supplier up-local-with-tax \
-	down-local down-all logs-% health-check-extended fix-container-orphans clean-all \
-	clean-podman-prune clean-gradle reset-local test-product run-product-local rebuild-product-local \
-	test-supplier run-supplier-local rebuild-supplier-local test-tax run-tax-local rebuild-tax-local \
-	up-db reset-db tax-db-reset diagnose check-ports \
-	sync-podman-desktop debug-discovery fix-discovery check-discovery-health check-resources \
-	service-logs check-container-status emergency-clean restart-podman-vm fix-discovery-chmod \
-	diagnose-chmod build-images-all-nocache fix-line-endings podman-auth
+    stop restart restart-all dev dev-full dev-supplier dev-tax build-all build-jars \
+    build-jars-all test-all test-quick status status-all logs health podman-ready ensure-script-exec \
+    up-local up-local-all up-local-all-ordered up-local-supplier up-local-with-tax \
+    down-local down-all logs-% health-check-extended fix-container-orphans clean-all \
+    clean-podman-prune clean-gradle reset-local test-product run-product-local rebuild-product-local \
+    test-supplier run-supplier-local rebuild-supplier-local test-tax run-tax-local rebuild-tax-local \
+    test-purchase run-purchase-local rebuild-purchase-local \
+    test-auth run-auth-local rebuild-auth-local auth-db-reset \
+    up-db reset-db tax-db-reset diagnose check-ports \
+    sync-podman-desktop debug-discovery fix-discovery check-discovery-health check-resources \
+    service-logs check-container-status emergency-clean restart-podman-vm fix-discovery-chmod \
+    diagnose-chmod build-images-all-nocache fix-line-endings podman-auth
