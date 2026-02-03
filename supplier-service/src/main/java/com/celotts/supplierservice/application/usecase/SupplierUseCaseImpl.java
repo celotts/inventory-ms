@@ -16,6 +16,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -28,7 +29,7 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Boolean existsById(UUID id) {
+    public boolean existsById(UUID id) { // Cambia 'Boolean' por 'boolean'
         return repo.existsById(id);
     }
 
@@ -140,5 +141,8 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
         return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
 
-
+    @Override
+    public Optional<SupplierModel> getSupplierById(UUID id) { // Cambia Long por UUID
+        return repo.getSupplierById(id);
+    }
 }

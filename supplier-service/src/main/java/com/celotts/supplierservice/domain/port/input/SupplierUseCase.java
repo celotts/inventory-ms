@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface SupplierUseCase {
@@ -24,5 +25,8 @@ public interface SupplierUseCase {
     List<SupplierModel> searchByNameDescription(String q, int limit);
     boolean existsByName(String name);
 
-    Boolean existsById(UUID id);
+    Optional<SupplierModel> getSupplierById(UUID id);
+
+    boolean existsById(UUID id);
+
 }

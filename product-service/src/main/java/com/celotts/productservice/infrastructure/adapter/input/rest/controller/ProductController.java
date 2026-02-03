@@ -2,10 +2,7 @@ package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
 import com.celotts.productservice.domain.model.product.ProductModel;
 import com.celotts.productservice.domain.port.input.product.ProductUseCase;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductCreateDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductRequestDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductResponseDto;
-import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.ProductUpdateDto;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.*;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.ListResponse;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.PageResponse;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductMapper;
@@ -198,8 +195,8 @@ public class ProductController {
 
     @PatchMapping("/{id}/stock")
     @Operation(summary = "Update stock", description = "Update the stock of a product")
-    public ResponseEntity<ProductResponseDto> updateStock(@PathVariable UUID id, @RequestBody int stock) {
-        ProductModel updated = productUseCase.updateStock(id, stock);
+    public ResponseEntity<ProductResponseDto> updateStock(@PathVariable UUID id, @RequestBody @Valid UpdateStockDto stockDto) {
+        ProductModel updated = productUseCase.updateStock(id, stockDto.getStock());
         return ResponseEntity.ok(productMapper.toResponse(updated));
     }
 

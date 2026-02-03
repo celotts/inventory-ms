@@ -1,6 +1,7 @@
 server:
   port: ${PURCHASE_PORT:9094}
 
+
 spring:
   application:
     name: purchase-service
@@ -89,7 +90,8 @@ app:
     default-direction: desc
   cors:
     allowed-origin: "*"
-
+  security:
+    anonymous-user: ${DEFAULT_USER:ANONYMOUS}
 
 # Gestión de Endpoints
 management:

@@ -3,6 +3,7 @@ package com.celotts.supplierservice.domain.port.output;
 import com.celotts.supplierservice.domain.model.supplier.SupplierModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -11,6 +12,7 @@ public interface SupplierRepositoryPort {
     SupplierModel save(SupplierModel supplier);
 
     Optional<SupplierModel> findById(UUID id);
+
 
     // Unicidad / existencia
     boolean existsById(UUID id);
@@ -27,4 +29,10 @@ public interface SupplierRepositoryPort {
     Optional<SupplierModel> findByCode(String code);
     // Sugerencias / búsqueda flexible con límite
     List<SupplierModel> findByNameDescription(String query, int limit);
+
+    @Transactional(readOnly = true)
+    Optional<SupplierModel> getSupplierById(UUID id);
+
+    @Transactional(readOnly = true)
+    Optional<SupplierModel> getSupplierById(Long id);
 }
