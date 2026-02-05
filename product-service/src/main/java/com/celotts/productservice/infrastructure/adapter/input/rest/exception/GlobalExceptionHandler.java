@@ -14,7 +14,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
-import org.springframework.web.ErrorResponseException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -91,22 +90,6 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiResponse<Void> handleConflict(DataIntegrityViolationException ex, HttpServletRequest req) {
         return ApiResponse.conflict(msg("error.db.conflict"), path(req), method(req), "ERR_DB_INTEGRITY");
-    }
-
-    // Errores “HTTP” ya construidos (opcional)
-    @ExceptionHandler(ErrorResponseException.class)
-    public ApiResponse<Void> handleErrorResponse(ErrorResponseException ex, HttpServletRequest req) {
-        int status = ex.getStatusCode().value();
-        String code = switch (status) {
-            case 400 -> "ERR_BAD_REQUEST";
-            case 403 -> "ERR_FORBIDDEN";
-            case 404 -> "ERR_NOT_FOUND";
-            default -> "ERR_HTTP";
-        };
-        String detail = (ex.getBody() != null && ex.getBody().getDetail() != null)
-                ? ex.getBody().getDetail()
-                : msg("error.http.invalid");
-        return ApiResponse.error(status, detail, path(req), method(req), code, null);
     }
 
     // 500 - Fallback
