@@ -1,5 +1,9 @@
 server:
   port: ${PURCHASE_PORT:9094}
+  error:
+    include-message: always
+
+
 
 spring:
   application:

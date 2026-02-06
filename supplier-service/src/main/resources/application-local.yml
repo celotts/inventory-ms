@@ -4,7 +4,10 @@
 server:
   port: ${SUPPLIER_PORT:9091}
   servlet:
-    context-path: /supplier-service
+    context-path: /
+  error:
+    include-message: always
+
 
 spring:
   application:

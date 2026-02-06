@@ -143,6 +143,7 @@ compileJava {
 
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation']
+    options.encoding = 'UTF-8'
 }
 
 tasks.withType(Jar).configureEach {

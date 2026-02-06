@@ -38,9 +38,18 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
     @Override
     @Transactional
     public PurchaseModel create(PurchaseModel purchase) {
+        System.out.println(">>> [DEBUG] Iniciando creación de compra: " + purchase.getOrderNumber());
         purchase.normalize();
 
-        validateSupplier(purchase.getSupplierId());
+        try {
+            System.out.println(">>> [DEBUG] Validando proveedor ID: " + purchase.getSupplierId());
+            validateSupplier(purchase.getSupplierId());
+            System.out.println(">>> [DEBUG] Proveedor validado con éxito");
+        } catch (Exception e) {
+            System.err.println(">>> [ERROR] Falló la validación del proveedor:");
+            e.printStackTrace(); // Esto imprimirá el error real en los logs de Podman
+            throw e;
+        }
 
         if (purchase.getCreatedBy() == null || purchase.getCreatedBy().isBlank()) {
             purchase.setCreatedBy(
@@ -55,6 +64,8 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
                     purchase.getOrderNumber()
             );
         }
+
+        System.out.println(">>> [DEBUG] Guardando compra en base de datos...");
         return repositoryPort.save(purchase);
     }
 
@@ -76,22 +87,26 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
         return repositoryPort.findById(id)
                 .map(existingPurchase -> {
                     purchase.setId(id);
-                    if(purchase.getUpdatedBy() == null) {
-                        throw new IllegalArgumentException(
-                                messageSource.getMessage("purchase.update.updatedBy.required", null, LocaleContextHolder.getLocale())
-                        );
+                    // Validación de quién actualiza
+                    if (purchase.getUpdatedBy() == null || purchase.getUpdatedBy().isBlank()) {
+                        throw new IllegalArgumentException(getMsg("purchase.update.updatedBy.required"));
                     }
-                    if (purchase.getSupplierId() == null) {
+                    // Lógica inteligente para el Proveedor:
+                    if (purchase.getSupplierId() != null && !purchase.getSupplierId().equals(existingPurchase.getSupplierId())) {
+                        validateSupplier(purchase.getSupplierId());
+                    }
+                    // 2. Si no mandan nada, mantenemos el que ya tenía la compra original.
+                    else if (purchase.getSupplierId() == null) {
                         purchase.setSupplierId(existingPurchase.getSupplierId());
                     }
+
+                    // Preservamos el autor original de la compra
+                    purchase.setCreatedBy(existingPurchase.getCreatedBy());
+
                     purchase.normalize();
                     return repositoryPort.save(purchase);
                 })
-                .orElseThrow(() -> {
-                    // Usamos la clave específica que ya tienes en tu messages.properties
-                    String errorMsg = messageSource.getMessage("purchase.cannot-update-not-found", new Object[]{id}, LocaleContextHolder.getLocale());
-                    return new PurchaseNotFoundException(errorMsg, id);
-                });
+                .orElseThrow(() -> new PurchaseNotFoundException(getMsg("purchase.cannot-update-not-found", id), id));
     }
 
     @Override
@@ -106,22 +121,28 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
 
     private void validateSupplier(UUID supplierId) {
         try {
+            // Intentamos obtener el proveedor
             SupplierDto supplier = supplierClient.getSupplier(supplierId);
+
+            // Si el cliente devuelve null (aunque Feign suele lanzar 404)
             if (supplier == null) {
                 throw new SupplierNotFoundException("supplier.not-found", "id", supplierId.toString());
             }
+
+            // Validación de estado (Si tienes SupplierInactiveException creada)
             if (!supplier.isActive()) {
-                throw new SupplierInactiveException("supplier.inactive", "id", supplierId.toString());
+                throw new SupplierInactiveException("supplier.inactive", "name", supplier.getName());
             }
+
         } catch (feign.FeignException.NotFound e) {
-            // Captura específicamente el 404 de Feign
+            // ✅ AQUÍ ES DONDE OCURRE LA MAGIA:
+            // Lanzamos tu excepción personalizada que hereda de BaseDomainException
             throw new SupplierNotFoundException("supplier.not-found", "id", supplierId.toString());
+
         } catch (feign.FeignException e) {
-            // Error de conexión o servidor (500, timeout, etc)
-            throw new RuntimeException(messageSource.getMessage("error.communication.supplier-service", null, LocaleContextHolder.getLocale())
-            );
+            // Para errores de red o caídas del servidor (500),
+            // lanzamos algo que el GlobalExceptionHandler capture como error de infraestructura
+            throw new RuntimeException("service.supplier.unavailable");
         }
     }
-
-
 }

@@ -1,5 +1,9 @@
 server:
   port: ${API_GATEWAY_PORT:8090}
+  error:
+    include-message: always
+
+
 
 spring:
   application:

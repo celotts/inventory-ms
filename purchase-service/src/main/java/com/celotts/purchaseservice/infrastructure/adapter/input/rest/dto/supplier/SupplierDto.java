@@ -2,9 +2,11 @@ package com.celotts.purchaseservice.infrastructure.adapter.input.rest.dto.suppli
 
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class SupplierDto {
-    private Long id;
+    private UUID id;
     private String name;        // Nombre de la empresa o proveedor
     private String email;       // Para notificaciones de compra
     private String category;    // Ej: "Electrónicos", "Alimentos"
