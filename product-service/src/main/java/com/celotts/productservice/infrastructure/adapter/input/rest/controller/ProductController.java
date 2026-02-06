@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,11 +35,12 @@ public class ProductController {
     private final ProductUseCase productUseCase;
     private final ProductMapper productMapper;
     private final PaginationProperties paginationProperties;
+    private final MessageSource messageSource;
 
     @GetMapping("/test")
     @Operation(summary = "Test API", description = "Test endpoint to verify that the service is working.")
     public ResponseEntity<String> testEndpoint() {
-        return ResponseEntity.ok("¡Product Service working correctly!");
+        return ResponseEntity.ok(messageSource.getMessage("app.status.ok", null, LocaleContextHolder.getLocale()));
     }
 
     @PostMapping

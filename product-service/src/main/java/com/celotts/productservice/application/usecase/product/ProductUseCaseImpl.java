@@ -77,7 +77,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public ProductModel getProductByCode(String code) {
         return productRepositoryPort.findByCode(code)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "Product not found with code: " + code));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", getMessage("product.not-found-code", code)));
     }
 
     @Override
@@ -156,13 +156,13 @@ public class ProductUseCaseImpl implements ProductUseCase {
 
     private void validateReferences(ProductModel dto) {
         if (dto.getUnitCode() != null && !productUnitPort.existsByCode(dto.getUnitCode())) {
-            throw new ResourceNotFoundException("Product", getMessage("validation.code-format.invalid") + ": " + dto.getUnitCode()); //
+            throw new ResourceNotFoundException("Product", getMessage("product.unit.not-found", dto.getUnitCode()));
         }
         if (dto.getBrandId() != null && !productBrandPort.existsById(dto.getBrandId())) {
-            throw new ResourceNotFoundException("Product", getMessage("brand.name.required")); //
+            throw new ResourceNotFoundException("Product", getMessage("brand.not-found", dto.getBrandId()));
         }
         if (dto.getCategoryId() != null && !categoryRepositoryPort.existsById(dto.getCategoryId())) {
-            throw new ResourceNotFoundException("Product", getMessage("category.not.found")); //
+            throw new ResourceNotFoundException("Product", getMessage("category.not.found"));
         }
     }
 
