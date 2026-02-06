@@ -27,19 +27,22 @@ public class GlobalExceptionHandler {
 
         String message;
         try {
-            message = ex.isI18n()
-                    ? messageSource.getMessage(ex.getMessageKey(), ex.getMessageArgs(), locale)
-                    : ex.getMessage();
+            if (ex.isI18n()) {
+                message = messageSource.getMessage(ex.getMessageKey(), ex.getMessageArgs(), locale);
+            } else {
+                message = ex.getMessage();
+            }
         } catch (Exception e) {
-            message = "Error: " + ex.getMessageKey();
+            // ✅ Si la llave específica no existe, usamos una llave genérica de tus archivos
+            // y le pegamos los datos técnicos para que el desarrollador sepa qué falló.
+            String fallbackTitle = messageSource.getMessage("app.error.validation", null, locale);
+            message = fallbackTitle + " (Key: " + ex.getMessageKey() + ") - Data: " + java.util.Arrays.toString(ex.getMessageArgs());
         }
 
-        // Determinamos el status
         HttpStatus status = (ex instanceof PurchaseNotFoundException || ex instanceof SupplierNotFoundException)
                 ? HttpStatus.NOT_FOUND
                 : HttpStatus.CONFLICT;
 
-        // Armamos el JSON que SÍ queremos ver
         response.put("timestamp", LocalDateTime.now());
         response.put("status", status.value());
         response.put("code", ex.getMessageKey());

@@ -12,7 +12,10 @@ public class CustomErrorDecoder implements ErrorDecoder {
     public Exception decode(String methodKey, Response response) {
         // Si el micro de proveedores responde 404 Not Found
         if (response.status() == 404) {
-            return new SupplierNotFoundException("supplier.not-found", "id", "unknown");
+            String url = response.request().url();
+            String id = url.substring(url.lastIndexOf('/') + 1);
+            
+            return new SupplierNotFoundException("supplier.not-found", "id", id);
         }
 
         // Para cualquier otro error (500, 400, etc.), deja que Feign lo maneje normalmente
