@@ -6,10 +6,12 @@ import com.celotts.purchaseservice.domain.exception.SupplierNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -23,9 +25,7 @@ public class GlobalExceptionHandler {
 
     // 1. CAPTURA TUS ERRORES DE DOMINIO (404, 409, etc.)
     @ExceptionHandler(BaseDomainException.class)
-    public ResponseEntity<Map<String, Object>> handleDomainException(BaseDomainException ex, Locale locale) {
-        Map<String, Object> response = new LinkedHashMap<>();
-
+    public ProblemDetail handleDomainException(BaseDomainException ex, Locale locale) {
         String message;
         try {
             if (ex.isI18n()) {
@@ -42,19 +42,18 @@ public class GlobalExceptionHandler {
                 ? HttpStatus.NOT_FOUND
                 : HttpStatus.CONFLICT;
 
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", status.value());
-        response.put("code", ex.getMessageKey());
-        response.put("message", message);
-
-        return new ResponseEntity<>(response, status);
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, message);
+        pd.setTitle(status.getReasonPhrase());
+        pd.setType(URI.create("urn:celotts:error:" + ex.getMessageKey()));
+        pd.setProperty("errorCode", ex.getMessageKey());
+        pd.setProperty("timestamp", LocalDateTime.now());
+        
+        return pd;
     }
 
     // 2. CAPTURA ERRORES GENÉRICOS Y DE COMUNICACIÓN (500, 503)
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex, Locale locale) {
-        Map<String, Object> response = new LinkedHashMap<>();
-
+    public ProblemDetail handleGenericException(Exception ex, Locale locale) {
         String messageKey = ex.getMessage();
         String message;
 
@@ -72,11 +71,12 @@ public class GlobalExceptionHandler {
                 ? HttpStatus.SERVICE_UNAVAILABLE
                 : HttpStatus.INTERNAL_SERVER_ERROR;
 
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", status.value());
-        response.put("code", messageKey != null ? messageKey : "internal.error");
-        response.put("message", message);
-
-        return new ResponseEntity<>(response, status);
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, message);
+        pd.setTitle(status.getReasonPhrase());
+        pd.setType(URI.create("urn:celotts:error:internal"));
+        pd.setProperty("errorCode", messageKey != null ? messageKey : "internal.error");
+        pd.setProperty("timestamp", LocalDateTime.now());
+        
+        return pd;
     }
-} // <--- Esta llave cierra la clase. Todo debe estar antes de ella.
+}

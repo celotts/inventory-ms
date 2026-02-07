@@ -9,6 +9,7 @@ import com.celotts.purchaseservice.domain.port.input.PurchaseUseCase;
 import com.celotts.purchaseservice.domain.port.output.PurchaseRepositoryPort;
 import com.celotts.purchaseservice.infrastructure.adapter.input.rest.dto.supplier.SupplierDto;
 import com.celotts.purchaseservice.infrastructure.client.SupplierClient;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -38,7 +39,6 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
     @Override
     @Transactional
     public PurchaseModel create(PurchaseModel purchase) {
-        System.out.println(">>> [DEBUG] PurchaseUseCaseImpl.create() INICIADO");
         log.info(">>> [DEBUG] Iniciando creación de compra: {}", purchase.getOrderNumber());
         purchase.normalize();
 
@@ -112,9 +112,9 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
 
     private void validateSupplier(UUID supplierId) {
         try {
-            System.out.println(">>> [DEBUG] Llamando a SupplierClient con ID: " + supplierId);
+            log.debug(">>> [DEBUG] Llamando a SupplierClient con ID: {}", supplierId);
             SupplierDto supplier = supplierClient.getSupplier(supplierId);
-            System.out.println(">>> [DEBUG] Respuesta de SupplierClient: " + supplier);
+            log.debug(">>> [DEBUG] Respuesta de SupplierClient: {}", supplier);
 
             if (supplier == null) {
                 throw new SupplierNotFoundException("supplier.not-found", "id", supplierId.toString());
@@ -124,26 +124,17 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
                 throw new SupplierInactiveException("supplier.inactive", "name", supplier.getName());
             }
 
-        } catch (feign.FeignException.NotFound e) {
-            System.err.println(">>> [ERROR] Feign NotFound (404): " + e.getMessage());
+        } catch (FeignException.NotFound e) {
+            log.error(">>> [ERROR] Feign NotFound (404): {}", e.getMessage());
             throw new SupplierNotFoundException("supplier.not-found", "id", supplierId.toString());
 
-        } catch (feign.FeignException e) {
-            System.err.println(">>> [ERROR CRÍTICO] Falló la llamada a Supplier Service!");
-            System.err.println(">>> Status: " + e.status());
-            System.err.println(">>> URL: " + e.request().url());
-            System.err.println(">>> Body: " + e.contentUTF8());
-            e.printStackTrace();
-            
-            log.error("Error al comunicar con Supplier Service: Status={}, Msg={}", e.status(), e.getMessage(), e);
-            throw new RuntimeException("FALLO EN LLAMADA FEIGN - REVISAR LOGS");
+        } catch (FeignException e) {
+            log.error(">>> [ERROR CRÍTICO] Falló la llamada a Supplier Service! Status: {}, URL: {}, Body: {}", 
+                    e.status(), e.request().url(), e.contentUTF8(), e);
+            throw new RuntimeException("service.supplier.unavailable");
         } catch (Exception e) {
-            System.err.println(">>> [DEBUG] Clase de la excepción: " + e.getClass().getName());
-            System.err.println(">>> [DEBUG] Mensaje: " + e.getMessage());
-            e.printStackTrace();
-
-            // CAMBIA ESTO PARA QUE EN POSTMAN VEAS ALGO DIFERENTE
-            throw new RuntimeException("ERROR_NUEVO_DETECTADO: " + e.getMessage());
+            log.error(">>> [ERROR] Error inesperado al validar proveedor: {}", e.getMessage(), e);
+            throw e;
         }
     }
 }
