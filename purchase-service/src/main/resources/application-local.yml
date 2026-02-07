@@ -94,11 +94,8 @@ app:
     default-direction: desc
   cors:
     allowed-origin: "*"
-
-# Al mismo nivel que 'app:' o 'eureka:'
-supplier:
-  service:
-    url: ${SUPPLIER_SERVICE_URL:http://localhost:9091}
+  services:
+    supplier-url: ${SUPPLIER_SERVICE_URL:http://localhost:9091}
 
 management:
   endpoints:

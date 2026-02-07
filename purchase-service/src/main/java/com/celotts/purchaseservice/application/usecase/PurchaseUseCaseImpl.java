@@ -7,10 +7,10 @@ import com.celotts.purchaseservice.domain.exception.SupplierNotFoundException;
 import com.celotts.purchaseservice.domain.model.purchase.PurchaseModel;
 import com.celotts.purchaseservice.domain.port.input.PurchaseUseCase;
 import com.celotts.purchaseservice.domain.port.output.PurchaseRepositoryPort;
-
 import com.celotts.purchaseservice.infrastructure.adapter.input.rest.dto.supplier.SupplierDto;
 import com.celotts.purchaseservice.infrastructure.client.SupplierClient;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
@@ -23,14 +23,14 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PurchaseUseCaseImpl implements PurchaseUseCase {
 
     private final PurchaseRepositoryPort repositoryPort;
-    private final MessageSource messageSource; // ✅ Inyectado para i18n
+    private final MessageSource messageSource;
     private final SupplierClient supplierClient;
 
 
-    // Método auxiliar para obtener mensajes del properties
     private String getMsg(String key, Object... args) {
         return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
     }
@@ -38,18 +38,13 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
     @Override
     @Transactional
     public PurchaseModel create(PurchaseModel purchase) {
-        System.out.println(">>> [DEBUG] Iniciando creación de compra: " + purchase.getOrderNumber());
+        System.out.println(">>> [DEBUG] PurchaseUseCaseImpl.create() INICIADO");
+        log.info(">>> [DEBUG] Iniciando creación de compra: {}", purchase.getOrderNumber());
         purchase.normalize();
 
-        try {
-            System.out.println(">>> [DEBUG] Validando proveedor ID: " + purchase.getSupplierId());
-            validateSupplier(purchase.getSupplierId());
-            System.out.println(">>> [DEBUG] Proveedor validado con éxito");
-        } catch (Exception e) {
-            System.err.println(">>> [ERROR] Falló la validación del proveedor:");
-            e.printStackTrace(); // Esto imprimirá el error real en los logs de Podman
-            throw e;
-        }
+        log.info(">>> [DEBUG] Validando proveedor ID: {}", purchase.getSupplierId());
+        validateSupplier(purchase.getSupplierId());
+        log.info(">>> [DEBUG] Proveedor validado con éxito");
 
         if (purchase.getCreatedBy() == null || purchase.getCreatedBy().isBlank()) {
             purchase.setCreatedBy(
@@ -65,7 +60,7 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
             );
         }
 
-        System.out.println(">>> [DEBUG] Guardando compra en base de datos...");
+        log.info(">>> [DEBUG] Guardando compra en base de datos...");
         return repositoryPort.save(purchase);
     }
 
@@ -87,22 +82,18 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
         return repositoryPort.findById(id)
                 .map(existingPurchase -> {
                     purchase.setId(id);
-                    // Validación de quién actualiza
                     if (purchase.getUpdatedBy() == null || purchase.getUpdatedBy().isBlank()) {
                         throw new IllegalArgumentException(getMsg("purchase.update.updatedBy.required"));
                     }
-                    // Lógica inteligente para el Proveedor:
+                    
                     if (purchase.getSupplierId() != null && !purchase.getSupplierId().equals(existingPurchase.getSupplierId())) {
                         validateSupplier(purchase.getSupplierId());
                     }
-                    // 2. Si no mandan nada, mantenemos el que ya tenía la compra original.
                     else if (purchase.getSupplierId() == null) {
                         purchase.setSupplierId(existingPurchase.getSupplierId());
                     }
 
-                    // Preservamos el autor original de la compra
                     purchase.setCreatedBy(existingPurchase.getCreatedBy());
-
                     purchase.normalize();
                     return repositoryPort.save(purchase);
                 })
@@ -121,28 +112,38 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
 
     private void validateSupplier(UUID supplierId) {
         try {
-            // Intentamos obtener el proveedor
+            System.out.println(">>> [DEBUG] Llamando a SupplierClient con ID: " + supplierId);
             SupplierDto supplier = supplierClient.getSupplier(supplierId);
+            System.out.println(">>> [DEBUG] Respuesta de SupplierClient: " + supplier);
 
-            // Si el cliente devuelve null (aunque Feign suele lanzar 404)
             if (supplier == null) {
                 throw new SupplierNotFoundException("supplier.not-found", "id", supplierId.toString());
             }
 
-            // Validación de estado (Si tienes SupplierInactiveException creada)
             if (!supplier.isActive()) {
                 throw new SupplierInactiveException("supplier.inactive", "name", supplier.getName());
             }
 
         } catch (feign.FeignException.NotFound e) {
-            // ✅ AQUÍ ES DONDE OCURRE LA MAGIA:
-            // Lanzamos tu excepción personalizada que hereda de BaseDomainException
+            System.err.println(">>> [ERROR] Feign NotFound (404): " + e.getMessage());
             throw new SupplierNotFoundException("supplier.not-found", "id", supplierId.toString());
 
         } catch (feign.FeignException e) {
-            // Para errores de red o caídas del servidor (500),
-            // lanzamos algo que el GlobalExceptionHandler capture como error de infraestructura
-            throw new RuntimeException("service.supplier.unavailable");
+            System.err.println(">>> [ERROR CRÍTICO] Falló la llamada a Supplier Service!");
+            System.err.println(">>> Status: " + e.status());
+            System.err.println(">>> URL: " + e.request().url());
+            System.err.println(">>> Body: " + e.contentUTF8());
+            e.printStackTrace();
+            
+            log.error("Error al comunicar con Supplier Service: Status={}, Msg={}", e.status(), e.getMessage(), e);
+            throw new RuntimeException("FALLO EN LLAMADA FEIGN - REVISAR LOGS");
+        } catch (Exception e) {
+            System.err.println(">>> [DEBUG] Clase de la excepción: " + e.getClass().getName());
+            System.err.println(">>> [DEBUG] Mensaje: " + e.getMessage());
+            e.printStackTrace();
+
+            // CAMBIA ESTO PARA QUE EN POSTMAN VEAS ALGO DIFERENTE
+            throw new RuntimeException("ERROR_NUEVO_DETECTADO: " + e.getMessage());
         }
     }
 }

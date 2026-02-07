@@ -69,6 +69,8 @@ springdoc:
     display-request-duration: ${VAR_TRUE:true}
 
 app:
+  services:
+    supplier-url: ${SUPPLIER_SERVICE_URL:http://supplier-service:9091}
   cors:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:*}
   pagination:

@@ -1,5 +1,7 @@
 package com.celotts.purchaseservice.infrastructure.adapter.output.feign;
-import com.celotts.purchaseservice.infrastructure.adapter.input.rest.dto.supplier.SupplierDto;
+
+import com.celotts.purchaseservice.infrastructure.adapter.output.feign.dto.SupplierDto;
+
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

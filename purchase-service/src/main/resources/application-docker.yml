@@ -130,7 +130,8 @@ spring:
   cloud:
     config:
       enabled: false
-
+  message:
+    encoding: UTF-8
   datasource:
     url: jdbc:postgresql://${PURCHASE_DB_HOST:purchase-db}:${PURCHASE_DB_PORT:5432}/${PURCHASE_DB_NAME:purchase}
     username: ${PURCHASE_DB_USERNAME:purchase}
