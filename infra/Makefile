@@ -61,7 +61,7 @@ endif
 # Puertos de servicios
 API_GATEWAY_PORT ?= 8090
 CONFIG_PORT      ?= 7777
-AUTH_PORT        ?= 8080
+AUTH_PORT        ?= 8081
 DISCOVERY_PORT   ?= 8761
 PRODUCT_PORT     ?= 9090
 SUPPLIER_PORT    ?= 9091

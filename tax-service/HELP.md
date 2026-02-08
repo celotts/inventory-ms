@@ -66,8 +66,8 @@ If the file does not exist, make sure the tests ran successfully and the `jacoco
 ## Puertos recomendados para microservicios
 
 | Microservicio          | Puerto en Docker (`docker-compose`) | Puerto local (IntelliJ o CLI) |
-| ---------------------- | ----------------------------------- | ----------------------------- |
-| `api-gateway`          | `8080:8080`                         | `8080`                        |
+| ---------------------- |-------------------------------------|-------------------------------|
+| `api-gateway`          | `8081:8081`                         | `8081`                        |
 | `discovery-service`    | `8761:8761`                         | `8761`                        |
 | `config-service`       | `7777:7777`                         | `7777`                        |
 | `product-service`      | `9090:9090`                         | `9090`                        |

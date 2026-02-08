@@ -80,9 +80,12 @@ public class AuthController {
                     .body(new MessageResponse("Error: Email is already in use!"));
         }
 
-        User user = new User(signUpRequest.getUsername(),
-                signUpRequest.getEmail(),
-                encoder.encode(signUpRequest.getPassword()));
+        // Crear usuario usando el patrón Builder
+        User user = User.builder()
+                .username(signUpRequest.getUsername())
+                .email(signUpRequest.getEmail())
+                .password(encoder.encode(signUpRequest.getPassword()))
+                .build();
 
         Set<String> strRoles = signUpRequest.getRole();
         Set<Role> roles = new HashSet<>();

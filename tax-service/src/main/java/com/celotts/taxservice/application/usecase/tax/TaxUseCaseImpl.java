@@ -59,7 +59,7 @@ public class TaxUseCaseImpl implements TaxUseCase {
     @Override
     public List<TaxModel> findAllById(List<UUID> ids) {
         log.debug(getLocalizedMessage("log.tax.finding.byids", ids));
-        return taxRepository.findAllById(ids);
+        return taxRepository.findAllById(ids); // Corregido
     }
 
     @Override
