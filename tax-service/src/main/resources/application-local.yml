@@ -1,5 +1,9 @@
 server:
   port: ${TAX_PORT:9090}
+  error:
+    include-message: always
+
+
 
 spring:
   application:

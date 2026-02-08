@@ -14,6 +14,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
@@ -22,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.*;
@@ -30,6 +32,7 @@ import java.util.*;
 @RequestMapping("/api/v1/suppliers")
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class SupplierController {
 
     private final SupplierUseCase useCase;
@@ -55,7 +58,14 @@ public class SupplierController {
         body.normalizeFields();
         SupplierModel created = useCase.create(mapper.toModel(body));
 
-        URI location = URI.create("/api/v1/suppliers/" + created.getId());
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(created.getId())
+                .toUri();
+
+        log.info("URI generada para Location: {}", location);
+
         return ResponseEntity.created(location).body(mapper.toResponse(created));
     }
 
@@ -149,11 +159,9 @@ public class SupplierController {
 
     @GetMapping("/_ping")
     public ResponseEntity<Map<String, Object>> ping() {
-        String okMsg = messageSource.getMessage("app.error.unexpected", null, LocaleContextHolder.getLocale());
         return ResponseEntity.ok(Map.of(
                 "service", "supplier-service",
-                "status", "OK",
-                "i18n.sample", okMsg
+                "status", "OK - VERSION 3 - PRUEBA FINAL"
         ));
     }
 }

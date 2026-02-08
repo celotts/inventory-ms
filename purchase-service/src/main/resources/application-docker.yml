@@ -1,11 +1,17 @@
 server:
   port: ${PURCHASE_PORT:9094}
+  servlet:
+    context-path: /
+  error:
+    include-message: always
+
 
 spring:
   application:
     name: purchase-service
   datasource:
-    url: jdbc:postgresql://${PURCHASE_DB_HOST:purchase-db}:5432/${PURCHASE_DB_NAME:purchase}
+    url: jdbc:postgresql://${PURCHASE_DB_HOST:localhost}:5435/${PURCHASE_DB_NAME:purchase}
+    #url: jdbc:postgresql://${PURCHASE_DB_HOST:purchase-db}:5432/${PURCHASE_DB_NAME:purchase}
     username: ${PURCHASE_DB_USERNAME:purchase}
     password: ${PURCHASE_DB_PASSWORD:purchase123}
     driver-class-name: org.postgresql.Driver
@@ -57,8 +63,7 @@ spring:
     exclude:
       - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
       - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
-      -
-      # Configuración de Eureka común para todos los entornos
+
 eureka:
   client:
     enabled: true
@@ -81,6 +86,8 @@ springdoc:
 
 # Configuración personalizada de la App
 app:
+  services:
+    supplier-url: ${SUPPLIER_SERVICE_URL:http://supplier-service:9091}
   pagination:
     default-page: 0
     default-size: 10
@@ -89,7 +96,8 @@ app:
     default-direction: desc
   cors:
     allowed-origin: "*"
-
+  security:
+    anonymous-user: ${DEFAULT_USER:ANONYMOUS}
 
 # Gestión de Endpoints
 management:
@@ -122,7 +130,8 @@ spring:
   cloud:
     config:
       enabled: false
-
+  message:
+    encoding: UTF-8
   datasource:
     url: jdbc:postgresql://${PURCHASE_DB_HOST:purchase-db}:${PURCHASE_DB_PORT:5432}/${PURCHASE_DB_NAME:purchase}
     username: ${PURCHASE_DB_USERNAME:purchase}

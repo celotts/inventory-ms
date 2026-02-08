@@ -3,6 +3,7 @@ package com.celotts.purchaseservice.infrastructure.adapter.input.rest.controller
 import com.celotts.purchaseservice.domain.model.purchase.PurchaseModel;
 import com.celotts.purchaseservice.domain.port.input.PurchaseUseCase;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,26 +18,28 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/purchase")
 @RequiredArgsConstructor
+@Slf4j
 public class PurchaseController {
 
     private final PurchaseUseCase purchaseUseCase;
 
     @PostMapping
     public ResponseEntity<PurchaseModel> create(@RequestBody PurchaseModel purchase) {
+        log.info(">>> RECIBIDA PETICIÓN POST /api/v1/purchase con body: {}", purchase);
         return ResponseEntity.status(HttpStatus.CREATED).body(purchaseUseCase.create(purchase));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<PurchaseModel> getById(@PathVariable UUID id) {
-        System.out.println(">>> Solicitando compra con ID: " + id);
+        log.info(">>> Solicitando compra con ID: {}", id);
 
         return purchaseUseCase.findById(id)
                 .map(purchase -> {
-                    System.out.println(">>> Compra encontrada: " + purchase.getOrderNumber());
+                    log.info(">>> Compra encontrada: {}", purchase.getOrderNumber());
                     return ResponseEntity.ok(purchase);
                 })
                 .orElseGet(() -> {
-                    System.out.println(">>> ERROR: No se encontró el ID en la DB");
+                    log.warn(">>> ERROR: No se encontró el ID en la DB");
                     return ResponseEntity.notFound().build();
                 });
     }
