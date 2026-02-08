@@ -38,12 +38,10 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
     @Override
     @Transactional
     public PurchaseModel create(PurchaseModel purchase) {
-        log.info(">>> [DEBUG] Iniciando creación de compra: {}", purchase.getOrderNumber());
+        log.info("Creating purchase with order number: {}", purchase.getOrderNumber());
         purchase.normalize();
 
-        log.info(">>> [DEBUG] Validando proveedor ID: {}", purchase.getSupplierId());
         validateSupplier(purchase.getSupplierId());
-        log.info(">>> [DEBUG] Proveedor validado con éxito");
 
         if (purchase.getCreatedBy() == null || purchase.getCreatedBy().isBlank()) {
             purchase.setCreatedBy(
@@ -59,7 +57,6 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
             );
         }
 
-        log.info(">>> [DEBUG] Guardando compra en base de datos...");
         return repositoryPort.save(purchase);
     }
 
@@ -111,11 +108,10 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
 
     private void validateSupplier(UUID supplierId) {
         try {
-            System.out.println(">>> [DEBUG] Llamando a SupplierClient con ID: " + supplierId);
             SupplierDto supplier = supplierClient.getSupplier(supplierId);
-            System.out.println(">>> [DEBUG] Respuesta de SupplierClient: " + supplier);
 
             if (supplier == null) {
+                // Esto no debería pasar si el CustomErrorDecoder funciona, pero por seguridad:
                 throw new SupplierNotFoundException("supplier.not-found", "id", supplierId.toString());
             }
 
@@ -124,23 +120,13 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
             }
 
         } catch (feign.FeignException.NotFound e) {
-            System.err.println(">>> [ERROR] Feign NotFound (404): " + e.getMessage());
+            // Si el CustomErrorDecoder no interceptó el 404, lo atrapamos aquí
             throw new SupplierNotFoundException("supplier.not-found", "id", supplierId.toString());
 
         } catch (feign.FeignException e) {
-            System.err.println(">>> [ERROR CRÍTICO] Falló la llamada a Supplier Service!");
-            System.err.println(">>> Status: " + e.status());
-            System.err.println(">>> URL: " + e.request().url());
-            System.err.println(">>> Body: " + e.contentUTF8());
-            e.printStackTrace();
-            
-            log.error("Error al comunicar con Supplier Service: Status={}, Msg={}", e.status(), e.getMessage(), e);
-            throw new RuntimeException("FALLO EN LLAMADA FEIGN - REVISAR LOGS");
-        } catch (Exception e) {
-            System.err.println(">>> [ERROR INESPERADO] " + e.getMessage());
-            e.printStackTrace();
-            log.error("Error inesperado validando proveedor", e);
-            throw new RuntimeException("FALLO EN LLAMADA FEIGN - REVISAR LOGS");
+            // Error de conexión o 500 del otro servicio
+            log.error("Error communicating with Supplier Service: Status={}, Msg={}", e.status(), e.getMessage());
+            throw new RuntimeException(getMsg("service.supplier.unavailable"));
         }
     }
 }

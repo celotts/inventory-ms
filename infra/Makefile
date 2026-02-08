@@ -23,6 +23,13 @@ IMAGE_DB ?= postgres:16
 PROFILES_BUILD_ORDER := infra gateway product supplier tax purchase auth
 SERVICES_TO_BUILD    := discovery-service config-service api-gateway product-service supplier-service tax-service purchase-service auth-service
 
+# ✅ LISTA ORDENADA DE SERVICIOS DE NEGOCIO (Para el contador de progreso de despliegue)
+BUSINESS_SERVICES := product-service auth-service supplier-service tax-service purchase-service
+
+# ✅ LISTA PARA HEALTH CHECK (Nombre:Puerto)
+# Nota: Usamos espacios en lugar de dos puntos para facilitar el parseo en el bucle for
+HEALTH_CHECK_LIST := Product:$(PRODUCT_PORT) Supplier:$(SUPPLIER_PORT) Tax:$(TAX_PORT) Purchase:$(PURCHASE_PORT) Auth:$(AUTH_PORT) Gateway:$(API_GATEWAY_PORT)
+
 # ✅ SOLUCIÓN PARA MAC: Detectar el socket de Podman automáticamente
 # Esto evita el error "Is the docker daemon running?"
 export DOCKER_HOST ?= unix://$(shell podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')
@@ -146,20 +153,22 @@ define check_health_url
 		echo "   ✅ $(2) está UP y respondiendo!"
 endef
 
+# ✅ FUNCIÓN CORREGIDA: Sin variables de shell internas conflictivas
 define check_health
-	@count=0; \
-	echo "   🔍 Verificando estado de $(2)..."; \
+	echo "   🔍 [$(3)/$(4)] Verificando estado de $(2)..."; \
+	retry_count=0; \
+	max_retries=5; \
 	until [ "$$(podman inspect --format='{{.State.Status}}' $(COMPOSE_PROJECT_NAME)-$(2)-service-1 2>/dev/null)" = "running" ] || \
 	      [ "$$(podman inspect --format='{{.State.Status}}' $(2)-service 2>/dev/null)" = "running" ]; do \
-		count=$$((count + 1)); \
-		if [ $$count -ge 5 ]; then \
-			echo "   ⚠️ $(2) ya debería estar corriendo. Forzando paso para desbloquear red..."; \
+		retry_count=$$((retry_count + 1)); \
+		if [ $$retry_count -ge $$max_retries ]; then \
+			echo "   ⚠️ $(2) no parece estar corriendo tras $$max_retries intentos."; \
 			break; \
 		fi; \
-		echo "   ⏳ $(2) esperando contenedor... (intento $$count/5)"; \
+		echo "   ⏳ $(2) esperando contenedor... (intento $$retry_count/$$max_retries)"; \
 		sleep 2; \
 	done; \
-	echo "   ✅ Mircoservico [$(2)] validado y listo!"
+	echo "   ✅ Microservicio [$(2)] validado y listo!"
 endef
 
 define print_row
@@ -395,11 +404,15 @@ up-local-all-ordered: podman-auth podman-ready fix-line-endings
 	@sleep 15
 
 	@echo "🚀 3. Servicios de Negocio..."
-	@for service in product-service auth-service supplier-service tax-service purchase-service; do \
-       echo "   -> Iniciando $$service..."; \
-       $(CMD) up -d --build $$service; \
-       sleep 5; \
-    done
+	@# Calculamos el total usando la función 'words' de Make
+	@total=$(words $(BUSINESS_SERVICES)); \
+	count=1; \
+	for service in $(BUSINESS_SERVICES); do \
+	   printf "   ⏳ [%d/%d] Iniciando %s...\n" $$count $$total $$service; \
+	   $(CMD) up -d --build $$service; \
+	   sleep 5; \
+	   count=$$((count + 1)); \
+	done
 
 	@echo "🌐 4. API Gateway..."
 	@$(CMD) up -d --build api-gateway
@@ -585,8 +598,26 @@ health-check-extended: podman-ready ## 💚 Verificación de salud extendida
 	@if ! command -v curl >/dev/null; then echo "❌ Error: 'curl' no está instalado."; exit 1; fi
 
 	@echo "🔍 Infraestructura:"
-	$(call check_health,$(DISCOVERY_PORT),Discovery)
-	$(call check_health,$(CONFIG_PORT),Config)
+	@# Verificación manual para Infraestructura (sin bucle)
+	@echo "   🔍 [1/2] Verificando estado de Discovery..."
+	@retry_count=0; max_retries=5; \
+	until [ "$$(podman inspect --format='{{.State.Status}}' $(COMPOSE_PROJECT_NAME)-discovery-service-1 2>/dev/null)" = "running" ] || \
+	      [ "$$(podman inspect --format='{{.State.Status}}' discovery-service 2>/dev/null)" = "running" ]; do \
+		retry_count=$$((retry_count + 1)); \
+		if [ $$retry_count -ge $$max_retries ]; then echo "   ⚠️ Discovery no parece estar corriendo."; break; fi; \
+		echo "   ⏳ Discovery esperando contenedor... (intento $$retry_count/$$max_retries)"; sleep 2; \
+	done; \
+	echo "   ✅ Microservicio [Discovery] validado y listo!"
+
+	@echo "   🔍 [2/2] Verificando estado de Config..."
+	@retry_count=0; max_retries=5; \
+	until [ "$$(podman inspect --format='{{.State.Status}}' $(COMPOSE_PROJECT_NAME)-config-service-1 2>/dev/null)" = "running" ] || \
+	      [ "$$(podman inspect --format='{{.State.Status}}' config-service 2>/dev/null)" = "running" ]; do \
+		retry_count=$$((retry_count + 1)); \
+		if [ $$retry_count -ge $$max_retries ]; then echo "   ⚠️ Config no parece estar corriendo."; break; fi; \
+		echo "   ⏳ Config esperando contenedor... (intento $$retry_count/$$max_retries)"; sleep 2; \
+	done; \
+	echo "   ✅ Microservicio [Config] validado y listo!"
 
 	@echo "🔍 Bases de datos (pg_isready):"
 	-@podman exec db_product pg_isready -U postgres >/dev/null 2>&1 && echo "   ✅ Product DB" || echo "   ❌ Product DB"
@@ -596,12 +627,28 @@ health-check-extended: podman-ready ## 💚 Verificación de salud extendida
 	-@podman exec db_auth pg_isready -U postgres >/dev/null 2>&1 && echo "   ✅ Auth DB" || echo "   ❌ Auth DB"
 
 	@echo "🔍 Microservicios (Health Actuator):"
-	$(call check_health,$(PRODUCT_PORT),Product)
-	$(call check_health,$(SUPPLIER_PORT),Supplier)
-	$(call check_health,$(TAX_PORT),Tax)
-	$(call check_health,$(PURCHASE_PORT),Purchase)
-	$(call check_health,$(API_GATEWAY_PORT),Gateway)
-	$(call check_health,$(AUTH_PORT),Auth)
+	@# Bucle dinámico para verificar salud de servicios de negocio
+	@total=$(words $(HEALTH_CHECK_LIST)); \
+	count=1; \
+	for item in $(HEALTH_CHECK_LIST); do \
+		NAME=$$(echo $$item | cut -d':' -f1); \
+		PORT=$$(echo $$item | cut -d':' -f2); \
+		echo "   🔍 [$$count/$$total] Verificando estado de $$NAME..."; \
+		retry_count=0; \
+		max_retries=5; \
+		until [ "$$(podman inspect --format='{{.State.Status}}' $(COMPOSE_PROJECT_NAME)-$$NAME-service-1 2>/dev/null)" = "running" ] || \
+		      [ "$$(podman inspect --format='{{.State.Status}}' $$NAME-service 2>/dev/null)" = "running" ]; do \
+			retry_count=$$((retry_count + 1)); \
+			if [ $$retry_count -ge $$max_retries ]; then \
+				echo "   ⚠️ $$NAME no parece estar corriendo tras $$max_retries intentos."; \
+				break; \
+			fi; \
+			echo "   ⏳ $$NAME esperando contenedor... (intento $$retry_count/$$max_retries)"; \
+			sleep 2; \
+		done; \
+		echo "   ✅ Microservicio [$$NAME] validado y listo!"; \
+		count=$$((count + 1)); \
+	done
 
 #------------------------------------------------------------------------
 #🛠️ MANTENIMIENTO Y LIMPIEZA

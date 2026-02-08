@@ -44,5 +44,7 @@ public class User {
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
+
+    @Builder.Default // <-- SOLUCIÓN AL WARNING
     private Set<Role> roles = new HashSet<>();
 }
