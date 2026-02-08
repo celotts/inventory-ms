@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://localhost:5437/auth
+    username: auth_user
+    password: auth_pass
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+server:
+  port: 8081
+
+app:
+  jwt:
+    secret: "======================CelottsJWTSecret==========================="
+    expirationMs: 86400000 # 24 hours

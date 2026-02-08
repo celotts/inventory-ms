@@ -7,9 +7,9 @@ import com.celotts.purchaseservice.domain.exception.SupplierNotFoundException;
 import com.celotts.purchaseservice.domain.model.purchase.PurchaseModel;
 import com.celotts.purchaseservice.domain.port.input.PurchaseUseCase;
 import com.celotts.purchaseservice.domain.port.output.PurchaseRepositoryPort;
+
 import com.celotts.purchaseservice.infrastructure.adapter.input.rest.dto.supplier.SupplierDto;
 import com.celotts.purchaseservice.infrastructure.client.SupplierClient;
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -19,7 +19,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -66,8 +65,9 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<PurchaseModel> findById(UUID id) {
-        return repositoryPort.findById(id);
+    public PurchaseModel findById(UUID id) {
+        return repositoryPort.findById(id)
+                .orElseThrow(() -> new PurchaseNotFoundException(getMsg("purchase.not-found-with-id", id), id));
     }
 
     @Override
@@ -104,17 +104,16 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
     @Transactional
     public void delete(UUID id) {
         if (!repositoryPort.existsById(id)) {
-            throw new PurchaseNotFoundException(
-                    getMsg("app.error.not-found") + ": " + id, id);
+            throw new PurchaseNotFoundException(getMsg("purchase.cannot-delete-not-found", id), id);
         }
         repositoryPort.deleteById(id);
     }
 
     private void validateSupplier(UUID supplierId) {
         try {
-            log.debug(">>> [DEBUG] Llamando a SupplierClient con ID: {}", supplierId);
+            System.out.println(">>> [DEBUG] Llamando a SupplierClient con ID: " + supplierId);
             SupplierDto supplier = supplierClient.getSupplier(supplierId);
-            log.debug(">>> [DEBUG] Respuesta de SupplierClient: {}", supplier);
+            System.out.println(">>> [DEBUG] Respuesta de SupplierClient: " + supplier);
 
             if (supplier == null) {
                 throw new SupplierNotFoundException("supplier.not-found", "id", supplierId.toString());
@@ -124,17 +123,24 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
                 throw new SupplierInactiveException("supplier.inactive", "name", supplier.getName());
             }
 
-        } catch (FeignException.NotFound e) {
-            log.error(">>> [ERROR] Feign NotFound (404): {}", e.getMessage());
+        } catch (feign.FeignException.NotFound e) {
+            System.err.println(">>> [ERROR] Feign NotFound (404): " + e.getMessage());
             throw new SupplierNotFoundException("supplier.not-found", "id", supplierId.toString());
 
-        } catch (FeignException e) {
-            log.error(">>> [ERROR CRÍTICO] Falló la llamada a Supplier Service! Status: {}, URL: {}, Body: {}", 
-                    e.status(), e.request().url(), e.contentUTF8(), e);
-            throw new RuntimeException("service.supplier.unavailable");
+        } catch (feign.FeignException e) {
+            System.err.println(">>> [ERROR CRÍTICO] Falló la llamada a Supplier Service!");
+            System.err.println(">>> Status: " + e.status());
+            System.err.println(">>> URL: " + e.request().url());
+            System.err.println(">>> Body: " + e.contentUTF8());
+            e.printStackTrace();
+            
+            log.error("Error al comunicar con Supplier Service: Status={}, Msg={}", e.status(), e.getMessage(), e);
+            throw new RuntimeException("FALLO EN LLAMADA FEIGN - REVISAR LOGS");
         } catch (Exception e) {
-            log.error(">>> [ERROR] Error inesperado al validar proveedor: {}", e.getMessage(), e);
-            throw e;
+            System.err.println(">>> [ERROR INESPERADO] " + e.getMessage());
+            e.printStackTrace();
+            log.error("Error inesperado validando proveedor", e);
+            throw new RuntimeException("FALLO EN LLAMADA FEIGN - REVISAR LOGS");
         }
     }
 }

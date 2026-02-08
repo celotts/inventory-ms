@@ -151,6 +151,7 @@ services:
           - ${AUTH_DB_HOST:-db_auth}
     volumes:
       - db_auth_data:/var/lib/postgresql/data
+      - ./init-scripts/auth/05-auth-init.sql:/docker-entrypoint-initdb.d/05-auth-init.sql:ro
     restart: unless-stopped
 
   # --- SERVICIOS DE INFRAESTRUCTURA ---

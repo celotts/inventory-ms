@@ -5,24 +5,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public interface TaxUseCase {
 
     TaxModel save(TaxModel tax);
 
-    Optional<TaxModel> findById(UUID id);
-    Optional<TaxModel> findByName(String name);
+    TaxModel findById(UUID id); // No más Optional
+    TaxModel findByName(String name); // No más Optional
     List<TaxModel> findAll();
     List<TaxModel> findAllById(List<UUID> ids);
 
     List<TaxModel> findByNameContaining(String name);
     List<TaxModel> findByDescriptionContaining(String name);
 
-    List<TaxModel> finjdByNameContaining(String name);
-
-    List<TaxModel> searchByNameOrDescriptionm(String query, int limit);
+    List<TaxModel> searchByNameOrDescription(String query, int limit); // Corregido
 
     void deleteById(UUID id);
 
