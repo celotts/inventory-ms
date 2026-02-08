@@ -9,36 +9,23 @@ public abstract class BaseDomainException extends RuntimeException {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private final String messageKey;     // p.ej. "supplier.already-exists"
-    private final Object[] messageArgs;  // p.ej. { field, value }
+    private final String messageKey;
+    private final Object[] messageArgs;
+    private final boolean i18n;
 
-    // Mensaje plano (legacy)
+    // Constructor para mensajes planos (sin i18n)
     protected BaseDomainException(String message) {
         super(message);
         this.messageKey = null;
         this.messageArgs = null;
+        this.i18n = false;
     }
 
-    protected BaseDomainException(String message, Throwable cause) {
-        super(message, cause);
-        this.messageKey = null;
-        this.messageArgs = null;
-    }
-
-    // Clave i18n + args
-    protected BaseDomainException(String messageKey, Object... messageArgs) {
-        super(messageKey);
+    // Constructor principal para i18n
+    protected BaseDomainException(String messageKey, Object[] messageArgs) {
+        super(messageKey); // El mensaje de la excepción será la clave, útil para logs
         this.messageKey = messageKey;
         this.messageArgs = messageArgs;
-    }
-
-    protected BaseDomainException(String messageKey, Throwable cause, Object... messageArgs) {
-        super(messageKey, cause);
-        this.messageKey = messageKey;
-        this.messageArgs = messageArgs;
-    }
-
-    public boolean isI18n() {
-        return messageKey != null;
+        this.i18n = true;
     }
 }

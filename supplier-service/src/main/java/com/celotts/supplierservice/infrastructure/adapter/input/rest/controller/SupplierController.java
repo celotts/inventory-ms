@@ -159,11 +159,9 @@ public class SupplierController {
 
     @GetMapping("/_ping")
     public ResponseEntity<Map<String, Object>> ping() {
-        String okMsg = messageSource.getMessage("app.error.unexpected", null, LocaleContextHolder.getLocale());
         return ResponseEntity.ok(Map.of(
                 "service", "supplier-service",
-                "status", "OK",
-                "i18n.sample", okMsg
+                "status", "OK - VERSION 3 - PRUEBA FINAL"
         ));
     }
 }

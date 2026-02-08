@@ -47,7 +47,7 @@ spring:
 
   messages:
     basename: messages
-    encoding: UTF-8
+    encoding: UTF-8 # <-- FORZAR CODIFICACIÓN
     fallback-to-system-locale: ${VAR_FALSE:false}
 
 eureka:
@@ -69,8 +69,6 @@ springdoc:
     display-request-duration: ${VAR_TRUE:true}
 
 app:
-  services:
-    supplier-url: ${SUPPLIER_SERVICE_URL:http://supplier-service:9091}
   cors:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:*}
   pagination:
