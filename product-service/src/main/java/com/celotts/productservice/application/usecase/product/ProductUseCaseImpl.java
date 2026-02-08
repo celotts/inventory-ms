@@ -47,7 +47,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public ProductModel updateProduct(UUID id, ProductModel cmd) {
         ProductModel existing = productRepositoryPort.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", id));
+                .orElseThrow(() -> new ResourceNotFoundException(getMessage("product.not-found-with-id", id)));
         validateReferences(cmd);
 
         ProductModel incoming = cmd;
@@ -71,13 +71,13 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public ProductModel getProductById(UUID id) {
         return productRepositoryPort.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", id));
+                .orElseThrow(() -> new ResourceNotFoundException(getMessage("product.not-found-with-id", id)));
     }
 
     @Override
     public ProductModel getProductByCode(String code) {
         return productRepositoryPort.findByCode(code)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", "Product not found with code: " + code));
+                .orElseThrow(() -> new ResourceNotFoundException(getMessage("product.not-found-code", code)));
     }
 
     @Override
@@ -156,13 +156,13 @@ public class ProductUseCaseImpl implements ProductUseCase {
 
     private void validateReferences(ProductModel dto) {
         if (dto.getUnitCode() != null && !productUnitPort.existsByCode(dto.getUnitCode())) {
-            throw new ResourceNotFoundException("Product", getMessage("validation.code-format.invalid") + ": " + dto.getUnitCode()); //
+            throw new ResourceNotFoundException(getMessage("product.unit.not-found", dto.getUnitCode()));
         }
         if (dto.getBrandId() != null && !productBrandPort.existsById(dto.getBrandId())) {
-            throw new ResourceNotFoundException("Product", getMessage("brand.name.required")); //
+            throw new ResourceNotFoundException(getMessage("brand.not-found", dto.getBrandId()));
         }
         if (dto.getCategoryId() != null && !categoryRepositoryPort.existsById(dto.getCategoryId())) {
-            throw new ResourceNotFoundException("Product", getMessage("category.not.found")); //
+            throw new ResourceNotFoundException(getMessage("category.not.found"));
         }
     }
 
@@ -183,8 +183,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
     public void disableProduct(UUID id) {
         ProductModel product = productRepositoryPort.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Product",
-                        messageSource.getMessage("app.error.not-found", null, LocaleContextHolder.getLocale()) + ": " + id
+                        getMessage("app.error.not-found") + ": " + id
                 ));
 
         // Usamos toBuilder para mantener la inmutabilidad y actualizar el estado

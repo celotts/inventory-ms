@@ -20,6 +20,12 @@ public abstract class BaseDomainException extends RuntimeException implements Se
         this.messageArgs = null;
     }
 
+    protected BaseDomainException(String messageKey, boolean i18n, Object[] messageArgs) {
+        super(messageKey);
+        this.messageKey = messageKey;
+        this.messageArgs = messageArgs;
+    }
+
     protected BaseDomainException(String message, Throwable cause) {
         super(message, cause);
         this.messageKey = null;

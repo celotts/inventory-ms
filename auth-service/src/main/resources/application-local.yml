@@ -1,7 +1,9 @@
-# Archivo de configuración para Auth Service (ej. application-docker.yml)
-
 server:
   port: ${AUTH_PORT:8081}
+  error:
+    include-message: always
+
+
 
 spring:
   application:

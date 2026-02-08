@@ -1,7 +1,10 @@
 server:
   port: ${SUPPLIER_PORT:9091}
   servlet:
-    context-path: /supplier-service
+    context-path: /
+  error:
+    include-message: always
+
 spring:
   application:
     name: supplier-service
@@ -44,7 +47,7 @@ spring:
 
   messages:
     basename: messages
-    encoding: UTF-8
+    encoding: UTF-8 # <-- FORZAR CODIFICACIÓN
     fallback-to-system-locale: ${VAR_FALSE:false}
 
 eureka:

@@ -1,151 +1,21 @@
-# =======================================================
-# CONFIGURACIÓN GLOBAL / PERFIL LOCAL (Por defecto)
-# =======================================================
+# Perfil para desarrollo local, fuera de Docker
+# Hereda de application.yml y sobreescribe lo necesario
+
 server:
   port: ${SUPPLIER_PORT:9091}
-  servlet:
-    context-path: /supplier-service
+  error:
+    include-message: always
 
 spring:
   application:
-    name: supplier-service
+    name: supplier-service-local
   datasource:
-    url: jdbc:${DB_PROTOCOL:postgresql}://${SUPPLIER_DB_HOST:localhost}:${SUPPLIER_DB_PORT:5434}/${SUPPLIER_DB_NAME:supplier}
-    username: ${SUPPLIER_DB_USERNAME:supplier}
-    password: ${SUPPLIER_DB_PASSWORD:supplier123}
-    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
-    hikari:
-      pool-name: HikariPool-SupplierServiceDocker
-      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
-      minimum-idle: ${MINIMUM_IDLE:5}
-      auto-commit: ${AUTO_COMMIT:true}
-      transaction-isolation: TRANSACTION_READ_COMMITTED
-      connection-timeout: ${VALIDATION_TIMEOUT:3000}
-      idle-timeout: ${ILDETIMEOUT:600000}
-      max-lifetime: ${MAXLIFETIME:1800000}
-
-  config:
-    activate:
-      on-profile: ${ONPROFILE:local}
-    import: ${OPTIONAL_CONFIG_SERVER:"optional:configserver:http://config-service:7777"}
-
-
-  cloud:
-    config:
-      enabled: ${CLOUD_CONFIG_ENABLED:false}
-      uri: ${SPRING_CLOUD_CONFIG_URI:http://localhost:7777}
-
-  eureka:
-    client:
-      enabled: ${EUREKA_CLIENT_ENABLED:true}
-      service-url:
-        defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
-      register-with-eureka: ${VAR_TRUE:true}
-      fetch-registry: ${VAR_TRUE:true}
-    instance:
-      prefer-ip-address: ${VAR_TRUE:true}
-      instance-id: ${spring.application.name}:${random.value}
-
-
-
+    url: jdbc:postgresql://localhost:5434/supplier
   jpa:
-    hibernate:
-      ddl-auto: ${DDL_AUTO:update}
-    show-sql: ${VAR_TRUE:true}
-    database-platform: ${ORG_HIBERNATE_DIALECT_POSTGRE_SQL_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
-
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
-      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
-
+    show-sql: true
   messages:
-    basename: messages
-    encoding: UTF-8
-    fallback-to-system-locale: ${VAR_FALSE:false}
+    encoding: UTF-8 # <-- FORZAR CODIFICACIÓN
 
-springdoc:
-  api-docs:
-    path: ${PATHAPI_DOCS:/v3/api-docs}
-  swagger-ui:
-    path: ${PATH_SPRING_DOC:/swagger-ui.html}
-    display-request-duration: ${VAR_TRUE:true}
-
-app:
-  cors:
-    allowed-origin: ${CORS_ALLOWED_ORIGIN:*}
-  pagination:
-    default-page: ${PAGINATION_DEFAULT_PAGE:0}
-    default-size: ${PAGINATION_DEFAULT_SIZE:10}
-    max-size: ${PAGINATION_MAX_SIZE:100}
-    default-sort: ${PAGINATION_DEFAULT_SORT:createdAt}
-    default-direction: ${PAGINATION_DEFAULT_DIRECTION:desc}
-
-logging:
-  level:
-    org.springframework.web: ${VAR_DEBUG:DEBUG}
-    org.hibernate: ${VAR_INFO:INFO}
-    org.hibernate.SQL: ${VAR_DEBUG:DEBUG}
-    com.celotts.supplierservice: ${VAR_INFO:INFO}
-    com.netflix.eureka: ${VAR_WARN:WARN}
-    com.netflix.discovery: ${VAR_WARN:WARN}
-    org.springframework.security: ${VAR_DEBUG:DEBUG}
-    root: ${LOGGING_LEVEL_ROOT:INFO}
-    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: ${VAR_INFO:INFO}
-    org.hibernate.internal.AbstractSharedSessionContract: ${VAR_INFO:INFO}
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-
----
-# =======================================================
-# 🐳 PERFIL DOCKER (Ejecución DENTRO del Contenedor)
-# =======================================================
-spring:
-  config:
-    activate:
-      on-profile: ${ON_PROFILE:docker}
-    import: ${OPTIONAL_CONFIG_SERVER:"optional:configserver:"}
-
-  cloud:
-    config:
-      enabled: ${DOCKER_CONFIG_SERVER_ENABLED:false}
-      uri: ${SPRING_CLOUD_CONFIG_URI:http://config-service:7777}
-
-  # Database: Conexión interna a la red de Docker
-  datasource:
-    # 🚨 CORREGIDO: Usamos el host del contenedor y puerto interno 5432
-    url: jdbc:${DB_PROTOCOL:postgresql}://${SUPPLIER_DB_HOST:localhost}:${SUPPLIER_DB_PORT:5434}/${SUPPLIER_DB_NAME:supplier}
-    username: ${SUPPLIER_DB_USERNAME:supplier}
-    password: ${SUPPLIER_DB_PASSWORD:supplier123}
-    driver-class-name: ${DB_DRIVER:org.postgresql.Driver}
-    hikari:
-      pool-name: HikariPool-ProductServiceDocker
-      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
-      minimum-idle: ${MINIMUM_IDLE:5}
-      auto-commit: ${AUTO_COMMIT:true}
-      transaction-isolation: TRANSACTION_READ_COMMITTED
-      connection-timeout: ${VALIDATION_TIMEOUT:3000}
-      idle-timeout: ${ILDETIMEOUT:600000}
-      max-lifetime: ${MAXLIFETIME:1800000}
-
-  jpa:
-    hibernate:
-      ddl-auto: ${DDL_AUTO:update}
-    show-sql: ${VAR_TRUE:true}
-    database-platform: ${ORG_HIBERNATE_DIALECT_POSTGRE_SQL_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
-
-  # Eureka: Conexión interna
 eureka:
   client:
-    enabled: ${EUREKA_CLIENT_ENABLED:true}
-    service-url:
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
-    register-with-eureka: ${VAR_TRUE:true}
-    fetch-registry: ${VAR_TRUE:true}
-  instance:
-    prefer-ip-address: ${VAR_TRUE:true}
-    instance-id: ${spring.application.name}:${random.uuid}
+    enabled: false

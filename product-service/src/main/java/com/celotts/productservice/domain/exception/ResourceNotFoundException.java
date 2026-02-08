@@ -1,13 +1,18 @@
 package com.celotts.productservice.domain.exception;
 
-public class ResourceNotFoundException extends RuntimeException {
-    // cuando "Product not found with id: <id>"
+import com.celotts.productservice.infrastructure.common.error.ErrorCode;
+
+public class ResourceNotFoundException extends DomainException {
+
     public ResourceNotFoundException(String resource, Object idOrKey) {
-        super(resource + " not found with id: " + idOrKey);
+        super(ErrorCode.NOT_FOUND, 404, resource + " not found with id: " + idOrKey);
     }
 
-    // cuando ya tengas el mensaje listo
     public ResourceNotFoundException(String message) {
-        super(message);
+        super(ErrorCode.NOT_FOUND, 404, message);
+    }
+
+    public ResourceNotFoundException(ErrorCode code, String message) {
+        super(code, 404, message);
     }
 }

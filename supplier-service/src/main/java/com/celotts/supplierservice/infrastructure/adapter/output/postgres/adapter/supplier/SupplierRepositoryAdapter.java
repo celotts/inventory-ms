@@ -38,6 +38,7 @@ public class SupplierRepositoryAdapter implements SupplierRepositoryPort {
         return jpa.findById(id).map(mapper::toModel);
     }
 
+
     @Override
     @Transactional(readOnly = true)
     public Optional<SupplierModel> findByCode(String code) {
@@ -110,5 +111,17 @@ public class SupplierRepositoryAdapter implements SupplierRepositoryPort {
         return jpa.searchByLooseQuery(query, PageRequest.of(0, size))
                 .map(mapper::toModel)
                 .getContent();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Optional<SupplierModel> getSupplierById(UUID id) {
+        return jpa.findById(id)
+                .map(mapper::toModel);
+    }
+
+    @Override
+    public Optional<SupplierModel> getSupplierById(Long id) {
+        return Optional.empty();
     }
 }

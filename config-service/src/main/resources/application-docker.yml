@@ -2,6 +2,9 @@
 
 server:
   port: ${CONFIG_PORT:7777}
+  error:
+    include-message: always
+
 
 spring:
   application:

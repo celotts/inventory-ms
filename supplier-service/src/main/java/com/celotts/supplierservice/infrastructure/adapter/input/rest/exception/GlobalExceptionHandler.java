@@ -24,11 +24,11 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -49,7 +49,6 @@ public class GlobalExceptionHandler {
 
     // -------------------- JSON mal formado --------------------
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ProblemDetail handleNotReadable(HttpMessageNotReadableException ex, HttpServletRequest req) {
         String detail = toFriendlyMessage(ex);
         return problem(
@@ -63,7 +62,6 @@ public class GlobalExceptionHandler {
 
     // -------------------- Validación: @Valid (body) --------------------
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ProblemDetail handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpServletRequest req) {
         String details = ex.getBindingResult().getFieldErrors().stream()
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
@@ -79,7 +77,6 @@ public class GlobalExceptionHandler {
 
     // -------------------- Validación: @Validated en params/path --------------------
     @ExceptionHandler(ConstraintViolationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ProblemDetail handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest req) {
         String details = ex.getConstraintViolations().stream()
                 .map(v -> v.getPropertyPath() + ": " + v.getMessage())
@@ -95,7 +92,6 @@ public class GlobalExceptionHandler {
 
     // -------------------- Bind errors (query/form sin @Valid body) --------------------
     @ExceptionHandler(BindException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ProblemDetail handleBind(BindException ex, HttpServletRequest req) {
         String details = ex.getFieldErrors().stream()
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
@@ -111,7 +107,6 @@ public class GlobalExceptionHandler {
 
     // -------------------- Falta parámetro obligatorio --------------------
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ProblemDetail handleMissingParam(MissingServletRequestParameterException ex, HttpServletRequest req) {
         return problem(
                 HttpStatus.BAD_REQUEST,
@@ -124,7 +119,6 @@ public class GlobalExceptionHandler {
 
     // -------------------- Dominio: Not Found --------------------
     @ExceptionHandler(SupplierNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ProblemDetail handleSupplierNotFound(SupplierNotFoundException ex, WebRequest req) {
         String titleAndDetail = ex.isI18n()
                 ? messageSource.getMessage(ex.getMessageKey(), ex.getMessageArgs(), LocaleContextHolder.getLocale())
@@ -132,7 +126,7 @@ public class GlobalExceptionHandler {
 
         return problem(
                 HttpStatus.NOT_FOUND,
-                titleAndDetail,
+                msg("error.not-found.title"),
                 titleAndDetail,
                 path(req),
                 "https://api.celotts.com/errors/supplier-not-found"
@@ -141,7 +135,6 @@ public class GlobalExceptionHandler {
 
     // -------------------- Dominio: Conflicto --------------------
     @ExceptionHandler(SupplierAlreadyExistsException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
     public ProblemDetail handleSupplierExists(SupplierAlreadyExistsException ex, WebRequest req) {
         String titleAndDetail = ex.isI18n()
                 ? messageSource.getMessage(ex.getMessageKey(), ex.getMessageArgs(), LocaleContextHolder.getLocale())
@@ -149,7 +142,7 @@ public class GlobalExceptionHandler {
 
         return problem(
                 HttpStatus.CONFLICT,
-                titleAndDetail,
+                msg("error.default.title"),
                 titleAndDetail,
                 path(req),
                 "https://api.celotts.com/errors/supplier-conflict"
@@ -158,7 +151,6 @@ public class GlobalExceptionHandler {
 
     // -------------------- Conflictos de BD (únicos/foreign, etc.) --------------------
     @ExceptionHandler(DataIntegrityViolationException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
     public ProblemDetail handleDataIntegrity(DataIntegrityViolationException ex, HttpServletRequest req) {
         return problem(
                 HttpStatus.CONFLICT,
@@ -171,7 +163,6 @@ public class GlobalExceptionHandler {
 
     // -------------------- HTTP 405 / 415 --------------------
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     public ProblemDetail handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpServletRequest req) {
         return problem(
                 HttpStatus.METHOD_NOT_ALLOWED,
@@ -183,7 +174,6 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
-    @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
     public ProblemDetail handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex, HttpServletRequest req) {
         return problem(
                 HttpStatus.UNSUPPORTED_MEDIA_TYPE,
@@ -196,7 +186,6 @@ public class GlobalExceptionHandler {
 
     // -------------------- Catch-all (500) --------------------
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ProblemDetail handleGeneric(Exception ex, HttpServletRequest req) {
         return problem(
                 HttpStatus.INTERNAL_SERVER_ERROR,
@@ -209,11 +198,11 @@ public class GlobalExceptionHandler {
 
     // -------------------- helpers --------------------
     private ProblemDetail problem(HttpStatus status, String title, String detail, String path, String typeUrl) {
-        ProblemDetail pd = ProblemDetail.forStatus(status);
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, detail);
         pd.setTitle(title);
-        pd.setDetail(detail);
         pd.setType(URI.create(typeUrl));
         pd.setProperty("path", path);
+        pd.setProperty("timestamp", LocalDateTime.now());
         return pd;
     }
 

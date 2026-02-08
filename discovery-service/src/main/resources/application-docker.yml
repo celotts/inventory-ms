@@ -1,5 +1,9 @@
 server:
   port: ${DISCOVERY_PORT:8761}
+  error:
+    include-message: always
+
+
 
 eureka:
   client:
