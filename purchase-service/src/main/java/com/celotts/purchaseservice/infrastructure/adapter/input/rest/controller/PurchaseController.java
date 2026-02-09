@@ -69,4 +69,5 @@ public class PurchaseController {
         purchaseUseCase.delete(id);
         return ResponseEntity.noContent().build();
     }
+
 }
