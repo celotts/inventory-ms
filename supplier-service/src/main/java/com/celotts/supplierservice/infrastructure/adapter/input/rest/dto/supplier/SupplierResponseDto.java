@@ -1,7 +1,6 @@
 package com.celotts.supplierservice.infrastructure.adapter.input.rest.dto.supplier;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,7 +14,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
+// @JsonInclude(JsonInclude.Include.NON_NULL) <-- ELIMINADO PARA UNIFORMIDAD
 public class SupplierResponseDto {
 
     private UUID id;

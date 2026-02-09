@@ -4,7 +4,7 @@ networks:
     name: ${NETWORK_NAME:-inventory-net}
 
 services:
-  # --- BASES DE DATOS ---
+  # --- BASES DE DATOS (Expuestas para acceso desde Host) ---
   db_product:
     profiles: ["product"]
     image: ${IMAGE_DB:-postgres:16}
@@ -12,7 +12,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M #256M
+          memory: 128M
     env_file: [./.env.local]
     environment:
       POSTGRES_DB: ${PRODUCT_DB_NAME:-product}
@@ -219,7 +219,7 @@ services:
       - inventory-net
     restart: unless-stopped
 
-  # --- SERVICIOS DE NEGOCIO ---
+  # --- SERVICIOS DE NEGOCIO (Puertos internos NO expuestos al host) ---
   supplier-service:
     profiles: [ "supplier" ]
     container_name: ${SUPPLIER_SERVICE_NAME:-supplier-service}
@@ -232,8 +232,8 @@ services:
     build:
       context: ../
       dockerfile: supplier-service/Dockerfile.local
-    ports:
-      - "${SUPPLIER_PORT:-9091}:9091"
+    # ports:  <-- COMENTADO POR SEGURIDAD
+    #   - "${SUPPLIER_PORT:-9091}:9091"
     environment:
       - JAVA_OPTS=-Xmx384m -Xms256m
       - JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
@@ -273,7 +273,7 @@ services:
       context: ../
       dockerfile: api-gateway/Dockerfile.local
     ports:
-      - "${API_GATEWAY_PORT:-8090}:8090"
+      - "${API_GATEWAY_PORT:-8090}:8090" # <-- ÚNICO PUNTO DE ENTRADA
     environment:
       - JAVA_OPTS=-Xmx512m -Xms256m
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
@@ -309,8 +309,8 @@ services:
     build:
       context: ../
       dockerfile: product-service/Dockerfile.local
-    ports:
-      - "${PRODUCT_PORT:-9090}:9090"
+    # ports: <-- COMENTADO POR SEGURIDAD
+    #   - "${PRODUCT_PORT:-9090}:9090"
     environment:
       - JAVA_OPTS=-Xmx384m -Xms256m
       - JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
@@ -325,7 +325,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://${EUREKA_HOST:-discovery-service}:${DISCOVERY_PORT:-8761}/${NAME_EUREKA:-eureka}/
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1" ]
-      interval: 45s    # Antes 30s
+      interval: 45s
       timeout: 10s
       retries: 5
       start_period: 90s
@@ -351,8 +351,8 @@ services:
     build:
       context: ../
       dockerfile: tax-service/Dockerfile.local
-    ports:
-      - "${TAX_PORT:-9093}:9093"
+    # ports: <-- COMENTADO POR SEGURIDAD
+    #   - "${TAX_PORT:-9093}:9093"
     environment:
       - JAVA_OPTS=-Xmx384m -Xms256m
       - JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
@@ -394,8 +394,8 @@ services:
     build:
       context: ../
       dockerfile: purchase-service/Dockerfile.local
-    ports:
-      - "${PURCHASE_PORT:-9094}:9094"
+    # ports: <-- COMENTADO POR SEGURIDAD
+    #   - "${PURCHASE_PORT:-9094}:9094"
     environment:
       - JAVA_OPTS=-Xmx384m -Xms256m
       - JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
@@ -439,7 +439,7 @@ services:
       context: ../
       dockerfile: auth-service/Dockerfile.local
     ports:
-      - "${AUTH_PORT:-8081}:${AUTH_PORT:-8081}"
+      - "${AUTH_PORT:-8081}:${AUTH_PORT:-8081}" # Expuesto para obtener tokens
     environment:
       - JAVA_OPTS=-Xmx384m -Xms256m
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
@@ -452,6 +452,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://${EUREKA_HOST:-discovery-service}:${DISCOVERY_PORT:-8761}/${NAME_EUREKA:-eureka}/
       - SPRING_CLOUD_CONFIG_URI=http://${CONFIG_HOST:-config-service}:${CONFIG_PORT:-7777}
       - SPRING_CONFIG_IMPORT=optional:configserver:http://${CONFIG_HOST:-config-service}:${CONFIG_PORT:-7777}
+      - JWT_SECRET=${JWT_SECRET:-======================CelottsJWTSecretDefaultDevKey===========================} # Inyectado
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:${AUTH_PORT:-8081}/actuator/health || exit 1" ]
       interval: 30s

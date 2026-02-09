@@ -16,5 +16,15 @@ server:
 
 app:
   jwt:
-    secret: "======================CelottsJWTSecret==========================="
+    # Usa variable de entorno o un valor por defecto SOLO para desarrollo local
+    secret: ${JWT_SECRET:======================CelottsJWTSecretDefaultDevKey===========================}
     expirationMs: 86400000 # 24 hours
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info" # <-- SEGURIDAD: Solo exponemos lo necesario
+  endpoint:
+    health:
+      show-details: always
