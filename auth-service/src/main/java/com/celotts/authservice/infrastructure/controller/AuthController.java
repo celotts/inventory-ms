@@ -2,6 +2,9 @@ package com.celotts.authservice.infrastructure.controller;
 
 import com.celotts.authservice.application.jwt.JwtUtils;
 import com.celotts.authservice.application.service.UserDetailsImpl;
+import com.celotts.authservice.domain.exception.EmailAlreadyExistsException;
+import com.celotts.authservice.domain.exception.RoleNotFoundException;
+import com.celotts.authservice.domain.exception.UsernameAlreadyExistsException;
 import com.celotts.authservice.domain.model.ERole;
 import com.celotts.authservice.domain.model.Role;
 import com.celotts.authservice.domain.model.User;
@@ -89,15 +92,11 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("Error: Username is already taken!"));
+            throw new UsernameAlreadyExistsException(signUpRequest.getUsername());
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("Error: Email is already in use!"));
+            throw new EmailAlreadyExistsException(signUpRequest.getEmail());
         }
 
         // Crear usuario usando el patrón Builder
@@ -112,24 +111,24 @@ public class AuthController {
 
         if (strRoles == null) {
             Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-                    .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                    .orElseThrow(() -> new RoleNotFoundException("ROLE_USER"));
             roles.add(userRole);
         } else {
             strRoles.forEach(role -> {
                 switch (role) {
                     case "admin":
                         Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                                .orElseThrow(() -> new RoleNotFoundException("ROLE_ADMIN"));
                         roles.add(adminRole);
                         break;
                     case "mod":
                         Role modRole = roleRepository.findByName(ERole.ROLE_MODERATOR)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                                .orElseThrow(() -> new RoleNotFoundException("ROLE_MODERATOR"));
                         roles.add(modRole);
                         break;
                     default:
                         Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-                                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+                                .orElseThrow(() -> new RoleNotFoundException("ROLE_USER"));
                         roles.add(userRole);
                 }
             });
