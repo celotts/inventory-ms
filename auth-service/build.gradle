@@ -1,7 +1,5 @@
 plugins {
     id 'java'
-    // ⚠️ CORRECCIÓN 1: Eliminar la versión explícita (3.4.5) aquí.
-    // La versión será forzada a 3.5.0 por el bloque 'resolutionStrategy'.
     id 'org.springframework.boot'
     id 'io.spring.dependency-management'
     id 'jacoco'
@@ -32,20 +30,21 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation' // <-- AÑADIDO
 
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-    implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
-    implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-    // ⭐ CORRECCIÓN 2: Agregar el driver de PostgreSQL
+    // Lombok
+    compileOnly 'org.projectlombok:lombok' // <-- AÑADIDO
+    annotationProcessor 'org.projectlombok:lombok' // <-- AÑADIDO
+
     runtimeOnly 'org.postgresql:postgresql'
-
-    // Opcional: Si H2 no se usa para pruebas, puedes comentar o eliminar esta línea
-    // runtimeOnly 'com.h2database:h2'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
@@ -58,11 +57,9 @@ dependencyManagement {
     }
 }
 
-
-// BLOQUE AÑADIDO PARA FORZAR EXPLÍCITAMENTE LAS VERSIONES COMPATIBLES
+// Este bloque puede ser necesario si hay conflictos de versiones, por ahora lo mantenemos.
 configurations.configureEach {
     resolutionStrategy {
-        // Mantenemos las fuerzas para compatibilidad con Spring Cloud 2025.0.0
         force 'org.springframework.boot:spring-boot:3.5.0'
         force 'org.springframework.boot:spring-boot-autoconfigure:3.5.0'
         force 'org.springframework.boot:spring-boot-starter:3.5.0'

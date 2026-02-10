@@ -82,7 +82,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: "health,info" # <-- SEGURIDAD: Limitado
+  endpoint:
+    health:
+      show-details: always
 
 logging:
   level:

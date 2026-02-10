@@ -47,7 +47,7 @@ spring:
 
   messages:
     basename: messages
-    encoding: UTF-8 # <-- FORZAR CODIFICACIÓN
+    encoding: UTF-8
     fallback-to-system-locale: ${VAR_FALSE:false}
 
 eureka:
@@ -82,7 +82,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: "health,info" # <-- SEGURIDAD: Limitado
+  endpoint:
+    health:
+      show-details: always
 
 logging:
   level:

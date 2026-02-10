@@ -11,13 +11,11 @@ spring:
   config:
     activate:
       on-profile: docker
-    # Eliminamos el import del config server aquí si no es estrictamente necesario
-    # para evitar que la app se quede colgada esperando al config-service
     import: "optional:configserver:http://config-service:7777"
 
   cloud:
     config:
-      enabled: false # Cámbialo a true solo si tu config-service ya funciona bien
+      enabled: false
 
   datasource:
     url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:5432/${PRODUCT_DB_NAME:product}
@@ -42,7 +40,6 @@ spring:
 eureka:
   client:
     service-url:
-      # IMPORTANTE: Aquí usabas localhost en los logs, debe ser el nombre del servicio
       defaultZone: http://discovery-service:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
@@ -54,7 +51,10 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: "health,info" # <-- SEGURIDAD: Limitado
+  endpoint:
+    health:
+      show-details: always
 
 logging:
   level:

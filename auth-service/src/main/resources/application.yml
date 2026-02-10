@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: jdbc:postgresql://localhost:5437/auth
+    username: auth_user
+    password: auth_pass
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+server:
+  port: 8081
+
+app:
+  jwt:
+    # Usa variable de entorno o un valor por defecto SOLO para desarrollo local
+    secret: ${JWT_SECRET:======================CelottsJWTSecretDefaultDevKey===========================}
+    expirationMs: 86400000 # 24 hours
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info" # <-- SEGURIDAD: Solo exponemos lo necesario
+  endpoint:
+    health:
+      show-details: always

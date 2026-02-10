@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -29,10 +30,10 @@ public class ProductUseCaseImpl implements ProductUseCase {
     private final ProductUnitRepositoryPort productUnitPort;
     private final ProductBrandRepositoryPort productBrandPort;
     private final CategoryRepositoryPort categoryRepositoryPort;
-    private final MessageSource messageSource; // Inyección para i18n
+    private final MessageSource messageSource;
 
     private String getMessage(String key, Object... args) {
-        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale()); //
+        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
     }
 
     @Override
@@ -47,7 +48,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public ProductModel updateProduct(UUID id, ProductModel cmd) {
         ProductModel existing = productRepositoryPort.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(getMessage("product.not-found-with-id", id)));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", getMessage("product.not-found-with-id", id)));
         validateReferences(cmd);
 
         ProductModel incoming = cmd;
@@ -71,13 +72,13 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public ProductModel getProductById(UUID id) {
         return productRepositoryPort.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(getMessage("product.not-found-with-id", id)));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", getMessage("product.not-found-with-id", id)));
     }
 
     @Override
     public ProductModel getProductByCode(String code) {
         return productRepositoryPort.findByCode(code)
-                .orElseThrow(() -> new ResourceNotFoundException(getMessage("product.not-found-code", code)));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", getMessage("product.not-found-code", code)));
     }
 
     @Override
@@ -127,14 +128,14 @@ public class ProductUseCaseImpl implements ProductUseCase {
     public List<ProductModel> getLowStockByCategory(UUID categoryId) {
         return getProductsByCategory(categoryId).stream()
                 .filter(ProductModel::lowStock)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<ProductModel> getLowStockProducts() {
         return productRepositoryPort.findAll(Pageable.unpaged()).getContent().stream()
                 .filter(ProductModel::lowStock)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -156,13 +157,13 @@ public class ProductUseCaseImpl implements ProductUseCase {
 
     private void validateReferences(ProductModel dto) {
         if (dto.getUnitCode() != null && !productUnitPort.existsByCode(dto.getUnitCode())) {
-            throw new ResourceNotFoundException(getMessage("product.unit.not-found", dto.getUnitCode()));
+            throw new ResourceNotFoundException("Product", getMessage("product.unit.not-found", dto.getUnitCode()));
         }
         if (dto.getBrandId() != null && !productBrandPort.existsById(dto.getBrandId())) {
-            throw new ResourceNotFoundException(getMessage("brand.not-found", dto.getBrandId()));
+            throw new ResourceNotFoundException("Product", getMessage("brand.not-found", dto.getBrandId()));
         }
         if (dto.getCategoryId() != null && !categoryRepositoryPort.existsById(dto.getCategoryId())) {
-            throw new ResourceNotFoundException(getMessage("category.not.found"));
+            throw new ResourceNotFoundException("Product", getMessage("category.not.found", dto.getCategoryId()));
         }
     }
 
@@ -172,6 +173,8 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public boolean existsByCode(String code) { return productRepositoryPort.existsByCode(code); }
 
+
+
     @Override
     public List<ProductModel> getAll() {
         return productRepositoryPort.findAll(Pageable.unpaged()).getContent();
@@ -179,17 +182,13 @@ public class ProductUseCaseImpl implements ProductUseCase {
 
     @Override
     @Transactional
-    // Importante: cualquier cambio de estado debe ser transaccional
     public void disableProduct(UUID id) {
         ProductModel product = productRepositoryPort.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        getMessage("app.error.not-found") + ": " + id
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException("Product", getMessage("product.not-found-with-id", id)));
 
-        // Usamos toBuilder para mantener la inmutabilidad y actualizar el estado
         ProductModel updated = product.toBuilder()
                 .enabled(false)
-                .updatedAt(java.time.LocalDateTime.now()) // Buena práctica registrar cuándo se deshabilitó
+                .updatedAt(java.time.LocalDateTime.now())
                 .build();
 
         productRepositoryPort.save(updated);

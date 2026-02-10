@@ -46,7 +46,7 @@ FROM eclipse-temurin:21-jre-jammy AS runner
 LABEL maintainer="Inventory MS Team"
 
 # Puerto común de Auth Service
-EXPOSE 8080
+EXPOSE 8081
 
 # Instalar dos2unix como root para solucionar el problema de formato CRLF/LF.
 RUN apt-get update && apt-get install -y dos2unix && rm -rf /var/lib/apt/lists/*

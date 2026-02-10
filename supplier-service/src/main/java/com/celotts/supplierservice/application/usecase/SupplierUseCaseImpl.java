@@ -16,7 +16,6 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -29,7 +28,7 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean existsById(UUID id) { // Cambia 'Boolean' por 'boolean'
+    public boolean existsById(UUID id) {
         return repo.existsById(id);
     }
 
@@ -37,7 +36,6 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
 
     @Override
     public SupplierModel create(SupplierModel supplier) {
-        // Unicidad por code
         if (supplier.getCode() != null && repo.existsByCode(supplier.getCode())) {
             throw new SupplierAlreadyExistsException("field.code", supplier.getCode());
         }
@@ -49,7 +47,7 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
     public SupplierModel update(UUID id, SupplierModel partial) {
         SupplierModel current = repo.findById(id)
                 .orElseThrow(() -> new SupplierNotFoundException(id));
-        // ✔️ evita colisión de code con otros registros
+        
         if (partial.getCode() != null) {
             boolean codeChanged = current.getCode() == null
                     || !current.getCode().equalsIgnoreCase(partial.getCode());
@@ -82,8 +80,11 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
 
     @Override
     public void delete(UUID id, String deletedBy, String reason) {
-
-        delete(id);
+        // Implementación de borrado lógico (soft delete)
+        SupplierModel supplier = getById(id);
+        supplier.setEnabled(false); // O un campo 'deleted' si lo tuvieras
+        // Aquí podrías setear deletedBy y reason si existieran en el modelo
+        repo.save(supplier);
     }
 
     // ---------------- Queries ----------------
@@ -139,10 +140,5 @@ public class SupplierUseCaseImpl implements SupplierUseCase {
 
     private String translateField(String key) {
         return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
-    }
-
-    @Override
-    public Optional<SupplierModel> getSupplierById(UUID id) { // Cambia Long por UUID
-        return repo.getSupplierById(id);
     }
 }

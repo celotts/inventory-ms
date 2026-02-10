@@ -21,7 +21,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.*;
 
 @RestController
@@ -48,7 +50,14 @@ public class ProductController {
     public ResponseEntity<ProductResponseDto> create(@RequestBody @Valid ProductCreateDto createDto) {
         log.info("Creating new product with code: {}", createDto.getCode());
         ProductModel created = productUseCase.createProduct(productMapper.toModel(createDto));
-        return ResponseEntity.status(HttpStatus.CREATED).body(productMapper.toResponse(created));
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(created.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(productMapper.toResponse(created));
     }
 
     @PutMapping("/{id}")

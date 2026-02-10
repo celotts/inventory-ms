@@ -133,7 +133,7 @@ public class SupplierController {
 
     // --- ✍️ ACTUALIZACIÓN Y BORRADO ---
 
-    @PatchMapping("/{id}")
+    @PutMapping("/{id}") // <-- CAMBIO: De @PatchMapping a @PutMapping
     public ResponseEntity<SupplierResponseDto> update(
             @PathVariable UUID id,
             @Validated(ValidationGroups.Update.class) @RequestBody SupplierUpdateDto body
