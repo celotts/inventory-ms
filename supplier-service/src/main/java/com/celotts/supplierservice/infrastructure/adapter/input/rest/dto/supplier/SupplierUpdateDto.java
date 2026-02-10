@@ -2,6 +2,7 @@ package com.celotts.supplierservice.infrastructure.adapter.input.rest.dto.suppli
 
 import com.celotts.supplierservice.infrastructure.common.validation.ValidationGroups;
 import com.fasterxml.jackson.annotation.*;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -12,6 +13,7 @@ import lombok.*;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(description = "DTO for updating an existing supplier")
 public class SupplierUpdateDto {
 
     @Pattern(
@@ -19,6 +21,7 @@ public class SupplierUpdateDto {
             message = "{supplier.code.pattern}",
             groups = ValidationGroups.Update.class
     )
+    @Schema(description = "Unique code for the supplier", example = "SUP-001")
     private String code;
 
     @Size(
@@ -26,6 +29,7 @@ public class SupplierUpdateDto {
             message = "{supplier.name.size}",
             groups = ValidationGroups.Update.class
     )
+    @Schema(description = "Name of the supplier", example = "ACME Corporation")
     private String name;
 
     @Size(
@@ -34,6 +38,7 @@ public class SupplierUpdateDto {
             groups = ValidationGroups.Update.class
     )
     @JsonProperty("tax_id")
+    @Schema(description = "Tax identifier (e.g., RFC, VAT number)", example = "XAXX010101000")
     private String taxId;
 
     @Email(message = "{supplier.email.format}", groups = ValidationGroups.Update.class)
@@ -42,6 +47,7 @@ public class SupplierUpdateDto {
             message = "{supplier.email.size}",
             groups = ValidationGroups.Update.class
     )
+    @Schema(description = "Contact email of the supplier", example = "contact@acme.com")
     private String email;
 
     @Size(
@@ -49,6 +55,7 @@ public class SupplierUpdateDto {
             message = "{supplier.phone.size}",
             groups = ValidationGroups.Update.class
     )
+    @Schema(description = "Contact phone number", example = "+1-555-123-4567")
     private String phone;
 
     @Size(
@@ -56,9 +63,11 @@ public class SupplierUpdateDto {
             message = "{supplier.address.size}",
             groups = ValidationGroups.Update.class
     )
+    @Schema(description = "Physical address of the supplier", example = "123 Main St, Anytown, USA")
     private String address;
 
     @JsonAlias({"active","enabled"})
+    @Schema(description = "Whether the supplier is active", example = "true")
     private Boolean enabled;
 
     // (opcional) garantiza que venga al menos un campo
