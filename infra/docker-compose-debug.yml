@@ -9,7 +9,7 @@ services:
     profiles: ["product"]
     image: ${IMAGE_DB:-postgres:16}
     container_name: db_product
-    env_file: [./.env.local]
+    env_file: [ .env ]
     environment:
       POSTGRES_DB: ${PRODUCT_DB_NAME:-db_product}
       POSTGRES_USER: ${PRODUCT_DB_USERNAME:-product}
@@ -34,7 +34,7 @@ services:
     profiles: ["supplier"]
     image: ${IMAGE_DB:-postgres:16}
     container_name: db_supplier
-    env_file: [./.env.local]
+    env_file: [ .env ]
     environment:
       POSTGRES_DB: ${SUPPLIER_DB_NAME:-db_supplier}
       POSTGRES_USER: ${SUPPLIER_DB_USERNAME:-supplier}
@@ -59,7 +59,7 @@ services:
     profiles: ["purchase"]
     image: ${IMAGE_DB:-postgres:16}
     container_name: db_purchase
-    env_file: [./.env.local]
+    env_file: [ .env ]
     environment:
       POSTGRES_DB: ${PURCHASE_DB_NAME:-db_purchase}
       POSTGRES_USER: ${PURCHASE_DB_USERNAME:-purchase}
@@ -84,7 +84,7 @@ services:
     profiles: ["tax"]
     image: ${IMAGE_DB:-postgres:16}
     container_name: db_tax
-    env_file: [./.env.local]
+    env_file: [ .env ]
     environment:
       POSTGRES_DB: ${TAX_DB_NAME:-db_tax}
       POSTGRES_USER: ${TAX_DB_USERNAME:-tax}
@@ -109,7 +109,7 @@ services:
   discovery-service:
     profiles: ["infra"]
     container_name: discovery-service
-    env_file: [./.env.local]
+    env_file: [ .env ]
     build:
       context: ..
       dockerfile: ./discovery-service/Dockerfile
@@ -131,7 +131,7 @@ services:
   config-service:
     profiles: [ "infra" ]
     container_name: config-service
-    env_file: [ ./.env.local ]
+    env_file: [ .env ]
     build:
       context: ..
       dockerfile: ./config-service/Dockerfile
@@ -161,7 +161,7 @@ services:
   auth-service:
     profiles: ["auth"]
     container_name: auth-service
-    env_file: [./.env.local]
+    env_file: [ .env ]
     build:
       context: ..
       dockerfile: ./auth-service/Dockerfile
@@ -183,7 +183,7 @@ services:
   product-service:
     profiles: ["product"]
     container_name: product-service
-    env_file: [./.env.local]
+    env_file: [ .env ]
     build:
       context: ..
       dockerfile: ./product-service/Dockerfile
@@ -211,7 +211,7 @@ services:
   supplier-service:
     profiles: ["supplier"]
     container_name: supplier-service
-    env_file: [./.env.local]
+    env_file: [ .env ]
     build:
       context: ..
       dockerfile: ./supplier-service/Dockerfile
@@ -239,7 +239,7 @@ services:
   purchase-service:
     profiles: ["purchase"]
     container_name: purchase-service
-    env_file: [./.env.local]
+    env_file: [ .env ]
     build:
       context: ..
       dockerfile: ./purchase-service/Dockerfile
@@ -266,7 +266,7 @@ services:
   tax-service:
     profiles: ["tax"]
     container_name: tax-service
-    env_file: [./.env.local]
+    env_file: [ .env ]
     build:
       context: ..
       dockerfile: ./tax-service/Dockerfile
@@ -294,7 +294,7 @@ services:
   api-gateway:
     profiles: ["gateway"]
     container_name: api-gateway
-    env_file: [./.env.local]
+    env_file: [ .env ]
     build:
       context: ..
       dockerfile: ./api-gateway/Dockerfile

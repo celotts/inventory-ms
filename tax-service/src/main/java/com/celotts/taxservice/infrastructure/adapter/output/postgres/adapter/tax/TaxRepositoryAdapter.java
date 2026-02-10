@@ -63,7 +63,7 @@ public class TaxRepositoryAdapter implements TaxRepositoryPort {
     }
 
     @Override
-    public List<TaxModel> findById(List<UUID> ids) {
+    public List<TaxModel> findAllById(Iterable<UUID> ids) {
         log.debug("Finding taxes by ids: {}", ids);
         return jpa.findAllById(ids)
                 .stream()
@@ -84,7 +84,6 @@ public class TaxRepositoryAdapter implements TaxRepositoryPort {
     @Override
     public List<TaxModel> findByDescriptionContaining(String name) {
         log.debug("Finding taxes by description containing: {}", name);
-        // Asumiendo que TaxJpaRepository tiene este método de consulta derivada
         return jpa.findByDescriptionIgnoreCase(name, Pageable.unpaged())
                 .getContent()
                 .stream()
@@ -157,13 +156,6 @@ public class TaxRepositoryAdapter implements TaxRepositoryPort {
 
     @Override
     public Page<TaxModel> findAllPaginated(String name, Boolean active, Pageable pageable) {
-        log.debug("Finding all taxes paginated with name: {} and active: {}", name, active);
-        return jpa.findAllWithFilters(name, name, active, null, null, pageable)
-                .map(mapper::toDomain);
-    }
-
-    @Override
-    public Page<TaxModel> findAllPaginated(String name, boolean active, Pageable pageable) {
         log.debug("Finding all taxes paginated with name: {} and active: {}", name, active);
         return jpa.findAllWithFilters(name, name, active, null, null, pageable)
                 .map(mapper::toDomain);

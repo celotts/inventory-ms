@@ -5,7 +5,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public interface SupplierUseCase {
@@ -25,8 +24,9 @@ public interface SupplierUseCase {
     List<SupplierModel> searchByNameDescription(String q, int limit);
     boolean existsByName(String name);
 
-    Optional<SupplierModel> getSupplierById(UUID id);
+    // Este método es redundante con getById, lo eliminamos para evitar duplicados.
+    // Si se necesita con otro nombre, debe tener un propósito diferente.
+    // Optional<SupplierModel> getSupplierById(UUID id);
 
     boolean existsById(UUID id);
-
 }

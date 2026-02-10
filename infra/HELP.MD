@@ -191,8 +191,16 @@ make up-prod
 | ------------------------ | ------------------------------------- | ------------------------------- |
 | `notification-service`   | `9094:9094`                           | `9094`                          |
 
-🗺️ Arquitectura general del sistema
 
+### 🗺️ Arquitectura general del sistema
+
+| Servicio     | Base de Datos | Host      | Puerto | Usuario  | Password    |
+|:-------------|:--------------|:----------|:-------|:---------|:------------|
+| **Product**  | product       | localhost | 5433   | product  | product123  |
+| **Supplier** | supplier      | localhost | 5434   | supplier | supplier123 |
+| **Purchase** | purchase      | localhost | 5435   | purchase | purchase123 |
+| **Tax**      | tax           | localhost | 5436   | tax      | tax123      |
+| **Auth**     | auth          | localhost | 5437   | auth     | auth123     |
 
 
 ![img_2.png](img_2.png)

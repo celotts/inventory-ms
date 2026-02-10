@@ -7,9 +7,9 @@ import com.celotts.purchaseservice.domain.exception.SupplierNotFoundException;
 import com.celotts.purchaseservice.domain.model.purchase.PurchaseModel;
 import com.celotts.purchaseservice.domain.port.input.PurchaseUseCase;
 import com.celotts.purchaseservice.domain.port.output.PurchaseRepositoryPort;
+
 import com.celotts.purchaseservice.infrastructure.adapter.input.rest.dto.supplier.SupplierDto;
 import com.celotts.purchaseservice.infrastructure.client.SupplierClient;
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
@@ -19,7 +19,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -39,12 +38,10 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
     @Override
     @Transactional
     public PurchaseModel create(PurchaseModel purchase) {
-        log.info(">>> [DEBUG] Iniciando creación de compra: {}", purchase.getOrderNumber());
+        log.info("Creating purchase with order number: {}", purchase.getOrderNumber());
         purchase.normalize();
 
-        log.info(">>> [DEBUG] Validando proveedor ID: {}", purchase.getSupplierId());
         validateSupplier(purchase.getSupplierId());
-        log.info(">>> [DEBUG] Proveedor validado con éxito");
 
         if (purchase.getCreatedBy() == null || purchase.getCreatedBy().isBlank()) {
             purchase.setCreatedBy(
@@ -60,14 +57,14 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
             );
         }
 
-        log.info(">>> [DEBUG] Guardando compra en base de datos...");
         return repositoryPort.save(purchase);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<PurchaseModel> findById(UUID id) {
-        return repositoryPort.findById(id);
+    public PurchaseModel findById(UUID id) {
+        return repositoryPort.findById(id)
+                .orElseThrow(() -> new PurchaseNotFoundException(getMsg("purchase.not-found-with-id", id), id));
     }
 
     @Override
@@ -104,19 +101,17 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
     @Transactional
     public void delete(UUID id) {
         if (!repositoryPort.existsById(id)) {
-            throw new PurchaseNotFoundException(
-                    getMsg("app.error.not-found") + ": " + id, id);
+            throw new PurchaseNotFoundException(getMsg("purchase.cannot-delete-not-found", id), id);
         }
         repositoryPort.deleteById(id);
     }
 
     private void validateSupplier(UUID supplierId) {
         try {
-            log.debug(">>> [DEBUG] Llamando a SupplierClient con ID: {}", supplierId);
             SupplierDto supplier = supplierClient.getSupplier(supplierId);
-            log.debug(">>> [DEBUG] Respuesta de SupplierClient: {}", supplier);
 
             if (supplier == null) {
+                // Esto no debería pasar si el CustomErrorDecoder funciona, pero por seguridad:
                 throw new SupplierNotFoundException("supplier.not-found", "id", supplierId.toString());
             }
 
@@ -124,17 +119,14 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
                 throw new SupplierInactiveException("supplier.inactive", "name", supplier.getName());
             }
 
-        } catch (FeignException.NotFound e) {
-            log.error(">>> [ERROR] Feign NotFound (404): {}", e.getMessage());
+        } catch (feign.FeignException.NotFound e) {
+            // Si el CustomErrorDecoder no interceptó el 404, lo atrapamos aquí
             throw new SupplierNotFoundException("supplier.not-found", "id", supplierId.toString());
 
-        } catch (FeignException e) {
-            log.error(">>> [ERROR CRÍTICO] Falló la llamada a Supplier Service! Status: {}, URL: {}, Body: {}", 
-                    e.status(), e.request().url(), e.contentUTF8(), e);
-            throw new RuntimeException("service.supplier.unavailable");
-        } catch (Exception e) {
-            log.error(">>> [ERROR] Error inesperado al validar proveedor: {}", e.getMessage(), e);
-            throw e;
+        } catch (feign.FeignException e) {
+            // Error de conexión o 500 del otro servicio
+            log.error("Error communicating with Supplier Service: Status={}, Msg={}", e.status(), e.getMessage());
+            throw new RuntimeException(getMsg("service.supplier.unavailable"));
         }
     }
 }

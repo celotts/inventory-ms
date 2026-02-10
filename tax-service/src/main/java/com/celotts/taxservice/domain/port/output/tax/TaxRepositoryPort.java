@@ -24,7 +24,7 @@ public interface TaxRepositoryPort {
 
     List<TaxModel> findAll();
 
-    List<TaxModel> findById(List<UUID> ids);
+    List<TaxModel> findAllById(Iterable<UUID> ids); // Corregido: findAllById y usa Iterable
 
     // ========== Búsquedas contains ==========
     List<TaxModel> findByNameContaining(String name);
@@ -47,9 +47,7 @@ public interface TaxRepositoryPort {
 
     Page<TaxModel> findByNameContainingAndActive(String name, Boolean active, Pageable pageable);
 
-    Page<TaxModel> findAllPaginated(String name, Boolean active, Pageable pageable);
-
-    Page<TaxModel> findAllPaginated(String name, boolean active, Pageable pageable);
+    Page<TaxModel> findAllPaginated(String name, Boolean active,  Pageable pageable);
 
     // ========== Conteos ==========
     long count();

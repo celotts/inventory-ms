@@ -70,7 +70,6 @@ public record ApiErrorResponse(
                 return ms.getMessage(key, args, LocaleContextHolder.getLocale());
             }
         } catch (Exception ignored) {}
-        // fallback si no hay messageSource (por ejemplo en tests)
         return key;
     }
 }

@@ -1,15 +1,14 @@
 package com.celotts.purchaseservice.domain.port.input;
 
 import com.celotts.purchaseservice.domain.model.purchase.PurchaseModel;
-import org.springframework.data.domain.Page; // Necesario para paginación
-import org.springframework.data.domain.Pageable; // Necesario para parámetros
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.Optional;
 import java.util.UUID;
 
 public interface PurchaseUseCase {
     PurchaseModel create(PurchaseModel purchase);
-    Optional<PurchaseModel> findById(UUID id);
+    PurchaseModel findById(UUID id); // Devuelve el modelo directamente
 
     Page<PurchaseModel> findAll(Pageable pageable);
 
