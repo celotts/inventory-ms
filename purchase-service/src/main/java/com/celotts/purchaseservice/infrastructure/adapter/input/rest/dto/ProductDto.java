@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Data
@@ -19,7 +20,9 @@ public class ProductDto {
     private String code;
     private String name;
 
-    @JsonProperty("unit_id")
-    private UUID unitId;
+    @JsonProperty("unit_code")
+    private String unitCode;
 
+    @JsonProperty("unit_price")
+    private BigDecimal unitPrice;
 }
