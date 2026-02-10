@@ -3,8 +3,6 @@ server:
   error:
     include-message: always
 
-
-
 spring:
   application:
     name: api-gateway
@@ -43,7 +41,6 @@ spring:
           filters:
             - StripPrefix=1
 
-            # 2. Agrega la ruta directa
         - id: purchase-direct
           uri: lb://purchase-service
           predicates:
@@ -69,7 +66,6 @@ management:
 eureka:
   client:
     service-url:
-      # CAMBIO: discovery-service en lugar de localhost
       defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
     register-with-eureka: true
     fetch-registry: true
@@ -77,7 +73,6 @@ eureka:
     instance-info-replication-interval-seconds: 5
   instance:
     prefer-ip-address: true
-    # Limpieza de instance-id para evitar errores si lineage no está definido
     instance-id: ${spring.application.name}:${random.value}
     lease-renewal-interval-in-seconds: 10
     lease-expiration-duration-in-seconds: 30
@@ -90,3 +85,20 @@ logging:
     org.springframework.core.env: INFO
     org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
     org.hibernate.internal.AbstractSharedSessionContract: INFO
+
+# ✅ Configuración Centralizada de Swagger UI
+springdoc:
+  swagger-ui:
+    urls:
+      - name: product
+        url: /product-service/v3/api-docs
+      - name: supplier
+        url: /supplier-service/v3/api-docs
+      - name: purchase
+        url: /purchase-service/v3/api-docs
+      - name: tax
+        url: /tax-service/v3/api-docs
+      - name: auth
+        url: /auth-service/v3/api-docs
+  api-docs:
+    enabled: true
