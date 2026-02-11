@@ -1,8 +1,16 @@
 package com.celotts.productservice.domain.exception.product;
 
-public class ProductNotFoundException extends RuntimeException {
-    public ProductNotFoundException(String message) { super(message); }
-    public ProductNotFoundException(java.util.UUID id) {
-        super("Producto no encontrado: " + id);
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
+
+import java.util.UUID;
+
+public class ProductNotFoundException extends ResourceNotFoundException {
+
+    public ProductNotFoundException(String message) {
+        super(message);
+    }
+
+    public ProductNotFoundException(UUID id) {
+        super("product.not-found.id", id);
     }
 }

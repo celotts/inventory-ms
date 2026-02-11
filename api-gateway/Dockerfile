@@ -33,9 +33,6 @@ COPY api-gateway/src api-gateway/src
 COPY api-gateway/entrypoint.sh api-gateway/entrypoint.sh
 COPY api-gateway/wait-for-it.sh api-gateway/wait-for-it.sh
 
-# =====================================================================
-# ⭐ CORRECCIÓN DE PERMISOS (SOLUCIÓN FINAL CON DOS2UNIX) ⭐
-# =====================================================================
 # PASO CRÍTICO: Sanitizar el formato de línea (CRLF -> LF) con dos2unix.
 RUN dos2unix api-gateway/entrypoint.sh api-gateway/wait-for-it.sh
 

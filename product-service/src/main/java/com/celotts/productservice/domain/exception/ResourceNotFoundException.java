@@ -4,15 +4,13 @@ import com.celotts.productservice.infrastructure.common.error.ErrorCode;
 
 public class ResourceNotFoundException extends DomainException {
 
-    public ResourceNotFoundException(String resource, Object idOrKey) {
-        super(ErrorCode.NOT_FOUND, 404, resource + " not found with id: " + idOrKey);
+    // Constructor para clave de mensaje y argumentos (estilo i18n)
+    public ResourceNotFoundException(String messageKey, Object... args) {
+        super(ErrorCode.NOT_FOUND, 404, messageKey); // Pasamos la clave como mensaje temporal
     }
 
+    // Constructor legacy (para compatibilidad, pero marcado para evitarse)
     public ResourceNotFoundException(String message) {
         super(ErrorCode.NOT_FOUND, 404, message);
-    }
-
-    public ResourceNotFoundException(ErrorCode code, String message) {
-        super(code, 404, message);
     }
 }

@@ -43,7 +43,7 @@ public class ProductBrandController {
     @PatchMapping(value = "/{id}", consumes = "application/json")
     public ResponseEntity<ProductBrandResponseDto> update(@PathVariable UUID id,
                                                           @Valid @RequestBody ProductBrandUpdateDto dto) {
-        log.info("PATCH brand id={} payload={}", id, dto);   // <— inspecciona entrada
+        log.info("PATCH brand id={} payload={}", id, dto);
 
         ProductBrandModel patch = ProductBrandModel.builder()
                 .name(dto.getName())
@@ -80,7 +80,7 @@ public class ProductBrandController {
                 .map(productBrandMapper::toResponse)
                 .map(ResponseEntity::ok)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Brand with id " + id + " not found"));
+                        new ResourceNotFoundException("brand.not-found", id));
     }
 
     @GetMapping("/{id}/name")

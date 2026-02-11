@@ -8,6 +8,11 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductMapper;
 import com.celotts.productservice.infrastructure.config.PaginationProperties;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -47,6 +53,12 @@ public class ProductController {
 
     @PostMapping
     @Operation(summary = "Create a new product", description = "Create a product in the system")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Product created successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ProductResponseDto.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Product code already exists", content = @Content)
+    })
     public ResponseEntity<ProductResponseDto> create(@RequestBody @Valid ProductCreateDto createDto) {
         log.info("Creating new product with code: {}", createDto.getCode());
         ProductModel created = productUseCase.createProduct(productMapper.toModel(createDto));
@@ -61,7 +73,11 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update a product", description = "Update a product")
+    @Operation(summary = "Update a product", description = "Update an existing product")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Product updated successfully"),
+            @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
+    })
     public ResponseEntity<ProductResponseDto> updateProduct(
             @PathVariable UUID id,
             @RequestBody @Valid ProductUpdateDto updateDto) {
@@ -116,39 +132,43 @@ public class ProductController {
                 ? productUseCase.getAllProductsWithFilters(pageable, code, name, description)
                 : productUseCase.getAllProducts(pageable);
 
-        // Envolver en PageResponse usando el mapper a DTO
         return ResponseEntity.ok(PageResponse.from(products, productMapper::toResponse));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get product by ID", description = "Query a product by its identifier")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Product found"),
+            @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
+    })
     public ResponseEntity<ProductResponseDto> getProductById(@PathVariable UUID id) {
         ProductModel product = productUseCase.getProductById(id);
         return ResponseEntity.ok(productMapper.toResponse(product));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete logical product", description = "Delete logical product")
+    @Operation(summary = "Delete logical product", description = "Performs a soft delete on the product.")
     public ResponseEntity<Void> deleteProduct(@PathVariable UUID id) {
         productUseCase.disableProduct(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}/hard")
-    @Operation(summary = "Delete physical product", description = "Delete physical product")
+    @Operation(summary = "Delete physical product", description = "Permanently removes the product from the database.")
     public ResponseEntity<Void> hardDeleteProduct(@PathVariable UUID id) {
         productUseCase.hardDeleteProduct(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/enable")
-    @Operation(summary = "Enable product", description = "Enable product")
+    @Operation(summary = "Enable product", description = "Re-activates a previously disabled product.")
     public ResponseEntity<ProductResponseDto> enableProduct(@PathVariable UUID id) {
         ProductModel enabledProduct = productUseCase.enableProduct(id);
         return ResponseEntity.ok(productMapper.toResponse(enabledProduct));
     }
 
     @GetMapping("/inactive")
+    @Operation(summary = "List inactive products", description = "Returns a list of all products that have been logically disabled.")
     public ResponseEntity<ListResponse<ProductResponseDto>> getInactiveProducts() {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getInactiveProducts());
@@ -156,6 +176,7 @@ public class ProductController {
     }
 
     @GetMapping("/category/{categoryId}")
+    @Operation(summary = "Get products by category", description = "List all products belonging to a specific category.")
     public ResponseEntity<ListResponse<ProductResponseDto>> getProductsByCategory(@PathVariable UUID categoryId) {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getProductsByCategory(categoryId));
@@ -163,6 +184,7 @@ public class ProductController {
     }
 
     @GetMapping("/category/{categoryId}/low-stock")
+    @Operation(summary = "Get low stock products by category", description = "List products in a category that are below their minimum stock level.")
     public ResponseEntity<ListResponse<ProductResponseDto>> getLowStockByCategory(@PathVariable UUID categoryId) {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getLowStockByCategory(categoryId));
@@ -170,6 +192,7 @@ public class ProductController {
     }
 
     @GetMapping("/low-stock")
+    @Operation(summary = "Get low stock products", description = "List all products that are below their minimum stock level.")
     public ResponseEntity<ListResponse<ProductResponseDto>> getLowStockProducts() {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getLowStockProducts());
@@ -177,6 +200,7 @@ public class ProductController {
     }
 
     @GetMapping("/brand/{brandId}")
+    @Operation(summary = "Get products by brand", description = "List all products belonging to a specific brand.")
     public ResponseEntity<ListResponse<ProductResponseDto>> getProductsByBrand(@PathVariable UUID brandId) {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getProductsByBrand(brandId));
@@ -184,19 +208,19 @@ public class ProductController {
     }
 
     @GetMapping("/count")
-    @Operation(summary = "Count products", description = "Returns the total number of products")
+    @Operation(summary = "Count products", description = "Returns the total number of products in the system.")
     public ResponseEntity<Long> countProducts() {
         return ResponseEntity.ok(productUseCase.countProducts());
     }
 
     @GetMapping("/count/active")
-    @Operation(summary = "Count active products", description = "Returns the number of active products")
+    @Operation(summary = "Count active products", description = "Returns the number of active products.")
     public ResponseEntity<Long> countActiveProducts() {
         return ResponseEntity.ok(productUseCase.countActiveProducts());
     }
 
     @GetMapping("/validate-unit/{code}")
-    @Operation(summary = "Validate unit code", description = "Validates if a unit code exists and obtains its name")
+    @Operation(summary = "Validate unit code", description = "Validates if a unit code exists and obtains its name.")
     public ResponseEntity<Map<String, Object>> validateUnit(@PathVariable String code) {
         Optional<String> name = productUseCase.validateUnitCode(code);
         Map<String, Object> response = new HashMap<>();
@@ -206,14 +230,18 @@ public class ProductController {
     }
 
     @PatchMapping("/{id}/stock")
-    @Operation(summary = "Update stock", description = "Update the stock of a product")
+    @Operation(summary = "Update stock", description = "Updates the stock quantity of a product.")
     public ResponseEntity<ProductResponseDto> updateStock(@PathVariable UUID id, @RequestBody @Valid UpdateStockDto stockDto) {
         ProductModel updated = productUseCase.updateStock(id, stockDto.getStock());
         return ResponseEntity.ok(productMapper.toResponse(updated));
     }
 
     @GetMapping("/code/{code}")
-    @Operation(summary = "Get product by code", description = "Query a product by its code")
+    @Operation(summary = "Get product by code", description = "Query a product by its unique code.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Product found"),
+            @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
+    })
     public ResponseEntity<ProductResponseDto> getProductByCode(@PathVariable String code) {
         if (code == null || code.isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);

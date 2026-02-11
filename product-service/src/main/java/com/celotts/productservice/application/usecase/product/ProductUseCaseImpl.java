@@ -46,24 +46,24 @@ public class ProductUseCaseImpl implements ProductUseCase {
     }
 
     @Override
-    public ProductModel updateProduct(UUID id, ProductModel cmd) {
+    public ProductModel updateProduct(UUID id, ProductModel productUpdates) {
         ProductModel existing = productRepositoryPort.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product", getMessage("product.not-found-with-id", id)));
-        validateReferences(cmd);
+        validateReferences(productUpdates);
 
-        ProductModel incoming = cmd;
+
         ProductModel updated = existing.toBuilder()
-                .code(incoming.getCode() != null ? incoming.getCode() : existing.getCode())
-                .name(incoming.getName() != null ? incoming.getName() : existing.getName())
-                .description(incoming.getDescription() != null ? incoming.getDescription() : existing.getDescription())
-                .categoryId(incoming.getCategoryId() != null ? incoming.getCategoryId() : existing.getCategoryId())
-                .unitCode(incoming.getUnitCode() != null ? incoming.getUnitCode() : existing.getUnitCode())
-                .brandId(incoming.getBrandId() != null ? incoming.getBrandId() : existing.getBrandId())
-                .minimumStock(incoming.getMinimumStock() != null ? incoming.getMinimumStock() : existing.getMinimumStock())
-                .currentStock(incoming.getCurrentStock() != null ? incoming.getCurrentStock() : existing.getCurrentStock())
-                .unitPrice(incoming.getUnitPrice() != null ? incoming.getUnitPrice() : existing.getUnitPrice())
-                .enabled(incoming.getEnabled() != null ? incoming.getEnabled() : existing.getEnabled())
-                .updatedBy(incoming.getUpdatedBy() != null ? incoming.getUpdatedBy() : existing.getUpdatedBy())
+                .code(productUpdates.getCode() != null ? productUpdates.getCode() : existing.getCode())
+                .name(productUpdates.getName() != null ? productUpdates.getName() : existing.getName())
+                .description(productUpdates.getDescription() != null ? productUpdates.getDescription() : existing.getDescription())
+                .categoryId(productUpdates.getCategoryId() != null ? productUpdates.getCategoryId() : existing.getCategoryId())
+                .unitCode(productUpdates.getUnitCode() != null ? productUpdates.getUnitCode() : existing.getUnitCode())
+                .brandId(productUpdates.getBrandId() != null ? productUpdates.getBrandId() : existing.getBrandId())
+                .minimumStock(productUpdates.getMinimumStock() != null ? productUpdates.getMinimumStock() : existing.getMinimumStock())
+                .currentStock(productUpdates.getCurrentStock() != null ? productUpdates.getCurrentStock() : existing.getCurrentStock())
+                .unitPrice(productUpdates.getUnitPrice() != null ? productUpdates.getUnitPrice() : existing.getUnitPrice())
+                .enabled(productUpdates.getEnabled() != null ? productUpdates.getEnabled() : existing.getEnabled())
+                .updatedBy(productUpdates.getUpdatedBy() != null ? productUpdates.getUpdatedBy() : existing.getUpdatedBy())
                 .updatedAt(java.time.LocalDateTime.now())
                 .build();
         return productRepositoryPort.save(updated);

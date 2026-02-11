@@ -5,6 +5,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -25,6 +26,9 @@ public class PurchaseModel {
     private LocalDate expectedAt;
     private LocalDateTime receivedAt;
     private String notes;
+
+    // Items
+    private List<PurchaseItemModel> items;
 
     // Auditoria
     private LocalDateTime createdAt;

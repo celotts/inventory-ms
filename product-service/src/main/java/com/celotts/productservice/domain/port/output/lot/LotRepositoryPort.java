@@ -19,6 +19,5 @@ public interface LotRepositoryPort {
 
     void softDelete(UUID id, String user, String reason);
 
-    // ✅ Nuevo: vencidos o que expiran en la ventana [now, until]
     Page<LotModel> findExpiredOrExpiring(LocalDate now, LocalDate until, Pageable pageable);
 }
