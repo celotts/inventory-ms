@@ -6,57 +6,61 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
 @Schema(description = "DTO representing a purchase order response")
 public class PurchaseResponseDto {
 
-    @Schema(description = "Unique identifier of the purchase order", example = "d290f1ee-6c54-4b01-90e6-d701748f0851")
+    @Schema(description = "Unique identifier of the purchase order")
     private UUID id;
 
-    @Schema(description = "Unique identifier of the supplier", example = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11")
+    @Schema(description = "Unique identifier of the supplier")
     private UUID supplierId;
 
-    @Schema(description = "Unique order number", example = "PO-2024-00123")
+    @Schema(description = "Unique order number")
     private String orderNumber;
 
-    @Schema(description = "Current status of the purchase order", example = "APPROVED")
+    @Schema(description = "Current status of the purchase order")
     private String status;
 
-    @Schema(description = "Currency code", example = "USD")
+    @Schema(description = "Currency code")
     private String currency;
 
-    @Schema(description = "Subtotal amount", example = "1500.75")
+    @Schema(description = "Subtotal amount")
     private BigDecimal subtotal;
 
-    @Schema(description = "Total tax amount", example = "240.12")
+    @Schema(description = "Total tax amount")
     private BigDecimal taxTotal;
 
-    @Schema(description = "Total discount amount", example = "50.00")
+    @Schema(description = "Total discount amount")
     private BigDecimal discountTotal;
 
-    @Schema(description = "Grand total amount", example = "1690.87")
+    @Schema(description = "Grand total amount")
     private BigDecimal grandTotal;
 
-    @Schema(description = "Expected delivery date", example = "2024-12-31")
+    @Schema(description = "Expected delivery date")
     private LocalDate expectedAt;
 
-    @Schema(description = "Date when the order was received", example = "2025-01-05T10:30:00")
+    @Schema(description = "Date when the order was received")
     private LocalDateTime receivedAt;
 
-    @Schema(description = "Additional notes", example = "Handle with care")
+    @Schema(description = "Additional notes")
     private String notes;
 
-    @Schema(description = "Timestamp when the record was created", example = "2024-11-20T14:00:00")
+    @Schema(description = "List of items in the purchase")
+    private List<PurchaseItemResponseDto> items;
+
+    @Schema(description = "Timestamp when the record was created")
     private LocalDateTime createdAt;
 
-    @Schema(description = "User who created the record", example = "carlos.lott")
+    @Schema(description = "User who created the record")
     private String createdBy;
 
-    @Schema(description = "Timestamp when the record was last updated", example = "2024-11-21T09:15:00")
+    @Schema(description = "Timestamp when the record was last updated")
     private LocalDateTime updatedAt;
 
-    @Schema(description = "User who last updated the record", example = "admin")
+    @Schema(description = "User who last updated the record")
     private String updatedBy;
 }

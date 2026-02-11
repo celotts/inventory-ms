@@ -52,7 +52,7 @@ public class LotRepositoryAdapter implements LotRepositoryPort {
 
     @Override
     public Page<LotModel> findExpiredOrExpiring(LocalDate now, LocalDate until, Pageable pageable) {
-        return jpa.findExpiredOrExpiring(now, until, pageable)
+        return jpa.findExpiredOrExpiring(until, pageable)
                 .map(mapper::toModel);
     }
 }
