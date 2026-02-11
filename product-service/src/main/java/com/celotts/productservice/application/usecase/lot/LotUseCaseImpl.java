@@ -13,6 +13,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Service
@@ -33,8 +34,6 @@ public class LotUseCaseImpl implements LotUseCase {
         return lotRepo.findByProductId(productId, pageable);
     }
 
-    // com.celotts.productservice.application.usecase.lot.LotUseCaseImpl
-
     @Override
     public Instant dispose(UUID lotId, String reference, String reason, String user) {
         Instant deletedAt = Instant.now();
@@ -44,11 +43,10 @@ public class LotUseCaseImpl implements LotUseCase {
 
     @Override
     public Page<LotModel> markExpiredAndList(int horizonDays, Pageable pageable) {
-        // Marca vencida con horizonte
         jdbc.queryForObject("SELECT sp_mark_expired_lots(?)", Integer.class, horizonDays);
 
-        var now   = java.time.LocalDate.now();
-        var until = now.plusDays(horizonDays);
+        LocalDate now   = LocalDate.now();
+        LocalDate until = now.plusDays(horizonDays);
 
         return lotRepo.findExpiredOrExpiring(now, until, pageable);
     }

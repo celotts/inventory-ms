@@ -8,10 +8,10 @@ import lombok.Data;
 @Schema(description = "Request object for user login")
 public class LoginRequest {
     @NotBlank
-    @Schema(description = "Username of the user", example = "carlos.lott", required = true)
+    @Schema(description = "Username of the user", example = "carlos.lott")
     private String username;
 
     @NotBlank
-    @Schema(description = "Password of the user", example = "password123", required = true)
+    @Schema(description = "Password of the user", example = "password123")
     private String password;
 }

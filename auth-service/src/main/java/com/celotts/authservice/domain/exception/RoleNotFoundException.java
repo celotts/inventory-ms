@@ -1,7 +1,7 @@
 package com.celotts.authservice.domain.exception;
 
-public class RoleNotFoundException extends RuntimeException {
+public class RoleNotFoundException extends BaseAuthException {
     public RoleNotFoundException(String role) {
-        super("Error: Role '" + role + "' is not found.");
+        super("auth.error.role.not-found", role);
     }
 }

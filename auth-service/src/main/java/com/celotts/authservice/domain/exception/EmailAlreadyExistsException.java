@@ -1,7 +1,7 @@
 package com.celotts.authservice.domain.exception;
 
-public class EmailAlreadyExistsException extends RuntimeException {
+public class EmailAlreadyExistsException extends BaseAuthException {
     public EmailAlreadyExistsException(String email) {
-        super("Error: Email '" + email + "' is already in use!");
+        super("auth.error.email.taken", email);
     }
 }

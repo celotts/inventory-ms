@@ -22,7 +22,7 @@ public class SupplierCreateDto {
             message = "{supplier.code.pattern}",
             groups = {ValidationGroups.Create.class, ValidationGroups.Update.class}
     )
-    @Schema(description = "Unique code for the supplier", example = "SUP-001", required = true)
+    @Schema(description = "Unique code for the supplier", example = "SUP-001")
     private String code;
 
     @NotBlank(message = "{supplier.name.required}", groups = ValidationGroups.Create.class)
@@ -31,7 +31,7 @@ public class SupplierCreateDto {
             message = "{supplier.name.size}",
             groups = {ValidationGroups.Create.class, ValidationGroups.Update.class}
     )
-    @Schema(description = "Name of the supplier", example = "ACME Corporation", required = true)
+    @Schema(description = "Name of the supplier", example = "ACME Corporation")
     private String name;
 
     @Size(max = 30, message = "{supplier.taxid.size}")

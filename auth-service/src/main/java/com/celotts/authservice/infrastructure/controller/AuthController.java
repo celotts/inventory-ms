@@ -21,7 +21,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,21 +42,15 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/auth")
 @Tag(name = "Authentication API", description = "API for user authentication and registration")
+@RequiredArgsConstructor
 public class AuthController {
-    @Autowired
-    AuthenticationManager authenticationManager;
 
-    @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    RoleRepository roleRepository;
-
-    @Autowired
-    PasswordEncoder encoder;
-
-    @Autowired
-    JwtUtils jwtUtils;
+    private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder encoder;
+    private final JwtUtils jwtUtils;
+    private final MessageSource messageSource; // Inyectado
 
     @Operation(summary = "User Login", description = "Authenticates a user and returns a JWT token.")
     @ApiResponses(value = {
@@ -137,6 +133,7 @@ public class AuthController {
         user.setRoles(roles);
         userRepository.save(user);
 
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+        String successMessage = messageSource.getMessage("auth.register.success", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(new MessageResponse(successMessage));
     }
 }

@@ -13,20 +13,16 @@ import java.util.UUID;
 public class PurchaseItemCreateDto {
 
     @NotNull
-    @Schema(description = "ID of the product being purchased", required = true)
+    @Schema(description = "ID of the product being purchased")
     private UUID productId;
 
     @NotNull
     @Positive
-    @Schema(description = "Quantity of the product being purchased", example = "10.5", required = true)
+    @Schema(description = "Quantity of the product being purchased", example = "10.5")
     private BigDecimal quantity;
 
     @NotNull
     @Positive
-    @Schema(description = "Cost per unit of the product", example = "99.99", required = true)
+    @Schema(description = "Cost per unit of the product", example = "99.99")
     private BigDecimal unitCost;
-
-    // Optional fields, can be added later if needed
-    // private BigDecimal discountRate;
-    // private UUID taxId;
 }

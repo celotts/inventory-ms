@@ -1,30 +1,10 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.4.5'
-    id 'io.spring.dependency-management' version '1.1.7'
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
     id 'jacoco'
     id 'com.github.ben-manes.versions' version '0.53.0'
     id 'org.owasp.dependencycheck' version '9.0.7'
-}
-
-group = 'com.celotts'
-version = '0.0.1-SNAPSHOT'
-
-jacoco { toolVersion = "0.8.11" }
-
-java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
-
-configurations { compileOnly { extendsFrom annotationProcessor } }
-
-repositories { mavenCentral() }
-
-ext {
-    set('springCloudVersion', "2024.0.2")
-    set('postgresDriverVersion', "42.7.8")
-    set('h2Version', "2.4.240")
-    set('lombokVersion', "1.18.42")
-    set('mapstructVersion', "1.6.3")
-    set('testcontainersBom', "1.20.1")
 }
 
 dependencies {
@@ -44,24 +24,18 @@ dependencies {
     implementation 'io.github.resilience4j:resilience4j-spring-boot3'
 
     // OpenAPI
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 
     // Commons Lang (recomendado)
     implementation 'org.apache.commons:commons-lang3:3.18.0'
 
     // DB
-    runtimeOnly "org.postgresql:postgresql:${postgresDriverVersion}"
-    testImplementation "com.h2database:h2:${h2Version}"
-
-    // Lombok
-    compileOnly "org.projectlombok:lombok:${lombokVersion}"
-    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
-    testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
-    testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    runtimeOnly "org.postgresql:postgresql"
+    testImplementation "com.h2database:h2"
 
     // MapStruct
-    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
-    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+    implementation "org.mapstruct:mapstruct:1.5.5.Final"
+    annotationProcessor "org.mapstruct:mapstruct-processor:1.5.5.Final"
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
     // DevTools
@@ -69,31 +43,21 @@ dependencies {
 
     // Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation platform("org.testcontainers:testcontainers-bom:${testcontainersBom}")
+    testImplementation platform("org.testcontainers:testcontainers-bom:1.19.8")
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
 
     // Mockito / Security Test
-    testImplementation 'org.mockito:mockito-core:5.20.0'
-    testImplementation 'org.mockito:mockito-junit-jupiter:5.20.0'
-    testImplementation 'org.mockito:mockito-inline:5.2.0'
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.mockito:mockito-junit-jupiter'
+    testImplementation 'org.mockito:mockito-inline'
     testImplementation 'org.springframework.security:spring-security-test'
 
     // Configuration processor
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 }
 
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-    }
-    dependencies {
-        dependency 'org.apache.commons:commons-lang3:3.18.0'
-    }
-}
-
 springBoot {
-    // Ajusta el main class según tu paquete y clase principal
     mainClass = 'com.celotts.productservice.ProductServiceApplication'
 }
 
@@ -109,7 +73,6 @@ compileJava {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
     options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation']
 }
 

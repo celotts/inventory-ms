@@ -1,4 +1,3 @@
-// com.celotts.productservice.infrastructure.adapter.output.postgres.repository.lot.LotJpaRepository
 package com.celotts.productservice.infrastructure.adapter.output.postgres.repository.lot;
 
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.lot.LotEntity;
@@ -17,8 +16,6 @@ public interface LotJpaRepository extends JpaRepository<LotEntity, UUID> {
 
     Page<LotEntity> findByProductIdAndDeletedAtIsNull(UUID productId, Pageable pageable);
 
-    // ✅ Nuevo: incluye vencidos y los que expiran hasta 'until', excluye borrados lógicos
-    // ✅ Corregido: Se agrega countQuery explícito para soportar la paginación
     @Query(value = """
            SELECT l
            FROM LotEntity l
@@ -31,6 +28,5 @@ public interface LotJpaRepository extends JpaRepository<LotEntity, UUID> {
            WHERE l.deletedAt IS NULL
              AND (l.expirationDate <= :until)
            """)
-    Page<LotEntity> findExpiredOrExpiring(@Param("until") LocalDate until,
-                                          LocalDate localDate, Pageable pageable);
+    Page<LotEntity> findExpiredOrExpiring(@Param("until") LocalDate until, Pageable pageable);
 }

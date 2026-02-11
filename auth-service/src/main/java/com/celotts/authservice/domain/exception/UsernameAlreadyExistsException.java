@@ -1,7 +1,7 @@
 package com.celotts.authservice.domain.exception;
 
-public class UsernameAlreadyExistsException extends RuntimeException {
+public class UsernameAlreadyExistsException extends BaseAuthException {
     public UsernameAlreadyExistsException(String username) {
-        super("Error: Username '" + username + "' is already taken!");
+        super("auth.error.username.taken", username);
     }
 }
