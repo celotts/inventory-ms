@@ -7,8 +7,10 @@ import com.celotts.purchaseservice.domain.port.input.PurchaseUseCase;
 import com.celotts.purchaseservice.domain.port.output.PurchaseRepositoryPort;
 import com.celotts.purchaseservice.infrastructure.adapter.input.rest.dto.product.ProductDto;
 import com.celotts.purchaseservice.infrastructure.adapter.input.rest.dto.supplier.SupplierDto;
+import com.celotts.purchaseservice.infrastructure.adapter.input.rest.dto.tax.TaxDto;
 import com.celotts.purchaseservice.infrastructure.client.ProductClient;
 import com.celotts.purchaseservice.infrastructure.client.SupplierClient;
+import com.celotts.purchaseservice.infrastructure.client.TaxClient;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.UUID;
 
 @Service
@@ -31,6 +34,7 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
     private final MessageSource messageSource;
     private final SupplierClient supplierClient;
     private final ProductClient productClient;
+    private final TaxClient taxClient;
 
     private String getMsg(String key, Object... args) {
         return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
@@ -63,6 +67,7 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
         }
 
         for (PurchaseItemModel item : purchase.getItems()) {
+            // 1. Validate Product
             try {
                 ProductDto product = productClient.getProductById(item.getProductId());
                 item.setProductName(product.getName());
@@ -74,19 +79,51 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
                 log.error("Error communicating with Product Service: Status={}, Msg={}", e.status(), e.getMessage());
                 throw new ServiceUnavailableException(getMsg("service.product.unavailable"));
             }
+
+            // 2. Validate Tax (if present)
+            if (item.getTaxId() != null) {
+                try {
+                    TaxDto tax = taxClient.getTaxById(item.getTaxId());
+                    if (Boolean.FALSE.equals(tax.getIsActive())) {
+                        throw new IllegalArgumentException(getMsg("tax.inactive", tax.getName()));
+                    }
+                    item.setTaxRate(tax.getRate());
+                } catch (FeignException.NotFound e) {
+                    throw new TaxNotFoundException("tax.not-found", item.getTaxId());
+                } catch (FeignException e) {
+                    log.error("Error communicating with Tax Service: Status={}, Msg={}", e.status(), e.getMessage());
+                    throw new ServiceUnavailableException(getMsg("service.tax.unavailable"));
+                }
+            } else {
+                item.setTaxRate(BigDecimal.ZERO);
+            }
         }
     }
 
     private void calculateTotals(PurchaseModel purchase) {
         BigDecimal subtotal = BigDecimal.ZERO;
+        BigDecimal taxTotal = BigDecimal.ZERO;
+
         for (PurchaseItemModel item : purchase.getItems()) {
+            // Line Total = Quantity * Unit Cost
             BigDecimal lineTotal = item.getUnitCost().multiply(item.getQuantity());
             subtotal = subtotal.add(lineTotal);
+
+            // Tax Amount = Line Total * (Tax Rate / 100)
+            if (item.getTaxRate() != null && item.getTaxRate().compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal taxAmount = lineTotal.multiply(item.getTaxRate())
+                        .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+                item.setTaxAmount(taxAmount);
+                taxTotal = taxTotal.add(taxAmount);
+            } else {
+                item.setTaxAmount(BigDecimal.ZERO);
+            }
         }
+
         purchase.setSubtotal(subtotal);
-        purchase.setTaxTotal(BigDecimal.ZERO);
-        purchase.setDiscountTotal(BigDecimal.ZERO);
-        purchase.setGrandTotal(subtotal);
+        purchase.setTaxTotal(taxTotal);
+        purchase.setDiscountTotal(BigDecimal.ZERO); // TODO: Implement discount logic
+        purchase.setGrandTotal(subtotal.add(taxTotal).subtract(purchase.getDiscountTotal()));
     }
 
     @Override
@@ -122,10 +159,10 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
             calculateTotals(purchaseUpdates);
             existingPurchase.setItems(purchaseUpdates.getItems());
             existingPurchase.setSubtotal(purchaseUpdates.getSubtotal());
+            existingPurchase.setTaxTotal(purchaseUpdates.getTaxTotal());
             existingPurchase.setGrandTotal(purchaseUpdates.getGrandTotal());
         }
         
-        // Actualizar otros campos si vienen en el DTO
         if (purchaseUpdates.getOrderNumber() != null) existingPurchase.setOrderNumber(purchaseUpdates.getOrderNumber());
         if (purchaseUpdates.getStatus() != null) existingPurchase.setStatus(purchaseUpdates.getStatus());
         if (purchaseUpdates.getNotes() != null) existingPurchase.setNotes(purchaseUpdates.getNotes());
