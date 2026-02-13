@@ -120,7 +120,7 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
         CategoryModel existing = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(getLocalizedMessage("category.not.found")));
 
-        existing.setActive(active);
+        existing.setEnabled(active);
         existing.setUpdatedAt(LocalDateTime.now());
         return repository.save(existing);
     }
@@ -129,7 +129,7 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
     public CategoryModel restore(UUID id) {
         CategoryModel existing = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(getLocalizedMessage("category.not.found")));
-        existing.setDeleted(false);
+        existing.setEnabled(true); // Restaurar es activar
         existing.setUpdatedAt(LocalDateTime.now());
         return repository.save(existing);
     }
@@ -145,7 +145,7 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
     @Override
     @Transactional(readOnly = true)
     public CategoryStats getCategoryStatistics() {
-        long total = repository.count();           // mejor que findAll().size()
+        long total = repository.count();
         long active = repository.countByActive(true);
         long inactive = repository.countByActive(false);
         return CategoryStats.builder()

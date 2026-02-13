@@ -14,19 +14,22 @@ class WebConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(@NonNull CorsRegistry registry) {
-                // Verificamos si props.cors() es nulo antes de llamar a allowedOrigin()
                 String origin = (props.cors() != null) ? props.cors().allowedOrigin() : "*";
+                if (origin == null) origin = "*";
 
-                // Si por alguna razón origin sigue siendo nulo, usamos "*"
-                if (origin == null) {
-                    origin = "*";
+                if ("*".equals(origin)) {
+                    registry.addMapping("/**")
+                            .allowedOriginPatterns("*") // Usar patterns cuando es comodín
+                            .allowedMethods("*")
+                            .allowedHeaders("*")
+                            .allowCredentials(true);
+                } else {
+                    registry.addMapping("/**")
+                            .allowedOrigins(origin) // Usar origins explícitos si hay uno definido
+                            .allowedMethods("*")
+                            .allowedHeaders("*")
+                            .allowCredentials(true);
                 }
-
-                registry.addMapping("/**")
-                        .allowedOrigins(origin)
-                        .allowedMethods("*")
-                        .allowedHeaders("*")
-                        .allowCredentials(true);
             }
         };
     }

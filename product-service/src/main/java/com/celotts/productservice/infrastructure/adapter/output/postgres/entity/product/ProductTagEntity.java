@@ -12,7 +12,6 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
 public class ProductTagEntity extends AuditableEntity {
 
@@ -22,14 +21,9 @@ public class ProductTagEntity extends AuditableEntity {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "name", length = 50, nullable = false)
     private String name;
 
     @Column(name = "description", length = 255)
     private String description;
-
-    @PrePersist
-    public void prePersist() {
-        super.prePersist(); // inicializa auditoría (createdAt, enabled, etc.)
-    }
 }

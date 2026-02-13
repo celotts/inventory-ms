@@ -22,7 +22,7 @@ public class TaxCreateDto {
     @Size(min = 2, max = 120, message = "{tax.name.size}")
     private String name;
 
-    @Size(min = 2, max = 120, message = "{tax.name.size}")
+    @Size(min = 2, max = 120, message = "{tax.description.size}")
     private String description;
 
     @NotNull(message = "{tax.rate.required}")
@@ -38,4 +38,15 @@ public class TaxCreateDto {
 
     @Builder.Default
     private Boolean isActive = true;
+
+    @NotBlank(message = "{tax.createdBy.required}")
+    private String createdBy;
+
+    @AssertTrue(message = "{tax.date.range.invalid}")
+    public boolean isDateRangeValid() {
+        if (validFrom == null || validTo == null) {
+            return true; // Dejamos que @NotNull maneje la obligatoriedad de validFrom
+        }
+        return !validTo.isBefore(validFrom);
+    }
 }

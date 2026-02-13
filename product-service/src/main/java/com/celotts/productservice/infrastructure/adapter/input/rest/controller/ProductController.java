@@ -1,10 +1,13 @@
 package com.celotts.productservice.infrastructure.adapter.input.rest.controller;
 
+import com.celotts.productservice.domain.model.lot.LotModel;
 import com.celotts.productservice.domain.model.product.ProductModel;
 import com.celotts.productservice.domain.port.input.product.ProductUseCase;
+import com.celotts.productservice.domain.port.input.stock.ReceiveStockUseCase;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.product.*;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.ListResponse;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.PageResponse;
+import com.celotts.productservice.infrastructure.adapter.input.rest.dto.stock.StockReceptionDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductMapper;
 import com.celotts.productservice.infrastructure.config.PaginationProperties;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +44,7 @@ import java.util.*;
 public class ProductController {
 
     private final ProductUseCase productUseCase;
+    private final ReceiveStockUseCase receiveStockUseCase;
     private final ProductMapper productMapper;
     private final PaginationProperties paginationProperties;
     private final MessageSource messageSource;
@@ -70,6 +74,24 @@ public class ProductController {
                 .toUri();
 
         return ResponseEntity.created(location).body(productMapper.toResponse(created));
+    }
+
+    @PostMapping("/receive-stock")
+    @Operation(summary = "Receive stock", description = "Receives stock for a product, creating a lot and updating inventory.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Stock received successfully"),
+            @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
+    })
+    public ResponseEntity<Map<String, Object>> receiveStock(@RequestBody @Valid StockReceptionDto receptionDto) {
+        log.info("Receiving stock for product: {}", receptionDto.getProductId());
+        LotModel lot = receiveStockUseCase.receiveStock(receptionDto);
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("lotId", lot.getId());
+        response.put("lotCode", lot.getLotCode());
+        response.put("message", "Stock received successfully");
+        
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")

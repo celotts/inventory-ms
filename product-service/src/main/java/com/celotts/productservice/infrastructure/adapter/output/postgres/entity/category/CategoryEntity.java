@@ -3,6 +3,7 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.entity
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.shared.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.util.UUID;
 
@@ -11,15 +12,16 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@EqualsAndHashCode(callSuper = true) // importante para herencia
+@EqualsAndHashCode(callSuper = true)
 public class CategoryEntity extends AuditableEntity {
 
     @Id
     @GeneratedValue
+    @UuidGenerator
+    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "name", length = 100, nullable = false)
     private String name;
 
     @Column(name = "description", length = 255)
