@@ -1,6 +1,7 @@
 // src/main/java/com/celotts/productservice/application/usecase/product/ProductTagAssignmentUseCaseImpl.java
 package com.celotts.productservice.application.usecase.product;
 
+import com.celotts.productservice.domain.exception.product.ProductTagAssignmentNotFoundException;
 import com.celotts.productservice.domain.model.product.ProductTagAssignmentModel;
 import com.celotts.productservice.domain.port.input.product.ProductTagAssignmentUseCase;
 import com.celotts.productservice.domain.port.output.product.ProductTagAssignmentRepositoryPort;
@@ -25,7 +26,9 @@ public class ProductTagAssignmentUseCaseImpl implements ProductTagAssignmentUseC
 
     @Override
     public ProductTagAssignmentModel update(UUID id, ProductTagAssignmentModel model) {
-        model.setId(id);
+        // Ensure the entity exists before updating
+        findById(id);
+        model.setId(id); // Set the ID from the path variable to the model
         return repository.save(model);
     }
 
@@ -36,7 +39,8 @@ public class ProductTagAssignmentUseCaseImpl implements ProductTagAssignmentUseC
 
     @Override
     public ProductTagAssignmentModel findById(UUID id) {
-        return repository.findById(id).orElse(null);
+        return repository.findById(id)
+                .orElseThrow(() -> new ProductTagAssignmentNotFoundException(id));
     }
 
     @Override
@@ -46,7 +50,7 @@ public class ProductTagAssignmentUseCaseImpl implements ProductTagAssignmentUseC
 
     @Override
     public List<ProductTagAssignmentModel> findByEnabled(boolean enabled) {
-        return repository.findByEnabled(enabled);
+        return repository.findByEnabled(enabled, Pageable.unpaged()).getContent();
     }
 
     @Override
@@ -56,11 +60,15 @@ public class ProductTagAssignmentUseCaseImpl implements ProductTagAssignmentUseC
 
     @Override
     public ProductTagAssignmentModel enable(UUID id) {
-        return repository.enable(id);
+        ProductTagAssignmentModel assignment = findById(id);
+        assignment.setEnabled(true);
+        return repository.save(assignment);
     }
 
     @Override
     public ProductTagAssignmentModel disable(UUID id) {
-        return repository.disable(id);
+        ProductTagAssignmentModel assignment = findById(id);
+        assignment.setEnabled(false);
+        return repository.save(assignment);
     }
 }

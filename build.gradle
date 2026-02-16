@@ -12,6 +12,7 @@ allprojects {
 
     repositories {
         mavenCentral()
+        maven { url 'https://repo.spring.io/milestone' }
     }
 }
 
@@ -32,6 +33,7 @@ subprojects {
         imports {
             mavenBom "org.springframework.boot:spring-boot-dependencies:3.2.5"
             mavenBom "org.springframework.cloud:spring-cloud-dependencies:2023.0.2"
+            mavenBom "org.springframework.ai:spring-ai-bom:0.8.1"
         }
     }
 

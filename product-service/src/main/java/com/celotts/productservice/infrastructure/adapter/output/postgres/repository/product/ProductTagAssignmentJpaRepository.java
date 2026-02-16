@@ -1,6 +1,8 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product;
 
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTagAssignmentEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -20,7 +22,7 @@ public interface ProductTagAssignmentJpaRepository
     boolean existsByProductIdAndTagId(UUID productId, UUID tagId);
 
     // nuevos
-    List<ProductTagAssignmentEntity> findByEnabled(Boolean enabled);
+    Page<ProductTagAssignmentEntity> findByEnabled(Boolean enabled, Pageable pageable);
     long countByEnabled(Boolean enabled);
 
     @Query("""
