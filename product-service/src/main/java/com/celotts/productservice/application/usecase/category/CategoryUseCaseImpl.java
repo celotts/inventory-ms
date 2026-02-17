@@ -11,7 +11,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 
@@ -24,7 +25,8 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
     private final MessageSource messageSource;
 
     private String getLocalizedMessage(String key, Object... args) {
-        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
+        String message = messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
+        return message != null ? message : key;
     }
 
     @Override
@@ -120,7 +122,7 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
         CategoryModel existing = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(getLocalizedMessage("category.not.found")));
 
-        existing.setEnabled(active);
+        existing.setActive(active);
         existing.setUpdatedAt(LocalDateTime.now());
         return repository.save(existing);
     }
@@ -129,7 +131,8 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
     public CategoryModel restore(UUID id) {
         CategoryModel existing = repository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(getLocalizedMessage("category.not.found")));
-        existing.setEnabled(true); // Restaurar es activar
+        existing.setActive(true); // Restaurar es activar
+        existing.setDeleted(false); // Restaurar es quitar la marca de eliminado
         existing.setUpdatedAt(LocalDateTime.now());
         return repository.save(existing);
     }

@@ -1,6 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product;
 
-import com.celotts.productservice.domain.exception.product.ProductTagAssignmentNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import com.celotts.productservice.domain.model.product.ProductTagAssignmentModel;
 import com.celotts.productservice.domain.port.output.product.ProductTagAssignmentRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductTagAssignmentEntity;
@@ -55,7 +55,7 @@ public class ProductTagAssignmentRepositoryAdapter implements ProductTagAssignme
     @Transactional
     public ProductTagAssignmentModel enable(UUID id) {
         ProductTagAssignmentEntity e = repository.findById(id)
-                .orElseThrow(() -> new ProductTagAssignmentNotFoundException(id));
+                .orElseThrow(() -> new EntityNotFoundException("Tag Assignment not found with id: " + id));
         e.setEnabled(true);
         return mapper.toModel(repository.save(e));
     }
@@ -64,7 +64,7 @@ public class ProductTagAssignmentRepositoryAdapter implements ProductTagAssignme
     @Transactional
     public ProductTagAssignmentModel disable(UUID id) {
         ProductTagAssignmentEntity e = repository.findById(id)
-                .orElseThrow(() -> new ProductTagAssignmentNotFoundException(id));
+                .orElseThrow(() -> new EntityNotFoundException("Tag Assignment not found with id: " + id));
         e.setEnabled(false);
         return mapper.toModel(repository.save(e));
     }

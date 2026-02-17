@@ -32,6 +32,12 @@ dependencies {
     runtimeOnly "org.postgresql:postgresql"
     testImplementation "com.h2database:h2"
 
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
     // 🔁 MapStruct
     implementation "org.mapstruct:mapstruct:1.5.5.Final"
     annotationProcessor "org.mapstruct:mapstruct-processor:1.5.5.Final"
@@ -51,7 +57,6 @@ dependencies {
     // 🧩 Mockito / Security Test
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.mockito:mockito-junit-jupiter'
-    testImplementation 'org.mockito:mockito-inline'
     testImplementation 'org.springframework.security:spring-security-test'
 
     // 🛠️ Configuration processor
