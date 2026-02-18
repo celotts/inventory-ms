@@ -46,9 +46,15 @@ subprojects {
         options.encoding = 'UTF-8'
     }
 
-    tasks.withType(Test).tap {
-        configureEach {
-            useJUnitPlatform()
+    // Configuración de tests
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+    }
+    
+    // Deshabilitar Eureka en tests SOLO si NO es el discovery-service
+    if (name != 'discovery-service') {
+        tasks.withType(Test).configureEach {
+            systemProperty 'eureka.client.enabled', 'false'
         }
     }
 }

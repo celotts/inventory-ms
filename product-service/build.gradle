@@ -62,6 +62,13 @@ dependencies {
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 }
 
+// Forzar versiones seguras de dependencias transitivas
+configurations.all {
+    resolutionStrategy {
+        force 'com.google.guava:guava:33.2.0-jre'
+    }
+}
+
 springBoot {
     mainClass = 'com.celotts.productservice.ProductServiceApplication'
 }
