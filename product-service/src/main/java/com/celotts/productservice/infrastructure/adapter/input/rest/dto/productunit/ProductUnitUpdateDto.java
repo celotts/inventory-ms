@@ -14,20 +14,20 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ProductUnitUpdateDto {
 
-    @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name must not exceed 100 characters")
+    @NotBlank(message = "{validation.product-unit.update.name.not-blank}")
+    @Size(max = 100, message = "{validation.product-unit.update.name.size}")
     private String name;
 
-    @NotBlank(message = "Description is required")
-    @Size(max = 500, message = "Description must not exceed 500 characters")
+    @NotBlank(message = "{validation.product-unit.update.description.not-blank}")
+    @Size(max = 500, message = "{validation.product-unit.update.description.size}")
     private String description;
 
-    @NotBlank(message = "Symbol is required")
+    @NotBlank(message = "{validation.product-unit.update.symbol.not-blank}")
     private String symbol;
 
-    @NotNull(message = "Enabled flag is required")
+    @NotNull(message = "{validation.product-unit.update.enabled.not-null}")
     private Boolean enabled;
 
-    @NotBlank(message = "UpdatedBy is required")
+    @NotBlank(message = "{validation.product-unit.update.updated-by.not-blank}")
     private String updatedBy;
 }

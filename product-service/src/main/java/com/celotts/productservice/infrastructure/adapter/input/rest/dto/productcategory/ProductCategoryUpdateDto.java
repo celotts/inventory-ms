@@ -16,15 +16,15 @@ import java.util.UUID;
 @Builder
 public class ProductCategoryUpdateDto {
 
-    @NotNull(message = "ID is required for update")
+    @NotNull(message = "{validation.product-category.update.id.not-null}")
     private UUID id;
 
     private LocalDateTime asignedAt;
 
-    @NotNull(message = "Enabled flag is required")
+    @NotNull(message = "{validation.product-category.update.enabled.not-null}")
     private Boolean enabled;
 
-    @NotBlank(message = "UpdatedBy is required")
+    @NotBlank(message = "{validation.product-category.update.updated-by.not-blank}")
     private String updatedBy;
 
 }
