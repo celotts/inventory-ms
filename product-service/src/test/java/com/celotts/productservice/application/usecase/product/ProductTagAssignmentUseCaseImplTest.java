@@ -1,6 +1,6 @@
 package com.celotts.productservice.application.usecase.product;
 
-import jakarta.persistence.EntityNotFoundException;
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
 import com.celotts.productservice.domain.model.product.ProductTagAssignmentModel;
 import com.celotts.productservice.domain.port.output.product.ProductTagAssignmentRepositoryPort;
 import org.junit.jupiter.api.Test;
@@ -41,7 +41,7 @@ class ProductTagAssignmentUseCaseImplTest {
         UUID id = UUID.randomUUID();
         when(repository.findById(id)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> useCase.findById(id));
+        assertThrows(ResourceNotFoundException.class, () -> useCase.findById(id));
     }
 
     @Test

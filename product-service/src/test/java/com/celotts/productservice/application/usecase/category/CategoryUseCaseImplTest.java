@@ -1,5 +1,6 @@
 package com.celotts.productservice.application.usecase.category;
 
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
 import com.celotts.productservice.domain.model.category.CategoryModel;
 import com.celotts.productservice.domain.port.output.category.CategoryRepositoryPort;
 import org.junit.jupiter.api.Test;
@@ -7,7 +8,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.MessageSource;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -22,9 +22,6 @@ class CategoryUseCaseImplTest {
     @Mock
     private CategoryRepositoryPort repository;
 
-    @Mock
-    private MessageSource messageSource;
-
     @InjectMocks
     private CategoryUseCaseImpl useCase;
 
@@ -32,18 +29,16 @@ class CategoryUseCaseImplTest {
     void updateStatus_throws_whenNotFound() {
         UUID id = UUID.randomUUID();
         when(repository.findById(id)).thenReturn(Optional.empty());
-        when(messageSource.getMessage(any(), any(), any())).thenReturn("Category not found");
 
-        assertThrows(IllegalArgumentException.class, () -> useCase.updateStatus(id, true));
+        assertThrows(ResourceNotFoundException.class, () -> useCase.updateStatus(id, true));
     }
 
     @Test
     void restore_throws_whenNotFound() {
         UUID id = UUID.randomUUID();
         when(repository.findById(id)).thenReturn(Optional.empty());
-        when(messageSource.getMessage(any(), any(), any())).thenReturn("Category not found");
 
-        assertThrows(IllegalArgumentException.class, () -> useCase.restore(id));
+        assertThrows(ResourceNotFoundException.class, () -> useCase.restore(id));
     }
 
     @Test
@@ -69,9 +64,8 @@ class CategoryUseCaseImplTest {
     void permanentDelete_whenNotExists_throws() {
         UUID id = UUID.randomUUID();
         when(repository.existsById(id)).thenReturn(false);
-        when(messageSource.getMessage(any(), any(), any())).thenReturn("Category not found");
 
-        assertThrows(IllegalArgumentException.class, () -> useCase.permanentDelete(id));
+        assertThrows(ResourceNotFoundException.class, () -> useCase.permanentDelete(id));
     }
 
     @Test
