@@ -15,32 +15,31 @@ import jakarta.validation.constraints.Pattern;
 @Builder
 public class ProductUnitCreateDto {
 
-    @NotBlank
-    @NotBlank(message = "Code is required")
-    @Size(max = 30, message = "Code must not exceed 30 characters")
+    @NotBlank(message = "{validation.product-unit.create.code.not-blank}")
+    @Size(max = 30, message = "{validation.product-unit.create.code.size}")
     private String code;
 
-    @NotBlank(message = "Name is required")
-    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
+    @NotBlank(message = "{validation.product-unit.create.name.not-blank}")
+    @Size(min = 2, max = 100, message = "{validation.product-unit.create.name.size}")
     @Pattern(
             regexp = "^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s\\-_]{2,100}$",
-            message = "Name has invalid characters"
+            message = "{validation.product-unit.create.name.pattern}"
     )
     private String name;
 
-    @NotBlank(message = "Description is required")
-    @Size(max = 500, message = "Description must not exceed 500 characters" )
+    @NotBlank(message = "{validation.product-unit.create.description.not-blank}")
+    @Size(max = 500, message = "{validation.product-unit.create.description.size}" )
     private String description;
 
-    @NotNull(message = "Enabled flag is required")
+    @NotNull(message = "{validation.product-unit.create.enabled.not-null}")
     private Boolean enabled;
 
-    @NotBlank(message = "Symbol is required")
+    @NotBlank(message = "{validation.product-unit.create.symbol.not-blank}")
     private String symbol;
 
-    @Size(max = 100, message = "CreatedBy max length is 100")
-    @NotBlank(message = "CreatedBy is required")
-    @Pattern(regexp = "^[\\p{L}0-9._\\-\\s@]+$", message = "CreatedBy has invalid characters")
+    @Size(max = 100, message = "{validation.product-unit.create.created-by.size}")
+    @NotBlank(message = "{validation.product-unit.create.created-by.not-blank}")
+    @Pattern(regexp = "^[\\p{L}0-9._\\-\\s@]+$", message = "{validation.product-unit.create.created-by.pattern}")
     private String createdBy;
 
     private String updatedBy;
