@@ -10,8 +10,6 @@ import com.celotts.productservice.domain.port.output.product.ProductRepositoryPo
 import com.celotts.productservice.domain.port.output.product.ProductUnitRepositoryPort;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -30,16 +28,11 @@ public class ProductUseCaseImpl implements ProductUseCase {
     private final ProductUnitRepositoryPort productUnitPort;
     private final ProductBrandRepositoryPort productBrandPort;
     private final CategoryRepositoryPort categoryRepositoryPort;
-    private final MessageSource messageSource;
-
-    private String getMessage(String key, Object... args) {
-        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
-    }
 
     @Override
     public ProductModel createProduct(ProductModel cmd) {
         if (productRepositoryPort.findByCode(cmd.getCode()).isPresent()) {
-            throw new ResourceAlreadyExistsException("Product", cmd.getCode());
+            throw new ResourceAlreadyExistsException("product.already-exists", cmd.getCode());
         }
         validateReferences(cmd);
         return productRepositoryPort.save(cmd);
@@ -48,7 +41,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public ProductModel updateProduct(UUID id, ProductModel productUpdates) {
         ProductModel existing = productRepositoryPort.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", getMessage("product.not-found-with-id", id)));
+                .orElseThrow(() -> new ResourceNotFoundException("product.not-found-with-id", id));
         validateReferences(productUpdates);
 
 
@@ -72,13 +65,13 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public ProductModel getProductById(UUID id) {
         return productRepositoryPort.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", getMessage("product.not-found-with-id", id)));
+                .orElseThrow(() -> new ResourceNotFoundException("product.not-found-with-id", id));
     }
 
     @Override
     public ProductModel getProductByCode(String code) {
         return productRepositoryPort.findByCode(code)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", getMessage("product.not-found-code", code)));
+                .orElseThrow(() -> new ResourceNotFoundException("product.not-found-code", code));
     }
 
     @Override
@@ -157,13 +150,13 @@ public class ProductUseCaseImpl implements ProductUseCase {
 
     private void validateReferences(ProductModel dto) {
         if (dto.getUnitCode() != null && !productUnitPort.existsByCode(dto.getUnitCode())) {
-            throw new ResourceNotFoundException("Product", getMessage("product.unit.not-found", dto.getUnitCode()));
+            throw new ResourceNotFoundException("product.unit.not-found", dto.getUnitCode());
         }
         if (dto.getBrandId() != null && !productBrandPort.existsById(dto.getBrandId())) {
-            throw new ResourceNotFoundException("Product", getMessage("brand.not-found", dto.getBrandId()));
+            throw new ResourceNotFoundException("brand.not-found", dto.getBrandId());
         }
         if (dto.getCategoryId() != null && !categoryRepositoryPort.existsById(dto.getCategoryId())) {
-            throw new ResourceNotFoundException("Product", getMessage("category.not.found", dto.getCategoryId()));
+            throw new ResourceNotFoundException("category.not.found", dto.getCategoryId());
         }
     }
 
@@ -184,7 +177,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Transactional
     public void disableProduct(UUID id) {
         ProductModel product = productRepositoryPort.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Product", getMessage("product.not-found-with-id", id)));
+                .orElseThrow(() -> new ResourceNotFoundException("product.not-found-with-id", id));
 
         ProductModel updated = product.toBuilder()
                 .enabled(false)
