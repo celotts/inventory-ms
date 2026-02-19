@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.UUID;
 
-@FeignClient(name = "tax-service")
+@FeignClient(name = "tax-service", fallback = TaxClientFallback.class)
 public interface TaxClient {
 
     @GetMapping("/api/v1/taxes/{id}")

@@ -116,6 +116,16 @@ logging:
     org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
     org.hibernate.internal.AbstractSharedSessionContract: INFO
 
+# Habilitar Circuit Breaker para Feign
+feign:
+  circuitbreaker:
+    enabled: true
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+
 ---
 # 🐳 CONFIGURACIÓN EXCLUSIVA PARA DOCKER
 spring:
