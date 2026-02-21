@@ -13,18 +13,18 @@ import lombok.*;        // ← importa Lombok
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProductBrandUpdateDto {
 
-    @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name must not exceed 100 characters")
+    @NotBlank(message = "{validation.product-brand.update.name.not-blank}")
+    @Size(max = 100, message = "{validation.product-brand.update.name.size}")
     private String name;
 
-    @NotBlank(message = "Description is required")
-    @Size(max = 500, message = "Description must not exceed 500 characters")
+    @NotBlank(message = "{validation.product-brand.update.description.not-blank}")
+    @Size(max = 500, message = "{validation.product-brand.update.description.size}")
     private String description;
 
-    @NotNull(message = "Enabled flag is required")
+    @NotNull(message = "{validation.product-brand.update.enabled.not-null}")
     private Boolean enabled;
 
     /** Usuario que realiza la actualización */
-    @NotBlank(message = "UpdatedBy is required")
+    @NotBlank(message = "{validation.product-brand.update.updated-by.not-blank}")
     private String updatedBy;
 }

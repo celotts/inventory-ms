@@ -17,7 +17,7 @@ public interface TaxMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(source = "createdBy", target = "createdBy") // Corregido
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
     TaxModel createdFrom(TaxCreateDto dto);
@@ -25,7 +25,7 @@ public interface TaxMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true) // updatedAt will be set by @PreUpdate / service
+    @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
     void updateFrom(TaxUpdateDto dto, @MappingTarget TaxModel model);
 

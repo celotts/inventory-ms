@@ -33,10 +33,15 @@ HEALTH_CHECK_LIST := Product:$(PRODUCT_PORT) Supplier:$(SUPPLIER_PORT) Tax:$(TAX
 export DOCKER_HOST ?= unix://$(shell podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')
 
 # Archivos de entorno
-ENV_FILE_LOCAL 				:= $(abspath $(CURDIR)/.env.local)
-ENV_FILE_SECURE             := $(abspath $(CURDIR)/.env)
+ENV_FILE_LOCAL   			:= $(abspath $(CURDIR)/.env.local)
+ENV_FILE_SECURE  			:= $(abspath $(CURDIR)/.env)
 ENV_FILE_DEV                := $(abspath $(CURDIR)/.env.dev)
 ENV_FILE_PROD               := $(abspath $(CURDIR)/.env.prod)
+ENV_FILE_LOCAL_SUPPLIER     := $(abspath $(CURDIR)/.env.local-supplier)
+
+# Resolución de archivos de entorno
+ENV_SUPPLIER_FALLBACK ?= $(ENV_FILE_LOCAL)
+ENV_FILE_LOCAL_SUPPLIER_RESOLVED := $(if $(wildcard $(ENV_FILE_LOCAL_SUPPLIER)),$(ENV_FILE_LOCAL_SUPPLIER),$(ENV_SUPPLIER_FALLBACK))
 
 COMPOSE_PROVIDER ?= podman
 export DOCKER_BUILDKIT := 0
@@ -57,18 +62,18 @@ endif
 # Puertos de servicios (con valores por defecto si no se cargaron del env)
 API_GATEWAY_PORT ?= 8090
 CONFIG_PORT      ?= 7777
-AUTH_PORT        ?= 8081
+AUTH_PORT        ?= 8080
 DISCOVERY_PORT   ?= 8761
 PRODUCT_PORT     ?= 9090
 SUPPLIER_PORT    ?= 9091
-TAX_PORT         ?= 9093
-PURCHASE_PORT    ?= 9094
+TAX_PORT         ?= 9092
+PURCHASE_PORT    ?= 9093
 
 # --- Puertos de Bases de Datos (Host) ---
 PRODUCT_DB_PORT_HOST  ?= 5433
 SUPPLIER_DB_PORT_HOST ?= 5434
-PURCHASE_DB_PORT_HOST ?= 5436
-TAX_DB_PORT_HOST      ?= 5435
+PURCHASE_DB_PORT_HOST ?= 5435
+TAX_DB_PORT_HOST      ?= 5436
 AUTH_DB_PORT_HOST     ?= 5437
 
 ifeq ($(ENV), prod)
@@ -187,7 +192,7 @@ build-images: podman-auth ## 🏗️ Construir imágenes
 #🔐 AUTENTICACIÓN
 podman-auth: ## 🔑 Autenticar y asegurar imagen base
 	@mkdir -p $(BUILD_DIR)
-	@touch $(AUTH_FILE) # <-- FIX: Crear archivo vacío si no existe
+	@# Eliminamos la creación incondicional del archivo vacío que causaba el error JSON
 	@echo "==========================================================================================================================================================================="
 	@echo "🔑 Configurando autenticación automática para Podman..."
 	@echo "==========================================================================================================================================================================="
@@ -199,9 +204,23 @@ podman-auth: ## 🔑 Autenticar y asegurar imagen base
 		echo "⚠️ No se encontraron credenciales en .env.local. Saltando login."; \
 	fi
 	@echo "📥 Asegurando imagen base Java 21..."
-	@# Usamos --authfile solo si el archivo tiene contenido o si el login fue exitoso
-	@podman pull eclipse-temurin:21-jdk-jammy || echo "⚠️ Error descarga imagen base (puede que ya exista)"
+	@# Usamos --authfile solo si el archivo existe
+	@if [ -f "$(AUTH_FILE)" ]; then \
+		podman pull eclipse-temurin:21-jdk-jammy --authfile $(AUTH_FILE) || echo "⚠️ Error descarga imagen base (puede que ya exista)"; \
+	else \
+		podman pull eclipse-temurin:21-jdk-jammy || echo "⚠️ Error descarga imagen base (puede que ya exista)"; \
+	fi
 	@echo "✅ Imagen base Java 21 lista."
+
+docker-login:
+	@echo "🔑 Forzando login de Podman/Docker con credenciales de .env.local..."
+	@if [ -z "$(D_USER)" ] || [ -z "$(D_PASS)" ]; then \
+		echo "🔴 ERROR: DOCKER_USERNAME o DOCKER_PASSWORD no definidos en .env.local."; \
+		exit 1; \
+	fi
+	# Usa pipe para pasar la password. Esto es menos seguro, pero es la única manera de automatizar sin prompt.
+	echo "$(D_PASS)" | podman login -u "$(D_USER)" --password-stdin docker.io
+	@echo "✅ Login completado."
 
 #🚀 DESPLIEGUE COMPLETO
 up-local-all-ordered: podman-auth podman-ready fix-line-endings
@@ -214,7 +233,7 @@ up-local-all-ordered: podman-auth podman-ready fix-line-endings
 	@echo "🔨 Compilando JARs..."
 	@$(MAKE) build-jars-all
 
-	$(eval CMD := $(DOCKER_COMPOSE_BIN) --env-file $(ENV_FILE_SECURE) -f $(COMPOSE_FILE) -p $(COMPOSE_PROJECT_NAME) --profile infra --profile product --profile supplier --profile tax --profile purchase --profile gateway --profile auth)
+	$(eval CMD := $(DOCKER_COMPOSE_BIN) --env-file $(abspath $(ENV_FILE_LOCAL)) -f $(abspath $(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) --profile infra --profile product --profile supplier --profile tax --profile purchase --profile gateway --profile auth)
 
 	@echo "🏗️  1. Infraestructura..."
 	@$(CMD) up -d --build discovery-service config-service
@@ -246,7 +265,7 @@ up-local-all-ordered: podman-auth podman-ready fix-line-endings
 	@echo "========================================================================"
 	@echo "                RESUMEN FINAL DE DESPLIEGUE"
 	@echo "========================================================================"
-	@printf "| %-20s | %-12s | %-10s | %-15s |\n" "SERVICIO" "ESTADO" "PUERTO" "HEALTH"
+	@printf "| %-20s | %-12s | %-10s | %-24s |\n" "SERVICIO" "ESTADO" "PUERTO" "HEALTH"
 
 	@echo "----------------------- INFRAESTRUCTURA & CORE -------------------------"
 	@$(foreach svc,discovery-service:$(DISCOVERY_PORT) config-service:$(CONFIG_PORT) api-gateway:$(API_GATEWAY_PORT),$(call print_row,$(svc));)
@@ -269,20 +288,40 @@ up-local-all-ordered: podman-auth podman-ready fix-line-endings
 	rm -f .start_time
 	@echo "✅ Proceso completado exitosamente."
 
+up-local: podman-ready fix-line-endings fix-container-orphans ## 🧪 Infra + Product + Gateway
+	@echo "🧪 Levantando: Infra + Product + Gateway"
+	$(Q) cp $(ENV_FILE_LOCAL) .env.override
+	$(Q) $(MAKE) build-jars
+	$(Q) $(COMPOSE_LOCAL) --profile infra --profile product --profile gateway up -d --build --remove-orphans
+
+up-local-supplier: docker-login podman-ready fix-line-endings fix-container-orphans ## 🧪 Infra + Supplier
+	@echo "🧹 Configurando entorno supplier..."
+	$(Q) cp "$(ENV_FILE_LOCAL_SUPPLIER_RESOLVED)" "$(CURDIR)/.env.override"
+	$(Q) $(MAKE) build-jars-all
+	@echo "🦭 Levantando supplier..."
+	$(Q) $(COMPOSE_LOCAL_SUPPLIER) --profile infra --profile supplier up -d --build --remove-orphans
+
+up-local-with-tax: podman-ready fix-line-endings fix-container-orphans ## 🧪 Infra + Product + Gateway + Tax
+	@echo "🧹 Configurando entorno con tax..."
+	$(Q) cp $(ENV_FILE_LOCAL) .env.override
+	$(Q) $(MAKE) build-jars-all
+	@echo "🦭 Levantando servicios con tax..."
+	$(Q) $(COMPOSE_LOCAL) --profile infra --profile gateway --profile product --profile tax up -d --build --remove-orphans
+
 #🧹 LIMPIEZA
 clean-env:
 	@echo "======================================================================"
-	@echo "🧹 LIMPIANDO ENTORNO (Proyecto: $(COMPOSE_PROJECT_NAME))"
+	@echo "🧹 LIMPIANDO ENTORNO Y VOLÚMENES (Full Reset)"
 	@echo "======================================================================"
-	-@$(DOCKER_COMPOSE_BIN) --env-file $(ENV_FILE_SECURE) -f $(COMPOSE_FILE) -p $(COMPOSE_PROJECT_NAME) --profile auth down -v --remove-orphans 2>/dev/null || true
-	@echo "🧨 Eliminando residuos..."
+	# Detener con perfiles y borrar volúmenes (-v)
+	-@$(DOCKER_COMPOSE_BIN) -f $(COMPOSE_FILE) -p $(COMPOSE_PROJECT_NAME) --profile infra --profile product --profile supplier --profile tax --profile purchase --profile gateway --profile auth down -v --remove-orphans 2>/dev/null || true
+	@echo "🧨 Eliminando contenedores y redes residuales..."
 	-@podman rm -f $$(podman ps -aq --filter "name=$(COMPOSE_PROJECT_NAME)") 2>/dev/null || true
-	-@podman network rm $$(podman network ls --filter "name=$(COMPOSE_PROJECT_NAME)" --format "{{.Name}}") 2>/dev/null || true
-	@echo "💾 Purgando volúmenes..."
+	-@podman network rm inventory-net 2>/dev/null || true
+	@echo "💾 Purgando volúmenes de sistema..."
 	-@podman volume prune -f 2>/dev/null || true
-	@# Eliminamos el archivo de tiempo aquí para empezar limpios
 	@rm -f .start_time 2>/dev/null || true
-	@echo "✅ Entorno listo."
+	@echo "✅ Entorno 100% limpio."
 
 clean-all: podman-ready fix-line-endings ## 🧨 Limpieza completa
 	@echo "🛑 Deteniendo servicios..."
@@ -365,3 +404,14 @@ health: health-check-extended ## 💚 Verificación de salud completa
 status: podman-ready ## 📊 Estado de todos los servicios
 	$(COMPOSE_LOCAL) ps
 status-all: status ## 📊 Alias para status
+
+fix-container-orphans: ## 🧹 Limpiar contenedores huérfanos (Forzado)
+	@echo "🧹 Limpiando contenedores huérfanos (Forzado)..."
+	# 1. Intenta down normal del proyecto
+	$(COMPOSE_LOCAL) down -v --remove-orphans 2>/dev/null || true
+	# 2. **Elimina forzadamente** contenedores que empiecen con el nombre del proyecto
+	$(Q) podman rm -f $$(podman ps -a --format '{{.Names}}' | grep '^$(COMPOSE_PROJECT_NAME)_') 2>/dev/null || true
+	# 3. Elimina contenedores detenidos globalmente (por si el paso 2 falla)
+	$(Q) podman rm -f $$(podman ps -aq --filter status=exited) 2>/dev/null || true
+	# 4. Purga el sistema
+	$(Q) podman system prune -f 2>/dev/null || true

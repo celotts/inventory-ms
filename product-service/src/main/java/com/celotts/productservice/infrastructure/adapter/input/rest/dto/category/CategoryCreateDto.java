@@ -16,17 +16,17 @@ import jakarta.validation.constraints.Pattern;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CategoryCreateDto {
-    @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name must not exceed 100 characters")
+    @NotBlank(message = "{validation.category.create.name.not-blank}")
+    @Size(max = 100, message = "{validation.category.create.name.size}")
     private String name;
 
-    @NotBlank(message = "Description is required")
-    @Size(max = 500, message = "Description must not exceed 500 characters")
+    @NotBlank(message = "{validation.category.create.description.not-blank}")
+    @Size(max = 500, message = "{validation.category.create.description.size}")
     private String description;
 
-    @Size(max = 100, message = "CreatedBy max length is 100")
-    @NotBlank(message = "createdBy is required")
-    @Pattern(regexp = "^[\\p{L}0-9._\\-\\s@]+$", message = "createdBy has invalid characters")
+    @Size(max = 100, message = "{validation.category.create.created-by.size}")
+    @NotBlank(message = "{validation.category.create.created-by.not-blank}")
+    @Pattern(regexp = "^[\\p{L}0-9._\\-\\s@]+$", message = "{validation.category.create.created-by.pattern}")
     private String createdBy;
 
     private String updatedBy;

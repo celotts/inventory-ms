@@ -11,6 +11,6 @@ public class ProductNotFoundException extends ResourceNotFoundException {
     }
 
     public ProductNotFoundException(UUID id) {
-        super("product.not-found.id", id);
+        super("product.not-found-with-id", id);
     }
 }

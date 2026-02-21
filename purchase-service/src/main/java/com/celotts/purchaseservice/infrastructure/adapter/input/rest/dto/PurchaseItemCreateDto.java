@@ -25,4 +25,7 @@ public class PurchaseItemCreateDto {
     @Positive
     @Schema(description = "Cost per unit of the product", example = "99.99")
     private BigDecimal unitCost;
+
+    @Schema(description = "ID of the tax applied to this item (optional)")
+    private UUID taxId;
 }

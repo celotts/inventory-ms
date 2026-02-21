@@ -1,0 +1,191 @@
+server:
+  port: 0
+  servlet:
+    context-path: /
+
+# Configuración para desactivar Swagger/OpenAPI en tests (FALTABA ESTO)
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+# Configuración dummy para Jasypt (FALTABA ESTO)
+jasypt:
+  encryptor:
+    password: password
+
+spring:
+  application:
+    name: auth-service
+  main:
+    allow-bean-definition-overriding: true
+  flyway:
+    enabled: false
+  liquibase:
+    enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081
+          jwk-set-uri: http://localhost:8081/.well-known/jwks.json
+      client:
+        registration:
+          google:
+            client-id: dummy
+            client-secret: dummy
+            scope: openid,profile,email
+            redirect-uri: http://localhost:8080/login/oauth2/code/google
+            authorization-grant-type: authorization_code
+        provider:
+          google:
+            authorization-uri: http://localhost:8081/oauth2/authorize
+            token-uri: http://localhost:8081/oauth2/token
+            user-info-uri: http://localhost:8081/userinfo
+            user-name-attribute: sub
+    user:
+      name: user
+      password: password
+  kafka:
+    bootstrap-servers: localhost:9092
+  mail:
+    host: localhost
+    port: 2525
+    username: user
+    password: password
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: password
+  # Redis Legacy (Soporte para versiones antiguas de Spring Data Redis)
+  redis:
+    host: localhost
+    port: 6379
+  datasource:
+    url: jdbc:h2:mem:auth-test-db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+  cloud:
+    config:
+      enabled: false
+    discovery:
+      enabled: false
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+logging:
+  level:
+    com.netflix.discovery: OFF
+    com.netflix.eureka: OFF
+    com.netflix.discovery.shared.transport.jersey3: OFF
+
+# Propiedades dummy para JWT (necesarias si tu servicio valida @Value("${jwt.secret}"))
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  secretKey: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration: 86400000
+  header: Authorization
+  prefix: "Bearer "
+  base64-secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  authorities-key: auth
+  token-validity-in-seconds: 86400
+  token-validity-in-milliseconds: 86400000
+  cookie-name: accessToken
+  refresh-cookie-name: refreshToken
+  access-token-validity-in-seconds: 3600
+  refresh-token-validity-in-seconds: 86400
+  token:
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    expiration: 86400000
+    secretKey: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+
+# Variaciones adicionales comunes para JWT
+app:
+  jwtSecret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  jwtExpirationMs: 86400000
+  jwt:
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    expiration: 86400000
+    secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  admin:
+    email: admin@test.com
+    password: password
+
+auth:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration: 86400000
+
+security:
+  jwt:
+    secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    expiration-time: 86400000
+    header: Authorization
+    prefix: "Bearer "
+    token:
+      secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      expiration: 86400000
+    refresh-token:
+      secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      expiration: 86400000
+
+# Estructura jerárquica común (Spring Boot 3 pattern)
+application:
+  security:
+    jwt:
+      secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      expiration: 86400000
+      refresh-token:
+        secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+        expiration: 86400000
+
+# URLs Dummy para Feign Clients
+product-service:
+  url: http://localhost:8080
+inventory-service:
+  url: http://localhost:8080
+gateway-service:
+  url: http://localhost:8080
+user-service:
+  url: http://localhost:8080
+notification-service:
+  url: http://localhost:8080
+account-service:
+  url: http://localhost:8080
+
+# Configuración CORS común
+cors:
+  allowed-origins: "*"
+  allowed-methods: "*"
+  allowed-headers: "*"
+  exposed-headers: "*"
+
+# Actuator & Info
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  tracing:
+    enabled: false
+  info:
+    env:
+      enabled: true
+info:
+  app:
+    name: auth-service
+    description: Auth Service
+    version: 1.0.0

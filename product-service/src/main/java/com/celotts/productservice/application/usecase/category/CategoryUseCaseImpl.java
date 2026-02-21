@@ -1,17 +1,17 @@
 package com.celotts.productservice.application.usecase.category;
 
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
 import com.celotts.productservice.domain.model.category.CategoryModel;
 import com.celotts.productservice.domain.model.category.CategoryStats;
 import com.celotts.productservice.domain.port.input.category.CategoryUseCase;
 import com.celotts.productservice.domain.port.output.category.CategoryRepositoryPort;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 
@@ -21,11 +21,6 @@ import lombok.RequiredArgsConstructor;
 public class CategoryUseCaseImpl implements CategoryUseCase {
 
     private final CategoryRepositoryPort repository;
-    private final MessageSource messageSource;
-
-    private String getLocalizedMessage(String key, Object... args) {
-        return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
-    }
 
     @Override
     public CategoryModel save(CategoryModel category) {
@@ -118,7 +113,7 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
     @Override
     public CategoryModel updateStatus(UUID id, Boolean active) {
         CategoryModel existing = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(getLocalizedMessage("category.not.found")));
+                .orElseThrow(() -> new ResourceNotFoundException("category.not.found", id));
 
         existing.setActive(active);
         existing.setUpdatedAt(LocalDateTime.now());
@@ -128,8 +123,9 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
     @Override
     public CategoryModel restore(UUID id) {
         CategoryModel existing = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(getLocalizedMessage("category.not.found")));
-        existing.setDeleted(false);
+                .orElseThrow(() -> new ResourceNotFoundException("category.not.found", id));
+        existing.setActive(true); // Restaurar es activar
+        existing.setDeleted(false); // Restaurar es quitar la marca de eliminado
         existing.setUpdatedAt(LocalDateTime.now());
         return repository.save(existing);
     }
@@ -137,7 +133,7 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
     @Override
     public void permanentDelete(UUID id) {
         if (!repository.existsById(id)) {
-            throw new IllegalArgumentException(getLocalizedMessage("category.not.found"));
+            throw new ResourceNotFoundException("category.not.found", id);
         }
         repository.deleteById(id);
     }
@@ -145,7 +141,7 @@ public class CategoryUseCaseImpl implements CategoryUseCase {
     @Override
     @Transactional(readOnly = true)
     public CategoryStats getCategoryStatistics() {
-        long total = repository.count();           // mejor que findAll().size()
+        long total = repository.count();
         long active = repository.countByActive(true);
         long inactive = repository.countByActive(false);
         return CategoryStats.builder()

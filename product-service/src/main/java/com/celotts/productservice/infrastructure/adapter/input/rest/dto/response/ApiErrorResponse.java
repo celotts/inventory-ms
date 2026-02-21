@@ -17,7 +17,7 @@ public record ApiErrorResponse(
 ) {
     public ApiErrorResponse {
         if (status < 100 || status > 599) {
-            throw new IllegalArgumentException("El código de estado HTTP no es válido: " + status);
+            throw new IllegalArgumentException("Invalid HTTP status code: " + status);
         }
         error   = (error == null || error.isBlank()) ? "Error" : error.strip();
         message = (message == null) ? "" : message.strip();

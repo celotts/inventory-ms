@@ -9,8 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.UUID;
 
-// CAMBIO: Eliminamos 'url' para usar Eureka + LoadBalancer
-@FeignClient(name = "supplier-service")
+@FeignClient(name = "supplier-service", fallback = SupplierClientFallback.class)
 public interface SupplierClient {
 
     @GetMapping("/api/v1/suppliers/{id}")

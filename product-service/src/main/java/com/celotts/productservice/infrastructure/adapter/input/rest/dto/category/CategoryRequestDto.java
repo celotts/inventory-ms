@@ -28,11 +28,11 @@ import lombok.experimental.SuperBuilder;
 public class CategoryRequestDto extends PageableRequestDto {
 
     // --- Filtros ---
-    @NotBlank(message = "Name is required")
-    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
+    @NotBlank(message = "{validation.category.request.name.not-blank}")
+    @Size(min = 2, max = 100, message = "{validation.category.request.name.size}")
     private String name;
 
-    @Size(max = 500, message = "Description cannot exceed 500 characters")
+    @Size(max = 500, message = "{validation.category.request.description.size}")
     private String description;
 
     private Boolean active;
@@ -41,11 +41,11 @@ public class CategoryRequestDto extends PageableRequestDto {
 
     // --- Paginación ---
     @Builder.Default
-    @PositiveOrZero(message = "Page must be >= 0")
+    @PositiveOrZero(message = "{validation.category.request.page.positive-or-zero}")
     private Integer page = 0;
 
     @Builder.Default
-    @Min(value = 1, message = "Size must be >= 1")
+    @Min(value = 1, message = "{validation.category.request.size.min}")
     private Integer size = 20;
 
     // --- Ordenamiento ---
@@ -56,11 +56,11 @@ public class CategoryRequestDto extends PageableRequestDto {
     @Builder.Default
     @Pattern(
             regexp = "name|createdAt|updatedAt|active",
-            message = "SortBy must be one of: name, createdAt, updatedAt, active"
+            message = "{validation.category.request.sort-by.pattern}"
     )
     private String sortBy = "name";
 
     @Builder.Default
-    @Pattern(regexp = "ASC|DESC", message = "SortDir must be 'ASC' or 'DESC'")
+    @Pattern(regexp = "ASC|DESC", message = "{validation.category.request.sort-dir.pattern}")
     private String sortDir = "ASC";
 }

@@ -1,4 +1,4 @@
-package com.celotts.productservice.infrastructure.common.listener;
+package com.celotts.productservice.infrastructure.common.jpa;
 
 import com.celotts.productservice.infrastructure.common.jpa.Auditable;
 import jakarta.persistence.PrePersist;

@@ -4,36 +4,32 @@ import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.CreatedBy;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import lombok.experimental.SuperBuilder;
 
-import jakarta.persistence.EntityListeners;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @MappedSuperclass
-@EntityListeners(AuditingEntityListener.class)
+@SuperBuilder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public abstract class AuditableEntity {
 
-    @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
-    @CreatedBy
     @Column(name = "created_by", updatable = false, length = 255)
     private String createdBy;
 
-    @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @LastModifiedBy
     @Column(name = "updated_by", length = 255)
     private String updatedBy;
 
@@ -46,13 +42,17 @@ public abstract class AuditableEntity {
     @Column(name = "deleted_reason", length = 255)
     private String deletedReason;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean enabled = Boolean.TRUE;
 
     @PrePersist
     public void prePersist() {
         if (createdAt == null) createdAt = LocalDateTime.now();
+        if (updatedAt == null) updatedAt = createdAt;
         if (enabled == null) enabled = Boolean.TRUE;
+        if (createdBy == null) createdBy = "system";
+        if (updatedBy == null) updatedBy = createdBy;
     }
 
     @PreUpdate

@@ -10,14 +10,11 @@ public interface ProductUnitEntityMapper {
 
     ProductUnitEntity toEntity(ProductUnitModel model);
 
-    @InheritInverseConfiguration(name = "toEntity")
     ProductUnitModel toModel(ProductUnitEntity entity);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mappings({
             @Mapping(target = "id", ignore = true),
-
-            // auditoría/soft-delete: los maneja la BD / listeners
             @Mapping(target = "createdAt", ignore = true),
             @Mapping(target = "updatedAt", ignore = true),
             @Mapping(target = "createdBy", ignore = true),

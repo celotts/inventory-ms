@@ -51,7 +51,7 @@ dependencies {
     // 🧩 Mockito / Security Test
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.mockito:mockito-junit-jupiter'
-    testImplementation 'org.mockito:mockito-inline'
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
     testImplementation 'org.springframework.security:spring-security-test'
 
     // 🛠️ Configuration processor
@@ -80,4 +80,13 @@ compileJava {
 
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation']
+}
+
+configurations.configureEach {
+    resolutionStrategy {
+        force 'com.google.guava:guava:19.0'
+        force 'com.netflix.servo:servo-core:0.12.21'
+        force 'commons-io:commons-io:2.15.1'
+        force 'org.apache.commons:commons-compress:1.26.1'
+    }
 }

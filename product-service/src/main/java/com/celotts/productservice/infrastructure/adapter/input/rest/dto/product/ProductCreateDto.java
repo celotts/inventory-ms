@@ -29,46 +29,46 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProductCreateDto {
 
-    @NotBlank(message = "Product code is required")
-    @Size(max = 50)
+    @NotBlank(message = "{validation.product.create.code.not-blank}")
+    @Size(max = 50, message = "{validation.product.create.code.size}")
     private String code;
 
-    @NotBlank
-    @Size(min = 2, max = 100)
+    @NotBlank(message = "{validation.product.create.name.not-blank}")
+    @Size(min = 2, max = 100, message = "{validation.product.create.name.size}")
     private String name;
 
-    @Size(max = 255)
+    @Size(max = 255, message = "{validation.product.create.description.size}")
     private String description;
 
-    @NotNull
+    @NotNull(message = "{validation.product.create.category-id.not-null}")
     @CategoryIdExists
     private UUID categoryId;
 
-    @NotBlank
+    @NotBlank(message = "{validation.product.create.unit-code.not-blank}")
     @UnitCodeExists
     private String unitCode;
 
-    @NotNull
+    @NotNull(message = "{validation.product.create.brand-id.not-null}")
     @BrandIdExists
     private UUID brandId;
 
-    @NotNull
-    @Min(0)
+    @NotNull(message = "{validation.product.create.minimum-stock.not-null}")
+    @Min(value = 0, message = "{validation.product.create.minimum-stock.min}")
     private Integer minimumStock;
 
-    @NotNull
-    @Min(0)
+    @NotNull(message = "{validation.product.create.current-stock.not-null}")
+    @Min(value = 0, message = "{validation.product.create.current-stock.min}")
     private Integer currentStock;
 
-    @NotNull
-    @DecimalMin(value = "0.0", inclusive = false)
+    @NotNull(message = "{validation.product.create.unit-price.not-null}")
+    @DecimalMin(value = "0.0", inclusive = false, message = "{validation.product.create.unit-price.decimal-min}")
     private BigDecimal unitPrice;
 
     @Builder.Default
     private Boolean enabled = true;
 
-    @Size(max = 255, message = "CreatedBy max length is 255")
-    @NotBlank
+    @Size(max = 255, message = "{validation.product.create.created-by.size}")
+    @NotBlank(message = "{validation.product.create.created-by.not-blank}")
     private String createdBy;
 
     @Size(max = 255)
