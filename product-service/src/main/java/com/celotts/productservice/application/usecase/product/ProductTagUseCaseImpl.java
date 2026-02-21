@@ -24,7 +24,7 @@ public class ProductTagUseCaseImpl implements ProductTagUseCase {
     @Override
     public ProductTagModel create(ProductTagModel model) {
         if (repo.existsByName(model.getName())) {
-            throw new ResourceAlreadyExistsException("Product", model.getName());
+            throw new ResourceAlreadyExistsException("tag.already-exists", model.getName());
         }
         return repo.save(model);
     }
@@ -52,7 +52,7 @@ public class ProductTagUseCaseImpl implements ProductTagUseCase {
 
     @Override
     public ProductTagModel findById(UUID id) {
-        return repo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product", id));
+        return repo.findById(id).orElseThrow(() -> new ResourceNotFoundException("tag.not-found", id));
     }
 
     @Override public Optional<ProductTagModel> findByName(String name){ return repo.findByName(name); }

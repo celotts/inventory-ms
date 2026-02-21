@@ -1,8 +1,12 @@
 package com.celotts.productservice.application.usecase.product;
 
+import com.celotts.productservice.domain.exception.DomainException;
+import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
+import com.celotts.productservice.domain.exception.ResourceNotFoundException;
 import com.celotts.productservice.domain.model.product.ProductTypeModel;
 import com.celotts.productservice.domain.port.input.product.ProductTypeUseCase;
 import com.celotts.productservice.domain.port.output.product.ProductTypeRepositoryPort;
+import com.celotts.productservice.infrastructure.common.error.ErrorCode;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +25,7 @@ import java.util.UUID;
 public class ProductTypeUseCaseImpl implements ProductTypeUseCase {
 
     private final ProductTypeRepositoryPort repo;
-    private final MessageSource messageSource; // ✅ inyección para i18n
+    private final MessageSource messageSource;
 
     private String getLocalizedMessage(String key, Object... args) {
         return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
@@ -31,10 +35,10 @@ public class ProductTypeUseCaseImpl implements ProductTypeUseCase {
     @Transactional
     public ProductTypeModel create(ProductTypeModel model) {
         if (model.getCode() == null || model.getCode().isBlank()) {
-            throw new IllegalArgumentException(getLocalizedMessage("product-type.code.required"));
+            throw new DomainException(ErrorCode.BAD_REQUEST, 400, "product-type.code.required");
         }
         if (repo.existsByCode(model.getCode())) {
-            throw new IllegalStateException(getLocalizedMessage("product-type.code.exists", model.getCode()));
+            throw new ResourceAlreadyExistsException("product-type.code.exists", model.getCode());
         }
         return repo.save(model);
     }
@@ -59,17 +63,13 @@ public class ProductTypeUseCaseImpl implements ProductTypeUseCase {
     public ProductTypeModel update(UUID id, ProductTypeModel changes) {
         // 1. Traducción para "No encontrado"
         ProductTypeModel current = repo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        getLocalizedMessage("product-type.not-found", id)
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException("product-type.not-found", id));
 
         // Si cambian el code, valida duplicados
         if (changes.getCode() != null && !changes.getCode().equalsIgnoreCase(current.getCode())) {
             if (repo.existsByCode(changes.getCode())) {
                 // 2. Traducción para "Código ya existe"
-                throw new IllegalStateException(
-                        getLocalizedMessage("product-type.code.exists", changes.getCode())
-                );
+                throw new ResourceAlreadyExistsException("product-type.code.exists", changes.getCode());
             }
             current = current.withCode(changes.getCode());
         }
@@ -92,7 +92,7 @@ public class ProductTypeUseCaseImpl implements ProductTypeUseCase {
     @Transactional
     public void deleteById(UUID id) {
         if (!repo.findById(id).isPresent()) {
-            throw new IllegalArgumentException(getLocalizedMessage("product-type.not-found", id));
+            throw new ResourceNotFoundException("product-type.not-found", id);
         }
         repo.deleteById(id);
     }

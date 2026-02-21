@@ -2,6 +2,7 @@ package com.celotts.purchaseservice.infrastructure.adapter.input.rest.controller
 
 import com.celotts.purchaseservice.domain.model.purchase.PurchaseModel;
 import com.celotts.purchaseservice.domain.port.input.PurchaseUseCase;
+import com.celotts.purchaseservice.domain.port.input.ReceivePurchaseUseCase;
 import com.celotts.purchaseservice.infrastructure.adapter.input.rest.dto.PurchaseCreateDto;
 import com.celotts.purchaseservice.infrastructure.adapter.input.rest.dto.PurchaseResponseDto;
 import com.celotts.purchaseservice.infrastructure.adapter.input.rest.dto.PurchaseUpdateDto;
@@ -36,6 +37,7 @@ import java.util.UUID;
 public class PurchaseController {
 
     private final PurchaseUseCase purchaseUseCase;
+    private final ReceivePurchaseUseCase receivePurchaseUseCase;
     private final PurchaseMapper purchaseMapper;
 
     @Operation(summary = "Create a new purchase order", description = "Creates a new purchase order. Validates the existence of the supplier and products before creation.")
@@ -59,6 +61,20 @@ public class PurchaseController {
                 .toUri();
 
         return ResponseEntity.created(location).body(purchaseMapper.toResponse(createdPurchase));
+    }
+
+    @Operation(summary = "Receive a purchase", description = "Marks a purchase as RECEIVED and updates the stock in the product service.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Purchase received successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid state for receiving (must be PLACED or DRAFT)", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Purchase not found", content = @Content)
+    })
+    @PostMapping("/{id}/receive")
+    public ResponseEntity<PurchaseResponseDto> receive(
+            @Parameter(description = "UUID of the purchase to receive", required = true)
+            @PathVariable UUID id) {
+        PurchaseModel receivedPurchase = receivePurchaseUseCase.receive(id);
+        return ResponseEntity.ok(purchaseMapper.toResponse(receivedPurchase));
     }
 
     @Operation(summary = "Get purchase by ID", description = "Retrieves the details of a specific purchase order by its unique identifier.")

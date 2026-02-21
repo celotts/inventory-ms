@@ -9,7 +9,7 @@ spring:
   application:
     name: purchase-service
   datasource:
-    url: jdbc:postgresql://${purchase_DB_HOST:purchase-db}:${purchase_DB_PORT:5432}/${PURCHASE_DB_NAME:purchase}
+    url: jdbc:postgresql://${PURCHASE_DB_HOST:purchase-db}:${PURCHASE_DB_PORT:5432}/${PURCHASE_DB_NAME:purchase}
     username: ${PURCHASE_DB_USERNAME:purchase}
     password: ${PURCHASE_DB_PASSWORD:purchase123}
     driver-class-name: org.postgresql.Driver
@@ -115,6 +115,16 @@ logging:
     org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
     org.hibernate.internal.AbstractSharedSessionContract: INFO
 
+# Habilitar Circuit Breaker para Feign
+feign:
+  circuitbreaker:
+    enabled: true
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+
 ---
 # ==========================================
 # 2. PERFIL DOCKER (LOCAL O NUBE BASADA EN CONTENEDORES)
@@ -130,7 +140,7 @@ spring:
       enabled: false
 
   datasource:
-    url: jdbc:postgresql://${PRUCHASEDB_HOST:purchase-db}:${PURCHASE_DB_PORT:5432}/${PURCHASE_DB_NAME:purchase}
+    url: jdbc:postgresql://${PURCHASE_DB_HOST:purchase-db}:${PURCHASE_DB_PORT:5432}/${PURCHASE_DB_NAME:purchase}
     username: ${PURCHASE_DB_USERNAME:purchase}
     password: ${PURCHASE_DB_PASSWORD:purchase123}
     driver-class-name: org.postgresql.Driver
@@ -149,13 +159,6 @@ spring:
       ddl-auto: update
     show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-
-feign:
-  client:
-    config:
-      default:
-        connectTimeout: 5000
-        readTimeout: 5000
 
 eureka:
   client:

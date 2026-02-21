@@ -1,10 +1,14 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot'
-    id 'io.spring.dependency-management'
+    id 'org.springframework.boot' version '3.4.5'
+    id 'io.spring.dependency-management' version '1.1.4'
     id 'jacoco'
     id 'com.github.ben-manes.versions' version '0.53.0'
     id 'org.owasp.dependencycheck' version '9.0.7'
+}
+
+repositories {
+    mavenCentral()
 }
 
 sourceSets {
@@ -15,6 +19,10 @@ sourceSets {
             exclude 'com/celotts/supplierservice/infrastructure/common/jpa/AuditListener.java'
         }
     }
+}
+
+ext {
+    set('springCloudVersion', "2023.0.1")
 }
 
 dependencies {
@@ -49,14 +57,14 @@ dependencies {
 
     // 🧪 Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation platform("org.testcontainers:testcontainers-bom:1.19.8")
+    testImplementation platform("org.testcontainers:testcontainers-bom:1.20.1")
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
 
     // 🧩 Mockito / Security Test
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.mockito:mockito-junit-jupiter'
-    testImplementation 'org.mockito:mockito-inline'
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
 
     // 🛠️ Configuration processor
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
@@ -64,6 +72,7 @@ dependencies {
 
 dependencyManagement {
     imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
         mavenBom "io.github.resilience4j:resilience4j-bom:2.2.0"
     }
 }

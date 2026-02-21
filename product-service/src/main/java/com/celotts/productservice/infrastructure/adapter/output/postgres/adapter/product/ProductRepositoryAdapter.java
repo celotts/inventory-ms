@@ -1,5 +1,6 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product;
 
+import com.celotts.productservice.domain.exception.product.ProductNotFoundException;
 import com.celotts.productservice.domain.model.product.ProductModel;
 import com.celotts.productservice.domain.port.output.product.ProductRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductEntity;
@@ -65,7 +66,6 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
 
     @Override
     public Page<ProductModel> findByCategory(UUID categoryId, Pageable pageable) {
-        // requiere en el repo: findByCategoryId(UUID, Pageable) con JOIN a ProductCategoryEntity
         return productRepository.findByCategoryId(categoryId, pageable).map(productEntityMapper::toModel);
     }
 
@@ -76,7 +76,6 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
 
     @Override
     public Page<ProductModel> findLowStock(Pageable pageable, int threshold) {
-        // requiere en el repo: Page<ProductEntity> findByCurrentStockLessThanEqual(BigDecimal, Pageable)
         return productRepository
                 .findByCurrentStockLessThanEqual(BigDecimal.valueOf(threshold), pageable)
                 .map(productEntityMapper::toModel);
@@ -84,7 +83,6 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
 
     @Override
     public Page<ProductModel> findLowStockByCategory(UUID categoryId, Pageable pageable, int threshold) {
-        // requiere en el repo: findByCategoryAndMaxStock(UUID, BigDecimal, Pageable) con JOIN + <=
         return productRepository
                 .findByCategoryAndMaxStock(categoryId, BigDecimal.valueOf(threshold), pageable)
                 .map(productEntityMapper::toModel);
@@ -103,7 +101,7 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
     @Transactional
     public ProductModel updateStock(UUID id, int newStock) {
         ProductEntity entity = productRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Product not found: " + id));
+                .orElseThrow(() -> new ProductNotFoundException(id));
         entity.setCurrentStock(BigDecimal.valueOf(newStock));
         return productEntityMapper.toModel(productRepository.save(entity));
     }

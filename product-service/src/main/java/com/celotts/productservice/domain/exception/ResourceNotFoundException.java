@@ -6,7 +6,7 @@ public class ResourceNotFoundException extends DomainException {
 
     // Constructor para clave de mensaje y argumentos (estilo i18n)
     public ResourceNotFoundException(String messageKey, Object... args) {
-        super(ErrorCode.NOT_FOUND, 404, messageKey); // Pasamos la clave como mensaje temporal
+        super(ErrorCode.NOT_FOUND, 404, messageKey, args); // Pasamos la clave como mensaje temporal
     }
 
     // Constructor legacy (para compatibilidad, pero marcado para evitarse)

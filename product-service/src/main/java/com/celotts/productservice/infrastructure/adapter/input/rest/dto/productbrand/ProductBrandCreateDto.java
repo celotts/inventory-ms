@@ -17,17 +17,17 @@ import lombok.Setter;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProductBrandCreateDto {
 
-    @NotBlank(message = "Name is required")
-    @Size(max = 120, message = "Name must not exceed 120 characters")
+    @NotBlank(message = "{validation.product-brand.create.name.not-blank}")
+    @Size(max = 120, message = "{validation.product-brand.create.name.size}")
     private String name;
 
-    @Size(max = 1000, message = "Description must not exceed 1000 characters")
+    @Size(max = 1000, message = "{validation.product-brand.create.description.size}")
     private String description; // opcional
 
     // opcional; en el use case default = true si es null
     private Boolean enabled;
 
-    @NotBlank(message = "CreatedBy is required")
+    @NotBlank(message = "{validation.product-brand.create.created-by.not-blank}")
     private String createdBy;
 
     private String updatedBy;

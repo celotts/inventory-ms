@@ -17,6 +17,12 @@ dependencies {
     // Security (opcional)
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
     // Spring Cloud
     implementation 'org.springframework.cloud:spring-cloud-starter-config'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
@@ -50,11 +56,17 @@ dependencies {
     // Mockito / Security Test
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.mockito:mockito-junit-jupiter'
-    testImplementation 'org.mockito:mockito-inline'
     testImplementation 'org.springframework.security:spring-security-test'
 
     // Configuration processor
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+}
+
+// Forzar versiones seguras de dependencias transitivas
+configurations.all {
+    resolutionStrategy {
+        force 'com.google.guava:guava:33.2.0-jre'
+    }
 }
 
 springBoot {

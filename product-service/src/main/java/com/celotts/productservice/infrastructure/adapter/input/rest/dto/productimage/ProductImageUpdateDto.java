@@ -13,15 +13,15 @@ import java.time.LocalDateTime;
 @Builder
 public class ProductImageUpdateDto {
 
-    @NotBlank(message = "Url is required")
-    @Size(max = 2048, message = "Url max length is 2048")
+    @NotBlank(message = "{validation.product-image.update.url.not-blank}")
+    @Size(max = 2048, message = "{validation.product-image.update.url.size}")
     String url;
 
     Boolean enabled;
 
-    @PastOrPresent(message = "UploadedAt must be in the past or present")
+    @PastOrPresent(message = "{validation.product-image.update.uploaded-at.past-or-present}")
     LocalDateTime uploadedAt;
 
-    @Size(max = 100, message = "UpdatedBy max length is 100")
+    @Size(max = 100, message = "{validation.product-image.update.updated-by.size}")
     String updatedBy;
 }

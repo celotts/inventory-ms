@@ -15,18 +15,18 @@ import java.util.UUID;
 @Builder
 public class ProductImageCreateDto {
 
-    @NotNull(message = "Product ID is required")
+    @NotNull(message = "{validation.product-image.create.product-id.not-null}")
     UUID productId;
 
-    @NotBlank(message = "Url is required")
-    @Size(max = 2048, message = "url max length is 2048")
+    @NotBlank(message = "{validation.product-image.create.url.not-blank}")
+    @Size(max = 2048, message = "{validation.product-image.create.url.size}")
     String url;
 
     Boolean enabled;
 
-    @PastOrPresent(message = "UploadedAt must be in the past or present")
+    @PastOrPresent(message = "{validation.product-image.create.uploaded-at.past-or-present}")
     LocalDateTime uploadedAt;
 
-    @Size(max = 100, message = "CreatedBy max length is 100")
+    @Size(max = 100, message = "{validation.product-image.create.created-by.size}")
     String createdBy;
 }

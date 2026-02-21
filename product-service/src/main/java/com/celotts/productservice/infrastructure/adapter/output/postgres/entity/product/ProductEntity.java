@@ -3,6 +3,7 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.entity
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.shared.AuditableEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
@@ -11,7 +12,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "product")
 @Data
-@Builder(toBuilder = true)
+@SuperBuilder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -33,7 +34,7 @@ public class ProductEntity extends AuditableEntity {
     private String description;
 
     @Column(name = "product_type", length = 50, nullable = false)
-    private String productType;   // referencia al code de product_type
+    private String productType;
 
     @Column(name = "unit_id", nullable = false)
     private UUID unitId;

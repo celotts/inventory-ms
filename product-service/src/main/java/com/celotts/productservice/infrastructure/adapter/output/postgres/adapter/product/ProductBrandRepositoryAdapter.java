@@ -1,11 +1,11 @@
 package com.celotts.productservice.infrastructure.adapter.output.postgres.adapter.product;
 
+import com.celotts.productservice.domain.exception.brand.BrandNotFoundException;
 import com.celotts.productservice.domain.model.product.ProductBrandModel;
 import com.celotts.productservice.domain.port.output.product.ProductBrandRepositoryPort;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductBrandEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.product.ProductBrandEntityMapper;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.repository.product.ProductBrandJpaRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,9 +56,7 @@ public class ProductBrandRepositoryAdapter implements ProductBrandRepositoryPort
     @Override
     @Transactional(readOnly = true)
     public boolean existsById(UUID id) {
-        // si quieres estricto por activos:
         return repository.findActiveById(id).isPresent();
-        // o bien: return repository.existsById(id); (incluye borrados)
     }
 
     // ===== Soft delete =====
@@ -89,10 +87,10 @@ public class ProductBrandRepositoryAdapter implements ProductBrandRepositoryPort
     @Transactional
     public ProductBrandModel enable(UUID id) {
         int updated = repository.enableBrandById(id);
-        if (updated == 0) throw new EntityNotFoundException("ProductBrand not found or deleted: " + id);
+        if (updated == 0) throw new BrandNotFoundException(id);
 
         ProductBrandEntity entity = repository.findActiveById(id)
-                .orElseThrow(() -> new EntityNotFoundException("ProductBrand not found: " + id));
+                .orElseThrow(() -> new BrandNotFoundException(id));
         return mapper.toModel(entity);
     }
 
@@ -100,10 +98,10 @@ public class ProductBrandRepositoryAdapter implements ProductBrandRepositoryPort
     @Transactional
     public ProductBrandModel disable(UUID id) {
         int updated = repository.disableBrandById(id);
-        if (updated == 0) throw new EntityNotFoundException("ProductBrand not found or deleted: " + id);
+        if (updated == 0) throw new BrandNotFoundException(id);
 
         ProductBrandEntity entity = repository.findActiveById(id)
-                .orElseThrow(() -> new EntityNotFoundException("ProductBrand not found: " + id));
+                .orElseThrow(() -> new BrandNotFoundException(id));
         return mapper.toModel(entity);
     }
 
@@ -111,6 +109,5 @@ public class ProductBrandRepositoryAdapter implements ProductBrandRepositoryPort
     @Transactional
     public void deleteById(UUID id){
        repository.softDelete(id, null, null);
-
     }
 }

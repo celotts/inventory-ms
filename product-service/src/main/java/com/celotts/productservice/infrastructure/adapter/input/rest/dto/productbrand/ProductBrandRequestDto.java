@@ -19,11 +19,11 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class ProductBrandRequestDto extends PageableRequestDto {
 
-    @NotBlank(message = "Name is required")
-    @Size(min = 2, max = 100, message = "Name must be between 2 and 100 characters")
+    @NotBlank(message = "{validation.product-brand.request.name.not-blank}")
+    @Size(min = 2, max = 100, message = "{validation.product-brand.request.name.size}")
     private String name;
 
-    @Size(max = 500, message = "Description cannot exceed 500 characters")
+    @Size(max = 500, message = "{validation.product-brand.request.description.size}")
     private String description;
 
     @NotNull
@@ -36,7 +36,7 @@ public class ProductBrandRequestDto extends PageableRequestDto {
     // Valida sortBy permitido SIN duplicar el campo (anotando el getter)
     @Pattern(
             regexp = "name|createdAt|updatedAt|enabled",
-            message = "SortBy must be one of: name, createdAt, updatedAt, enabled"
+            message = "{validation.product-brand.request.sort-by.pattern}"
     )
     @Override
     public String getSortBy() {
