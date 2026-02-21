@@ -40,7 +40,7 @@ import java.util.*;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "${app.cors.allowed-origin:*}")
 @Slf4j
-@Tag(name = "Product API", description = "API to manage products")
+@Tag(name = "${swagger.product.api.name}", description = "${swagger.product.api.desc}")
 public class ProductController {
 
     private final ProductUseCase productUseCase;
@@ -50,13 +50,13 @@ public class ProductController {
     private final MessageSource messageSource;
 
     @GetMapping("/test")
-    @Operation(summary = "Test API", description = "Test endpoint to verify that the service is working.")
+    @Operation(summary = "${swagger.product.test.summary}", description = "${swagger.product.test.desc}")
     public ResponseEntity<String> testEndpoint() {
         return ResponseEntity.ok(messageSource.getMessage("app.status.ok", null, LocaleContextHolder.getLocale()));
     }
 
     @PostMapping
-    @Operation(summary = "Create a new product", description = "Create a product in the system")
+    @Operation(summary = "${swagger.product.create.summary}", description = "${swagger.product.create.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Product created successfully",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ProductResponseDto.class))),
@@ -77,7 +77,7 @@ public class ProductController {
     }
 
     @PostMapping("/receive-stock")
-    @Operation(summary = "Receive stock", description = "Receives stock for a product, creating a lot and updating inventory.")
+    @Operation(summary = "${swagger.product.receive-stock.summary}", description = "${swagger.product.receive-stock.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Stock received successfully"),
             @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
@@ -95,7 +95,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update a product", description = "Update an existing product")
+    @Operation(summary = "${swagger.product.update.summary}", description = "${swagger.product.update.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Product updated successfully"),
             @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
@@ -109,7 +109,7 @@ public class ProductController {
     }
 
     @GetMapping
-    @Operation(summary = "List all active products", description = "List all active products")
+    @Operation(summary = "${swagger.product.list.summary}", description = "${swagger.product.list.desc}")
     public ResponseEntity<ListResponse<ProductResponseDto>> getAllProducts() {
         List<ProductResponseDto> response = productMapper.toResponseList(
                 productUseCase.getActiveProducts(Pageable.unpaged()).getContent()
@@ -118,8 +118,8 @@ public class ProductController {
     }
 
     @GetMapping("/paginated")
-    @Operation(summary = "Get paginated products",
-            description = "Product list with optional pagination and filters")
+    @Operation(summary = "${swagger.product.paginated.summary}",
+            description = "${swagger.product.paginated.desc}")
     public ResponseEntity<PageResponse<ProductResponseDto>> getAllProductsPaginated(
             @Valid @ModelAttribute ProductRequestDto requestDto
     ) {
@@ -158,7 +158,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get product by ID", description = "Query a product by its identifier")
+    @Operation(summary = "${swagger.product.get-by-id.summary}", description = "${swagger.product.get-by-id.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Product found"),
             @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
@@ -169,28 +169,28 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete logical product", description = "Performs a soft delete on the product.")
+    @Operation(summary = "${swagger.product.delete.summary}", description = "${swagger.product.delete.desc}")
     public ResponseEntity<Void> deleteProduct(@PathVariable UUID id) {
         productUseCase.disableProduct(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}/hard")
-    @Operation(summary = "Delete physical product", description = "Permanently removes the product from the database.")
+    @Operation(summary = "${swagger.product.hard-delete.summary}", description = "${swagger.product.hard-delete.desc}")
     public ResponseEntity<Void> hardDeleteProduct(@PathVariable UUID id) {
         productUseCase.hardDeleteProduct(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/enable")
-    @Operation(summary = "Enable product", description = "Re-activates a previously disabled product.")
+    @Operation(summary = "${swagger.product.enable.summary}", description = "${swagger.product.enable.desc}")
     public ResponseEntity<ProductResponseDto> enableProduct(@PathVariable UUID id) {
         ProductModel enabledProduct = productUseCase.enableProduct(id);
         return ResponseEntity.ok(productMapper.toResponse(enabledProduct));
     }
 
     @GetMapping("/inactive")
-    @Operation(summary = "List inactive products", description = "Returns a list of all products that have been logically disabled.")
+    @Operation(summary = "${swagger.product.inactive.summary}", description = "${swagger.product.inactive.desc}")
     public ResponseEntity<ListResponse<ProductResponseDto>> getInactiveProducts() {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getInactiveProducts());
@@ -198,7 +198,7 @@ public class ProductController {
     }
 
     @GetMapping("/category/{categoryId}")
-    @Operation(summary = "Get products by category", description = "List all products belonging to a specific category.")
+    @Operation(summary = "${swagger.product.by-category.summary}", description = "${swagger.product.by-category.desc}")
     public ResponseEntity<ListResponse<ProductResponseDto>> getProductsByCategory(@PathVariable UUID categoryId) {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getProductsByCategory(categoryId));
@@ -206,7 +206,7 @@ public class ProductController {
     }
 
     @GetMapping("/category/{categoryId}/low-stock")
-    @Operation(summary = "Get low stock products by category", description = "List products in a category that are below their minimum stock level.")
+    @Operation(summary = "${swagger.product.low-stock-category.summary}", description = "${swagger.product.low-stock-category.desc}")
     public ResponseEntity<ListResponse<ProductResponseDto>> getLowStockByCategory(@PathVariable UUID categoryId) {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getLowStockByCategory(categoryId));
@@ -214,7 +214,7 @@ public class ProductController {
     }
 
     @GetMapping("/low-stock")
-    @Operation(summary = "Get low stock products", description = "List all products that are below their minimum stock level.")
+    @Operation(summary = "${swagger.product.low-stock.summary}", description = "${swagger.product.low-stock.desc}")
     public ResponseEntity<ListResponse<ProductResponseDto>> getLowStockProducts() {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getLowStockProducts());
@@ -222,7 +222,7 @@ public class ProductController {
     }
 
     @GetMapping("/brand/{brandId}")
-    @Operation(summary = "Get products by brand", description = "List all products belonging to a specific brand.")
+    @Operation(summary = "${swagger.product.by-brand.summary}", description = "${swagger.product.by-brand.desc}")
     public ResponseEntity<ListResponse<ProductResponseDto>> getProductsByBrand(@PathVariable UUID brandId) {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getProductsByBrand(brandId));
@@ -230,19 +230,19 @@ public class ProductController {
     }
 
     @GetMapping("/count")
-    @Operation(summary = "Count products", description = "Returns the total number of products in the system.")
+    @Operation(summary = "${swagger.product.count.summary}", description = "${swagger.product.count.desc}")
     public ResponseEntity<Long> countProducts() {
         return ResponseEntity.ok(productUseCase.countProducts());
     }
 
     @GetMapping("/count/active")
-    @Operation(summary = "Count active products", description = "Returns the number of active products.")
+    @Operation(summary = "${swagger.product.count-active.summary}", description = "${swagger.product.count-active.desc}")
     public ResponseEntity<Long> countActiveProducts() {
         return ResponseEntity.ok(productUseCase.countActiveProducts());
     }
 
     @GetMapping("/validate-unit/{code}")
-    @Operation(summary = "Validate unit code", description = "Validates if a unit code exists and obtains its name.")
+    @Operation(summary = "${swagger.product.validate-unit.summary}", description = "${swagger.product.validate-unit.desc}")
     public ResponseEntity<Map<String, Object>> validateUnit(@PathVariable String code) {
         Optional<String> name = productUseCase.validateUnitCode(code);
         Map<String, Object> response = new HashMap<>();
@@ -252,14 +252,14 @@ public class ProductController {
     }
 
     @PatchMapping("/{id}/stock")
-    @Operation(summary = "Update stock", description = "Updates the stock quantity of a product.")
+    @Operation(summary = "${swagger.product.update-stock.summary}", description = "${swagger.product.update-stock.desc}")
     public ResponseEntity<ProductResponseDto> updateStock(@PathVariable UUID id, @RequestBody @Valid UpdateStockDto stockDto) {
         ProductModel updated = productUseCase.updateStock(id, stockDto.getStock());
         return ResponseEntity.ok(productMapper.toResponse(updated));
     }
 
     @GetMapping("/code/{code}")
-    @Operation(summary = "Get product by code", description = "Query a product by its unique code.")
+    @Operation(summary = "${swagger.product.get-by-code.summary}", description = "${swagger.product.get-by-code.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Product found"),
             @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)

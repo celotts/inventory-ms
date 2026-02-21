@@ -22,14 +22,14 @@ import java.util.UUID;
 @RequestMapping("/api/v1/product-categories")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Product Category API", description = "API for managing product categories")
+@Tag(name = "${swagger.product-category.api.name}", description = "${swagger.product-category.api.desc}")
 public class ProductCategoryController {
 
     private final ProductCategoryUseCase productCategoryUseCase;
     private final ProductCategoryMapper productCategoryMapper;
 
     @PostMapping
-    @Operation(summary = "Assign category to product")
+    @Operation(summary = "${swagger.product-category.create.summary}")
     public ResponseEntity<ProductCategoryResponseDto> create(@Valid @RequestBody ProductCategoryCreateDto dto) {
         ProductCategoryModel modelIn = productCategoryMapper.toModel(dto);                // ✅ MapStruct
         ProductCategoryModel saved   = productCategoryUseCase.assignCategoryToProduct(modelIn);
@@ -38,28 +38,28 @@ public class ProductCategoryController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get assignment by ID")
+    @Operation(summary = "${swagger.product-category.get-by-id.summary}")
     public ResponseEntity<ProductCategoryResponseDto> getById(@PathVariable UUID id) {
         ProductCategoryModel model = productCategoryUseCase.getById(id);
         return ResponseEntity.ok(productCategoryMapper.toResponse(model));                // ✅ MapStruct
     }
 
     @GetMapping
-    @Operation(summary = "List all assignments")
+    @Operation(summary = "${swagger.product-category.list.summary}")
     public ResponseEntity<ListResponse<ProductCategoryResponseDto>> getAll() {
         List<ProductCategoryModel> all = productCategoryUseCase.getAll();
         return ResponseEntity.ok(ListResponse.of(productCategoryMapper.toResponseList(all)));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Disable assignment (logical)")
+    @Operation(summary = "${swagger.product-category.disable.summary}")
     public ResponseEntity<Void> disable(@PathVariable UUID id) {
         productCategoryUseCase.disableById(id);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}/hard")
-    @Operation(summary = "Delete assignment (physical)")
+    @Operation(summary = "${swagger.product-category.delete.summary}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         productCategoryUseCase.deleteById(id);
         return ResponseEntity.noContent().build();
