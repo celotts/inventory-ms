@@ -41,7 +41,7 @@ import java.util.*;
 @RequiredArgsConstructor
 @Validated
 @Slf4j
-@Tag(name = "Supplier API", description = "API for managing suppliers")
+@Tag(name = "${swagger.supplier.api.name}", description = "${swagger.supplier.api.desc}")
 public class SupplierController {
 
     private final SupplierUseCase useCase;
@@ -50,7 +50,7 @@ public class SupplierController {
 
     // --- 🔍 VALIDACIÓN INTER-SERVICE ---
 
-    @Operation(summary = "Check if supplier exists", description = "Checks if a supplier exists by its ID. Used mainly by other microservices.")
+    @Operation(summary = "${swagger.supplier.exists.summary}", description = "${swagger.supplier.exists.desc}")
     @GetMapping("/{id}/exists")
     public ResponseEntity<Boolean> existsById(@PathVariable UUID id) {
         return ResponseEntity.ok(useCase.existsById(id));
@@ -58,7 +58,7 @@ public class SupplierController {
 
     // --- 🏗️ CREACIÓN ---
 
-    @Operation(summary = "Create a new supplier", description = "Creates a new supplier in the system.")
+    @Operation(summary = "${swagger.supplier.create.summary}", description = "${swagger.supplier.create.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Supplier created successfully",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = SupplierResponseDto.class))),
@@ -85,7 +85,7 @@ public class SupplierController {
 
     // --- 📖 LECTURA Y LISTADO ---
 
-    @Operation(summary = "Get supplier by ID", description = "Retrieves the details of a specific supplier by its unique identifier.")
+    @Operation(summary = "${swagger.supplier.get-by-id.summary}", description = "${swagger.supplier.get-by-id.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Supplier found"),
             @ApiResponse(responseCode = "404", description = "Supplier not found", content = @Content)
@@ -96,14 +96,14 @@ public class SupplierController {
         return ResponseEntity.ok(mapper.toResponse(model));
     }
 
-    @Operation(summary = "Get supplier by Code", description = "Retrieves a supplier by its unique code.")
+    @Operation(summary = "${swagger.supplier.get-by-code.summary}", description = "${swagger.supplier.get-by-code.desc}")
     @GetMapping("/code/{code}")
     public ResponseEntity<SupplierResponseDto> getByCode(@PathVariable String code) {
         SupplierModel model = useCase.getByCode(code);
         return ResponseEntity.ok(mapper.toResponse(model));
     }
 
-    @Operation(summary = "List suppliers", description = "Retrieves a paginated list of suppliers. Supports filtering by name and active status.")
+    @Operation(summary = "${swagger.supplier.list.summary}", description = "${swagger.supplier.list.desc}")
     @GetMapping
     public ResponseEntity<Page<SupplierResponseDto>> list(
             @Valid @ModelAttribute PageableRequestDto pageReq,
@@ -125,7 +125,7 @@ public class SupplierController {
 
     // --- 🛠️ BÚSQUEDAS Y SUGERENCIAS ---
 
-    @Operation(summary = "Check existence by name", description = "Checks if a supplier exists by name.")
+    @Operation(summary = "${swagger.supplier.exists-by-name.summary}", description = "${swagger.supplier.exists-by-name.desc}")
     @GetMapping("/_exists")
     public ResponseEntity<Map<String, Object>> existsByName(
             @RequestParam @NotBlank(message = "{validation.field-error}") String name
@@ -136,7 +136,7 @@ public class SupplierController {
         ));
     }
 
-    @Operation(summary = "Check existence by code", description = "Checks if a supplier exists by code.")
+    @Operation(summary = "${swagger.supplier.exists-by-code.summary}", description = "${swagger.supplier.exists-by-code.desc}")
     @GetMapping("/_exists-code")
     public ResponseEntity<Map<String, Object>> existsByCode(@RequestParam String code) {
         return ResponseEntity.ok(Map.of(
@@ -145,7 +145,7 @@ public class SupplierController {
         ));
     }
 
-    @Operation(summary = "Suggest suppliers", description = "Provides a list of supplier suggestions based on a search query.")
+    @Operation(summary = "${swagger.supplier.suggest.summary}", description = "${swagger.supplier.suggest.desc}")
     @GetMapping("/_suggest")
     public ResponseEntity<List<SupplierResponseDto>> suggest(
             @RequestParam(name = "q") @NotBlank(message = "{validation.field-error}") String q,
@@ -157,7 +157,7 @@ public class SupplierController {
 
     // --- ✍️ ACTUALIZACIÓN Y BORRADO ---
 
-    @Operation(summary = "Update a supplier", description = "Updates an existing supplier.")
+    @Operation(summary = "${swagger.supplier.update.summary}", description = "${swagger.supplier.update.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Supplier updated successfully"),
             @ApiResponse(responseCode = "404", description = "Supplier not found", content = @Content)
@@ -172,7 +172,7 @@ public class SupplierController {
         return ResponseEntity.ok(mapper.toResponse(updated));
     }
 
-    @Operation(summary = "Delete a supplier", description = "Soft deletes a supplier.")
+    @Operation(summary = "${swagger.supplier.delete.summary}", description = "${swagger.supplier.delete.desc}")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
             @PathVariable UUID id,
@@ -187,12 +187,12 @@ public class SupplierController {
 
     // --- 🏥 SALUD ---
 
-    @Operation(summary = "Ping service", description = "Simple ping to check service status.")
+    @Operation(summary = "${swagger.supplier.ping.summary}", description = "${swagger.supplier.ping.desc}")
     @GetMapping("/_ping")
     public ResponseEntity<Map<String, Object>> ping() {
         return ResponseEntity.ok(Map.of(
                 "service", "supplier-service",
-                "status", "OK - VERSION 3 - PRUEBA FINAL"
+                "status", messageSource.getMessage("app.status.ok", null, LocaleContextHolder.getLocale())
         ));
     }
 }

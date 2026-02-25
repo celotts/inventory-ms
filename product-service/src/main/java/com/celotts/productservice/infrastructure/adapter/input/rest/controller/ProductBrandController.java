@@ -8,13 +8,14 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productb
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productbrand.ProductBrandUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.ApiResponse;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productbrand.ProductBrandMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,12 +24,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping(value = "/api/v1/product-brands", produces = "application/json")
+@Tag(name = "${swagger.product-brand.api.name}", description = "${swagger.product-brand.api.desc}")
 public class ProductBrandController {
 
     private final ProductBrandUseCase productBrandUseCase;
     private final ProductBrandMapper productBrandMapper;
 
     @PostMapping(consumes = "application/json")
+    @Operation(summary = "${swagger.product-brand.create.summary}")
     public ResponseEntity<ProductBrandResponseDto> create(@Valid @RequestBody ProductBrandCreateDto dto) {
         ProductBrandModel model = productBrandMapper.toModel(dto);
         ProductBrandModel saved = productBrandUseCase.save(model);
@@ -41,6 +44,7 @@ public class ProductBrandController {
     }
 
     @PatchMapping(value = "/{id}", consumes = "application/json")
+    @Operation(summary = "${swagger.product-brand.update.summary}")
     public ResponseEntity<ProductBrandResponseDto> update(@PathVariable UUID id,
                                                           @Valid @RequestBody ProductBrandUpdateDto dto) {
         log.info("PATCH brand id={} payload={}", id, dto);
@@ -57,6 +61,7 @@ public class ProductBrandController {
     }
 
     @GetMapping
+    @Operation(summary = "${swagger.product-brand.list.summary}")
     public ResponseEntity<ApiResponse<List<ProductBrandResponseDto>>> getAllBrands() {
         List<ProductBrandResponseDto> list = productBrandUseCase.findAll()
                 .stream()
@@ -67,6 +72,7 @@ public class ProductBrandController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "${swagger.product-brand.delete.summary}")
     public ResponseEntity<Void> deleteBrand(@PathVariable UUID id,
                                             @RequestParam String deletedBy,
                                             @RequestParam String reason) {
@@ -75,6 +81,7 @@ public class ProductBrandController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "${swagger.product-brand.get-by-id.summary}")
     public ResponseEntity<ProductBrandResponseDto> getById(@PathVariable UUID id) {
         return productBrandUseCase.findById(id)
                 .map(productBrandMapper::toResponse)
@@ -84,25 +91,29 @@ public class ProductBrandController {
     }
 
     @GetMapping("/{id}/name")
+    @Operation(summary = "${swagger.product-brand.get-name-by-id.summary}")
     public ResponseEntity<String> getBrandNameById(@PathVariable UUID id) {
         return productBrandUseCase.findNameById(id)
                 .map(ResponseEntity::ok)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Brand name not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("brand.name.not-found", id));
     }
 
     @PatchMapping("/{id}/enable")
+    @Operation(summary = "${swagger.product-brand.enable.summary}")
     public ResponseEntity<ProductBrandResponseDto> enableBrand(@PathVariable UUID id) {
         ProductBrandModel brand = productBrandUseCase.enableBrand(id);
         return ResponseEntity.ok(productBrandMapper.toResponse(brand));
     }
 
     @PatchMapping("/{id}/disable")
+    @Operation(summary = "${swagger.product-brand.disable.summary}")
     public ResponseEntity<ProductBrandResponseDto> disableBrand(@PathVariable UUID id) {
         ProductBrandModel brand = productBrandUseCase.disableBrand(id);
         return ResponseEntity.ok(productBrandMapper.toResponse(brand));
     }
 
     @PutMapping(value = "/{id}", consumes = "application/json")
+    @Operation(summary = "${swagger.product-brand.replace.summary}")
     public ResponseEntity<ProductBrandResponseDto> replace(@PathVariable UUID id,
                                                            @Valid @RequestBody ProductBrandUpdateDto dto) {
 
