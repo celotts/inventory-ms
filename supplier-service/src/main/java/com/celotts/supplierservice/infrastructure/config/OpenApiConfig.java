@@ -7,16 +7,18 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 
 @Configuration
+@PropertySource(value = "classpath:messages.properties", encoding = "UTF-8")
 public class OpenApiConfig {
 
     @Bean
-    public OpenAPI productServiceOpenAPI() {
+    public OpenAPI supplierServiceOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Product Service API")
-                        .description("API documentation for product, brand, and category management")
+                        .title("Supplier Service API")
+                        .description("API documentation for supplier management")
                         .version("v1.0.0")
                         .contact(new Contact()
                                 .name("Equipo de Desarrollo")
