@@ -26,6 +26,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -181,6 +182,18 @@ public class GlobalExceptionHandler {
                 msg("media.type.unsupported.detail", ex.getContentType()),
                 req.getRequestURI(),
                 "https://api.celotts.com/errors/unsupported-media-type"
+        );
+    }
+
+    // -------------------- Ruta no encontrada (404) --------------------
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ProblemDetail handleNoResourceFound(NoResourceFoundException ex, HttpServletRequest req) {
+        return problem(
+                HttpStatus.NOT_FOUND,
+                msg("error.not-found.title"),
+                msg("route.not-found", "/" + ex.getResourcePath()),
+                req.getRequestURI(),
+                "https://api.celotts.com/errors/not-found"
         );
     }
 

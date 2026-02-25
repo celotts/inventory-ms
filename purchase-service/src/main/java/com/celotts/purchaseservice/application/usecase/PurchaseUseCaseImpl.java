@@ -68,32 +68,40 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
 
         for (PurchaseItemModel item : purchase.getItems()) {
             // 1. Validate Product
-            try {
-                ProductDto product = productClient.getProductById(item.getProductId());
-                item.setProductName(product.getName());
-                item.setProductCode(product.getCode());
-                item.setUnitSymbol(product.getUnitSymbol());
-            } catch (FeignException.NotFound e) {
-                throw new ProductNotFoundException("product.not-found", item.getProductId());
-            } catch (FeignException e) {
-                log.error("Error communicating with Product Service: Status={}, Msg={}", e.status(), e.getMessage());
+            // El fallback retorna null si falla o si no existe (dependiendo de la implementación del fallback)
+            // Asumimos que el fallback loguea el error y retorna null en caso de fallo de conexión.
+            ProductDto product = productClient.getProductById(item.getProductId());
+
+            if (product == null) {
+                // Decisión de Resiliencia: ¿Fallamos toda la compra o la permitimos con datos parciales?
+                // Para consistencia de datos, si no podemos validar el producto, debemos rechazar la compra
+                // pero con un mensaje claro de que el servicio no está disponible o el producto no existe.
+                log.error("Product validation failed for ID: {}. Service might be down or product not found.", item.getProductId());
                 throw new ServiceUnavailableException(getMsg("service.product.unavailable"));
             }
 
+            item.setProductName(product.getName());
+            item.setProductCode(product.getCode());
+            item.setUnitSymbol(product.getUnitSymbol());
+
             // 2. Validate Tax (if present)
             if (item.getTaxId() != null) {
-                try {
-                    TaxDto tax = taxClient.getTaxById(item.getTaxId());
-                    if (Boolean.FALSE.equals(tax.getIsActive())) {
-                        throw new IllegalArgumentException(getMsg("tax.inactive", tax.getName()));
-                    }
-                    item.setTaxRate(tax.getRate());
-                } catch (FeignException.NotFound e) {
-                    throw new TaxNotFoundException("tax.not-found", item.getTaxId());
-                } catch (FeignException e) {
-                    log.error("Error communicating with Tax Service: Status={}, Msg={}", e.status(), e.getMessage());
+                TaxDto tax = taxClient.getTaxById(item.getTaxId());
+                
+                if (tax == null) {
+                    // Resiliencia: Si el servicio de impuestos falla, ¿detenemos la venta?
+                    // Opción A: Detener (Estricto) -> throw new ServiceUnavailableException(...)
+                    // Opción B: Continuar sin impuestos (Degradación grácil) -> loguear y seguir.
+                    
+                    // Dado que es un sistema financiero, optamos por lo seguro: Fallar si no podemos calcular impuestos.
+                    log.error("Tax validation failed for ID: {}. Service might be down.", item.getTaxId());
                     throw new ServiceUnavailableException(getMsg("service.tax.unavailable"));
                 }
+
+                if (Boolean.FALSE.equals(tax.getIsActive())) {
+                    throw new IllegalArgumentException(getMsg("tax.inactive", tax.getName()));
+                }
+                item.setTaxRate(tax.getRate());
             } else {
                 item.setTaxRate(BigDecimal.ZERO);
             }
@@ -183,16 +191,14 @@ public class PurchaseUseCaseImpl implements PurchaseUseCase {
     }
 
     private void validateSupplier(UUID supplierId) {
-        try {
-            SupplierDto supplier = supplierClient.getSupplier(supplierId);
-            if (!supplier.isActive()) {
-                throw new SupplierInactiveException("supplier.inactive", "name", supplier.getName());
-            }
-        } catch (FeignException.NotFound e) {
-            throw new SupplierNotFoundException("supplier.not-found", "id", supplierId.toString());
-        } catch (FeignException e) {
-            log.error("Error communicating with Supplier Service: Status={}, Msg={}", e.status(), e.getMessage());
-            throw new ServiceUnavailableException(getMsg("service.supplier.unavailable"));
+        // Ahora el cliente usa FallbackFactory, por lo que lanzará la excepción correcta
+        // (SupplierNotFoundException o ServiceUnavailableException) si algo falla.
+        SupplierDto supplier = supplierClient.getSupplier(supplierId);
+
+        // Ya no necesitamos verificar null, porque el fallback factory lanza excepción.
+        // Pero mantenemos la validación de negocio.
+        if (!supplier.isActive()) {
+            throw new SupplierInactiveException("supplier.inactive", "name", supplier.getName());
         }
     }
 }

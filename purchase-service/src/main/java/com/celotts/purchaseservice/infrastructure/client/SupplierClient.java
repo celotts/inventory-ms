@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.UUID;
 
-@FeignClient(name = "supplier-service", fallback = SupplierClientFallback.class)
+@FeignClient(name = "supplier-service", fallbackFactory = SupplierClientFallbackFactory.class)
 public interface SupplierClient {
 
     @GetMapping("/api/v1/suppliers/{id}")
