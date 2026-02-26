@@ -11,6 +11,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -47,6 +48,11 @@ public class GlobalExceptionHandler {
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
                 .collect(Collectors.joining("; "));
         return buildProblemDetail(HttpStatus.BAD_REQUEST, msg("auth.error.validation.title"), details, "urn:celotts:error:validation", req);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ProblemDetail handleNoResourceFound(NoResourceFoundException ex, HttpServletRequest req) {
+        return buildProblemDetail(HttpStatus.NOT_FOUND, msg("auth.error.title"), msg("route.not-found", "/" + ex.getResourcePath()), "urn:celotts:error:not-found", req);
     }
 
     @ExceptionHandler(Exception.class)

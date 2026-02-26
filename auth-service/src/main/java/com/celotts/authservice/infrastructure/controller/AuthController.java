@@ -41,7 +41,7 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/v1/auth")
-@Tag(name = "Authentication API", description = "API for user authentication and registration")
+@Tag(name = "${swagger.auth.api.name}", description = "${swagger.auth.api.desc}")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -52,7 +52,7 @@ public class AuthController {
     private final JwtUtils jwtUtils;
     private final MessageSource messageSource; // Inyectado
 
-    @Operation(summary = "User Login", description = "Authenticates a user and returns a JWT token.")
+    @Operation(summary = "${swagger.auth.login.summary}", description = "${swagger.auth.login.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully authenticated",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = JwtResponse.class))),
@@ -79,7 +79,7 @@ public class AuthController {
                 roles));
     }
 
-    @Operation(summary = "User Registration", description = "Registers a new user with specified roles.")
+    @Operation(summary = "${swagger.auth.register.summary}", description = "${swagger.auth.register.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User registered successfully",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = MessageResponse.class))),
