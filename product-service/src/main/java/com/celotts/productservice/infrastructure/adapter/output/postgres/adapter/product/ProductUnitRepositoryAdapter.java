@@ -38,6 +38,11 @@ public class ProductUnitRepositoryAdapter implements ProductUnitRepositoryPort {
         return jpaRepo.findById(id).map(mapper::toModel);
     }
 
+    @Override
+    public Optional<ProductUnitModel> findByCode(String code) {
+        return jpaRepo.findByCode(code).map(mapper::toModel);
+    }
+
     @Override @Transactional
     public void deleteById(UUID id) { jpaRepo.deleteById(id); }
 

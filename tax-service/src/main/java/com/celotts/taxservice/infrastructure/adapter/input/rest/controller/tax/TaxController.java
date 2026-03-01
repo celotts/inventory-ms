@@ -32,14 +32,14 @@ import java.util.UUID;
 @RequestMapping("/api/v1/taxes")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Tax API", description = "API for managing tax configurations (VAT, etc.)")
+@Tag(name = "${swagger.tax.api.name}", description = "${swagger.tax.api.desc}")
 public class TaxController {
 
     private final TaxUseCase taxUseCase;
     private final TaxMapper taxMapper;
     private final PageableUtils pageableUtils;
 
-    @Operation(summary = "Create a new tax", description = "Creates a new tax configuration in the system.")
+    @Operation(summary = "${swagger.tax.create.summary}", description = "${swagger.tax.create.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Tax created successfully",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = TaxResponseDto.class))),
@@ -61,7 +61,7 @@ public class TaxController {
         return ResponseEntity.created(location).body(taxMapper.toResponse(saved));
     }
 
-    @Operation(summary = "Get tax by ID", description = "Retrieves the details of a specific tax by its unique identifier.")
+    @Operation(summary = "${swagger.tax.get-by-id.summary}", description = "${swagger.tax.get-by-id.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tax found",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = TaxResponseDto.class))),
@@ -75,14 +75,14 @@ public class TaxController {
         return ResponseEntity.ok(taxMapper.toResponse(model));
     }
 
-    @Operation(summary = "Get tax by Name", description = "Retrieves a tax configuration by its name.")
+    @Operation(summary = "${swagger.tax.get-by-name.summary}", description = "${swagger.tax.get-by-name.desc}")
     @GetMapping("/name/{name}")
     public ResponseEntity<TaxResponseDto> findByName(@PathVariable String name) {
         TaxModel model = taxUseCase.findByName(name);
         return ResponseEntity.ok(taxMapper.toResponse(model));
     }
 
-    @Operation(summary = "List all taxes", description = "Retrieves a paginated list of all taxes.")
+    @Operation(summary = "${swagger.tax.list.summary}", description = "${swagger.tax.list.desc}")
     @GetMapping
     public ResponseEntity<Page<TaxResponseDto>> findAll(
             @Valid PageableRequestDto pageableDto) {
@@ -91,7 +91,7 @@ public class TaxController {
         return ResponseEntity.ok(page.map(taxMapper::toResponse));
     }
 
-    @Operation(summary = "List active taxes", description = "Retrieves a paginated list of taxes filtered by their active status.")
+    @Operation(summary = "${swagger.tax.list-active.summary}", description = "${swagger.tax.list-active.desc}")
     @GetMapping("/active")
     public ResponseEntity<Page<TaxResponseDto>> findByActive(
             @Parameter(description = "Filter by active status (true/false)", required = true)
@@ -102,7 +102,7 @@ public class TaxController {
         return ResponseEntity.ok(page.map(taxMapper::toResponse));
     }
 
-    @Operation(summary = "Search taxes", description = "Search taxes by name and/or active status with pagination.")
+    @Operation(summary = "${swagger.tax.search.summary}", description = "${swagger.tax.search.desc}")
     @GetMapping("/search")
     public ResponseEntity<Page<TaxResponseDto>> search(
             @Parameter(description = "Partial name to search for")
@@ -115,7 +115,7 @@ public class TaxController {
         return ResponseEntity.ok(page.map(taxMapper::toResponse));
     }
 
-    @Operation(summary = "Update a tax", description = "Updates an existing tax configuration.")
+    @Operation(summary = "${swagger.tax.update.summary}", description = "${swagger.tax.update.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Tax updated successfully"),
             @ApiResponse(responseCode = "404", description = "Tax not found", content = @Content)
@@ -130,14 +130,14 @@ public class TaxController {
         return ResponseEntity.ok(taxMapper.toResponse(updated));
     }
 
-    @Operation(summary = "Delete a tax", description = "Permanently deletes a tax configuration.")
+    @Operation(summary = "${swagger.tax.delete.summary}", description = "${swagger.tax.delete.desc}")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         taxUseCase.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Activate a tax", description = "Sets the status of a tax to active.")
+    @Operation(summary = "${swagger.tax.activate.summary}", description = "${swagger.tax.activate.desc}")
     @PatchMapping("/{id}/activate")
     public ResponseEntity<TaxResponseDto> activate(@PathVariable UUID id) {
         TaxModel model = taxUseCase.findById(id);
@@ -146,7 +146,7 @@ public class TaxController {
         return ResponseEntity.ok(taxMapper.toResponse(updated));
     }
 
-    @Operation(summary = "Deactivate a tax", description = "Sets the status of a tax to inactive.")
+    @Operation(summary = "${swagger.tax.deactivate.summary}", description = "${swagger.tax.deactivate.desc}")
     @PatchMapping("/{id}/deactivate")
     public ResponseEntity<TaxResponseDto> deactivate(@PathVariable UUID id) {
         TaxModel model = taxUseCase.findById(id);

@@ -1,4 +1,4 @@
-package com.celotts.taxservice.infrastructure.config;
+package com.celotts.authservice.infrastructure.config;
 
 import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -14,11 +14,11 @@ import org.springframework.context.annotation.PropertySource;
 public class OpenApiConfig {
 
     @Bean
-    public OpenAPI taxServiceOpenAPI() {
+    public OpenAPI authServiceOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Tax Service API")
-                        .description("API documentation for tax management")
+                        .title("Auth Service API")
+                        .description("API documentation for authentication and user management")
                         .version("v1.0.0")
                         .contact(new Contact()
                                 .name("Equipo de Desarrollo")
