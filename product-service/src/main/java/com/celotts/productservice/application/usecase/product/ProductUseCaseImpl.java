@@ -3,6 +3,7 @@ package com.celotts.productservice.application.usecase.product;
 import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
 import com.celotts.productservice.domain.exception.ResourceNotFoundException;
 import com.celotts.productservice.domain.model.product.ProductModel;
+import com.celotts.productservice.domain.model.product.ProductUnitModel;
 import com.celotts.productservice.domain.port.input.product.ProductUseCase;
 import com.celotts.productservice.domain.port.output.category.CategoryRepositoryPort;
 import com.celotts.productservice.domain.port.output.product.ProductBrandRepositoryPort;
@@ -35,6 +36,14 @@ public class ProductUseCaseImpl implements ProductUseCase {
             throw new ResourceAlreadyExistsException("product.already-exists", cmd.getCode());
         }
         validateReferences(cmd);
+        
+        // Resolver unitId a partir de unitCode
+        if (cmd.getUnitCode() != null) {
+             ProductUnitModel unit = productUnitPort.findByCode(cmd.getUnitCode())
+                 .orElseThrow(() -> new ResourceNotFoundException("product.unit.not-found", cmd.getUnitCode()));
+             cmd.setUnitId(unit.getId());
+        }
+
         return productRepositoryPort.save(cmd);
     }
 
@@ -44,6 +53,13 @@ public class ProductUseCaseImpl implements ProductUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("product.not-found-with-id", id));
         validateReferences(productUpdates);
 
+        // Resolver unitId si cambia el unitCode
+        UUID newUnitId = existing.getUnitId();
+        if (productUpdates.getUnitCode() != null && !productUpdates.getUnitCode().equals(existing.getUnitCode())) {
+             ProductUnitModel unit = productUnitPort.findByCode(productUpdates.getUnitCode())
+                 .orElseThrow(() -> new ResourceNotFoundException("product.unit.not-found", productUpdates.getUnitCode()));
+             newUnitId = unit.getId();
+        }
 
         ProductModel updated = existing.toBuilder()
                 .code(productUpdates.getCode() != null ? productUpdates.getCode() : existing.getCode())
@@ -51,6 +67,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
                 .description(productUpdates.getDescription() != null ? productUpdates.getDescription() : existing.getDescription())
                 .categoryId(productUpdates.getCategoryId() != null ? productUpdates.getCategoryId() : existing.getCategoryId())
                 .unitCode(productUpdates.getUnitCode() != null ? productUpdates.getUnitCode() : existing.getUnitCode())
+                .unitId(newUnitId) // Asignar el ID resuelto
                 .brandId(productUpdates.getBrandId() != null ? productUpdates.getBrandId() : existing.getBrandId())
                 .minimumStock(productUpdates.getMinimumStock() != null ? productUpdates.getMinimumStock() : existing.getMinimumStock())
                 .currentStock(productUpdates.getCurrentStock() != null ? productUpdates.getCurrentStock() : existing.getCurrentStock())

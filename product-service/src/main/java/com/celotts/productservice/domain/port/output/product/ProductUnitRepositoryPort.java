@@ -10,15 +10,13 @@ public interface ProductUnitRepositoryPort {
 
     ProductUnitModel save(ProductUnitModel model);
     Optional<ProductUnitModel> findById(UUID id);
+    Optional<ProductUnitModel> findByCode(String code); // Añadido
     List<ProductUnitModel> findAll();
 
     void deleteById(UUID id);
-    boolean existsById(UUID id);          // ← añade esto
-    boolean existsByCode(String code);    // si ya lo agregaste, déjalo
+    boolean existsById(UUID id);
+    boolean existsByCode(String code);
     Optional<String> findNameByCode(String code);
     Optional<String> findDescriptionByCode(String code);
     List<String> findAllCodes();
-
-    // (Opcional) si se cambia el use case para usar existsById directamente:
-    // boolean existsById(UUID id);
 }

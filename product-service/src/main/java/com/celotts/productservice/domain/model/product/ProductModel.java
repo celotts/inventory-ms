@@ -19,6 +19,7 @@ public class ProductModel {
 
     private UUID categoryId;
 
+    private UUID unitId; // Añadido para persistencia
     private String unitCode;
     private UUID brandId;
     private Integer minimumStock;
