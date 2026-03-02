@@ -3,6 +3,9 @@ server:
   error:
     include-message: always
 
+app:
+  jwt:
+    secret: ${JWT_SECRET:======================CelottsJWTSecretDefaultDevKey===========================}
 
 spring:
   application:
@@ -10,6 +13,15 @@ spring:
   cloud:
     gateway:
       routes:
+        # --- AUTH SERVICE ---
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/auth-service/**
+          filters:
+            - StripPrefix=1
+
+        # --- PRODUCT SERVICE ---
         - id: product-service
           uri: lb://product-service
           predicates:
@@ -22,6 +34,7 @@ spring:
           predicates:
             - Path=/api/v1/products/**
 
+        # --- SUPPLIER SERVICE ---
         - id: supplier-service
           uri: lb://supplier-service
           predicates:
@@ -34,6 +47,7 @@ spring:
           predicates:
             - Path=/api/v1/suppliers/**
 
+        # --- PURCHASE SERVICE ---
         - id: purchase-service
           uri: lb://purchase-service
           predicates:
@@ -45,6 +59,20 @@ spring:
           uri: lb://purchase-service
           predicates:
             - Path=/api/v1/purchases/**
+
+        # --- TAX SERVICE ---
+        - id: tax-service
+          uri: lb://tax-service
+          predicates:
+            - Path=/tax-service/**
+          filters:
+            - StripPrefix=1
+
+        - id: tax-direct
+          uri: lb://tax-service
+          predicates:
+            - Path=/api/v1/taxes/**
+
       discovery:
         locator:
           enabled: true
@@ -78,12 +106,16 @@ springdoc:
   swagger-ui:
     enabled: true
     urls:
-      - name: "Purchase Service"
-        url: "/purchase-service/v3/api-docs"
-      - name: "Product Service"
-        url: "/product-service/v3/api-docs"
-      - name: "Supplier Service"
-        url: "/supplier-service/v3/api-docs"
+      - name: product
+        url: /product-service/v3/api-docs
+      - name: supplier
+        url: /supplier-service/v3/api-docs
+      - name: purchase
+        url: /purchase-service/v3/api-docs
+      - name: tax
+        url: /tax-service/v3/api-docs
+      - name: auth
+        url: /auth-service/v3/api-docs
 
 logging:
   level:

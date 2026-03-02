@@ -10,10 +10,12 @@ import com.celotts.authservice.domain.model.Role;
 import com.celotts.authservice.domain.model.User;
 import com.celotts.authservice.domain.repository.RoleRepository;
 import com.celotts.authservice.domain.repository.UserRepository;
+import com.celotts.authservice.infrastructure.common.ApiResult;
 import com.celotts.authservice.infrastructure.dto.JwtResponse;
 import com.celotts.authservice.infrastructure.dto.LoginRequest;
 import com.celotts.authservice.infrastructure.dto.MessageResponse;
 import com.celotts.authservice.infrastructure.dto.SignupRequest;
+import com.celotts.authservice.infrastructure.dto.UserResponseDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,6 +26,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -50,7 +53,7 @@ public class AuthController {
     private final RoleRepository roleRepository;
     private final PasswordEncoder encoder;
     private final JwtUtils jwtUtils;
-    private final MessageSource messageSource; // Inyectado
+    private final MessageSource messageSource;
 
     @Operation(summary = "${swagger.auth.login.summary}", description = "${swagger.auth.login.desc}")
     @ApiResponses(value = {
@@ -59,7 +62,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content)
     })
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<ApiResult<JwtResponse>> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
@@ -72,21 +75,27 @@ public class AuthController {
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
 
-        return ResponseEntity.ok(new JwtResponse(jwt,
+        JwtResponse jwtResponse = new JwtResponse(jwt,
                 userDetails.getId(),
                 userDetails.getUsername(),
                 userDetails.getEmail(),
-                roles));
+                roles);
+
+        return ApiResult.toResponseEntity(
+                jwtResponse, 
+                "Login successful", 
+                HttpStatus.OK
+        );
     }
 
     @Operation(summary = "${swagger.auth.register.summary}", description = "${swagger.auth.register.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User registered successfully",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = MessageResponse.class))),
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = UserResponseDto.class))),
             @ApiResponse(responseCode = "400", description = "Username or Email already in use", content = @Content)
     })
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+    public ResponseEntity<ApiResult<UserResponseDto>> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
             throw new UsernameAlreadyExistsException(signUpRequest.getUsername());
         }
@@ -95,7 +104,6 @@ public class AuthController {
             throw new EmailAlreadyExistsException(signUpRequest.getEmail());
         }
 
-        // Crear usuario usando el patrón Builder
         User user = User.builder()
                 .username(signUpRequest.getUsername())
                 .email(signUpRequest.getEmail())
@@ -131,9 +139,21 @@ public class AuthController {
         }
 
         user.setRoles(roles);
-        userRepository.save(user);
+        User savedUser = userRepository.save(user);
 
         String successMessage = messageSource.getMessage("auth.register.success", null, LocaleContextHolder.getLocale());
-        return ResponseEntity.ok(new MessageResponse(successMessage));
+        
+        UserResponseDto responseDto = new UserResponseDto(
+                savedUser.getId(),
+                savedUser.getUsername(),
+                savedUser.getEmail(),
+                savedUser.getRoles().stream().map(role -> role.getName().name()).collect(Collectors.toSet())
+        );
+
+        return ApiResult.toResponseEntity(
+                responseDto, 
+                successMessage, 
+                HttpStatus.CREATED
+        );
     }
 }

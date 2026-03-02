@@ -7,6 +7,7 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productu
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.productunit.ProductUnitUpdateDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.ListResponse;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.productunit.ProductUnitMapper;
+import com.celotts.productservice.infrastructure.common.ApiResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -14,10 +15,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -30,6 +34,11 @@ public class ProductUnitController {
 
     private final ProductUnitUseCase productUnitUseCase;
     private final ProductUnitMapper mapper;
+    private final MessageSource messageSource;
+
+    private String msg(String code) {
+        return messageSource.getMessage(code, null, LocaleContextHolder.getLocale());
+    }
 
     @Operation(summary = "${swagger.product-unit.create.summary}", description = "${swagger.product-unit.create.desc}")
     @ApiResponses({
@@ -38,49 +47,49 @@ public class ProductUnitController {
     })
 
     @PostMapping
-    public ResponseEntity<ProductUnitResponseDto> create(@Valid @RequestBody ProductUnitCreateDto dto) {
+    public ResponseEntity<ApiResult<ProductUnitResponseDto>> create(@Valid @RequestBody ProductUnitCreateDto dto) {
         ProductUnitModel toCreate = mapper.toModel(dto);
         ProductUnitModel created = productUnitUseCase.create(toCreate);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .header("Location", "/api/v1/product-units/" + created.getId())
-                .body(mapper.toResponse(created));
+        
+        URI location = URI.create("/api/v1/product-units/" + created.getId());
+        
+        return ApiResult.created(mapper.toResponse(created), msg("product-unit.created"), location);
     }
 
     @GetMapping
     @Operation(summary = "${swagger.product-unit.list.summary}")
-    public ResponseEntity<ListResponse<ProductUnitResponseDto>> findAll() {
+    public ResponseEntity<ApiResult<ListResponse<ProductUnitResponseDto>>> findAll() {
         var models = productUnitUseCase.findAll();
-        return ResponseEntity.ok(ListResponse.of(mapper.toResponseList(models)));
+        return ApiResult.success(ListResponse.of(mapper.toResponseList(models)), msg("product-unit.list"));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "${swagger.product-unit.get-by-id.summary}")
-    public ResponseEntity<ProductUnitResponseDto> findById(@PathVariable UUID id) {
+    public ResponseEntity<ApiResult<ProductUnitResponseDto>> findById(@PathVariable UUID id) {
         return productUnitUseCase.findById(id)
                 .map(mapper::toResponse)
-                .map(ResponseEntity::ok)
+                .map(dto -> ApiResult.success(dto, msg("product-unit.found")))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "${swagger.product-unit.update.summary}")
-    public ResponseEntity<ProductUnitResponseDto> update(@PathVariable UUID id,
+    public ResponseEntity<ApiResult<ProductUnitResponseDto>> update(@PathVariable UUID id,
                                                          @Valid @RequestBody ProductUnitUpdateDto dto) {
         // Patch parcial con MapStruct (ignora nulls)
         return productUnitUseCase.findById(id)
                 .map(existing -> {
                     mapper.updateModelFromDto(existing, dto);
                     ProductUnitModel saved = productUnitUseCase.update(id, existing);
-                    return ResponseEntity.ok(mapper.toResponse(saved));
+                    return ApiResult.success(mapper.toResponse(saved), msg("product-unit.updated"));
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "${swagger.product-unit.delete.summary}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<ApiResult<Void>> delete(@PathVariable UUID id) {
         productUnitUseCase.deleteById(id);
-        return ResponseEntity.noContent().build();
+        return ApiResult.success(null, msg("product-unit.deleted"));
     }
 }
