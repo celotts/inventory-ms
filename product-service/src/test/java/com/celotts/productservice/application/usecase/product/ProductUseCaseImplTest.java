@@ -3,6 +3,7 @@ package com.celotts.productservice.application.usecase.product;
 import com.celotts.productservice.domain.exception.ResourceAlreadyExistsException;
 import com.celotts.productservice.domain.exception.ResourceNotFoundException;
 import com.celotts.productservice.domain.model.product.ProductModel;
+import com.celotts.productservice.domain.model.product.ProductUnitModel;
 import com.celotts.productservice.domain.port.output.category.CategoryRepositoryPort;
 import com.celotts.productservice.domain.port.output.product.ProductBrandRepositoryPort;
 import com.celotts.productservice.domain.port.output.product.ProductRepositoryPort;
@@ -208,5 +209,13 @@ class ProductUseCaseImplTest {
         when(productUnitPort.existsByCode(anyString())).thenReturn(shouldExist);
         when(productBrandPort.existsById(any(UUID.class))).thenReturn(shouldExist);
         when(categoryRepositoryPort.existsById(any(UUID.class))).thenReturn(shouldExist);
+        
+        // Mock findByCode for unitId resolution
+        if (shouldExist) {
+            ProductUnitModel mockUnit = ProductUnitModel.builder().id(UUID.randomUUID()).code("UNIT").build();
+            when(productUnitPort.findByCode(anyString())).thenReturn(Optional.of(mockUnit));
+        } else {
+            when(productUnitPort.findByCode(anyString())).thenReturn(Optional.empty());
+        }
     }
 }

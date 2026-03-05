@@ -14,9 +14,10 @@ eureka:
   client:
     enabled: false
 
-jwt:
-  secret: testSecretKeyThatShouldBeAtLeast256BitsLongForHMACSHA256Algorithm1234567890
-  expiration: 86400000
+app:
+  jwt:
+    secret: testSecretKeyThatShouldBeAtLeast256BitsLongForHMACSHA256Algorithm1234567890
+    expiration: 86400000
 
 logging:
   level:

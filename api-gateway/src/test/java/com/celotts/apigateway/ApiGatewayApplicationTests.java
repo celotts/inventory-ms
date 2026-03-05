@@ -7,7 +7,8 @@ import org.springframework.test.context.TestPropertySource;
 @SpringBootTest
 @TestPropertySource(properties = {
         "spring.cloud.config.enabled=false",
-        "eureka.client.enabled=false"
+        "eureka.client.enabled=false",
+        "app.jwt.secret=test-secret-key-for-api-gateway-tests-1234567890"
 })
 class ApiGatewayApplicationTests {
 
