@@ -3,6 +3,7 @@ package com.celotts.productservice.infrastructure.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -11,6 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Profile("!test")
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // Habilitar @PreAuthorize
 public class SecurityConfig {
 
     @Bean
@@ -21,9 +23,10 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()          // Health checks
                         .requestMatchers("/swagger-ui/**").permitAll()        // Swagger UI
                         .requestMatchers("/v3/api-docs/**").permitAll()       // OpenAPI docs
-                        .requestMatchers("/api/v1/**").permitAll()            // Nuestros endpoints
-                        .anyRequest().permitAll()                             // Todo lo demás permitido
-                );
+                        .anyRequest().authenticated()                         // Todo lo demás requiere autenticación
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt()); // Configurar como Resource Server JWT
+
         return http.build();
     }
 }

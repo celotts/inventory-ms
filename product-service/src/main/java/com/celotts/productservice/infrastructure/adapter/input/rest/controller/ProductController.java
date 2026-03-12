@@ -30,6 +30,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -68,6 +69,7 @@ public class ProductController {
             @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content),
             @ApiResponse(responseCode = "409", description = "Product code already exists", content = @Content)
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public ResponseEntity<ApiResult<ProductResponseDto>> create(@RequestBody @Valid ProductCreateDto createDto) {
         log.info("Creating new product with code: {}", createDto.getCode());
         ProductModel created = productUseCase.createProduct(productMapper.toModel(createDto));
@@ -87,6 +89,7 @@ public class ProductController {
             @ApiResponse(responseCode = "200", description = "Stock received successfully"),
             @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public ResponseEntity<ApiResult<Map<String, Object>>> receiveStock(@RequestBody @Valid StockReceptionDto receptionDto) {
         log.info("Receiving stock for product: {}", receptionDto.getProductId());
         LotModel lot = receiveStockUseCase.receiveStock(receptionDto);
@@ -104,6 +107,7 @@ public class ProductController {
             @ApiResponse(responseCode = "200", description = "Product updated successfully"),
             @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public ResponseEntity<ApiResult<ProductResponseDto>> updateProduct(
             @PathVariable UUID id,
             @RequestBody @Valid ProductUpdateDto updateDto) {
@@ -174,6 +178,7 @@ public class ProductController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "${swagger.product.delete.summary}", description = "${swagger.product.delete.desc}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public ResponseEntity<ApiResult<Void>> deleteProduct(@PathVariable UUID id) {
         productUseCase.disableProduct(id);
         return ApiResult.success(null, msg("product.deleted"));
@@ -181,6 +186,7 @@ public class ProductController {
 
     @DeleteMapping("/{id}/hard")
     @Operation(summary = "${swagger.product.hard-delete.summary}", description = "${swagger.product.hard-delete.desc}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResult<Void>> hardDeleteProduct(@PathVariable UUID id) {
         productUseCase.hardDeleteProduct(id);
         return ApiResult.success(null, msg("product.deleted"));
@@ -188,6 +194,7 @@ public class ProductController {
 
     @PatchMapping("/{id}/enable")
     @Operation(summary = "${swagger.product.enable.summary}", description = "${swagger.product.enable.desc}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public ResponseEntity<ApiResult<ProductResponseDto>> enableProduct(@PathVariable UUID id) {
         ProductModel enabledProduct = productUseCase.enableProduct(id);
         return ApiResult.success(productMapper.toResponse(enabledProduct), msg("product.updated"));
@@ -257,6 +264,7 @@ public class ProductController {
 
     @PatchMapping("/{id}/stock")
     @Operation(summary = "${swagger.product.update-stock.summary}", description = "${swagger.product.update-stock.desc}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public ResponseEntity<ApiResult<ProductResponseDto>> updateStock(@PathVariable UUID id, @RequestBody @Valid UpdateStockDto stockDto) {
         ProductModel updated = productUseCase.updateStock(id, stockDto.getStock());
         return ApiResult.success(productMapper.toResponse(updated), msg("product.stock.updated"));
