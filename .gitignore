@@ -41,3 +41,4 @@ Thumbs.db
 infra/.env
 infra/.env.*
 infra/.build/
+infra/.start_time
