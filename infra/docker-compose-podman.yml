@@ -154,6 +154,30 @@ services:
       - ./init-scripts/auth/05-auth-init.sql:/docker-entrypoint-initdb.d/05-auth-init.sql:ro
     restart: unless-stopped
 
+  # --- MESSAGE BROKER ---
+  rabbitmq:
+    profiles: ["infra", "purchase", "product"] # Se necesita para purchase y product
+    image: rabbitmq:3.12-management-alpine
+    container_name: rabbitmq
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    ports:
+      - "5672:5672" # Puerto AMQP
+      - "15672:15672" # UI de Gestión
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - inventory-net
+    restart: unless-stopped
+
   # --- SERVICIOS DE INFRAESTRUCTURA ---
   discovery-service:
     profiles: ["infra"]
@@ -282,6 +306,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://${EUREKA_HOST:-discovery-service}:8761/eureka/
       - SPRING_CLOUD_CONFIG_URI=http://${CONFIG_HOST:-config-service}:7777
       - SPRING_CONFIG_IMPORT=optional:configserver:http://${CONFIG_HOST:-config-service}:7777
+      - JWT_SECRET=${JWT_SECRET:-======================CelottsJWTSecretDefaultDevKey===========================}
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:8090/actuator/health || exit 1" ]
       interval: 30s
@@ -323,6 +348,10 @@ services:
       - SPRING_CLOUD_CONFIG_URI=http://${CONFIG_HOST:-config-service}:7777
       - SPRING_CONFIG_IMPORT=optional:configserver:http://${CONFIG_HOST:-config-service}:7777
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://${EUREKA_HOST:-discovery-service}:8761/eureka/
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-guest}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASS:-guest}
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1" ]
       interval: 45s
@@ -335,6 +364,8 @@ services:
       discovery-service:
         condition: service_healthy
       config-service:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - inventory-net
@@ -409,6 +440,10 @@ services:
       - SPRING_CONFIG_IMPORT=optional:configserver:http://${CONFIG_HOST:-config-service}:7777
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://${EUREKA_HOST:-discovery-service}:8761/eureka/
       - SUPPLIER_SERVICE_URL=http://${SUPPLIER_SERVICE_NAME:-supplier-service}:9091
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-guest}
+      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASS:-guest}
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:9094/actuator/health | grep UP || exit 1" ]
       interval: 30s
@@ -421,6 +456,8 @@ services:
       discovery-service:
         condition: service_healthy
       config-service:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - inventory-net
