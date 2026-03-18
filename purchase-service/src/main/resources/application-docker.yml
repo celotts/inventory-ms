@@ -43,6 +43,18 @@ resilience4j:
         waitDurationInOpenState: 10s
         failureRateThreshold: 50
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${MANAGEMENT_ZIPKIN_TRACING_ENDPOINT:http://zipkin:9411/api/v2/spans}
+
 logging:
   level:
     com.celotts: INFO

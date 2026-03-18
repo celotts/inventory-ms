@@ -67,7 +67,7 @@ spring:
             - Path=/tax-service/**
           filters:
             - StripPrefix=1
-
+        
         - id: tax-direct
           uri: lb://tax-service
           predicates:
@@ -101,6 +101,12 @@ management:
       show-details: always
     env:
       show-values: ALWAYS
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${MANAGEMENT_ZIPKIN_TRACING_ENDPOINT:http://zipkin:9411/api/v2/spans}
 
 springdoc:
   swagger-ui:

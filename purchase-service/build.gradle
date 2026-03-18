@@ -18,6 +18,10 @@ dependencies {
     // 🔒 Security (si lo necesitas)
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
+    // Observability (Tracing)
+    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
+    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
+
     // ☁️ Spring Cloud
     implementation 'org.springframework.cloud:spring-cloud-starter-config'
     implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'

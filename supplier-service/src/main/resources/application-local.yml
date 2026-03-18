@@ -1,21 +1,46 @@
-# Perfil para desarrollo local, fuera de Docker
-# Hereda de application.yml y sobreescribe lo necesario
-
 server:
   port: ${SUPPLIER_PORT:9091}
-  error:
-    include-message: always
 
 spring:
   application:
-    name: supplier-service-local
+    name: supplier-service
   datasource:
-    url: jdbc:postgresql://localhost:5434/supplier
+    url: jdbc:postgresql://${SUPPLIER_DB_HOST:localhost}:${SUPPLIER_DB_PORT:5434}/${SUPPLIER_DB_NAME:supplier}
+    username: ${SUPPLIER_DB_USERNAME:supplier}
+    password: ${SUPPLIER_DB_PASSWORD:supplier123}
+    driver-class-name: org.postgresql.Driver
   jpa:
+    hibernate:
+      ddl-auto: update
     show-sql: true
-  messages:
-    encoding: UTF-8 # <-- FORZAR CODIFICACIÓN
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 eureka:
   client:
-    enabled: false
+    service-url:
+      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${MANAGEMENT_ZIPKIN_TRACING_ENDPOINT:http://localhost:9411/api/v2/spans}
+
+logging:
+  level:
+    com.celotts: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

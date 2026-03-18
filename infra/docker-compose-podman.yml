@@ -154,9 +154,9 @@ services:
       - ./init-scripts/auth/05-auth-init.sql:/docker-entrypoint-initdb.d/05-auth-init.sql:ro
     restart: unless-stopped
 
-  # --- MESSAGE BROKER ---
+  # --- MESSAGE BROKER & OBSERVABILITY ---
   rabbitmq:
-    profiles: ["infra", "purchase", "product"] # Se necesita para purchase y product
+    profiles: ["infra", "purchase", "product"]
     image: rabbitmq:3.12-management-alpine
     container_name: rabbitmq
     deploy:
@@ -164,13 +164,32 @@ services:
         limits:
           memory: 512M
     ports:
-      - "5672:5672" # Puerto AMQP
-      - "15672:15672" # UI de Gestión
+      - "5672:5672"
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - inventory-net
+    restart: unless-stopped
+
+  zipkin:
+    profiles: ["infra"]
+    image: openzipkin/zipkin
+    container_name: zipkin
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    ports:
+      - "9411:9411"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9411/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -270,6 +289,7 @@ services:
       - SPRING_CONFIG_IMPORT=optional:configserver:http://${CONFIG_HOST:-config-service}:7777
       - SPRING_CLOUD_CONFIG_URI=http://${CONFIG_HOST:-config-service}:7777
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://${EUREKA_HOST:-discovery-service}:8761/eureka/
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:9091/actuator/health || exit 1" ]
       interval: 30s
@@ -280,6 +300,8 @@ services:
       db_supplier:
         condition: service_healthy
       config-service:
+        condition: service_healthy
+      zipkin:
         condition: service_healthy
     networks:
       - inventory-net
@@ -307,6 +329,7 @@ services:
       - SPRING_CLOUD_CONFIG_URI=http://${CONFIG_HOST:-config-service}:7777
       - SPRING_CONFIG_IMPORT=optional:configserver:http://${CONFIG_HOST:-config-service}:7777
       - JWT_SECRET=${JWT_SECRET:-======================CelottsJWTSecretDefaultDevKey===========================}
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:8090/actuator/health || exit 1" ]
       interval: 30s
@@ -317,6 +340,8 @@ services:
       discovery-service:
         condition: service_healthy
       config-service:
+        condition: service_healthy
+      zipkin:
         condition: service_healthy
     networks:
       - inventory-net
@@ -352,6 +377,7 @@ services:
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-guest}
       - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASS:-guest}
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1" ]
       interval: 45s
@@ -366,6 +392,8 @@ services:
       config-service:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      zipkin:
         condition: service_healthy
     networks:
       - inventory-net
@@ -396,6 +424,7 @@ services:
       - SPRING_CLOUD_CONFIG_URI=http://${CONFIG_HOST:-config-service}:7777
       - SPRING_CONFIG_IMPORT=optional:configserver:http://${CONFIG_HOST:-config-service}:7777
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://${EUREKA_HOST:-discovery-service}:8761/eureka/
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:9093/actuator/health | grep UP || exit 1" ]
       interval: 30s
@@ -408,6 +437,8 @@ services:
       discovery-service:
         condition: service_healthy
       config-service:
+        condition: service_healthy
+      zipkin:
         condition: service_healthy
     networks:
       - inventory-net
@@ -444,6 +475,7 @@ services:
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-guest}
       - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASS:-guest}
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:9094/actuator/health | grep UP || exit 1" ]
       interval: 30s
@@ -458,6 +490,8 @@ services:
       config-service:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      zipkin:
         condition: service_healthy
     networks:
       - inventory-net
@@ -490,6 +524,7 @@ services:
       - SPRING_CLOUD_CONFIG_URI=http://${CONFIG_HOST:-config-service}:7777
       - SPRING_CONFIG_IMPORT=optional:configserver:http://${CONFIG_HOST:-config-service}:7777
       - JWT_SECRET=${JWT_SECRET:-======================CelottsJWTSecretDefaultDevKey===========================}
+      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1" ]
       interval: 30s
@@ -500,6 +535,8 @@ services:
       db_auth:
         condition: service_healthy
       config-service:
+        condition: service_healthy
+      zipkin:
         condition: service_healthy
     networks:
       - inventory-net
