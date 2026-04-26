@@ -1,36 +1,12 @@
-plugins {
-    id 'java'
-    id 'org.springframework.boot'
-    id 'io.spring.dependency-management'
-    id 'jacoco'
-    id 'com.github.ben-manes.versions' version '0.53.0'
-    id 'org.owasp.dependencycheck' version '9.0.7'
-}
-
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    
-    // Seguridad (Faltaba)
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
-    // Observability (Tracing)
-    implementation 'io.micrometer:micrometer-tracing-bridge-brave'
-    implementation 'io.zipkin.reporter2:zipkin-reporter-brave'
-
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
-    testCompileOnly 'org.projectlombok:lombok'
-    testAnnotationProcessor 'org.projectlombok:lombok'
-
-    implementation 'org.springframework.cloud:spring-cloud-starter-config'
-    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-    // OpenFeign (Faltaba)
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
 
     runtimeOnly "org.postgresql:postgresql"
     testImplementation "com.h2database:h2"
@@ -41,7 +17,6 @@ dependencies {
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation platform("org.testcontainers:testcontainers-bom:1.19.8")
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
@@ -50,19 +25,8 @@ dependencies {
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
 }
 
-// Forzar versiones seguras de dependencias transitivas
-configurations.all {
-    resolutionStrategy {
-        force 'com.google.guava:guava:33.2.0-jre'
-    }
-}
-
-springBoot {
-    mainClass = 'com.celotts.supplierservice.SupplierServiceApplication'
-}
-
 bootJar {
-    archiveFileName = 'supplier-service-0.0.1-SNAPSHOT.jar'
+    archiveFileName = "supplier-service-${project.version}.jar"
 }
 
 compileJava {
@@ -70,16 +34,4 @@ compileJava {
             '-Amapstruct.defaultComponentModel=spring',
             '-Amapstruct.unmappedTargetPolicy=IGNORE'
     ]
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.compilerArgs += ['-Xlint:unchecked', '-Xlint:deprecation']
-}
-
-dependencyCheck {
-    autoUpdate = false
-    failBuildOnCVSS = 0
-    nvd {
-        skip = true
-    }
 }

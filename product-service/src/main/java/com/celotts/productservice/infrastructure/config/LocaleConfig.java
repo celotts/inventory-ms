@@ -13,8 +13,8 @@ public class LocaleConfig {
     @Bean
     public LocaleResolver localeResolver() {
         var resolver = new AcceptHeaderLocaleResolver();
-        // ✅ Uso moderno del factory method (Java 19+)
-        resolver.setDefaultLocale(Locale.of("es", "MX"));
+        // ✅ Compatible con Java 17 y anteriores
+        resolver.setDefaultLocale(new Locale("es", "MX"));
         return resolver;
     }
 }
