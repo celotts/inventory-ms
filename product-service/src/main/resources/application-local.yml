@@ -1,57 +1,24 @@
 server:
   port: ${PRODUCT_PORT:9090}
-  error:
-    include-message: always
-
-
 
 spring:
   application:
     name: product-service
-
-  config:
-    import: "optional:configserver:http://config-service:7777"
-    activate:
-      on-profile: docker
-
-  cloud:
-    config:
-      enabled: ${DOCKER_CONFIG_SERVER_ENABLED:false}
-      uri: ${SPRING_CLOUD_CONFIG_URI:http://config-service:7777}
-
-  datasource:
-    url: jdbc:postgresql://${PRODUCT_DB_HOST:product-db}:${PRODUCT_DB_PORT:5432}/${PRODUCT_DB_NAME:product}
-    username: ${PRODUCT_DB_USERNAME:product}
-    password: ${PRODUCT_DB_PASSWORD:product123}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      pool-name: HikariPool-ProductServiceDocker
-      maximum-pool-size: ${MAXIMUM_POOL_SIZE:10}
-      minimum-idle: ${MINIMUM_IDLE:5}
-      auto-commit: ${AUTO_COMMIT:true}
-      transaction-isolation: TRANSACTION_READ_COMMITTED
-      connection-timeout: ${VALIDATION_TIMEOUT:3000}
-      idle-timeout: ${ILDETIMEOUT:600000}
-      max-lifetime: ${MAXLIFETIME:1800000}
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
-      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret-key: ${JWT_SECRET:======================CelottsJWTSecretDefaultDevKey===========================}
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
 
 eureka:
   client:
     service-url:
       defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
-    register-with-eureka: true
-    fetch-registry: true
-
   instance:
     prefer-ip-address: true
     instance-id: ${spring.application.name}:${random.value}
@@ -61,14 +28,16 @@ management:
     web:
       exposure:
         include: "*"
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${MANAGEMENT_ZIPKIN_TRACING_ENDPOINT:http://localhost:9411/api/v2/spans}
 
 logging:
   level:
-    org.springframework.web: INFO # DEBUG es demasiado ruidoso para Docker
-    com.celotts.productservice: DEBUG # Corregido el paquete (decía purchaseservice)
-    com.netflix.eureka: WARN
-    com.netflix.discovery: WARN
-    org.hibernate: INFO
-    root: INFO
-    org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl: INFO
-    org.hibernate.internal.AbstractSharedSessionContract: INFO
+    com.celotts: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

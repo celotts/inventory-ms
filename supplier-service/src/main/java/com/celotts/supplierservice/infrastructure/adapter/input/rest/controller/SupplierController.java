@@ -7,6 +7,7 @@ import com.celotts.supplierservice.infrastructure.adapter.input.rest.dto.supplie
 import com.celotts.supplierservice.infrastructure.adapter.input.rest.dto.supplier.SupplierResponseDto;
 import com.celotts.supplierservice.infrastructure.adapter.input.rest.dto.supplier.SupplierUpdateDto;
 import com.celotts.supplierservice.infrastructure.adapter.input.rest.mapper.supplier.SupplierMapper;
+import com.celotts.supplierservice.infrastructure.common.ApiResult;
 import com.celotts.supplierservice.infrastructure.common.dto.PageableRequestDto;
 import com.celotts.supplierservice.infrastructure.common.validation.ValidationGroups;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,12 +49,16 @@ public class SupplierController {
     private final SupplierMapper mapper;
     private final MessageSource messageSource;
 
+    private String msg(String code) {
+        return messageSource.getMessage(code, null, LocaleContextHolder.getLocale());
+    }
+
     // --- 🔍 VALIDACIÓN INTER-SERVICE ---
 
     @Operation(summary = "${swagger.supplier.exists.summary}", description = "${swagger.supplier.exists.desc}")
     @GetMapping("/{id}/exists")
-    public ResponseEntity<Boolean> existsById(@PathVariable UUID id) {
-        return ResponseEntity.ok(useCase.existsById(id));
+    public ResponseEntity<ApiResult<Boolean>> existsById(@PathVariable UUID id) {
+        return ApiResult.success(useCase.existsById(id), msg("supplier.exists"));
     }
 
     // --- 🏗️ CREACIÓN ---
@@ -66,7 +71,7 @@ public class SupplierController {
             @ApiResponse(responseCode = "409", description = "Supplier code or tax ID already exists", content = @Content)
     })
     @PostMapping
-    public ResponseEntity<SupplierResponseDto> create(
+    public ResponseEntity<ApiResult<SupplierResponseDto>> create(
             @Validated(ValidationGroups.Create.class) @RequestBody SupplierCreateDto body
     ) {
         body.normalizeFields();
@@ -80,7 +85,7 @@ public class SupplierController {
 
         log.info("URI generada para Location: {}", location);
 
-        return ResponseEntity.created(location).body(mapper.toResponse(created));
+        return ApiResult.created(mapper.toResponse(created), msg("supplier.created"), location);
     }
 
     // --- 📖 LECTURA Y LISTADO ---
@@ -91,21 +96,21 @@ public class SupplierController {
             @ApiResponse(responseCode = "404", description = "Supplier not found", content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity<SupplierResponseDto> getById(@PathVariable UUID id) {
+    public ResponseEntity<ApiResult<SupplierResponseDto>> getById(@PathVariable UUID id) {
         SupplierModel model = useCase.getById(id);
-        return ResponseEntity.ok(mapper.toResponse(model));
+        return ApiResult.success(mapper.toResponse(model), msg("supplier.found"));
     }
 
     @Operation(summary = "${swagger.supplier.get-by-code.summary}", description = "${swagger.supplier.get-by-code.desc}")
     @GetMapping("/code/{code}")
-    public ResponseEntity<SupplierResponseDto> getByCode(@PathVariable String code) {
+    public ResponseEntity<ApiResult<SupplierResponseDto>> getByCode(@PathVariable String code) {
         SupplierModel model = useCase.getByCode(code);
-        return ResponseEntity.ok(mapper.toResponse(model));
+        return ApiResult.success(mapper.toResponse(model), msg("supplier.found"));
     }
 
     @Operation(summary = "${swagger.supplier.list.summary}", description = "${swagger.supplier.list.desc}")
     @GetMapping
-    public ResponseEntity<Page<SupplierResponseDto>> list(
+    public ResponseEntity<ApiResult<Page<SupplierResponseDto>>> list(
             @Valid @ModelAttribute PageableRequestDto pageReq,
             @Parameter(description = "Filter by partial name") @RequestParam(name = "q", required = false) String q,
             @Parameter(description = "Filter by active status") @RequestParam(name = "active", required = false) Boolean active
@@ -120,39 +125,39 @@ public class SupplierController {
         } else {
             page = useCase.findAll(pageable);
         }
-        return ResponseEntity.ok(mapper.toResponsePage(page));
+        return ApiResult.success(mapper.toResponsePage(page), msg("supplier.list"));
     }
 
     // --- 🛠️ BÚSQUEDAS Y SUGERENCIAS ---
 
     @Operation(summary = "${swagger.supplier.exists-by-name.summary}", description = "${swagger.supplier.exists-by-name.desc}")
     @GetMapping("/_exists")
-    public ResponseEntity<Map<String, Object>> existsByName(
+    public ResponseEntity<ApiResult<Map<String, Object>>> existsByName(
             @RequestParam @NotBlank(message = "{validation.field-error}") String name
     ) {
-        return ResponseEntity.ok(Map.of(
+        return ApiResult.success(Map.of(
                 "exists", useCase.existsByName(name),
                 "name", name
-        ));
+        ), msg("supplier.exists"));
     }
 
     @Operation(summary = "${swagger.supplier.exists-by-code.summary}", description = "${swagger.supplier.exists-by-code.desc}")
     @GetMapping("/_exists-code")
-    public ResponseEntity<Map<String, Object>> existsByCode(@RequestParam String code) {
-        return ResponseEntity.ok(Map.of(
+    public ResponseEntity<ApiResult<Map<String, Object>>> existsByCode(@RequestParam String code) {
+        return ApiResult.success(Map.of(
                 "exists", useCase.existsByCode(code),
                 "code", code
-        ));
+        ), msg("supplier.exists"));
     }
 
     @Operation(summary = "${swagger.supplier.suggest.summary}", description = "${swagger.supplier.suggest.desc}")
     @GetMapping("/_suggest")
-    public ResponseEntity<List<SupplierResponseDto>> suggest(
+    public ResponseEntity<ApiResult<List<SupplierResponseDto>>> suggest(
             @RequestParam(name = "q") @NotBlank(message = "{validation.field-error}") String q,
             @RequestParam(name = "limit", required = false, defaultValue = "10") @Positive @Min(1) int limit
     ) {
         List<SupplierModel> list = useCase.searchByNameDescription(q, Math.min(limit, 1000));
-        return ResponseEntity.ok(mapper.toResponseList(list));
+        return ApiResult.success(mapper.toResponseList(list), msg("supplier.suggestions"));
     }
 
     // --- ✍️ ACTUALIZACIÓN Y BORRADO ---
@@ -163,18 +168,18 @@ public class SupplierController {
             @ApiResponse(responseCode = "404", description = "Supplier not found", content = @Content)
     })
     @PutMapping("/{id}")
-    public ResponseEntity<SupplierResponseDto> update(
+    public ResponseEntity<ApiResult<SupplierResponseDto>> update(
             @PathVariable UUID id,
             @Validated(ValidationGroups.Update.class) @RequestBody SupplierUpdateDto body
     ) {
         body.normalizeFields();
         SupplierModel updated = useCase.update(id, mapper.toModel(body));
-        return ResponseEntity.ok(mapper.toResponse(updated));
+        return ApiResult.success(mapper.toResponse(updated), msg("supplier.updated"));
     }
 
     @Operation(summary = "${swagger.supplier.delete.summary}", description = "${swagger.supplier.delete.desc}")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
+    public ResponseEntity<ApiResult<Void>> delete(
             @PathVariable UUID id,
             @RequestBody(required = false) SupplierDeleteDto body
     ) {
@@ -182,17 +187,17 @@ public class SupplierController {
         String reason = (body != null) ? body.getReason() : null;
 
         useCase.delete(id, deletedBy, reason);
-        return ResponseEntity.noContent().build();
+        return ApiResult.success(null, msg("supplier.deleted"));
     }
 
     // --- 🏥 SALUD ---
 
     @Operation(summary = "${swagger.supplier.ping.summary}", description = "${swagger.supplier.ping.desc}")
     @GetMapping("/_ping")
-    public ResponseEntity<Map<String, Object>> ping() {
-        return ResponseEntity.ok(Map.of(
+    public ResponseEntity<ApiResult<Map<String, Object>>> ping() {
+        return ApiResult.success(Map.of(
                 "service", "supplier-service",
                 "status", messageSource.getMessage("app.status.ok", null, LocaleContextHolder.getLocale())
-        ));
+        ), "OK");
     }
 }

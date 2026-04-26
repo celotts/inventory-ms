@@ -9,6 +9,7 @@ import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.response.PageResponse;
 import com.celotts.productservice.infrastructure.adapter.input.rest.dto.stock.StockReceptionDto;
 import com.celotts.productservice.infrastructure.adapter.input.rest.mapper.product.ProductMapper;
+import com.celotts.productservice.infrastructure.common.ApiResult;
 import com.celotts.productservice.infrastructure.config.PaginationProperties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,6 +30,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -49,10 +51,14 @@ public class ProductController {
     private final PaginationProperties paginationProperties;
     private final MessageSource messageSource;
 
+    private String msg(String code) {
+        return messageSource.getMessage(code, null, LocaleContextHolder.getLocale());
+    }
+
     @GetMapping("/test")
     @Operation(summary = "${swagger.product.test.summary}", description = "${swagger.product.test.desc}")
-    public ResponseEntity<String> testEndpoint() {
-        return ResponseEntity.ok(messageSource.getMessage("app.status.ok", null, LocaleContextHolder.getLocale()));
+    public ResponseEntity<ApiResult<String>> testEndpoint() {
+        return ApiResult.success(msg("app.status.ok"), "OK");
     }
 
     @PostMapping
@@ -63,7 +69,8 @@ public class ProductController {
             @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content),
             @ApiResponse(responseCode = "409", description = "Product code already exists", content = @Content)
     })
-    public ResponseEntity<ProductResponseDto> create(@RequestBody @Valid ProductCreateDto createDto) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
+    public ResponseEntity<ApiResult<ProductResponseDto>> create(@RequestBody @Valid ProductCreateDto createDto) {
         log.info("Creating new product with code: {}", createDto.getCode());
         ProductModel created = productUseCase.createProduct(productMapper.toModel(createDto));
 
@@ -73,7 +80,7 @@ public class ProductController {
                 .buildAndExpand(created.getId())
                 .toUri();
 
-        return ResponseEntity.created(location).body(productMapper.toResponse(created));
+        return ApiResult.created(productMapper.toResponse(created), msg("product.created"), location);
     }
 
     @PostMapping("/receive-stock")
@@ -82,16 +89,16 @@ public class ProductController {
             @ApiResponse(responseCode = "200", description = "Stock received successfully"),
             @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
     })
-    public ResponseEntity<Map<String, Object>> receiveStock(@RequestBody @Valid StockReceptionDto receptionDto) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
+    public ResponseEntity<ApiResult<Map<String, Object>>> receiveStock(@RequestBody @Valid StockReceptionDto receptionDto) {
         log.info("Receiving stock for product: {}", receptionDto.getProductId());
         LotModel lot = receiveStockUseCase.receiveStock(receptionDto);
         
         Map<String, Object> response = new HashMap<>();
         response.put("lotId", lot.getId());
         response.put("lotCode", lot.getLotCode());
-        response.put("message", "Stock received successfully");
         
-        return ResponseEntity.ok(response);
+        return ApiResult.success(response, msg("product.stock.received"));
     }
 
     @PutMapping("/{id}")
@@ -100,27 +107,28 @@ public class ProductController {
             @ApiResponse(responseCode = "200", description = "Product updated successfully"),
             @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
     })
-    public ResponseEntity<ProductResponseDto> updateProduct(
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
+    public ResponseEntity<ApiResult<ProductResponseDto>> updateProduct(
             @PathVariable UUID id,
             @RequestBody @Valid ProductUpdateDto updateDto) {
         log.info("Updating product with id: {}", id);
         ProductModel updated = productUseCase.updateProduct(id, productMapper.toModel(updateDto));
-        return ResponseEntity.ok(productMapper.toResponse(updated));
+        return ApiResult.success(productMapper.toResponse(updated), msg("product.updated"));
     }
 
     @GetMapping
     @Operation(summary = "${swagger.product.list.summary}", description = "${swagger.product.list.desc}")
-    public ResponseEntity<ListResponse<ProductResponseDto>> getAllProducts() {
+    public ResponseEntity<ApiResult<ListResponse<ProductResponseDto>>> getAllProducts() {
         List<ProductResponseDto> response = productMapper.toResponseList(
                 productUseCase.getActiveProducts(Pageable.unpaged()).getContent()
         );
-        return ResponseEntity.ok(ListResponse.of(response));
+        return ApiResult.success(ListResponse.of(response), msg("product.list"));
     }
 
     @GetMapping("/paginated")
     @Operation(summary = "${swagger.product.paginated.summary}",
             description = "${swagger.product.paginated.desc}")
-    public ResponseEntity<PageResponse<ProductResponseDto>> getAllProductsPaginated(
+    public ResponseEntity<ApiResult<PageResponse<ProductResponseDto>>> getAllProductsPaginated(
             @Valid @ModelAttribute ProductRequestDto requestDto
     ) {
         // Fallbacks si el cliente no envía valores
@@ -154,7 +162,7 @@ public class ProductController {
                 ? productUseCase.getAllProductsWithFilters(pageable, code, name, description)
                 : productUseCase.getAllProducts(pageable);
 
-        return ResponseEntity.ok(PageResponse.from(products, productMapper::toResponse));
+        return ApiResult.success(PageResponse.from(products, productMapper::toResponse), msg("product.list"));
     }
 
     @GetMapping("/{id}")
@@ -163,99 +171,103 @@ public class ProductController {
             @ApiResponse(responseCode = "200", description = "Product found"),
             @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
     })
-    public ResponseEntity<ProductResponseDto> getProductById(@PathVariable UUID id) {
+    public ResponseEntity<ApiResult<ProductResponseDto>> getProductById(@PathVariable UUID id) {
         ProductModel product = productUseCase.getProductById(id);
-        return ResponseEntity.ok(productMapper.toResponse(product));
+        return ApiResult.success(productMapper.toResponse(product), msg("product.found"));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "${swagger.product.delete.summary}", description = "${swagger.product.delete.desc}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable UUID id) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
+    public ResponseEntity<ApiResult<Void>> deleteProduct(@PathVariable UUID id) {
         productUseCase.disableProduct(id);
-        return ResponseEntity.noContent().build();
+        return ApiResult.success(null, msg("product.deleted"));
     }
 
     @DeleteMapping("/{id}/hard")
     @Operation(summary = "${swagger.product.hard-delete.summary}", description = "${swagger.product.hard-delete.desc}")
-    public ResponseEntity<Void> hardDeleteProduct(@PathVariable UUID id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResult<Void>> hardDeleteProduct(@PathVariable UUID id) {
         productUseCase.hardDeleteProduct(id);
-        return ResponseEntity.noContent().build();
+        return ApiResult.success(null, msg("product.deleted"));
     }
 
     @PatchMapping("/{id}/enable")
     @Operation(summary = "${swagger.product.enable.summary}", description = "${swagger.product.enable.desc}")
-    public ResponseEntity<ProductResponseDto> enableProduct(@PathVariable UUID id) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
+    public ResponseEntity<ApiResult<ProductResponseDto>> enableProduct(@PathVariable UUID id) {
         ProductModel enabledProduct = productUseCase.enableProduct(id);
-        return ResponseEntity.ok(productMapper.toResponse(enabledProduct));
+        return ApiResult.success(productMapper.toResponse(enabledProduct), msg("product.updated"));
     }
 
     @GetMapping("/inactive")
     @Operation(summary = "${swagger.product.inactive.summary}", description = "${swagger.product.inactive.desc}")
-    public ResponseEntity<ListResponse<ProductResponseDto>> getInactiveProducts() {
+    public ResponseEntity<ApiResult<ListResponse<ProductResponseDto>>> getInactiveProducts() {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getInactiveProducts());
-        return ResponseEntity.ok(ListResponse.of(response));
+        return ApiResult.success(ListResponse.of(response), msg("product.list"));
     }
 
     @GetMapping("/category/{categoryId}")
     @Operation(summary = "${swagger.product.by-category.summary}", description = "${swagger.product.by-category.desc}")
-    public ResponseEntity<ListResponse<ProductResponseDto>> getProductsByCategory(@PathVariable UUID categoryId) {
+    public ResponseEntity<ApiResult<ListResponse<ProductResponseDto>>> getProductsByCategory(@PathVariable UUID categoryId) {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getProductsByCategory(categoryId));
-        return ResponseEntity.ok(ListResponse.of(response));
+        return ApiResult.success(ListResponse.of(response), msg("product.list"));
     }
 
     @GetMapping("/category/{categoryId}/low-stock")
     @Operation(summary = "${swagger.product.low-stock-category.summary}", description = "${swagger.product.low-stock-category.desc}")
-    public ResponseEntity<ListResponse<ProductResponseDto>> getLowStockByCategory(@PathVariable UUID categoryId) {
+    public ResponseEntity<ApiResult<ListResponse<ProductResponseDto>>> getLowStockByCategory(@PathVariable UUID categoryId) {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getLowStockByCategory(categoryId));
-        return ResponseEntity.ok(ListResponse.of(response));
+        return ApiResult.success(ListResponse.of(response), msg("product.list"));
     }
 
     @GetMapping("/low-stock")
     @Operation(summary = "${swagger.product.low-stock.summary}", description = "${swagger.product.low-stock.desc}")
-    public ResponseEntity<ListResponse<ProductResponseDto>> getLowStockProducts() {
+    public ResponseEntity<ApiResult<ListResponse<ProductResponseDto>>> getLowStockProducts() {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getLowStockProducts());
-        return ResponseEntity.ok(ListResponse.of(response));
+        return ApiResult.success(ListResponse.of(response), msg("product.list"));
     }
 
     @GetMapping("/brand/{brandId}")
     @Operation(summary = "${swagger.product.by-brand.summary}", description = "${swagger.product.by-brand.desc}")
-    public ResponseEntity<ListResponse<ProductResponseDto>> getProductsByBrand(@PathVariable UUID brandId) {
+    public ResponseEntity<ApiResult<ListResponse<ProductResponseDto>>> getProductsByBrand(@PathVariable UUID brandId) {
         List<ProductResponseDto> response =
                 productMapper.toResponseList(productUseCase.getProductsByBrand(brandId));
-        return ResponseEntity.ok(ListResponse.of(response));
+        return ApiResult.success(ListResponse.of(response), msg("product.list"));
     }
 
     @GetMapping("/count")
     @Operation(summary = "${swagger.product.count.summary}", description = "${swagger.product.count.desc}")
-    public ResponseEntity<Long> countProducts() {
-        return ResponseEntity.ok(productUseCase.countProducts());
+    public ResponseEntity<ApiResult<Long>> countProducts() {
+        return ApiResult.success(productUseCase.countProducts(), "OK");
     }
 
     @GetMapping("/count/active")
     @Operation(summary = "${swagger.product.count-active.summary}", description = "${swagger.product.count-active.desc}")
-    public ResponseEntity<Long> countActiveProducts() {
-        return ResponseEntity.ok(productUseCase.countActiveProducts());
+    public ResponseEntity<ApiResult<Long>> countActiveProducts() {
+        return ApiResult.success(productUseCase.countActiveProducts(), "OK");
     }
 
     @GetMapping("/validate-unit/{code}")
     @Operation(summary = "${swagger.product.validate-unit.summary}", description = "${swagger.product.validate-unit.desc}")
-    public ResponseEntity<Map<String, Object>> validateUnit(@PathVariable String code) {
+    public ResponseEntity<ApiResult<Map<String, Object>>> validateUnit(@PathVariable String code) {
         Optional<String> name = productUseCase.validateUnitCode(code);
         Map<String, Object> response = new HashMap<>();
         response.put("valid", name.isPresent());
         response.put("unitName", name.orElse(null));
-        return ResponseEntity.ok(response);
+        return ApiResult.success(response, "OK");
     }
 
     @PatchMapping("/{id}/stock")
     @Operation(summary = "${swagger.product.update-stock.summary}", description = "${swagger.product.update-stock.desc}")
-    public ResponseEntity<ProductResponseDto> updateStock(@PathVariable UUID id, @RequestBody @Valid UpdateStockDto stockDto) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
+    public ResponseEntity<ApiResult<ProductResponseDto>> updateStock(@PathVariable UUID id, @RequestBody @Valid UpdateStockDto stockDto) {
         ProductModel updated = productUseCase.updateStock(id, stockDto.getStock());
-        return ResponseEntity.ok(productMapper.toResponse(updated));
+        return ApiResult.success(productMapper.toResponse(updated), msg("product.stock.updated"));
     }
 
     @GetMapping("/code/{code}")
@@ -264,13 +276,13 @@ public class ProductController {
             @ApiResponse(responseCode = "200", description = "Product found"),
             @ApiResponse(responseCode = "404", description = "Product not found", content = @Content)
     })
-    public ResponseEntity<ProductResponseDto> getProductByCode(@PathVariable String code) {
+    public ResponseEntity<ApiResult<ProductResponseDto>> getProductByCode(@PathVariable String code) {
         if (code == null || code.isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
         ProductModel product = productUseCase.getProductByCode(code);
         return (product == null)
                 ? ResponseEntity.status(HttpStatus.NOT_FOUND).build()
-                : ResponseEntity.ok(productMapper.toResponse(product));
+                : ApiResult.success(productMapper.toResponse(product), msg("product.found"));
     }
 }

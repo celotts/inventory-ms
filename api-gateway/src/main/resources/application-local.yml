@@ -3,6 +3,10 @@ server:
   error:
     include-message: always
 
+app:
+  jwt:
+    secret: ${JWT_SECRET:======================CelottsJWTSecretDefaultDevKey===========================}
+
 spring:
   application:
     name: api-gateway
@@ -10,6 +14,15 @@ spring:
   cloud:
     gateway:
       routes:
+        # --- AUTH SERVICE ---
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/auth-service/**
+          filters:
+            - StripPrefix=1
+        
+        # --- PRODUCT SERVICE ---
         - id: product-service
           uri: lb://product-service
           predicates:
@@ -22,6 +35,7 @@ spring:
           predicates:
             - Path=/api/v1/products/**
 
+        # --- SUPPLIER SERVICE ---
         - id: supplier-service
           uri: lb://supplier-service
           predicates:
@@ -34,6 +48,7 @@ spring:
           predicates:
             - Path=/api/v1/suppliers/**
 
+        # --- PURCHASE SERVICE ---
         - id: purchase-service
           uri: lb://purchase-service
           predicates:
@@ -45,12 +60,26 @@ spring:
           uri: lb://purchase-service
           predicates:
             - Path=/api/v1/purchases/**
+
+        # --- TAX SERVICE ---
+        - id: tax-service
+          uri: lb://tax-service
+          predicates:
+            - Path=/tax-service/**
+          filters:
+            - StripPrefix=1
+        
+        - id: tax-direct
+          uri: lb://tax-service
+          predicates:
+            - Path=/api/v1/taxes/**
+
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
 
-# ✅ Management fuera del bloque spring
+# ✅ Management y Observabilidad
 management:
   endpoints:
     web:
@@ -61,6 +90,12 @@ management:
       show-details: always
     env:
       show-values: ALWAYS
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${MANAGEMENT_ZIPKIN_TRACING_ENDPOINT:http://localhost:9411/api/v2/spans}
 
 # ✅ Configuración de Eureka corregida para red Docker
 eureka:

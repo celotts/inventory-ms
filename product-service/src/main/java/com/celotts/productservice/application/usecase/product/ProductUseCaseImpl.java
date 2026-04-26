@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -107,6 +108,19 @@ public class ProductUseCaseImpl implements ProductUseCase {
     @Override
     public ProductModel updateStock(UUID id, int stock) {
         return productRepositoryPort.updateStock(id, stock);
+    }
+
+    @Override
+    @Transactional
+    public void adjustStock(UUID productId, int quantity) {
+        ProductModel product = productRepositoryPort.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("product.not-found-with-id", productId));
+
+        int currentStock = product.getCurrentStock() != null ? product.getCurrentStock() : 0;
+        int newStock = currentStock + quantity;
+
+        product.setCurrentStock(newStock);
+        productRepositoryPort.save(product);
     }
 
     @Override

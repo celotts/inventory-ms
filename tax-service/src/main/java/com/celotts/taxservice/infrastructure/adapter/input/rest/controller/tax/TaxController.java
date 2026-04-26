@@ -6,6 +6,7 @@ import com.celotts.taxservice.infrastructure.adapter.input.rest.dto.tax.TaxCreat
 import com.celotts.taxservice.infrastructure.adapter.input.rest.dto.tax.TaxResponseDto;
 import com.celotts.taxservice.infrastructure.adapter.input.rest.dto.tax.TaxUpdateDto;
 import com.celotts.taxservice.infrastructure.adapter.input.rest.mapper.tax.TaxMapper;
+import com.celotts.taxservice.infrastructure.common.ApiResult;
 import com.celotts.taxservice.infrastructure.common.dto.PageableRequestDto;
 import com.celotts.taxservice.infrastructure.common.util.PageableUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +19,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -38,6 +41,11 @@ public class TaxController {
     private final TaxUseCase taxUseCase;
     private final TaxMapper taxMapper;
     private final PageableUtils pageableUtils;
+    private final MessageSource messageSource;
+
+    private String msg(String code) {
+        return messageSource.getMessage(code, null, LocaleContextHolder.getLocale());
+    }
 
     @Operation(summary = "${swagger.tax.create.summary}", description = "${swagger.tax.create.desc}")
     @ApiResponses(value = {
@@ -47,7 +55,7 @@ public class TaxController {
             @ApiResponse(responseCode = "409", description = "Tax code already exists", content = @Content)
     })
     @PostMapping
-    public ResponseEntity<TaxResponseDto> create(@Valid @RequestBody TaxCreateDto dto) {
+    public ResponseEntity<ApiResult<TaxResponseDto>> create(@Valid @RequestBody TaxCreateDto dto) {
         log.info("Creating new tax with name: {}", dto.getName());
         TaxModel model = taxMapper.createdFrom(dto);
         TaxModel saved = taxUseCase.create(model);
@@ -58,7 +66,7 @@ public class TaxController {
                 .buildAndExpand(saved.getId())
                 .toUri();
 
-        return ResponseEntity.created(location).body(taxMapper.toResponse(saved));
+        return ApiResult.created(taxMapper.toResponse(saved), msg("tax.created"), location);
     }
 
     @Operation(summary = "${swagger.tax.get-by-id.summary}", description = "${swagger.tax.get-by-id.desc}")
@@ -68,43 +76,43 @@ public class TaxController {
             @ApiResponse(responseCode = "404", description = "Tax not found", content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity<TaxResponseDto> findById(
+    public ResponseEntity<ApiResult<TaxResponseDto>> findById(
             @Parameter(description = "UUID of the tax to retrieve", required = true)
             @PathVariable UUID id) {
         TaxModel model = taxUseCase.findById(id);
-        return ResponseEntity.ok(taxMapper.toResponse(model));
+        return ApiResult.success(taxMapper.toResponse(model), msg("tax.found"));
     }
 
     @Operation(summary = "${swagger.tax.get-by-name.summary}", description = "${swagger.tax.get-by-name.desc}")
     @GetMapping("/name/{name}")
-    public ResponseEntity<TaxResponseDto> findByName(@PathVariable String name) {
+    public ResponseEntity<ApiResult<TaxResponseDto>> findByName(@PathVariable String name) {
         TaxModel model = taxUseCase.findByName(name);
-        return ResponseEntity.ok(taxMapper.toResponse(model));
+        return ApiResult.success(taxMapper.toResponse(model), msg("tax.found"));
     }
 
     @Operation(summary = "${swagger.tax.list.summary}", description = "${swagger.tax.list.desc}")
     @GetMapping
-    public ResponseEntity<Page<TaxResponseDto>> findAll(
+    public ResponseEntity<ApiResult<Page<TaxResponseDto>>> findAll(
             @Valid PageableRequestDto pageableDto) {
         Pageable pageable = pageableUtils.toPageable(pageableDto);
         Page<TaxModel> page = taxUseCase.findAll(pageable);
-        return ResponseEntity.ok(page.map(taxMapper::toResponse));
+        return ApiResult.success(page.map(taxMapper::toResponse), msg("tax.list"));
     }
 
     @Operation(summary = "${swagger.tax.list-active.summary}", description = "${swagger.tax.list-active.desc}")
     @GetMapping("/active")
-    public ResponseEntity<Page<TaxResponseDto>> findByActive(
+    public ResponseEntity<ApiResult<Page<TaxResponseDto>>> findByActive(
             @Parameter(description = "Filter by active status (true/false)", required = true)
             @RequestParam Boolean active,
             @Valid PageableRequestDto pageableDto) {
         Pageable pageable = pageableUtils.toPageable(pageableDto);
         Page<TaxModel> page = taxUseCase.findByActive(active, pageable);
-        return ResponseEntity.ok(page.map(taxMapper::toResponse));
+        return ApiResult.success(page.map(taxMapper::toResponse), msg("tax.list"));
     }
 
     @Operation(summary = "${swagger.tax.search.summary}", description = "${swagger.tax.search.desc}")
     @GetMapping("/search")
-    public ResponseEntity<Page<TaxResponseDto>> search(
+    public ResponseEntity<ApiResult<Page<TaxResponseDto>>> search(
             @Parameter(description = "Partial name to search for")
             @RequestParam(required = false) String name,
             @Parameter(description = "Filter by active status")
@@ -112,7 +120,7 @@ public class TaxController {
             @Valid PageableRequestDto pageableDto) {
         Pageable pageable = pageableUtils.toPageable(pageableDto);
         Page<TaxModel> page = taxUseCase.findAllPaginated(name, active, pageable);
-        return ResponseEntity.ok(page.map(taxMapper::toResponse));
+        return ApiResult.success(page.map(taxMapper::toResponse), msg("tax.list"));
     }
 
     @Operation(summary = "${swagger.tax.update.summary}", description = "${swagger.tax.update.desc}")
@@ -121,37 +129,37 @@ public class TaxController {
             @ApiResponse(responseCode = "404", description = "Tax not found", content = @Content)
     })
     @PutMapping("/{id}")
-    public ResponseEntity<TaxResponseDto> update(
+    public ResponseEntity<ApiResult<TaxResponseDto>> update(
             @PathVariable UUID id,
             @Valid @RequestBody TaxUpdateDto dto) {
         TaxModel model = taxUseCase.findById(id);
         taxMapper.updateFrom(dto, model);
         TaxModel updated = taxUseCase.save(model);
-        return ResponseEntity.ok(taxMapper.toResponse(updated));
+        return ApiResult.success(taxMapper.toResponse(updated), msg("tax.updated"));
     }
 
     @Operation(summary = "${swagger.tax.delete.summary}", description = "${swagger.tax.delete.desc}")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<ApiResult<Void>> delete(@PathVariable UUID id) {
         taxUseCase.deleteById(id);
-        return ResponseEntity.noContent().build();
+        return ApiResult.success(null, msg("tax.deleted"));
     }
 
     @Operation(summary = "${swagger.tax.activate.summary}", description = "${swagger.tax.activate.desc}")
     @PatchMapping("/{id}/activate")
-    public ResponseEntity<TaxResponseDto> activate(@PathVariable UUID id) {
+    public ResponseEntity<ApiResult<TaxResponseDto>> activate(@PathVariable UUID id) {
         TaxModel model = taxUseCase.findById(id);
         model.setIsActive(true);
         TaxModel updated = taxUseCase.save(model);
-        return ResponseEntity.ok(taxMapper.toResponse(updated));
+        return ApiResult.success(taxMapper.toResponse(updated), msg("tax.activated"));
     }
 
     @Operation(summary = "${swagger.tax.deactivate.summary}", description = "${swagger.tax.deactivate.desc}")
     @PatchMapping("/{id}/deactivate")
-    public ResponseEntity<TaxResponseDto> deactivate(@PathVariable UUID id) {
+    public ResponseEntity<ApiResult<TaxResponseDto>> deactivate(@PathVariable UUID id) {
         TaxModel model = taxUseCase.findById(id);
         model.setIsActive(false);
         TaxModel updated = taxUseCase.save(model);
-        return ResponseEntity.ok(taxMapper.toResponse(updated));
+        return ApiResult.success(taxMapper.toResponse(updated), msg("tax.deactivated"));
     }
 }

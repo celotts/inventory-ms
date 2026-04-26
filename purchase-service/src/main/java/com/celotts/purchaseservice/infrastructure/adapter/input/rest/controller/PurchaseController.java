@@ -7,6 +7,7 @@ import com.celotts.purchaseservice.infrastructure.adapter.input.rest.dto.Purchas
 import com.celotts.purchaseservice.infrastructure.adapter.input.rest.dto.PurchaseResponseDto;
 import com.celotts.purchaseservice.infrastructure.adapter.input.rest.dto.PurchaseUpdateDto;
 import com.celotts.purchaseservice.infrastructure.adapter.input.rest.mapper.PurchaseMapper;
+import com.celotts.purchaseservice.infrastructure.common.ApiResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,6 +19,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -33,23 +36,28 @@ import java.util.UUID;
 @RequestMapping("/api/v1/purchases")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Purchase API", description = "API for managing purchase orders and their lifecycle")
+@Tag(name = "${swagger.purchase.api.name}", description = "${swagger.purchase.api.desc}")
 public class PurchaseController {
 
     private final PurchaseUseCase purchaseUseCase;
     private final ReceivePurchaseUseCase receivePurchaseUseCase;
     private final PurchaseMapper purchaseMapper;
+    private final MessageSource messageSource;
 
-    @Operation(summary = "Create a new purchase order", description = "Creates a new purchase order. Validates the existence of the supplier and products before creation.")
+    private String msg(String code) {
+        return messageSource.getMessage(code, null, LocaleContextHolder.getLocale());
+    }
+
+    @Operation(summary = "${swagger.purchase.create.summary}", description = "${swagger.purchase.create.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Purchase created successfully",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = PurchaseResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input data (e.g., missing required fields, negative values)", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content),
             @ApiResponse(responseCode = "404", description = "Supplier or Product not found", content = @Content),
             @ApiResponse(responseCode = "409", description = "Purchase order number already exists", content = @Content)
     })
     @PostMapping
-    public ResponseEntity<PurchaseResponseDto> create(@RequestBody @Valid PurchaseCreateDto createDto) {
+    public ResponseEntity<ApiResult<PurchaseResponseDto>> create(@RequestBody @Valid PurchaseCreateDto createDto) {
         log.info("Creating new purchase with order number: {}", createDto.getOrderNumber());
         PurchaseModel purchaseToCreate = purchaseMapper.toModel(createDto);
         PurchaseModel createdPurchase = purchaseUseCase.create(purchaseToCreate);
@@ -60,47 +68,47 @@ public class PurchaseController {
                 .buildAndExpand(createdPurchase.getId())
                 .toUri();
 
-        return ResponseEntity.created(location).body(purchaseMapper.toResponse(createdPurchase));
+        return ApiResult.created(purchaseMapper.toResponse(createdPurchase), msg("purchase.created"), location);
     }
 
-    @Operation(summary = "Receive a purchase", description = "Marks a purchase as RECEIVED and updates the stock in the product service.")
+    @Operation(summary = "${swagger.purchase.receive.summary}", description = "${swagger.purchase.receive.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Purchase received successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid state for receiving (must be PLACED or DRAFT)", content = @Content),
             @ApiResponse(responseCode = "404", description = "Purchase not found", content = @Content)
     })
     @PostMapping("/{id}/receive")
-    public ResponseEntity<PurchaseResponseDto> receive(
+    public ResponseEntity<ApiResult<PurchaseResponseDto>> receive(
             @Parameter(description = "UUID of the purchase to receive", required = true)
             @PathVariable UUID id) {
         PurchaseModel receivedPurchase = receivePurchaseUseCase.receive(id);
-        return ResponseEntity.ok(purchaseMapper.toResponse(receivedPurchase));
+        return ApiResult.success(purchaseMapper.toResponse(receivedPurchase), msg("purchase.received"));
     }
 
-    @Operation(summary = "Get purchase by ID", description = "Retrieves the details of a specific purchase order by its unique identifier.")
+    @Operation(summary = "${swagger.purchase.get-by-id.summary}", description = "${swagger.purchase.get-by-id.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Purchase found",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = PurchaseResponseDto.class))),
             @ApiResponse(responseCode = "404", description = "Purchase not found", content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity<PurchaseResponseDto> getById(
+    public ResponseEntity<ApiResult<PurchaseResponseDto>> getById(
             @Parameter(description = "UUID of the purchase to retrieve", required = true)
             @PathVariable UUID id) {
         PurchaseModel purchase = purchaseUseCase.findById(id);
-        return ResponseEntity.ok(purchaseMapper.toResponse(purchase));
+        return ApiResult.success(purchaseMapper.toResponse(purchase), msg("purchase.found"));
     }
 
-    @Operation(summary = "List all purchases", description = "Retrieves a paginated list of purchase orders. Supports sorting.")
+    @Operation(summary = "${swagger.purchase.list.summary}", description = "${swagger.purchase.list.desc}")
     @ApiResponse(responseCode = "200", description = "List of purchases retrieved successfully")
     @GetMapping
-    public ResponseEntity<Page<PurchaseResponseDto>> getAll(
+    public ResponseEntity<ApiResult<Page<PurchaseResponseDto>>> getAll(
             @ParameterObject @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
         Page<PurchaseModel> purchasePage = purchaseUseCase.findAll(pageable);
-        return ResponseEntity.ok(purchasePage.map(purchaseMapper::toResponse));
+        return ApiResult.success(purchasePage.map(purchaseMapper::toResponse), msg("purchase.list"));
     }
 
-    @Operation(summary = "Update a purchase", description = "Updates an existing purchase order. Only allows updates if the purchase is in a modifiable state (e.g., DRAFT).")
+    @Operation(summary = "${swagger.purchase.update.summary}", description = "${swagger.purchase.update.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Purchase updated successfully",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = PurchaseResponseDto.class))),
@@ -109,25 +117,25 @@ public class PurchaseController {
             @ApiResponse(responseCode = "409", description = "Conflict (e.g., invalid state transition)", content = @Content)
     })
     @PutMapping("/{id}")
-    public ResponseEntity<PurchaseResponseDto> update(
+    public ResponseEntity<ApiResult<PurchaseResponseDto>> update(
             @Parameter(description = "UUID of the purchase to update", required = true)
             @PathVariable UUID id,
             @RequestBody @Valid PurchaseUpdateDto updateDto) {
         PurchaseModel purchaseToUpdate = purchaseMapper.toModel(updateDto);
         PurchaseModel updatedPurchase = purchaseUseCase.update(id, purchaseToUpdate);
-        return ResponseEntity.ok(purchaseMapper.toResponse(updatedPurchase));
+        return ApiResult.success(purchaseMapper.toResponse(updatedPurchase), msg("purchase.updated"));
     }
 
-    @Operation(summary = "Delete a purchase", description = "Soft deletes a purchase order. The record remains in the database but is marked as deleted.")
+    @Operation(summary = "${swagger.purchase.delete.summary}", description = "${swagger.purchase.delete.desc}")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Purchase deleted successfully"),
             @ApiResponse(responseCode = "404", description = "Purchase not found", content = @Content)
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
+    public ResponseEntity<ApiResult<Void>> delete(
             @Parameter(description = "UUID of the purchase to delete", required = true)
             @PathVariable UUID id) {
         purchaseUseCase.delete(id);
-        return ResponseEntity.noContent().build();
+        return ApiResult.success(null, msg("purchase.deleted"));
     }
 }

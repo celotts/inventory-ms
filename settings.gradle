@@ -30,5 +30,6 @@ include(
         'supplier-service',
         'purchase-service',
         'tax-service',
-        'auth-service'
+        'auth-service',
+        'sales-service'
 )

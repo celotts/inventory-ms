@@ -1,71 +1,39 @@
 spring:
-  main:
-    allow-bean-definition-overriding: true
-  application:
-    name: product-service-test
-  config:
-    activate:
-      on-profile: test
-    import: "optional:classpath:/empty.yml"
+  # --- Base de datos en memoria para tests ---
+  datasource:
+    url: jdbc:h2:mem:product_test_db;DB_CLOSE_DELAY=-1
+    username: sa
+    password: sa
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+    show-sql: false
+
+  # --- Desactivar dependencias externas ---
   cloud:
     config:
       enabled: false
+  eureka:
+    client:
+      enabled: false
+  
+  # --- Desactivar RabbitMQ para que no intente conectar ---
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
 
-  datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
-    username: sa
-    password: ""
-    driver-class-name: org.h2.Driver
-
-  jpa:
-    open-in-view: false
-    hibernate:
-      ddl-auto: create-drop
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
-        format_sql: true
-    show-sql: false
-
-  flyway:
-    enabled: false
-
-  h2:
-    console:
-      enabled: true
-
-  sql:
-    init:
-      mode: never
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
-    date-format: yyyy-MM-dd'T'HH:mm:ss
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health
-  endpoint:
-    health:
-      show-details: always
-
-server:
-  port: 0
-
-app:
-  cors:
-    allowed-origin: "*"
-eureka:
-  client:
-    enabled: false
+  # --- Propiedad para seguridad (aunque la sobreescribimos con TestSecurityConfig) ---
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret-key: "test-secret-key-for-product-service-that-is-long-enough"
 
 logging:
   level:
-    root: WARN
-    org.springframework: WARN
-    org.hibernate.SQL: WARN
-    com.ms_cels: DEBUG
-    com.celotts.productservice: DEBUG
-    org.springframework.web: DEBUG
+    org.springframework.web: INFO
+    com.celotts: INFO
+    org.hibernate: WARN
