@@ -1,3 +1,4 @@
+
 plugins {
     id 'java'
     id 'org.springframework.boot'
@@ -6,6 +7,9 @@ plugins {
     id 'com.github.ben-manes.versions' version '0.53.0'
     id 'org.owasp.dependencycheck' version '9.0.7'
 }
+
+group = 'com.celotts'
+version = '0.0.1-SNAPSHOT'
 
 dependencies {
     // 🌐 Core Spring Boot
