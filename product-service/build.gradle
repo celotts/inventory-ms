@@ -21,7 +21,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    testImplementation platform("org.testcontainers:testcontainers-bom:1.19.8")
+    testImplementation platform("org.testcontainers:testcontainers-bom:1.19.9")
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
     testImplementation 'org.springframework.security:spring-security-test'

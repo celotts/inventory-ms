@@ -1,32 +1,10 @@
-ARG DOCKER_USERNAME
-ARG DOCKER_PASSWORD
-
-
-FROM eclipse-temurin:21-jre-jammy
-LABEL maintainer="Inventory MS Team"
-
-# El EXPOSE debe ir DESPUÉS del FROM, igual que en tu ejemplo de product
+FROM eclipse-temurin:17-jre-jammy AS runner
 EXPOSE 8081
-
-USER root
-WORKDIR /app
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends dos2unix && \
-    rm -rf /var/lib/apt/lists/*
-
 RUN addgroup --system spring && adduser --system --ingroup spring spring
-
-# Cambiamos las rutas a auth-service
+WORKDIR /app
 COPY ./auth-service/build/libs/auth-service-*.jar /app/app.jar
 COPY ./auth-service/entrypoint.sh /app/entrypoint.sh
-COPY ./infra/wait-for-it.sh /app/wait-for-it.sh
-
-RUN dos2unix /app/entrypoint.sh /app/wait-for-it.sh && \
-    chmod +x /app/entrypoint.sh /app/wait-for-it.sh && \
-    chown -R spring:spring /app
-
+COPY ./wait-for-it.sh /app/wait-for-it.sh
+RUN chmod +x /app/entrypoint.sh /app/wait-for-it.sh && chown spring:spring /app/entrypoint.sh /app/wait-for-it.sh
 USER spring:spring
-
 ENTRYPOINT ["/app/entrypoint.sh"]
-

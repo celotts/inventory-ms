@@ -1,43 +1,41 @@
 server:
-  port: ${PRODUCT_PORT:9090}
+  port: 9090
 
 spring:
   application:
     name: product-service
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          secret-key: ${JWT_SECRET:======================CelottsJWTSecretDefaultDevKey===========================}
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://db-product:5432/product}
+    username: ${SPRING_DATASOURCE_USERNAME:product}
+    password: ${SPRING_DATASOURCE_PASSWORD:product123}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
   rabbitmq:
     host: ${SPRING_RABBITMQ_HOST:rabbitmq}
     port: ${SPRING_RABBITMQ_PORT:5672}
     username: ${SPRING_RABBITMQ_USERNAME:guest}
     password: ${SPRING_RABBITMQ_PASSWORD:guest}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          secret-key: ${JWT_SECRET:======================CelottsJWTSecretDefaultDevKey===========================}
 
 eureka:
   client:
     service-url:
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
-  instance:
-    prefer-ip-address: true
-    instance-id: ${spring.application.name}:${random.value}
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://discovery-service:8761/eureka/}
 
 management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: "health,info,prometheus"
+  endpoint:
+    health:
+      show-details: always
   tracing:
     sampling:
-      probability: 1.0
-  zipkin:
-    tracing:
-      endpoint: ${MANAGEMENT_ZIPKIN_TRACING_ENDPOINT:http://zipkin:9411/api/v2/spans}
-
-logging:
-  level:
-    com.celotts: INFO
-    org.springframework.web: WARN
-    org.hibernate.SQL: WARN
-    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+      probability: 0.0

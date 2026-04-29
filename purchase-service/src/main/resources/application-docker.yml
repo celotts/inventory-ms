@@ -1,63 +1,33 @@
 server:
-  port: ${PURCHASE_PORT:9094}
+  port: 9094
 
 spring:
   application:
     name: purchase-service
-  rabbitmq:
-    host: ${SPRING_RABBITMQ_HOST:rabbitmq}
-    port: ${SPRING_RABBITMQ_PORT:5672}
-    username: ${SPRING_RABBITMQ_USERNAME:guest}
-    password: ${SPRING_RABBITMQ_PASSWORD:guest}
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://db-purchase:5432/purchase}
+    username: ${SPRING_DATASOURCE_USERNAME:purchase}
+    password: ${SPRING_DATASOURCE_PASSWORD:purchase123}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
 
 eureka:
   client:
     service-url:
-      defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
-  instance:
-    prefer-ip-address: true
-    instance-id: ${spring.application.name}:${random.value}
-
-resilience4j:
-  circuitbreaker:
-    instances:
-      product-service:
-        registerHealthIndicator: true
-        slidingWindowSize: 10
-        minimumNumberOfCalls: 5
-        permittedNumberOfCallsInHalfOpenState: 3
-        waitDurationInOpenState: 10s
-        failureRateThreshold: 50
-      supplier-service:
-        registerHealthIndicator: true
-        slidingWindowSize: 10
-        minimumNumberOfCalls: 5
-        permittedNumberOfCallsInHalfOpenState: 3
-        waitDurationInOpenState: 10s
-        failureRateThreshold: 50
-      tax-service:
-        registerHealthIndicator: true
-        slidingWindowSize: 10
-        minimumNumberOfCalls: 5
-        permittedNumberOfCallsInHalfOpenState: 3
-        waitDurationInOpenState: 10s
-        failureRateThreshold: 50
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://discovery-service:8761/eureka/}
 
 management:
   endpoints:
     web:
       exposure:
         include: "*"
-  tracing:
-    sampling:
-      probability: 1.0
-  zipkin:
-    tracing:
-      endpoint: ${MANAGEMENT_ZIPKIN_TRACING_ENDPOINT:http://zipkin:9411/api/v2/spans}
-
-logging:
-  level:
-    com.celotts: INFO
-    org.springframework.web: WARN
-    org.hibernate.SQL: WARN
-    io.github.resilience4j: INFO
+  endpoint:
+    health:
+      show-details: always

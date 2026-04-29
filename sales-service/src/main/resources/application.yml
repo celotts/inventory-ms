@@ -5,9 +5,9 @@ spring:
   application:
     name: sales-service
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/sales_db}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASS:postgres}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://db-sales:5432/sales}
+    username: ${SPRING_DATASOURCE_USERNAME:sales_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:sales_pass}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -21,7 +21,7 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://discovery-service:8761/eureka/}
 
 management:
   endpoints:

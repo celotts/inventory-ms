@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -32,7 +34,13 @@ public class CategoryController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<CategoryResponseDto>> create(@Valid @RequestBody CategoryCreateDto dto) {
-        CategoryModel model = categoryMapper.toModel(dto);                 // ✅ MapStruct
+        // Extraer el nombre de usuario del Token JWT
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserName = (auth != null) ? auth.getName() : "system";
+
+        CategoryModel model = categoryMapper.toModel(dto);
+        model.setCreatedBy(currentUserName); // Inyectar el autor
+        
         CategoryModel saved = categoryUseCase.save(model);
         CategoryResponseDto out = categoryMapper.toResponse(saved);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -44,7 +52,6 @@ public class CategoryController {
     public ResponseEntity<ApiResponse<CategoryResponseDto>> getById(@PathVariable UUID id) {
         CategoryModel model = categoryUseCase.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found: " + id));
-        // 200 + { status, message, timestamp, data }
         return ResponseEntity.ok(ApiResponse.ok(categoryMapper.toResponse(model)));
     }
 
@@ -56,18 +63,21 @@ public class CategoryController {
         CategoryModel existing = categoryUseCase.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found: " + id));
 
-        categoryMapper.updateModelFromDto(existing, dto);
-        CategoryModel saved = categoryUseCase.save(existing);
+        // Extraer el nombre de usuario para el registro de actualización
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentUserName = (auth != null) ? auth.getName() : "system";
 
+        categoryMapper.updateModelFromDto(existing, dto);
+        existing.setUpdatedBy(currentUserName); // Inyectar el autor de la actualización
+
+        CategoryModel saved = categoryUseCase.save(existing);
         return ResponseEntity.ok(ApiResponse.ok(categoryMapper.toResponse(saved)));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         categoryUseCase.deleteById(id);
-        return ResponseEntity.noContent().build(); // ← (3) Mantén 204 (opción recomendada)
-        // Si prefieres JSON consistente:
-        // return ResponseEntity.ok(ApiResponse.ok(null));
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping

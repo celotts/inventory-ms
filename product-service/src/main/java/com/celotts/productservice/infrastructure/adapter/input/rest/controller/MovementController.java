@@ -31,4 +31,12 @@ public class MovementController {
                          @RequestParam(defaultValue = "api") String user) {
         return movementUseCase.registerAdjust(productId, lotId, quantity, reason, user);
     }
+
+    @PostMapping("/consume")
+    public Object consume(@RequestParam UUID productId,
+                          @RequestParam @Positive BigDecimal quantity,
+                          @RequestParam String reference,
+                          @RequestParam(defaultValue = "api") String user) {
+        return movementUseCase.consumeToProduction(productId, quantity, reference, user);
+    }
 }
