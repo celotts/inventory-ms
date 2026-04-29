@@ -1,546 +1,359 @@
 networks:
   inventory-net:
     driver: bridge
-    name: ${NETWORK_NAME:-inventory-net}
+    name: inventory-net
 
 services:
-  # --- BASES DE DATOS ---
-  db_product:
-    profiles: ["product"]
-    image: ${IMAGE_DB:-postgres:16}
-    container_name: ${PRODUCT_DB_HOST:-db_product}
+  # --- INFRAESTRUCTURA BASE ---
+  rabbitmq:
+    profiles: ["infra", "product", "purchase", "sales"]
+    image: rabbitmq:3.12-management-alpine
+    container_name: rabbitmq
+    ports: ["5672:5672", "15672:15672"]
+    networks: { inventory-net: { aliases: [rabbitmq] } }
+    user: rabbitmq # Ejecutar como usuario rabbitmq para permisos
+    volumes: ["rabbitmq_data:/var/lib/rabbitmq"] # Volumen para persistencia y permisos
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
     deploy:
       resources:
         limits:
-          memory: 128M
-    env_file: [./.env]
-    environment:
-      POSTGRES_DB: ${PRODUCT_DB_NAME:-product}
-      POSTGRES_USER: ${PRODUCT_DB_USERNAME:-product}
-      POSTGRES_PASSWORD: ${PRODUCT_DB_PASSWORD:-product123}
-    ports:
-      - "${PRODUCT_DB_PORT_HOST:-5433}:5432"
+          memory: 256M # Límite de memoria
+
+  zipkin:
+    profiles: ["infra", "product", "supplier", "auth", "sales", "tax", "purchase", "gateway"]
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports: ["9411:9411"]
+    networks: { inventory-net: { aliases: [zipkin] } }
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${PRODUCT_DB_USERNAME:-product} -d ${PRODUCT_DB_NAME:-product}"]
-      interval: 15s
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9411/health"]
+      interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      inventory-net:
-        aliases:
-          - ${PRODUCT_DB_HOST:-db_product}
-          - product-db
-    volumes:
-      - db_product_data:/var/lib/postgresql/data
-      - ./init-scripts/product/01-product-init.sql:/docker-entrypoint-initdb.d/01-product-init.sql:ro
-    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M # Límite de memoria
+
+  # --- BASES DE DATOS (Globales y con doble alias) ---
+  db_product:
+    profiles: ["product"]
+    image: postgres:16
+    container_name: db_product
+    environment: { POSTGRES_DB: product, POSTGRES_USER: product, POSTGRES_PASSWORD: product123 }
+    ports: ["5433:5432"]
+    networks: { inventory-net: { aliases: [product-db] } }
+    volumes: ["db_product_data:/var/lib/postgresql/data", "./init-scripts/product/01-product-init.sql:/docker-entrypoint-initdb.d/01-product-init.sql:ro"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U product -d product"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 128M # Límite de memoria
 
   db_supplier:
     profiles: ["supplier"]
-    image: ${IMAGE_DB:-postgres:16}
-    container_name: ${SUPPLIER_DB_HOST:-db_supplier}
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    env_file: [./.env]
-    environment:
-      POSTGRES_DB: ${SUPPLIER_DB_NAME:-supplier}
-      POSTGRES_USER: ${SUPPLIER_DB_USERNAME:-supplier}
-      POSTGRES_PASSWORD: ${SUPPLIER_DB_PASSWORD:-supplier123}
-    ports:
-      - "${SUPPLIER_DB_PORT_HOST:-5434}:5432"
+    image: postgres:16
+    container_name: db_supplier
+    environment: { POSTGRES_DB: supplier, POSTGRES_USER: supplier, POSTGRES_PASSWORD: supplier123 }
+    ports: ["5434:5432"]
+    networks: { inventory-net: { aliases: [supplier-db] } }
+    volumes: ["db_supplier_data:/var/lib/postgresql/data"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${SUPPLIER_DB_USERNAME:-supplier} -d ${SUPPLIER_DB_NAME:-supplier}"]
+      test: ["CMD-SHELL", "pg_isready -U supplier -d supplier"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      inventory-net:
-        aliases:
-          - ${SUPPLIER_DB_HOST:-db_supplier}
-          - supplier-db
-    volumes:
-      - db_supplier_data:/var/lib/postgresql/data
-      - ./init-scripts/supplier/02-supplier-init.sql:/docker-entrypoint-initdb.d/02-supplier-init.sql:ro
-    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M # Límite de memoria
 
   db_purchase:
-    profiles: [ "purchase" ]
-    image: ${IMAGE_DB:-postgres:16}
-    container_name: ${PURCHASE_DB_HOST:-db_purchase}
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    env_file: [ ./.env ]
-    environment:
-      POSTGRES_DB: ${PURCHASE_DB_NAME:-purchase}
-      POSTGRES_USER: ${PURCHASE_DB_USERNAME:-purchase}
-      POSTGRES_PASSWORD: ${PURCHASE_DB_PASSWORD:-purchase123}
-    ports:
-      - "${PURCHASE_DB_PORT_HOST:-5436}:5432"
+    profiles: ["purchase"]
+    image: postgres:16
+    container_name: db_purchase
+    environment: { POSTGRES_DB: purchase, POSTGRES_USER: purchase, POSTGRES_PASSWORD: purchase123 }
+    ports: ["5436:5432"]
+    networks: { inventory-net: { aliases: [purchase-db] } }
+    volumes: ["db_purchase_data:/var/lib/postgresql/data"]
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${PURCHASE_DB_USERNAME:-purchase} -d ${PURCHASE_DB_NAME:-purchase}" ]
+      test: ["CMD-SHELL", "pg_isready -U purchase -d purchase"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      inventory-net:
-        aliases:
-          - ${PURCHASE_DB_HOST:-db_purchase}
-          - purchase-db
-    volumes:
-      - db_purchase_data:/var/lib/postgresql/data
-      - ./init-scripts/purchase/03-purchase-init.sql:/docker-entrypoint-initdb.d/03-purchase-init.sql:ro
-    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M # Límite de memoria
 
   db_tax:
-    profiles: [ "tax" ]
-    image: ${IMAGE_DB:-postgres:16}
-    container_name: ${TAX_DB_HOST:-db_tax}
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    env_file: [ ./.env ]
-    environment:
-      POSTGRES_DB: ${TAX_DB_NAME:-tax}
-      POSTGRES_USER: ${TAX_DB_USERNAME:-tax}
-      POSTGRES_PASSWORD: ${TAX_DB_PASSWORD:-tax123}
-    ports:
-      - "${TAX_DB_PORT_HOST:-5435}:5432"
+    profiles: ["tax"]
+    image: postgres:16
+    container_name: db_tax
+    environment: { POSTGRES_DB: tax, POSTGRES_USER: tax, POSTGRES_PASSWORD: tax123 }
+    ports: ["5435:5432"]
+    networks: { inventory-net: { aliases: [tax-db] } }
+    volumes: ["db_tax_data:/var/lib/postgresql/data"]
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${TAX_DB_USERNAME:-tax} -d ${TAX_DB_NAME:-tax}" ]
+      test: ["CMD-SHELL", "pg_isready -U tax -d tax"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      inventory-net:
-        aliases:
-          - ${TAX_DB_HOST:-db_tax}
-          - tax-db
-    volumes:
-      - db_tax_data:/var/lib/postgresql/data
-      - ./init-scripts/tax/04-tax-init.sql:/docker-entrypoint-initdb.d/04-tax-init.sql:ro
-    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M # Límite de memoria
 
   db_auth:
-    profiles: [ "auth" ]
-    image: ${IMAGE_DB:-postgres:16}
-    container_name: ${AUTH_DB_HOST:-db_auth}
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-    env_file: [ ./.env ]
-    environment:
-      POSTGRES_DB: ${AUTH_DB_NAME:-auth}
-      POSTGRES_USER: ${AUTH_DB_USERNAME:-auth_user}
-      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD:-auth_pass}
-    ports:
-      - "${AUTH_DB_PORT_HOST:-5437}:5432"
+    profiles: ["auth"]
+    image: postgres:16
+    container_name: db_auth
+    environment: { POSTGRES_DB: auth, POSTGRES_USER: auth_user, POSTGRES_PASSWORD: auth_pass }
+    ports: ["5437:5432"]
+    networks: { inventory-net: { aliases: [auth-db] } }
+    volumes: ["db_auth_data:/var/lib/postgresql/data", "./init-scripts/auth/05-auth-init.sql:/docker-entrypoint-initdb.d/05-auth-init.sql:ro"]
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${AUTH_DB_USERNAME:-auth_user} -d ${AUTH_DB_NAME:-auth}" ]
+      test: ["CMD-SHELL", "pg_isready -U auth_user -d auth"]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      inventory-net:
-        aliases:
-          - ${AUTH_DB_HOST:-db_auth}
-    volumes:
-      - db_auth_data:/var/lib/postgresql/data
-      - ./init-scripts/auth/05-auth-init.sql:/docker-entrypoint-initdb.d/05-auth-init.sql:ro
-    restart: unless-stopped
-
-  # --- MESSAGE BROKER & OBSERVABILITY ---
-  rabbitmq:
-    profiles: ["infra", "purchase", "product"]
-    image: rabbitmq:3.12-management-alpine
-    container_name: rabbitmq
     deploy:
       resources:
         limits:
-          memory: 512M
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    networks:
-      - inventory-net
-    restart: unless-stopped
+          memory: 128M # Límite de memoria
 
-  zipkin:
-    profiles: ["infra"]
-    image: openzipkin/zipkin
-    container_name: zipkin
+  db_sales:
+    profiles: ["sales"]
+    image: postgres:16
+    container_name: db_sales
+    environment: { POSTGRES_DB: sales, POSTGRES_USER: sales_user, POSTGRES_PASSWORD: sales_pass }
+    ports: ["5438:5432"]
+    networks: { inventory-net: { aliases: [sales-db] } }
+    volumes: ["db_sales_data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sales_user -d sales"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     deploy:
       resources:
         limits:
-          memory: 512M
-    ports:
-      - "9411:9411"
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9411/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    networks:
-      - inventory-net
-    restart: unless-stopped
+          memory: 128M # Límite de memoria
 
-  # --- SERVICIOS DE INFRAESTRUCTURA ---
+  # --- CORE SERVICES ---
   discovery-service:
     profiles: ["infra"]
-    container_name: ${EUREKA_HOST:-discovery-service}
-    image: ${EUREKA_HOST:-discovery-service}:latest
+    container_name: discovery-service
+    image: discovery-service:latest
+    build: { context: ../, dockerfile: discovery-service/Dockerfile.local }
+    ports: ["8761:8761"]
+    networks: { inventory-net: { aliases: [discovery-service] } }
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 0"] # Relajado para no bloquear
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      JAVA_OPTS: "-Xmx256m -Xms128m" # Reducido
     deploy:
       resources:
         limits:
-          memory: 512M
-    env_file: [./.env]
-    build:
-      context: ../
-      dockerfile: discovery-service/Dockerfile.local
-    ports:
-      - "${DISCOVERY_PORT:-8761}:8761"
-    environment:
-      - JAVA_OPTS=-Xmx384m -Xms256m
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SERVER_PORT=8761
-      - EUREKA_CLIENT_REGISTER_WITH_EUREKA=${EUREKA_REGISTER:-false}
-      - EUREKA_CLIENT_FETCH_REGISTRY=${EUREKA_FETCH:-false}
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
-      interval: 20s
-      timeout: 10s
-      retries: 5
-    networks:
-      - inventory-net
-    restart: unless-stopped
+          memory: 384M # Límite de memoria
 
   config-service:
     profiles: ["infra"]
-    container_name: ${CONFIG_HOST:-config-service}
-    image: ${CONFIG_HOST:-config-service}:latest
+    container_name: config-service
+    image: config-service:latest
+    build: { context: ../, dockerfile: config-service/Dockerfile.local }
+    ports: ["7777:7777"]
+    environment:
+        SPRING_PROFILES_ACTIVE: docker,native
+        SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS: file:/config-repo-local/
+        JAVA_OPTS: "-Xmx256m -Xms128m" # Reducido
+    volumes: ["../config-repo-local:/config-repo-local:ro"]
+    networks: { inventory-net: { aliases: [config-service] } }
+    depends_on: [discovery-service]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:7777/actuator/health || exit 0"] # Relajado para no bloquear
+      interval: 10s
+      timeout: 5s
+      retries: 5
     deploy:
       resources:
         limits:
-          memory: 512M
-    user: root
-    env_file: [./.env]
-    build:
-      context: ../
-      dockerfile: config-service/Dockerfile.local
-    ports:
-      - "${CONFIG_PORT:-7777}:7777"
-    environment:
-      - JAVA_OPTS=-Xmx384m -Xms256m
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker},native
-      - SERVER_PORT=7777
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://${EUREKA_HOST:-discovery-service}:8761/eureka/
-      - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS=file:/config-repo-local/
-    volumes:
-      - ${LOCAL_CONFIG_REPO_PATH:-../config-repo-local}:/config-repo-local:ro,Z
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:7777/actuator/health || exit 1"]
-      interval: 20s
-      timeout: 10s
-      retries: 5
-    depends_on:
-      discovery-service:
-        condition: service_healthy
-    networks:
-      - inventory-net
-    restart: unless-stopped
+          memory: 384M # Límite de memoria
 
-  # --- SERVICIOS DE NEGOCIO ---
-  supplier-service:
-    profiles: [ "supplier" ]
-    container_name: ${SUPPLIER_SERVICE_NAME:-supplier-service}
-    image: ${SUPPLIER_SERVICE_NAME:-supplier-service}:latest
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-    env_file: [ ./.env ]
-    build:
-      context: ../
-      dockerfile: supplier-service/Dockerfile.local
-    # ports:
-    #   - "${SUPPLIER_PORT:-9091}:9091"
-    environment:
-      - JAVA_OPTS=-Xmx384m -Xms256m
-      - JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
-      - SERVER_PORT=9091
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SPRING_APPLICATION_NAME=${SUPPLIER_SERVICE_NAME:-supplier-service}
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${SUPPLIER_DB_HOST:-db_supplier}:5432/${SUPPLIER_DB_NAME:-supplier}
-      - SPRING_DATASOURCE_USERNAME=${SUPPLIER_DB_USERNAME:-supplier}
-      - SPRING_DATASOURCE_PASSWORD=${SUPPLIER_DB_PASSWORD:-supplier123}
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://${CONFIG_HOST:-config-service}:7777
-      - SPRING_CLOUD_CONFIG_URI=http://${CONFIG_HOST:-config-service}:7777
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://${EUREKA_HOST:-discovery-service}:8761/eureka/
-      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:9091/actuator/health || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 90s
-    depends_on:
-      db_supplier:
-        condition: service_healthy
-      config-service:
-        condition: service_healthy
-      zipkin:
-        condition: service_healthy
-    networks:
-      - inventory-net
-
-  api-gateway:
-    profiles: [ "gateway" ]
-    container_name: ${GATEWAY_SERVICE_NAME:-api-gateway}
-    image: ${GATEWAY_SERVICE_NAME:-api-gateway}:latest
-    deploy:
-      resources:
-        limits:
-          memory: 768M
-    env_file: [ ./.env ]
-    build:
-      context: ../
-      dockerfile: api-gateway/Dockerfile.local
-    ports:
-      - "${API_GATEWAY_PORT:-8090}:8090"
-    environment:
-      - JAVA_OPTS=-Xmx512m -Xms256m
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SPRING_APPLICATION_NAME=${GATEWAY_SERVICE_NAME:-api-gateway}
-      - SERVER_PORT=8090
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://${EUREKA_HOST:-discovery-service}:8761/eureka/
-      - SPRING_CLOUD_CONFIG_URI=http://${CONFIG_HOST:-config-service}:7777
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://${CONFIG_HOST:-config-service}:7777
-      - JWT_SECRET=${JWT_SECRET:-======================CelottsJWTSecretDefaultDevKey===========================}
-      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:8090/actuator/health || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
-    depends_on:
-      discovery-service:
-        condition: service_healthy
-      config-service:
-        condition: service_healthy
-      zipkin:
-        condition: service_healthy
-    networks:
-      - inventory-net
-    restart: unless-stopped
-
+  # --- MICROSERVICIOS ---
   product-service:
-    profiles: [ "product" ]
-    container_name: ${PRODUCT_SERVICE_NAME:-product-service}
-    image: ${PRODUCT_SERVICE_NAME:-product-service}:latest
+    profiles: ["product"]
+    container_name: product-service
+    image: product-service:latest
+    build: { context: ../, dockerfile: product-service/Dockerfile.local }
+    ports: ["9090:9090"]
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://product-db:5432/product
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:7777
+      SPRING_RABBITMQ_HOST: rabbitmq
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_OPTS: "-Xmx384m -Xms192m" # Reducido
+    networks: [inventory-net]
+    depends_on:
+      db_product: { condition: service_healthy }
+      config-service: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      zipkin: { condition: service_healthy }
     deploy:
       resources:
         limits:
-          memory: 400M
-    env_file: [ ./.env ]
-    build:
-      context: ../
-      dockerfile: product-service/Dockerfile.local
-    # ports:
-    #   - "${PRODUCT_PORT:-9090}:9090"
-    environment:
-      - JAVA_OPTS=-Xmx384m -Xms256m
-      - JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SPRING_APPLICATION_NAME=${PRODUCT_SERVICE_NAME:-product-service}
-      - SERVER_PORT=9090
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${PRODUCT_DB_HOST:-db_product}:5432/${PRODUCT_DB_NAME:-product}
-      - SPRING_DATASOURCE_USERNAME=${PRODUCT_DB_USERNAME:-product}
-      - SPRING_DATASOURCE_PASSWORD=${PRODUCT_DB_PASSWORD:-product123}
-      - SPRING_CLOUD_CONFIG_URI=http://${CONFIG_HOST:-config-service}:7777
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://${CONFIG_HOST:-config-service}:7777
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://${EUREKA_HOST:-discovery-service}:8761/eureka/
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-guest}
-      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASS:-guest}
-      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:9090/actuator/health || exit 1" ]
-      interval: 45s
-      timeout: 10s
-      retries: 5
-      start_period: 90s
-    depends_on:
-      db_product:
-        condition: service_healthy
-      discovery-service:
-        condition: service_healthy
-      config-service:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      zipkin:
-        condition: service_healthy
-    networks:
-      - inventory-net
+          memory: 512M # Límite de memoria
 
-  tax-service:
-    profiles: [ "tax" ]
-    container_name: ${TAX_SERVICE_NAME:-tax-service}
-    image: ${TAX_SERVICE_NAME:-tax-service}:latest
+  supplier-service:
+    profiles: ["supplier"]
+    container_name: supplier-service
+    image: supplier-service:latest
+    build: { context: ../, dockerfile: supplier-service/Dockerfile.local }
+    ports: ["9091:9091"]
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://supplier-db:5432/supplier
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:7777
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_OPTS: "-Xmx384m -Xms192m" # Reducido
+    networks: [inventory-net]
+    depends_on:
+      db_supplier: { condition: service_healthy }
+      config-service: { condition: service_healthy }
+      zipkin: { condition: service_healthy }
     deploy:
       resources:
         limits:
-          memory: 512M
-    env_file: [ ./.env ]
-    build:
-      context: ../
-      dockerfile: tax-service/Dockerfile.local
-    # ports:
-    #   - "${TAX_PORT:-9093}:9093"
-    environment:
-      - JAVA_OPTS=-Xmx384m -Xms256m
-      - JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SPRING_APPLICATION_NAME=${TAX_SERVICE_NAME:-tax-service}
-      - SERVER_PORT=9093
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${TAX_DB_HOST:-db_tax}:5432/${TAX_DB_NAME:-tax}
-      - SPRING_DATASOURCE_USERNAME=${TAX_DB_USERNAME:-tax}
-      - SPRING_DATASOURCE_PASSWORD=${TAX_DB_PASSWORD:-tax123}
-      - SPRING_CLOUD_CONFIG_URI=http://${CONFIG_HOST:-config-service}:7777
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://${CONFIG_HOST:-config-service}:7777
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://${EUREKA_HOST:-discovery-service}:8761/eureka/
-      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:9093/actuator/health | grep UP || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 90s
-    depends_on:
-      db_tax:
-        condition: service_healthy
-      discovery-service:
-        condition: service_healthy
-      config-service:
-        condition: service_healthy
-      zipkin:
-        condition: service_healthy
-    networks:
-      - inventory-net
-    restart: unless-stopped
-
-  purchase-service:
-    profiles: [ "purchase" ]
-    container_name: ${PURCHASE_SERVICE_NAME:-purchase-service}
-    image: ${PURCHASE_SERVICE_NAME:-purchase-service}:latest
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-    env_file: [ ./.env ]
-    build:
-      context: ../
-      dockerfile: purchase-service/Dockerfile.local
-    # ports:
-    #   - "${PURCHASE_PORT:-9094}:9094"
-    environment:
-      - JAVA_OPTS=-Xmx384m -Xms256m
-      - JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SPRING_APPLICATION_NAME=${PURCHASE_SERVICE_NAME:-purchase-service}
-      - SERVER_PORT=9094
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${PURCHASE_DB_HOST:-db_purchase}:5432/${PURCHASE_DB_NAME:-purchase}
-      - SPRING_DATASOURCE_USERNAME=${PURCHASE_DB_USERNAME:-purchase}
-      - SPRING_DATASOURCE_PASSWORD=${PURCHASE_DB_PASSWORD:-purchase123}
-      - SPRING_CLOUD_CONFIG_URI=http://${CONFIG_HOST:-config-service}:7777
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://${CONFIG_HOST:-config-service}:7777
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://${EUREKA_HOST:-discovery-service}:8761/eureka/
-      - SUPPLIER_SERVICE_URL=http://${SUPPLIER_SERVICE_NAME:-supplier-service}:9091
-      - SPRING_RABBITMQ_HOST=rabbitmq
-      - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=${RABBITMQ_USER:-guest}
-      - SPRING_RABBITMQ_PASSWORD=${RABBITMQ_PASS:-guest}
-      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:9094/actuator/health | grep UP || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 90s
-    depends_on:
-      db_purchase:
-        condition: service_healthy
-      discovery-service:
-        condition: service_healthy
-      config-service:
-        condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
-      zipkin:
-        condition: service_healthy
-    networks:
-      - inventory-net
-    restart: unless-stopped
+          memory: 512M # Límite de memoria
 
   auth-service:
-    profiles: [ "auth" ]
-    container_name: ${AUTH_SERVICE_NAME:-auth-service}
-    image: ${AUTH_SERVICE_NAME:-auth-service}:latest
+    profiles: ["auth"]
+    container_name: auth-service
+    image: auth-service:latest
+    build: { context: ../, dockerfile: auth-service/Dockerfile.local }
+    ports: ["8081:8081"]
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/auth
+      JWT_SECRET: ======================CelottsJWTSecretDefaultDevKey===========================
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:7777
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_OPTS: "-Xmx384m -Xms192m" # Reducido
+    networks: [inventory-net]
+    depends_on:
+      db_auth: { condition: service_healthy }
+      config-service: { condition: service_healthy }
+      zipkin: { condition: service_healthy }
     deploy:
       resources:
         limits:
-          memory: 512M
-    env_file: [ ./.env ]
-    build:
-      context: ../
-      dockerfile: auth-service/Dockerfile.local
-    ports:
-      - "${AUTH_PORT:-8081}:8081"
+          memory: 512M # Límite de memoria
+
+  sales-service:
+    profiles: ["sales"]
+    container_name: sales-service
+    image: sales-service:latest
+    build: { context: ../, dockerfile: sales-service/Dockerfile.local }
+    ports: ["8086:8086"]
     environment:
-      - JAVA_OPTS=-Xmx384m -Xms256m
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
-      - SPRING_APPLICATION_NAME=${AUTH_SERVICE_NAME:-auth-service}
-      - SERVER_PORT=8081
-      - JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${AUTH_DB_HOST:-db_auth}:5432/${AUTH_DB_NAME:-auth}
-      - DB_USERNAME=${AUTH_DB_USERNAME:-auth_user}
-      - DB_PASSWORD=${AUTH_DB_PASSWORD:-auth_pass}
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://${EUREKA_HOST:-discovery-service}:8761/eureka/
-      - SPRING_CLOUD_CONFIG_URI=http://${CONFIG_HOST:-config-service}:7777
-      - SPRING_CONFIG_IMPORT=optional:configserver:http://${CONFIG_HOST:-config-service}:7777
-      - JWT_SECRET=${JWT_SECRET:-======================CelottsJWTSecretDefaultDevKey===========================}
-      - MANAGEMENT_ZIPKIN_TRACING_ENDPOINT=http://zipkin:9411/api/v2/spans
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 90s
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://sales-db:5432/sales
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:7777
+      SPRING_RABBITMQ_HOST: rabbitmq
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_OPTS: "-Xmx384m -Xms192m" # Reducido
+    networks: [inventory-net]
     depends_on:
-      db_auth:
-        condition: service_healthy
-      config-service:
-        condition: service_healthy
-      zipkin:
-        condition: service_healthy
-    networks:
-      - inventory-net
-    restart: unless-stopped
+      db_sales: { condition: service_healthy }
+      config-service: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      zipkin: { condition: service_healthy }
+    deploy:
+      resources:
+        limits:
+          memory: 512M # Límite de memoria
+
+  tax-service:
+    profiles: ["tax"]
+    container_name: tax-service
+    image: tax-service:latest
+    build: { context: ../, dockerfile: tax-service/Dockerfile.local }
+    ports: ["9093:9093"]
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://tax-db:5432/tax
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:7777
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_OPTS: "-Xmx384m -Xms192m" # Reducido
+    networks: [inventory-net]
+    depends_on:
+      db_tax: { condition: service_healthy }
+      config-service: { condition: service_healthy }
+      zipkin: { condition: service_healthy }
+    deploy:
+      resources:
+        limits:
+          memory: 512M # Límite de memoria
+
+  purchase-service:
+    profiles: ["purchase"]
+    container_name: purchase-service
+    image: purchase-service:latest
+    build: { context: ../, dockerfile: purchase-service/Dockerfile.local }
+    ports: ["9094:9094"]
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://purchase-db:5432/purchase
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:7777
+      SPRING_RABBITMQ_HOST: rabbitmq
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_OPTS: "-Xmx384m -Xms192m" # Reducido
+    networks: [inventory-net]
+    depends_on:
+      db_purchase: { condition: service_healthy }
+      config-service: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      zipkin: { condition: service_healthy }
+    deploy:
+      resources:
+        limits:
+          memory: 512M # Límite de memoria
+
+  api-gateway:
+    profiles: ["gateway"]
+    container_name: api-gateway
+    image: api-gateway:latest
+    build: { context: ../, dockerfile: api-gateway/Dockerfile.local }
+    ports: ["8090:8090"]
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-service:7777
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      JAVA_OPTS: "-Xmx512m -Xms256m" # Reducido
+    networks: [inventory-net]
+    depends_on:
+      discovery-service: { condition: service_healthy }
+      config-service: { condition: service_healthy }
+      zipkin: { condition: service_healthy }
+    deploy:
+      resources:
+        limits:
+          memory: 768M # Límite de memoria
 
 volumes:
   db_product_data:
@@ -548,3 +361,5 @@ volumes:
   db_purchase_data:
   db_tax_data:
   db_auth_data:
+  db_sales_data:
+  rabbitmq_data:

@@ -1,0 +1,47 @@
+# ---------------------------------------------------------------------
+# ETAPA 1: CONSTRUCTOR (Compila la aplicación)
+# ---------------------------------------------------------------------
+FROM eclipse-temurin:17-jdk-jammy AS builder
+WORKDIR /app
+
+# Copia archivos de la raíz del proyecto (configuración de Gradle)
+COPY gradle/ gradle/
+COPY gradlew .
+COPY settings.gradle .
+COPY build.gradle .
+RUN chmod +x ./gradlew
+
+# Instalar dos2unix
+RUN apt-get update && apt-get install -y dos2unix && rm -rf /var/lib/apt/lists/*
+
+# Optimización de memoria para Gradle en Docker
+ENV GRADLE_OPTS="-Dorg.gradle.daemon=false -Xmx512m"
+
+# Copia del servicio
+COPY sales-service/ /app/sales-service/
+
+# Sanitizar scripts si existen (entrypoint, wait-for-it)
+RUN if [ -f /app/sales-service/entrypoint.sh ]; then dos2unix /app/sales-service/entrypoint.sh && chmod +x /app/sales-service/entrypoint.sh; fi
+RUN if [ -f /app/sales-service/wait-for-it.sh ]; then dos2unix /app/sales-service/wait-for-it.sh && chmod +x /app/sales-service/wait-for-it.sh; fi
+
+# Compila el JAR
+RUN ./gradlew :sales-service:bootJar -x test --no-daemon
+
+# ---------------------------------------------------------------------
+# ETAPA 2: EJECUCIÓN (Crea la imagen final mínima)
+# ---------------------------------------------------------------------
+FROM eclipse-temurin:17-jre-jammy AS runner
+EXPOSE 8086
+RUN addgroup --system spring && adduser --system --ingroup spring spring
+USER spring:spring
+WORKDIR /app
+
+# Copiar el JAR generado
+COPY --from=builder /app/sales-service/build/libs/sales-service-*.jar /app/app.jar
+
+# Copiar scripts de espera si existen en el contexto de sales-service o usar los de la raíz
+# Si no existen en sales-service, se pueden copiar de la raíz del proyecto
+COPY --from=builder /app/sales-service/wait-for-it.sh /app/wait-for-it.sh
+COPY --from=builder /app/sales-service/entrypoint.sh /app/entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh"]
