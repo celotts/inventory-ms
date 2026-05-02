@@ -2,6 +2,8 @@ package com.celotts.productservice.infrastructure.adapter.output.postgres.reposi
 
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductEntity;
 import com.celotts.productservice.infrastructure.adapter.output.postgres.entity.product.ProductCategoryEntity;
+// import com.celotts.productservice.infrastructure.adapter.output.postgres.mapper.lot.LotEntityMapper; // <-- ELIMINADO: Ya no se necesita
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
@@ -71,4 +73,6 @@ public interface ProductJpaRepository extends JpaRepository<ProductEntity, UUID>
                                            @Param("code") String code,
                                            @Param("name") String name,
                                            @Param("description") String description);
+
+    // ELIMINADO: LotEntityMapper findByCategoryIdAndCurrentStockLessThanEqual(UUID categoryId, BigDecimal bigDecimal, Pageable pageable);
 }

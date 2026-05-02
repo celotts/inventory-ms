@@ -83,6 +83,7 @@ public class ProductRepositoryAdapter implements ProductRepositoryPort {
 
     @Override
     public Page<ProductModel> findLowStockByCategory(UUID categoryId, Pageable pageable, int threshold) {
+        // CORRECCIÓN: Usar el método correcto definido en ProductJpaRepository
         return productRepository
                 .findByCategoryAndMaxStock(categoryId, BigDecimal.valueOf(threshold), pageable)
                 .map(productEntityMapper::toModel);

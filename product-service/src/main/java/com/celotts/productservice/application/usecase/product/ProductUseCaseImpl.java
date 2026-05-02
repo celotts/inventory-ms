@@ -15,7 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,36 +31,34 @@ public class ProductUseCaseImpl implements ProductUseCase {
     private final ProductBrandRepositoryPort productBrandPort;
     private final CategoryRepositoryPort categoryRepositoryPort;
 
+    // Umbral por defecto para productos con bajo stock
+    private static final int DEFAULT_LOW_STOCK_THRESHOLD = 5;
+
     @Override
+    @Transactional
     public ProductModel createProduct(ProductModel cmd) {
-        if (productRepositoryPort.findByCode(cmd.getCode()).isPresent()) {
+        if (productRepositoryPort.existsByCode(cmd.getCode())) {
             throw new ResourceAlreadyExistsException("product.already-exists", cmd.getCode());
         }
+
         validateReferences(cmd);
         
-        // Resolver unitId a partir de unitCode
-        if (cmd.getUnitCode() != null) {
-             ProductUnitModel unit = productUnitPort.findByCode(cmd.getUnitCode())
-                 .orElseThrow(() -> new ResourceNotFoundException("product.unit.not-found", cmd.getUnitCode()));
-             cmd.setUnitId(unit.getId());
-        }
+        // Usar toBuilder para asignar el unitId resuelto de forma segura e inmutable
+        ProductModel productToSave = cmd.toBuilder()
+                .unitId(resolveUnitId(cmd.getUnitCode()))
+                .build();
 
-        return productRepositoryPort.save(cmd);
+        return productRepositoryPort.save(productToSave);
     }
 
     @Override
+    @Transactional
     public ProductModel updateProduct(UUID id, ProductModel productUpdates) {
         ProductModel existing = productRepositoryPort.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("product.not-found-with-id", id));
-        validateReferences(productUpdates);
 
-        // Resolver unitId si cambia el unitCode
-        UUID newUnitId = existing.getUnitId();
-        if (productUpdates.getUnitCode() != null && !productUpdates.getUnitCode().equals(existing.getUnitCode())) {
-             ProductUnitModel unit = productUnitPort.findByCode(productUpdates.getUnitCode())
-                 .orElseThrow(() -> new ResourceNotFoundException("product.unit.not-found", productUpdates.getUnitCode()));
-             newUnitId = unit.getId();
-        }
+        validateReferences(productUpdates);
+        UUID newUnitId = resolveUnitId(productUpdates.getUnitCode());
 
         ProductModel updated = existing.toBuilder()
                 .code(productUpdates.getCode() != null ? productUpdates.getCode() : existing.getCode())
@@ -68,14 +66,14 @@ public class ProductUseCaseImpl implements ProductUseCase {
                 .description(productUpdates.getDescription() != null ? productUpdates.getDescription() : existing.getDescription())
                 .categoryId(productUpdates.getCategoryId() != null ? productUpdates.getCategoryId() : existing.getCategoryId())
                 .unitCode(productUpdates.getUnitCode() != null ? productUpdates.getUnitCode() : existing.getUnitCode())
-                .unitId(newUnitId) // Asignar el ID resuelto
+                .unitId(newUnitId != null ? newUnitId : existing.getUnitId())
                 .brandId(productUpdates.getBrandId() != null ? productUpdates.getBrandId() : existing.getBrandId())
                 .minimumStock(productUpdates.getMinimumStock() != null ? productUpdates.getMinimumStock() : existing.getMinimumStock())
                 .currentStock(productUpdates.getCurrentStock() != null ? productUpdates.getCurrentStock() : existing.getCurrentStock())
                 .unitPrice(productUpdates.getUnitPrice() != null ? productUpdates.getUnitPrice() : existing.getUnitPrice())
                 .enabled(productUpdates.getEnabled() != null ? productUpdates.getEnabled() : existing.getEnabled())
                 .updatedBy(productUpdates.getUpdatedBy() != null ? productUpdates.getUpdatedBy() : existing.getUpdatedBy())
-                .updatedAt(java.time.LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
         return productRepositoryPort.save(updated);
     }
@@ -117,10 +115,11 @@ public class ProductUseCaseImpl implements ProductUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("product.not-found-with-id", productId));
 
         int currentStock = product.getCurrentStock() != null ? product.getCurrentStock() : 0;
-        int newStock = currentStock + quantity;
+        ProductModel updated = product.toBuilder()
+                .currentStock(currentStock + quantity)
+                .build();
 
-        product.setCurrentStock(newStock);
-        productRepositoryPort.save(product);
+        productRepositoryPort.save(updated);
     }
 
     @Override
@@ -150,16 +149,14 @@ public class ProductUseCaseImpl implements ProductUseCase {
 
     @Override
     public List<ProductModel> getLowStockByCategory(UUID categoryId) {
-        return getProductsByCategory(categoryId).stream()
-                .filter(ProductModel::lowStock)
-                .collect(Collectors.toList());
+        // Usar el método del repositorio con paginación y umbral
+        return productRepositoryPort.findLowStockByCategory(categoryId, Pageable.unpaged(), DEFAULT_LOW_STOCK_THRESHOLD).getContent();
     }
 
     @Override
     public List<ProductModel> getLowStockProducts() {
-        return productRepositoryPort.findAll(Pageable.unpaged()).getContent().stream()
-                .filter(ProductModel::lowStock)
-                .collect(Collectors.toList());
+        // Usar el método del repositorio con paginación y umbral
+        return productRepositoryPort.findLowStock(Pageable.unpaged(), DEFAULT_LOW_STOCK_THRESHOLD).getContent();
     }
 
     @Override
@@ -180,15 +177,19 @@ public class ProductUseCaseImpl implements ProductUseCase {
     }
 
     private void validateReferences(ProductModel dto) {
-        if (dto.getUnitCode() != null && !productUnitPort.existsByCode(dto.getUnitCode())) {
-            throw new ResourceNotFoundException("product.unit.not-found", dto.getUnitCode());
-        }
         if (dto.getBrandId() != null && !productBrandPort.existsById(dto.getBrandId())) {
             throw new ResourceNotFoundException("brand.not-found", dto.getBrandId());
         }
         if (dto.getCategoryId() != null && !categoryRepositoryPort.existsById(dto.getCategoryId())) {
             throw new ResourceNotFoundException("category.not.found", dto.getCategoryId());
         }
+    }
+
+    private UUID resolveUnitId(String unitCode) {
+        if (unitCode == null) return null;
+        return productUnitPort.findByCode(unitCode)
+                .map(ProductUnitModel::getId)
+                .orElseThrow(() -> new ResourceNotFoundException("product.unit.not-found", unitCode));
     }
 
     @Override
@@ -212,7 +213,7 @@ public class ProductUseCaseImpl implements ProductUseCase {
 
         ProductModel updated = product.toBuilder()
                 .enabled(false)
-                .updatedAt(java.time.LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
 
         productRepositoryPort.save(updated);

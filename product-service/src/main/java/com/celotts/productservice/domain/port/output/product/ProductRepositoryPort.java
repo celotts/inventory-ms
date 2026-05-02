@@ -17,16 +17,17 @@ public interface ProductRepositoryPort {
     Page<ProductModel> findAll(Pageable pageable);
     Page<ProductModel> findAllWithFilters(Pageable pageable, String code, String name, String description);
     Page<ProductModel> findActive(Pageable pageable);
-    Page<ProductModel> findInactive(Pageable pageable); // <- antes List
+    Page<ProductModel> findInactive(Pageable pageable);
 
-    Page<ProductModel> findByCategory(UUID categoryId, Pageable pageable); // <- antes List
-    Page<ProductModel> findByBrand(UUID brandId, Pageable pageable);      // <- antes List
+    Page<ProductModel> findByCategory(UUID categoryId, Pageable pageable);
+    Page<ProductModel> findByBrand(UUID brandId, Pageable pageable);
 
-    // Low stock (si usas minimumStock como umbral interno, quita el parámetro)
+    // Low stock
     Page<ProductModel> findLowStock(Pageable pageable, int threshold);
     Page<ProductModel> findLowStockByCategory(UUID categoryId, Pageable pageable, int threshold);
-    boolean existsByName(String name);
+
     // Validaciones y mantenimiento
+    boolean existsByName(String name);
     boolean existsById(UUID id);
     boolean existsByCode(String code);
     long countAll();
